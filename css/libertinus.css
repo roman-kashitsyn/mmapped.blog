@@ -1,0 +1,13 @@
+@font-face {
+  font-family: "Libertinus Serif";
+  src: local("Libertinum Serif"),
+       local("Linux Libertine O"),
+       url("/fonts/LibertinusSerif-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Libertinus Sans";
+  src: local("Libertinus Sans"),
+       local("Linux Biolinum O"),
+       url("/fonts/LibertinusSans-Regular.woff2") format("woff2");
+}

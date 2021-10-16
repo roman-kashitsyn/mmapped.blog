@@ -1,0 +1,130 @@
+html { font-size: 1em; }
+
+body {
+  font-family: "Libertinus Serif", Palatino, serif;
+}
+
+.blog-title {
+  font-weight: bold;
+}
+
+ul.posts {
+  padding-left: 0px;
+}
+
+ul.posts > li {
+  list-style: none;
+}
+
+nav ul {
+  padding: 0px;
+}
+
+nav li {
+  display: inline;
+  margin: 0 1.5em 0 0;
+  font-feature-settings: "smcp" on;
+}
+
+article {
+  max-width: 45em;
+  margin-left: auto;
+  margin-right: auto; 
+  box-shadow: 0 0.3em 1em #000; 
+  padding: 10px 20px;
+  line-height: 1.5em;
+}
+
+a.anchor {
+  float: left;
+  font-size: 0.8em;
+  text-decoration: none;
+}
+
+div.advice {
+  padding: 10px;
+}
+
+div.advice > p {
+  font-size: 1em;
+  font-style: italic;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2em;
+}
+
+h1, h2, h3 {
+  font-family: "Libertinus Sans", sans-serif;
+  font-feature-settings: "smcp" on;
+}
+
+h1 code, h2 code, h3 code {
+  margin: 0.1em;
+  font-size: 1em;
+}
+
+pre.source {
+  padding: 20px;
+  box-shadow: 0 0.1em 0.3em #000; 
+  font-size: 1em;
+  line-height: 1.2em;
+}
+
+ul.arrows > li:before {
+  position: absolute;
+  margin-left: -2.5rem;
+  content: "➞ ";
+}
+
+ul.arrows > li {
+  list-style: none;
+}
+
+ol.circled > li {
+  list-style: none;
+}
+
+ol.circled > li:before {
+  position: absolute;
+  margin-left: -2.5rem;
+  content: attr(num);
+}
+
+.circled-ref {
+  font-family: "Libertinus Serif", serif;
+}
+
+pre.good {
+  background-color: #dcedc8;
+}
+
+pre.bad {
+  background-color: #ffe6d8;
+}
+
+@media(prefers-color-scheme: light) {
+body {
+  background-color: #fffff8;
+}
+}
+
+@media(prefers-color-scheme: dark) {
+a {
+  color: #d8dee9;
+}
+
+body {
+  color: rgb(236, 239, 244);
+  background-color: #2e3440;
+}
+
+pre.good {
+  color: black;
+}
+
+pre.bad {
+  color: black;
+}
+}
