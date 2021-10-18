@@ -2,6 +2,7 @@ html { font-size: 1em; }
 
 body {
   font-family: "Libertinus Serif", Palatino, serif;
+  line-height: 1.40;
 }
 
 .blog-title {
@@ -26,6 +27,11 @@ nav li {
   font-feature-settings: "smcp" on;
 }
 
+img.portrait {
+  float: left;
+  margin-right: 10px;
+}
+
 article {
   max-width: 45em;
   margin-left: auto;
@@ -41,8 +47,17 @@ a.anchor {
   text-decoration: none;
 }
 
+a {
+  text-decoration: none;
+  text-decoration-color: initial;
+  text-transform: lowercase;
+  font-feature-settings: "smcp" on;
+  font-style: normal;
+  hyphens: none;
+}
+
 div.advice {
-  padding: 10px;
+  padding: 5px 0px;
 }
 
 div.advice > p {
@@ -55,9 +70,19 @@ h1 {
   font-size: 2em;
 }
 
+.smallcaps {
+  font-feature-settings: "smcp" on;
+  font-style: normal;
+  text-transform: lowercase;
+}
+
 h1, h2, h3 {
   font-family: "Libertinus Sans", sans-serif;
   font-feature-settings: "smcp" on;
+  text-decoration: none;
+  text-transform: lowercase;
+  font-style: normal;
+  hyphens: none;
 }
 
 h1 code, h2 code, h3 code {

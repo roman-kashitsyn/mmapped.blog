@@ -4,6 +4,8 @@
          txexpr)
 
 (provide source-code
+         section
+         subsection
          advice
          anchor
          circled
@@ -14,6 +16,14 @@
   (txexpr* 'div '((class "source-countainer"))
           (txexpr 'pre `((class ,(string-append "source " attr)))
                   (list (txexpr 'code '() elems)))))
+
+(define (section anchor name)
+  (txexpr* 'h2 '()
+           (txexpr* 'a `((href ,(string-append "#" anchor))) name)))
+
+(define (subsection anchor name)
+  (txexpr* 'h3 '()
+           (txexpr* 'a `((href ,(string-append "#" anchor))) name)))
 
 (define (anchor name)
   (txexpr* 'a `((class "anchor") (href ,(string-append "#" name))) #x261B))
