@@ -41,6 +41,10 @@ article {
   line-height: 1.5em;
 }
 
+footer {
+  text-align: center;
+}
+
 a.anchor {
   float: left;
   font-size: 0.8em;
@@ -129,9 +133,25 @@ pre.bad {
   background-color: #ffe6d8;
 }
 
+.github-link::before {
+  background-size: 1em 1em;
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: sub;
+  content: "";
+  margin-right: 5px;
+}
+
 @media(prefers-color-scheme: light) {
+a {
+  color: #000;
+}
 body {
   background-color: #fffff8;
+}
+.github-link::before {
+  background-image: url(/images/GitHub-Mark-32px.png);
 }
 }
 
@@ -151,5 +171,9 @@ pre.good {
 
 pre.bad {
   color: black;
+}
+
+.github-link::before {
+  background-image: url(/images/GitHub-Mark-Light-32px.png);
 }
 }
