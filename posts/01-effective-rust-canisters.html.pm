@@ -1,21 +1,22 @@
 #lang pollen
 
 ◊(define-meta title "Effective Rust canisters")
+◊(define-meta keywords "rust, ic, canisters")
+◊(define-meta summary "A compilation of useful patterns for developing IC canisters in Rust")
 ◊(define-meta doc-publish-date "2021-10-18")
-◊(define-meta last-updated-date "2021-10-18")
+◊(define-meta doc-updated-date "2021-10-18")
 
 ◊section["how-to-read"]{How to read this document}
 
 ◊p{
-  This document is a compilation of useful patterns and typical pitfalls I observed when developing Internet Computer canisters in Rust.
-  Don't treat them as dogmas.
-  Solutions that worked well for my problems might be suboptimal for yours.
-  Every advice comes with explanations to help you make your own judgement.
+  This document is a compilation of useful patterns and typical pitfalls I observed when developing canisters in Rust.
+  Treat everything in this document with a grain of salt: solutions that worked well for my problems might be suboptimal for yours.
+  Every piece of advice comes with explanations to help you make your own judgement.
 }
 
 ◊p{
-Some recommendation might change if I discover better patterns or if the state of the ecosystem improves.
-I'll try to keep this document up to date.
+  Some recommendation might change if I discover better patterns or if the state of the ecosystem improves.
+  I'll try to keep this document up to date.
 }
 
 ◊section["code-organization"]{Code organization}
@@ -151,8 +152,7 @@ thread_local! {
 }
 }
 
-◊p{
-I borrowed ◊a[#:href "https://sdk.dfinity.org/docs/language-guide/upgrades.html#_declaring_stable_variables"]{Motoko terminology} here:
+◊p{I borrowed ◊a[#:href "https://sdk.dfinity.org/docs/language-guide/upgrades.html#_declaring_stable_variables"]{Motoko terminology} here:}
 ◊ol-circled{
   ◊li{
     ◊em{stable} variables are globals that are persisted across upgrades.
@@ -162,7 +162,6 @@ I borrowed ◊a[#:href "https://sdk.dfinity.org/docs/language-guide/upgrades.htm
     ◊em{flexible} variables are globals that don't survive an upgrade.
     For example, a cache might be flexible if persisting it across upgrades isn't critical for your product.
   }
-}
 }
 
 ◊p{
@@ -402,6 +401,9 @@ service : {
 ◊p{
   Finally, if your code is still evolving, make it easy for people to correlate module hashes with versions of the source code.
   For example, if you use GitHub releases, mention the module hash in the release notes.
+}
+◊p{
+  Read ◊a[#:href "https://smartcontracts.org/docs/developers-guide/tutorials/reproducible-builds.html"]{Reproducible Canister Builds} article for more advice on reproducible builds.
 }
 
 ◊subsection["upgrades"]{Upgrades}

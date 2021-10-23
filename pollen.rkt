@@ -44,7 +44,7 @@
            [(txexpr tag attrs elems)
             (if (eq? tag 'li)
               (begin0
-                (attr-set elem 'num (circled n))
+                (attr-set elem 'data-num-glyph (circled n))
                 (set! n (+ n 1)))
               elem)]
            [e e])))

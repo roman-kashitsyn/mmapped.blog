@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html>
-<head lang="en">
+<html lang="en">
+<head>
   <meta charset="UTF-8"/>
   <title>◊(hash-ref metas 'title)</title>
   <link rel="stylesheet" href="/css/libertinus.css">
   <link rel="stylesheet" href="/css/styles.css">
+  <link rel="alternate" type="application/atom+xml" href="/feed.xml">
 </head>
 <body>
 <article>
@@ -14,12 +15,13 @@
       <li><a class="blog-title" href="/index.html">mmap(blog)</a></li>
       <li><a href="/posts.html">Posts</a></li>
       <li><a href="/about.html">About</a></li>
+      <li><a href="/feed.xml">Atom Feed</a></li>
     </ul>
   </nav>
 </header>
 <h1>◊(hash-ref metas 'title)</h1>
 <hr>
-◊(->html ◊doc)
+◊(->html doc #:splice? #t)
 <hr>
 <footer>
   <span>&copy; Roman Kashitsyn</span>&nbsp;
