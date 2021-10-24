@@ -146,7 +146,7 @@ pre.bad {
   margin-right: 5px;
 }
 
-@media(prefers-color-scheme: light) {
+/* light theme */
 a {
   color: #000;
 }
@@ -156,7 +156,7 @@ body {
 .github-link::before {
   background-image: url(/images/GitHub-Mark-32px.png);
 }
-}
+/* end of light theme */
 
 @media(prefers-color-scheme: dark) {
 a {
