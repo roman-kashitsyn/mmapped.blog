@@ -23,6 +23,7 @@
 ◊p{
   This website is my personal blog.
   It doesn't necessary reflect the views of my employer.
+  If you want to report a mistake or have constructive feedback, ◊a[#:href "https://github.com/roman-kashitsyn/mmapped.blog/issues/new"]{open an issue on GitHub}.
 }
 
 ◊h2{What does "mmap" mean?}

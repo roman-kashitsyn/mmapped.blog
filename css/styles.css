@@ -141,7 +141,7 @@ pre.bad {
   width: 1em;
   height: 1em;
   display: inline-block;
-  vertical-align: sub;
+  vertical-align: middle;
   content: "";
   margin-right: 5px;
 }
