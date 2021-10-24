@@ -2,16 +2,16 @@
 
 ◊(define-meta title "Effective Rust canisters")
 ◊(define-meta keywords "rust, ic, canisters")
-◊(define-meta summary "A compilation of useful patterns for developing IC canisters in Rust")
-◊(define-meta doc-publish-date "2021-10-18")
-◊(define-meta doc-updated-date "2021-10-18")
+◊(define-meta summary "A compilation of useful patterns for developing IC canisters in Rust.")
+◊(define-meta doc-publish-date "2021-10-25")
+◊(define-meta doc-updated-date "2021-10-25")
 
 ◊section["how-to-read"]{How to read this document}
 
 ◊p{
-  This document is a compilation of useful patterns and typical pitfalls I observed when developing canisters in Rust.
-  Treat everything in this document with a grain of salt: solutions that worked well for my problems might be suboptimal for yours.
-  Every piece of advice comes with explanations to help you make your own judgement.
+  This document is a compilation of useful patterns and typical pitfalls I observed in the Rust code running on the ◊a[#:href "https://internetcomputer.org/"]{Internet Computer} (IC).
+  Take everything in this document with a grain of salt: solutions that worked well for my problems might be suboptimal for yours.
+  Every piece of advice comes with explanations to help you reach your own judgement.
 }
 
 ◊p{
@@ -24,8 +24,8 @@
 ◊subsection["canister-state"]{Canister state}
 
 ◊p{
-  The way canister are used on the IC platform requires them to use global mutable state.
-  Rust, on the other hand, intentionally makes using global state a painful experience.
+  The way IC canister are structured forces developers to use global mutable state.
+  Rust, on the other hand, intentionally makes it hard to use global mutable variables.
   Furthermore, there are more than one way to do it in Rust.
   Which option is the best?
 }
@@ -49,9 +49,9 @@ thread_local! {
 let state = ic_cdk::storage::get_mut<MyState>;
 }
 ◊p{
-  The Rust CDK provides the "storage" abstraction that allows one to get a mutable reference indexed by a type.
+  The Rust CDK provides ◊a[#:href "https://docs.rs/ic-cdk/0.3.2/ic_cdk/storage/index.html"]{storage} abstraction that allows you to get a mutable reference indexed by a type.
   In my opinion, introducing this abstraction wasn't a very good decision.
-  This approach allows one to obtain multiple non-exclusive mutable references to the same object, which breaks language guarantees.
+  ◊a[#:href "https://docs.rs/ic-cdk/0.3.2/ic_cdk/storage/fn.get_mut.html"]{get-mut} allows you to obtain multiple non-exclusive mutable references to the same object, which breaks language guarantees.
   You can easily shut yourself in a foot with this, I'll show you how in a minute.
 }
 }
@@ -61,8 +61,8 @@ let state = ic_cdk::storage::get_mut<MyState>;
 static mut STATE: Option<State> = None;
 }
 ◊p{
-  The plain old global variables.
-  This approach forces you to write some boilerplate to access them and suffers from the same safety issues.
+  Plain old global variables.
+  This approach forces you to write some boilerplate to access the global state and suffers from the same safety issues as the previous one.
 }
 }
 
@@ -76,13 +76,14 @@ lazy_static! {
 ◊p{
   This approach is memory-safe, but I find it very confusing.
   Threading is not available in canister, so it's not obvious what happens if one tries to obtain a lock for an already locked object.
-  The meaning of your program changes depending on the compilation target.
+  Canister traps if it fails to obtain a lock, which means that the meaning of your program changes depending on the compilation target.
+  ◊a[#:href "#target-independent"]{we don't want that}.
 }
 }
 }
 
 ◊p{
-  Let's take a look how non-exclusive mutable references can lead to troubles.
+  Let's see how non-exclusive mutable references can lead to bugs that are very hard to debug.
   At first it might seem that if you don't have concurrency involved, there should be no harm.
   Unfortunately, that's not true.
   Let's look at an example.
@@ -104,13 +105,13 @@ fn register_friend(uid: UserId, friend: User) -> Result<UserId, Error> {
 }
 
 ◊p{
-  Here we have a function that uses the storage abstraction, but the mutable statics are essentially the same.
+  Here we have a function that uses the storage abstraction, but plain old mutable globals have the same issue.
 }
 ◊ol-circled{
 ◊li{We get a mutable reference pointing into our data structure.}
 ◊li{
   We call a function that modifies the data structure.
-  This might have invalidated the reference we obtained in step ◊circled-ref[1], so now it could be pointing to garbage or into the middle of another valid object.
+  This call might have invalidated the reference we obtained in step ◊circled-ref[1], so now the reference could be pointing to garbage or into the middle of another valid object.
 }
 ◊li{
   We use the original mutable reference to modify the object.
@@ -120,7 +121,8 @@ fn register_friend(uid: UserId, friend: User) -> Result<UserId, Error> {
 
 ◊p{
   Real code might be much more complicated, the mutation might happen in a function called from a function called from the canister method, etc.
-  If we used a ◊code{RefCell}, we would get a panic before this code would be shipped (assuming enough test coverage).
+  The issue might have stayed undetected until your canister is in active use and stores (and corrupts) important user data.
+  If we used a ◊code{RefCell}, we would get a panic before this code is shipped (assuming you at ran the code at least once before shipping).
 }
 
 ◊p{
@@ -131,7 +133,8 @@ fn register_friend(uid: UserId, friend: User) -> Result<UserId, Error> {
 ◊advice["clear-state"]{Put all your globals in one basket.}
 
 ◊p{
-  There are clear benefits in making all the global variables private and placing them in a single file, the canister main file:
+  Consider making all the global variables private and placing them in a single file, the canister main file.
+  This approach has a few benefits:
 }
 
 ◊ul[#:class "arrows"]{
@@ -142,11 +145,10 @@ fn register_friend(uid: UserId, friend: User) -> Result<UserId, Error> {
  }
 }
 
-◊p{Consider adding comments making it clear which variables are stable:}
+◊p{Consider also adding comments clarifying which variables are stable, like in example below:}
 
 ◊source-code["good"]{
 thread_local! {
-    // Document which variables are ◊b{flexible} and which are ◊b{stable}.
     /* ◊b{stable}   ◊circled-ref[1] */ static USERS: RefCell<Users> = ... ;
     /* ◊b{flexible} ◊circled-ref[2] */ static LAST_ACTIVE: Cell<UserId> = ...;
 }
@@ -155,31 +157,31 @@ thread_local! {
 ◊p{I borrowed ◊a[#:href "https://sdk.dfinity.org/docs/language-guide/upgrades.html#_declaring_stable_variables"]{Motoko terminology} here:}
 ◊ol-circled{
   ◊li{
-    ◊em{stable} variables are globals that are persisted across upgrades.
+    ◊em{stable} variables are globals that the system preserves across upgrades.
     For example, a user database should probably be stable.
   }
   ◊li{
-    ◊em{flexible} variables are globals that don't survive an upgrade.
-    For example, a cache might be flexible if persisting it across upgrades isn't critical for your product.
+    ◊em{flexible} variables are globals that the system discards on code upgrade.
+    For example, it's reasonable to make a cache flexible if keeping this cache hot isn't critical for your product.
   }
 }
 
 ◊p{
-  If you ever tried to test canister code, you probably noticed that the UX is not quite polished yet.
-  A quick way to make life easier is to piggy-back on the existing Rust infrastructure.
-  For that we need the code to compile both to native and to WebAssembly.
+  If you ever tried to test canister code, you probably noticed that this part of development workflow is not quite polished yet.
+  A quick way to make your life easier is to piggy-back on the existing Rust infrastructure.
+  This is only possible if we can compile the canister both to native target and to WebAssembly.
 }
 
-◊advice["target-independent"]{Make most of the code target-independent.}
+◊advice["target-independent"]{Make most of the canister code target-independent.}
 
 ◊p{
   It pays off to factor most of the canister code into loosely coupled modules and packages and test them independently.
-  Most of the code that depends on the system API should go into the main file.
+  Most of the code that depends on the System API should go into the main file.
 }
 
 ◊p{
-  It's also possible to create a thin abstractions for the System API and test your code with a fake but faithful implementations.
-  For example, you can use the following trait to abstract the Stable Memory API:
+  It's also possible to create a thin abstractions for the System API and test your code with a fake but faithful implementation.
+  For example, we could use the following trait to abstract the ◊a[#:href "https://sdk.dfinity.org/docs/interface-spec/index.html#system-api-stable-memory"]{Stable Memory API}
 }
 ◊source-code["good"]{
 pub trait Memory {
@@ -194,7 +196,7 @@ pub trait Memory {
 
 ◊code{panics} and ◊code{traps} in canisters are somewhat special.
 If your code traps or panics, the system rolls back the state of the canister to the latest working snapshot.
-Unfortunately, this means that if your canister made a call and then panicked in the callback, it might never release the resources it allocated for the call.
+Unfortunately, this means that if your canister made a call and then panicked in the callback, the canister might never release the resources it allocated for the call.
 
 ◊advice["panic-await"]{Don't panic after ◊code{await}}
 
@@ -225,11 +227,11 @@ fn update_avatar(user_id: UserId, ◊b{pic: ByteBuf} ◊circled-ref[1] ) {
 
 ◊p{Note that there is no corruption, the canister is still in a valid state, but some resources, like memory, will never be released until the next upgrade.}
 ◊p{
-  The system API was recently extended to deal with that problem (see ◊code{ic0.call_on_cleanup} in the ◊a[#:href "https://sdk.dfinity.org/docs/interface-spec/index.html"]{Internet Computer Interface Specification}).
+  The System API was recently extended to deal with that problem (see ◊code{ic0.call_on_cleanup} in the ◊a[#:href "https://sdk.dfinity.org/docs/interface-spec/index.html"]{Internet Computer Interface Specification}).
   This issue is likely to be fixed in future versions of the Rust CDK.
 }
 
-◊p{Another problem that you might experience with asynchrony and miss in tests is a future that obtains exclusive access to a resource for a long period of time.}
+◊p{Another problem that you might experience with asynchrony and miss in tests is a future that obtains exclusive access to some resource for a long period of time.}
 
 ◊advice["dont-lock"]{Don't lock shared resources across await boundaries.}
 
@@ -251,9 +253,9 @@ fn add_user(user: User) {
 }
 }
 ◊ol-circled{
-◊li{We obtain exclusive access to the users map and makes an async call.}
+◊li{We obtain exclusive access to the users map and make an async call.}
 ◊li{The canister state is committed right after the call suspends. The user map stays locked.}
-◊li{Other methods trying to access the map will panic until the code issued in step ◊circled-ref[2] completes.}
+◊li{Other methods trying to access the map will panic until the call issued in step ◊circled-ref[2] completes.}
 }
 
 ◊p{
@@ -262,17 +264,17 @@ fn add_user(user: User) {
 
 ◊p{
   We're now ready to appreciate another benefit of ◊a[#:href "#use-threadlocal"]{using ◊code{thread_local!} for global variables}.
-  The code above wouldn't have compiled if we used them.
-  One simply can't await an async function from a closure accessing thread-local variables:
+  The code above wouldn't have compiled if we used ◊code{thread_local!}.
+  One simply can't await an async function from a closure that accesses thread-local variables:
 }
 
 ◊source-code["bad"]{
 #[update]
 async fn refresh_profile(user_id: UserId) {
-    USERS.with(|users| {
+    ◊b{USERS.with}(|users| {
         if let Some(user) = users.borrow_mut().find_mut(user_id) {
-            if let Ok(profile) = async_get_profile(user_id).await {
-                // The closure is synchronous, cannot await ^^^
+            if let Ok(profile) = async_get_profile(user_id)◊b{.await} {
+                ◊b{// The closure is synchronous, cannot await ^^^}
                 // ...
             }
         }
@@ -301,20 +303,20 @@ async fn refresh_profile(user_id: UserId) {
 ◊subsection["canister-interfaces"]{Canister interfaces}
 
 ◊p{
-  Many people enjoy the code-first approach supported by Motoko compiler: one writes an actor with some public functions, and the compiler automatically generates the corresponding Candid file.
+  Many people enjoy the code-first approach supported by Motoko compiler: you write an actor with some public functions, and the compiler automatically generates the corresponding Candid file.
   That's indeed a very useful feature, especially in the early stages of development.
 }
 
 ◊p{
-  I'll try to persuade you that for it should be the other way around for canisters that have clients: Candid file should be the source of truth, not the implementation.
+  I'll try to persuade you that it should be the other way around for canisters that have clients: Candid file should be the source of truth, not the implementation.
 }
 
 ◊advice["candid-file"]{Make your .did file the source of truth.}
 
 ◊p{
-  Candid file is then main resource for people who want to interact with your canister (including your own team members who work on the frontend).
-  It should provide a stable interface, be easy to read and navigate, have good names and plenty of API comments.
-  Which is not something you can autogenerate.
+  Candid file is the main source of documention for people who want to interact with your canister (including your own team members who work on the frontend).
+  The interface should be stable, easy to find, and have plenty of API comments.
+  Which is not something you can get automatically.
 }
 
 ◊source-code["good"]{
@@ -353,6 +355,7 @@ service {
 
 ◊p{
   Just as Rust error types make it easy for API consumers to recover from errors correctly, Candid variants can help your clients handle edge cases gracefully.
+  Using variant types is also the ◊a[#:href "https://sdk.dfinity.org/docs/language-guide/errors.html#_prefer_optionresult_over_exceptions_where_possible"]{preferred way of handling errors in Motoko}.
 }
 ◊source-code["good"]{
 type CreateEntityResult = variant {
@@ -382,7 +385,7 @@ service : {
 ◊p{
   Some people might want to verify that your canister does what it claims to do, especially if it moves tokens around.
   The Internet Computer allows anyone to inspect the SHA256 hash sum of the canister WebAssembly module.
-  However, there are no good tools yet to inspect the source code from which that module was built.
+  However, there are no good tools yet to inspect the source code that module was built from.
   It's developer's responsibility to provide a reproducible way of building a WebAssembly module from the published sources.
 }
 
@@ -396,11 +399,11 @@ service : {
 }
 
 ◊p{
-  It's also helpful if your module is build by a public Continuous Integration system, so that it's easy to follow the steps that produced your module and download the artifact.
+  It's also helpful if your module is built by a public Continuous Integration system, so that it's easy to follow the steps that produced your module and download the artifact.
 }
 ◊p{
   Finally, if your code is still evolving, make it easy for people to correlate module hashes with versions of the source code.
-  For example, if you use GitHub releases, mention the module hash in the release notes.
+  For example, if you use GitHub releases, mention the module hash in release notes.
 }
 ◊p{
   Read ◊a[#:href "https://smartcontracts.org/docs/developers-guide/tutorials/reproducible-builds.html"]{Reproducible Canister Builds} article for more advice on reproducible builds.
@@ -408,7 +411,7 @@ service : {
 
 ◊subsection["upgrades"]{Upgrades}
 
-◊p{A quick reminder on how the upgrades work:}
+◊p{Let me remind you how upgrades work:}
 ◊ol-circled{
 ◊li{The system calls ◊code{pre_upgrade} hook if your canister defines it.}
 ◊li{
@@ -428,16 +431,18 @@ service : {
 ◊advice["plan-for-upgrades"]{Plan for upgrades from day one.}
 ◊p{
   You can live without upgrades during the initial development cycle, but even then loosing state on each deploy quickly becomes annoying.
-  As soon as you deploy your canister to the Internet Computer, the only way to ship new versions of the code is to carefully plan the upgrades.
+  As soon as you deploy your canister to the mainnet, the only way to ship new versions of the code is to carefully plan the upgrades.
 }
 
 ◊advice["version-stable-memory"]{Version your stable memory.}
 ◊p{
   You can view stable memory as a communication channel between the old and the new versions of your canister.
   All good communication protocols are versioned, and yours should be as well.
-  For example, you might want to radically change stable data layout or serialization format in the future.
+  For example, you might want to radically change the stable data layout or serialization format in the future.
   If the stable memory decoding code needs to ◊em{guess} the data format, it tends to become quite messy and brittle.
-  All you need is to think about versioning in advance.
+}
+◊p{
+  Save your nerve cells, think about versioning in advance.
   It's as easy as declaring "the first byte of my stable memory is version number".
 }
 
@@ -477,8 +482,9 @@ assert_eq!(data, expected_value);
   This means that if you serialize your whole state to stable memory in the ◊code{pre_upgrade} hook and your state grows huge, you might not be able to upgrade your canister ever again.
 }
 ◊p{
-  One way of dealing with this issue is avoiding the serialization step in the first place.
-  You can use stable memory as your "disk store", this way you might not need the ◊code{pre_upgrade} hook at all, and your ◊code{post_upgrade} hook will need to burn few cycles.
+  One way of dealing with this issue to avoid the serialization step in the first place.
+  You can use stable memory as your "disk store", updating it a little in every update call.
+  This way you might not need the ◊code{pre_upgrade} hook at all, and your ◊code{post_upgrade} hook will need to burn very few cycles.
 }
 ◊p{
   There are quite a few downsides to this approach, however:
@@ -487,7 +493,7 @@ assert_eq!(data, expected_value);
 ◊li{
   Organizing the flat address space of stable storage into a data structure is a challenge.
   This is especially true for complex states consisting of multiple interlinked data structures.
-  As far as I know, there are no good libraries for that yet, but there are a few people working on addressing this.
+  As far as I know, there are no good libraries for that yet, but there are a few people working on addressing this issue.
 }
 ◊li{
   Changing the layout of your data later on might be infeasible.
@@ -497,19 +503,19 @@ assert_eq!(data, expected_value);
 }
 ◊li{
   You need to think carefully about backward compatibility of your data structures.
-  The latest version of your canister might need to be able to read data written by the version that you installed a few months ago.
+  The latest version of your canister might need to be able to read data written by the version installed a few months ago.
 }
 }
 ◊p{
-  Overall, it's a tough trade-off between scalability and code simplicity.
-  If you plan to store gigabytes of state and upgrade the code, using stable memory as the main storage is a good option.
+  Overall, it's a tough trade-off between service scalability and code simplicity.
+  If you plan to store gigabytes of state and upgrade the code, using stable memory as the main storage is a good option to consider.
 }
 
 ◊subsection["observability"]{Observability}
 
 ◊p{
-  At DFINITY, we use metrics extensively and record a lot of data about our production services.
-  This is indispensable when you're trying to understand behavior of a complex system.
+  At ◊a[#:href "https://dfinity.org/"]{dfinity}, we use metrics extensively and record a lot of data about our production services.
+  This is indispensable when you're trying to understand behavior of a complex distributed system.
   Canisters are not special in this regard.
 }
 
@@ -583,7 +589,6 @@ fn http_request(req: HttpRequest) -> HttpResponse {
 ◊section["references"]{References}
 ◊p{
   Below are a few examples of heavily used Rust canisters you might draw inspiration from.
-  They aren't perfect, many of them made some choices that we now know weren't great.
 }
 ◊ul[#:class "arrows"]{
 ◊li{◊a[#:href "https://github.com/dfinity/internet-identity/tree/main/src/internet_identity"]{Internet Identity Backend} is a good example of a canister that uses stable memory as the main storage, obtains secure randomness from the system, and exposes Prometheus metrics.}
