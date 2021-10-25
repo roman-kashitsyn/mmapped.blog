@@ -1,13 +1,30 @@
 @font-face {
   font-family: "Libertinus Serif";
-  src: local("Libertinum Serif"),
-       local("Linux Libertine O"),
+  font-style:  normal;
+  font-weight: 400;
+  src: local(Libertinum Serif),
+       local(Linux Libertine O),
+       url("static/OTF/LibertinusSerif-Regular.otf") format("opentype"), 
        url("/fonts/LibertinusSerif-Regular.woff2") format("woff2");
+}
+
+@font-face
+{
+  font-family: "Libertinus Serif";
+  font-style:  italic;
+  font-weight: 400;
+  src: local(Libertinus Serif Italic), 
+       url("static/OTF/LibertinusSerif-Italic.otf") format("opentype"), 
+       url("static/WOFF2/LibertinusSerif-Italic.woff2") format("woff2");
 }
 
 @font-face {
   font-family: "Libertinus Sans";
+  font-style: normal;
+  font-weight: 400;
   src: local("Libertinus Sans"),
        local("Linux Biolinum O"),
+       url("/fonts/LibertinusSans-Regular.otf") format("opentype");
        url("/fonts/LibertinusSans-Regular.woff2") format("woff2");
 }
+
