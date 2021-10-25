@@ -1,0 +1,7 @@
+compiled/
+posts/compiled/
+index.html
+about.html
+posts.html
+posts/*.html
+feed.xml
