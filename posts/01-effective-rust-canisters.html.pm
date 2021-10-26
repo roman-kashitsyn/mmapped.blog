@@ -204,7 +204,7 @@ Let's look at an example.
 
 ◊source-code["bad"]{
 #[update]
-fn update_avatar(user_id: UserId, ◊b{pic: ByteBuf} ◊circled-ref[1] ) {
+async fn update_avatar(user_id: UserId, ◊b{pic: ByteBuf} ◊circled-ref[1] ) {
     let key = store_async(user_id, &pic)
                   ◊b{.await}      ◊circled-ref[2]
                   ◊b{.unwrap()};  ◊circled-ref[3]
