@@ -10,5 +10,5 @@
 ◊(define last-post (last all-posts))
 ◊(define last-post-metas (get-metas last-post))
 
-◊h1{◊(select-from-metas 'title last-post-metas)}
+◊h1{◊a[#:href ◊(symbol->string last-post)]{◊(select-from-metas 'title last-post-metas)}}
 ◊@{◊(get-doc last-post)}
