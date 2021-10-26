@@ -5,6 +5,3 @@ COPY . sources
 RUN cd sources && raco pollen reset && cd ..
 RUN raco pollen publish sources blog && rm sources/template.html
 RUN tar cf blog.tar blog && gzip blog.tar
-
-FROM scratch
-COPY --from=builder blog.tar.gz blog.tar.gz
