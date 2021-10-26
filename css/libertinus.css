@@ -4,7 +4,7 @@
   font-weight: 400;
   src: local(Libertinum Serif),
        local(Linux Libertine O),
-       url("static/OTF/LibertinusSerif-Regular.otf") format("opentype"), 
+       url("/fonts/LibertinusSerif-Regular.otf") format("opentype"), 
        url("/fonts/LibertinusSerif-Regular.woff2") format("woff2");
 }
 
@@ -14,8 +14,8 @@
   font-style:  italic;
   font-weight: 400;
   src: local(Libertinus Serif Italic), 
-       url("static/OTF/LibertinusSerif-Italic.otf") format("opentype"), 
-       url("static/WOFF2/LibertinusSerif-Italic.woff2") format("woff2");
+       url("/fonts/LibertinusSerif-Italic.otf") format("opentype"), 
+       url("/fonts/LibertinusSerif-Italic.woff2") format("woff2");
 }
 
 @font-face {
