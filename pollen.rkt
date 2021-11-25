@@ -18,11 +18,11 @@
                   (list (txexpr 'code '() elems)))))
 
 (define (section anchor name)
-  (txexpr* 'h2 '()
+  (txexpr* 'h2 `((id ,anchor))
            (txexpr* 'a `((href ,(string-append "#" anchor))) name)))
 
 (define (subsection anchor name)
-  (txexpr* 'h3 '()
+  (txexpr* 'h3 `((id ,anchor))
            (txexpr* 'a `((href ,(string-append "#" anchor))) name)))
 
 (define (anchor name)
