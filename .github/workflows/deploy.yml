@@ -30,8 +30,9 @@ jobs:
         key: ${{ runner.os }}-racket-8.3
 
     - run: raco pkg install --auto --skip-installed pollen
-    - run: mkdir site && raco pollen publish sources site 
-    - run: rm site/template.html
+    - run: raco pollen render sources
+    - run: raco pollen publish sources site 
+    - run: rm site/template.html site/README.md site/Dockerfile
 
     - name: Publish
       uses: netlify/actions/cli@master
