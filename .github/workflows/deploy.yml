@@ -6,6 +6,7 @@ on:
 name: Publish on Netlify
 jobs:
   publish:
+    environment: 'Netlify Deploy'
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +21,15 @@ jobs:
         variant: 'CS'
         version: '8.3'
 
-    - run: raco pkg install --auto pollen
+    - name: Cache Racket dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/racket
+          ~/.local/share/racket
+        key: ${{ runner.os }}-racket-8.3
+
+    - run: raco pkg install --auto --skip-installed pollen
     - run: mkdir site && raco pollen publish sources site 
     - run: rm site/template.html
 
