@@ -22,6 +22,19 @@
 <h1><a href="/◊|here|">◊(hash-ref metas 'title)</a></h1>
 <hr>
 ◊(->html doc #:splice? #t)
+◊(define posts (children 'posts.html (current-pagetree)))
+◊(define next-page (next here))
+◊(define prev-page (previous here))
+◊when/splice[(member here posts)]{
+<div id="next-prev-nav">
+  ◊when/splice[(and prev-page (member prev-page posts))]{
+    <div id="newer"><a href="/◊|prev-page|"> ← ◊(select-from-metas 'title prev-page)</a></div>
+  }
+  ◊when/splice[(and next-page (member next-page posts))]{
+    <div id="older"><a href="/◊|next-page|">◊(select-from-metas 'title next-page)→ </a></div>
+  }
+</div>
+}
 <hr>
 <footer>
   <span>&copy; Roman Kashitsyn</span>&nbsp;

@@ -150,6 +150,16 @@ pre.bad {
   margin-right: 5px;
 }
 
+#next-prev-nav {
+  min-height: 2em;
+}
+#newer {
+  float: left;
+}
+#older {
+  float: right;
+}
+
 /* light theme */
 a {
   color: #000;
