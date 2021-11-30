@@ -104,6 +104,10 @@ pre.source {
   line-height: 1.2em;
 }
 
+ul.arrows, ol.circled {
+  padding-left: 2.5rem;
+}
+
 ul.arrows > li:before {
   position: absolute;
   margin-left: -2.5rem;
