@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v2
       with:
         path: sources
 
@@ -22,7 +22,7 @@ jobs:
 
     - run: raco pkg install --auto pollen
     - run: mkdir site && raco pollen publish sources site 
-    - run: rm blog/template.html
+    - run: rm site/template.html
 
     - name: Publish
       uses: netlify/actions/cli@master
