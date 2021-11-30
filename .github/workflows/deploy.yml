@@ -1,0 +1,33 @@
+on:
+  push:
+    branches:
+      - 'master'
+
+name: Publish on Netlify
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+      with:
+        path: sources
+
+    - uses: Bogdanp/setup-racket@v1.7
+      with:
+        architecture: 'x64'
+        distribution: 'full'
+        variant: 'CS'
+        version: '8.3'
+
+    - run: raco pkg install --auto pollen
+    - run: mkdir site && raco pollen publish sources site 
+    - run: rm blog/template.html
+
+    - name: Publish
+      uses: netlify/actions/cli@master
+      with:
+        args: deploy --dir=site
+      env:
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
