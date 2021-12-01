@@ -3,8 +3,8 @@
 ◊(define-meta title "A swarm of replicated state machines")
 ◊(define-meta keywords "ic")
 ◊(define-meta summary "Let's look at the Internet Computer through the lens of state machine replication.")
-◊(define-meta doc-publish-date "2021-11-10")
-◊(define-meta doc-updated-date "2021-11-10")
+◊(define-meta doc-publish-date "2021-12-01")
+◊(define-meta doc-updated-date "2021-12-01")
 
 ◊p{
 In this article, we shall view the Internet Computer (IC) through the lens of distributed system design.
@@ -53,7 +53,9 @@ Thus we'll define the state as a data structure containing everything we need to
 }
 ◊dt{Output function}
 ◊dd{Once a replica processed a block, it computes a state tree.
-This tree can be used to inspect the results of the execution and validate the authenticity of those results.}
+This tree can be used to inspect the results of the execution and validate the authenticity of those results.
+The deterministic procedure that constructs a state tree from the state is our output function.
+}
 ◊dt{Initial state}
 ◊dd{
 Each subnet starts its life with no canisters, no messages, and no results to inspect.
@@ -83,21 +85,22 @@ Let's call those persistent snapshots ◊em{checkpoints}.
 
 ◊figure[#:class "grayscale-diagram"]{
 ◊p{◊(embed-svg "images/02-states.svg")}
+◊figcaption{Components of the state machine: blocks as inputs, states, state trees as outputs, and checkpoints.}
 }
 
 ◊section["threshold-signatures"]{Threshold signatures}
 ◊p{
 The state machine relies on ◊em{threshold signatures} for constructing proofs of data authenticity.
-Let's take a quick look at this technology, which lies at the heart of ◊a[#:href "https://dfinity.org/howitworks/chain-key-technology"]{chain key technology}.
+Let's take a quick look at this technology, which lies at the heart of the ◊a[#:href "https://dfinity.org/howitworks/chain-key-technology"]{chain key technology}.
 }
 ◊p{
 The idea is relatively simple: we require nodes to collaborate to construct cryptographic signatures in such a way that ⅔ of the subnet nodes must sign the same data for the signature to be valid.
 The implementation relies on ◊a[#:href "https://en.wikipedia.org/wiki/Public-key_cryptography"]{Public-key cryptography}.
 }
 ◊p{
-Imagine that we have a box with an asymmetric lock: only the owner of a special secret key can lock it.
+Imagine that we have a box with an asymmetric lock: only the owner of a special secret key can lock the box.
 The key opening the box is public.
-If you receive a locked box, open it and get a letter, you can be sure that the person who put the letter into that box had the private key.
+If you receive a locked box, open it with the public key, and get a letter, you can be sure that the person who put the letter into that box had the private key.
 This is analogous to how simple digital signatures work.
 Note, however, that our analogy is imperfect: unlike physical locked boxes, digital signatures can be copied perfectly.
 }
@@ -110,6 +113,7 @@ One possible arrangement of key sets is depicted below.
 
 ◊figure[#:class "grayscale-diagram"]{
 ◊p{◊(embed-svg "images/02-key-shares.svg")}
+◊figcaption{One way to distribute sets of keys among four parties to implement threshold signatures.}
 }
 
 ◊p{
@@ -119,7 +123,7 @@ If you get a fully locked box, you can be sure that the majority of the particip
 
 ◊p{
 The sets of keys in our analogy are called ◊em{key shares}.
-The public set of keys opening all the locks is called ◊em{subnet key} or ◊em{chain key}.
+The public set of keys opening all the locks is called ◊em{subnet key}.
 Replicas use a secure protocol to distribute key shares among the nodes, but we won't dive into details of this protocol.
 }
 
@@ -129,53 +133,55 @@ In this article we'll also use term ◊em{certification} of some value X, which 
 
 ◊section["state-trees"]{State trees}
 ◊p{
-The procedure that we called a transition function is complex, but all its details aren't very important for our discussion.
+The transition function is complex, but its details aren't very important for our discussion.
 We can treat block processing as a black box.
-Let's now take a look at how we get the data out of the state machine.
+Let's now see how we get the data out of the state machine.
 }
 
 ◊p{
-There are quite a few bits of information that we want to get back from the state machine, for example:
+There are quite a few bits of information that we want to access, for example:
 }
 ◊ul[#:class "arrows"]{
 ◊li{Replies to user requests.}
 ◊li{Canister metadata, like module hashes or certified data entries.}
-◊li{Messages that cannot be processed by this subnet and need to be routed to other state machines.}
+◊li{Messages that need to be routed to other state machines (inter-subnet messages).}
 }
 ◊p{
-Furthermore, because we cannot trust any particular node, we want to have some authenticity guarantees for the data we get back.
-Sounds easy: compute all interesting bits hash of the state, collect a threshold signature on it, and use the signature as a proof of state authenticity.
+Furthermore, since we cannot trust any particular node, we want to have some authenticity guarantees for the data we get back.
+Sounds easy: hash all the relevant bits of the state, collect a threshold signature on that hash, and use the signature as a proof of state authenticity.
+Problem solved?
 }
 ◊p{
 But how do can we validate a single request status if we have a signature on the full state?
 Collecting a separate signature for each request would solve the problem, but the cost of this approach is unacceptable from the performance point of view.
 }
 ◊p{
-Wouldn't it be great to be able to "zoom" into different parts of the state for different clients, while still having only a single hash to sign?
+Wouldn't it be great to be able to "zoom" into different parts of the state to produce replies for different clients, while still having only a single hash to sign?
 Enter state trees.
 }
 
 
 ◊figure[#:class "grayscale-diagram"]{
 ◊p{◊(embed-svg "images/02-state-tree.svg")}
+◊figcaption{The logical structure of a state tree.}
 }
 
 ◊p{
 State tree is a data structure that contains all outputs of our state machine in a form of a ◊a[#:href "https://en.wikipedia.org/wiki/Merkle_tree"]{merkle tree}.
-Once the gears of the execution stopped, the system computes the root hash of the state tree corresponding to the new state, initiates the process of certification for that hash, and moves on to the next block.
+Once the gears of the execution stopped, the system computes the root hash of the state tree corresponding to the newly computed state, initiates the process of certification for that hash, and moves on to the next block.
 }
 
 ◊subsection["tree-lookup"]{Lookup}
 ◊p{
 Let's look at an example to see how the state tree does its magical zooming.
 Assume that you sent a request with id ◊code{1355...48de} to the IC and you want to get back the reply.
-As we now know, the system will put the reply into a state tree, so let's make a ◊code{read_state} request with path ◊code{"/request_status/1355...48de/reply"}.
+As we now know, the system will put the reply into a state tree, so let's make a ◊a[#:href "https://smartcontracts.org/docs/interface-spec/index.html#http-read-state"]{◊code{read_state}} request with path ◊code{"/request_status/1355...48de/reply"}.
 }
-◊p{The replica processes your request in the following way}
+◊p{The replica processes our request in the following way}
 ◊ol-circled{
-  ◊li{Check that the caller has permissions to look at the paths listed in the ◊code{read_state} request.}
+  ◊li{Check that the caller has permission to look at the paths listed in the ◊code{read_state} request.}
   ◊li{Get the latest certified state tree.}
-  ◊li{Make the result tree that includes all the paths from the ◊code{read_state} request, with all the pruned branches replaced by their hashes.}
+  ◊li{Build the result tree that includes all the paths from the ◊code{read_state} request, with all the pruned branches replaced by their hashes.}
   ◊li{Combine the result tree with the threshold signature to form a full certified reply.}
 }
 ◊p{
@@ -184,6 +190,7 @@ The tree that you'll get back will look something like this:
 
 ◊figure[#:class "grayscale-diagram"]{
 ◊p{ ◊(embed-svg "images/02-pruned-state-tree.svg") }}
+◊figcaption{The logical structure of a tree containing a response to an ingress message.}
 
 ◊p{
 Even though the pruned tree is much smaller than the full state tree, both trees have exactly the same root hash.
@@ -194,9 +201,9 @@ So we can validate the authenticity of the pruned tree using the threshold signa
 
 ◊subsection["state-artifact"]{State as an artifact}
 ◊p{
-As we discussed in the ◊a[#:href "#checkpoints"]{checkpoints} section, a replica periodically persists snapshots of its state to disk.
+As we discussed in the ◊a[#:href "#checkpoints"]{checkpoints} section, replicas periodically persist snapshots of its state to disk.
 The main purpose of these snapshots is to speed up state recovery.
-If a replica was out for a brief period of time, it can use its own checkpoint to recover more quickly than replaying all the blocks starting from genesis.
+If a replica was out for a brief period of time, it can use its own checkpoint to recover more quickly than replaying all the blocks starting from the genesis.
 Load the checkpoint, replay a few blocks, and you're ready to rock.
 There is a more interesting case, however: a healthy replica can help other replicas catch up by sending them a recent checkpoint.
 }
@@ -205,7 +212,7 @@ Replicas in a subnet communicate by exchanging ◊em{artifacts} using a peer-to-
 Most of these artifacts (e.g., user ingress messages, random beacons, state certifications) are relatively small, up to a few megabytes in size.
 But the machinery for artifact transfer is quite general: the protocol supports fetching arbitrary large artifacts by slicing them into chunks, provided that there is a way to authenticate each chunk independently.
 Furthermore, multiple chunks can be fetched in parallel from multiple peers.
-If this reminded you of ◊a[#:href "https://en.wikipedia.org/wiki/BitTorrent"]{BitTorrent}, you got the right idea.
+Sounds a lot like ◊a[#:href "https://en.wikipedia.org/wiki/BitTorrent"]{BitTorrent}, isn't it?
 }
 ◊p{
 Before advertising a checkpoint, replica computes a ◊em{manifest} for that checkpoint.
@@ -213,17 +220,18 @@ Manifest is an inventory of files constituting a checkpoint.
 Files are sliced into chunks, and the manifest enumerates paths, sizes and cryptographic hashes of every file and every chunk of each file.
 In our BitTorrent analogy, manifest plays a role of a ◊a[#:href "https://en.wikipedia.org/wiki/Torrent_file"]{.torrent file}.
 If we have a manifest, we know for sure how much data we need to fetch to construct a checkpoint, and how to arrange this data.
-Hashes of file chunks in the manifest allow us to validate each chunk independently before we put it to disk.
-Replicas use the hash of the manifest in artifact advertisements they send through the peer-to-peer network.
+Hashes of file chunks in the manifest allow us to validate each chunk independently before we put it on disk.
+Replicas use the hash of the manifest itself when they advertise a checkpoint in the peer-to-peer network.
 }
 
 ◊figure[#:class "grayscale-diagram"]{
 ◊p{ ◊(embed-svg "images/02-checkpoint-artifact.svg") }
+◊figcaption{A replica advertising a checkpoint as an artifact.}
 }
 
 ◊subsection["trigger-transfer"]{Triggering state transfer}
 ◊p{
-Let's assume that we add a new replica to a subnet, and that replica needs to fetch the latest checkpoint.
+Let's assume that we have a replica that needs to fetch the latest checkpoint.
 It listens to the peers, and discovers a few state artifacts with different hashes advertised by different peers.
 How does our poor replica decide which state it needs to fetch?
 }
@@ -243,10 +251,10 @@ Consensus sees a catch-up package for state 100 with a valid threshold signature
 Consensus asks the state machine "Hey, what's your state height?".
 }
 ◊li{State machine: "It's nine. Why?".}
-◊li{Consensus: "We're missing out. Fetch a checkpoint for state 100, but only if it has root hash ◊code{H◊sub{100}}."}
+◊li{Consensus: "We're missing out. Fetch the checkpoint for state 100, but only if it has root hash ◊code{H◊sub{100}}."}
 ◊li{State machine: "Sure, I'm on it." The state machine starts looking for state artifact advertisements with a matching hash.}
 }
-◊p{Yes, the consensus module can be a bit bossy sometimes.}
+◊p{Yes, the consensus module can be a bit bossy sometimes, but it always acts with the best of intentions.}
 
 ◊subsection["incremental-sync"]{Fetching states incrementally}
 ◊p{
@@ -266,10 +274,11 @@ Why waste network bandwidth and fetch data you already have?
 ◊p{When there are no more chunks to fetch, checkpoint 100 is complete, and the replica is ready to go.}
 ◊figure[#:class "grayscale-diagram"]{
 ◊p{◊(embed-svg "images/02-state-sync.svg")}
+◊figcaption{A replica constructing a fresh checkpoint by re-using existing chunks and fetching the missing ones.}
 }
 ◊p{
-As you can see, the state synchronization procedure is incremental: if the node was offline for a brief period of time, it only needs to fetch data that actually changed in the meantime.
-If the replica that is trying to catch up has no checkpoints at all, it will have to fetch all the chunks.
+As you can see, the state transfer procedure is incremental: if the catching-up replica was offline for a brief period of time, it needs to fetch only the data that actually changed in the meantime.
+Of course, a replica that has no checkpoints at all will have to fetch all the chunks to construct its first checkpoint.
 }
 
 ◊section["conclusion"]{Conclusion}

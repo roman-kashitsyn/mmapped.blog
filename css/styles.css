@@ -147,6 +147,11 @@ pre.bad {
 figure p {
   text-align: center;
 }
+figcaption {
+  font-style: italic;
+  text-align: center;
+  font-size: 0.8em;
+}
 
 .github-link::before {
   background-size: 1em 1em;
