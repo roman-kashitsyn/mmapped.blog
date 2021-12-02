@@ -9,7 +9,7 @@ on:
         type: string
 
 name: Render website from source
-job:
+jobs:
   render_site:
     runs-on: ubuntu-latest
 
