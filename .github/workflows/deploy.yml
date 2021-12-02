@@ -6,7 +6,7 @@ on:
 name: Publish on Netlify
 jobs:
   publish:
-    environment: 'Netlify Deploy'
+    environment: 'Netlify Deploy Prod'
     runs-on: ubuntu-latest
 
     steps:
@@ -14,30 +14,15 @@ jobs:
       with:
         path: sources
 
-    - uses: Bogdanp/setup-racket@v1.7
+    - uses: roman-kashitsyn/mmapped.blog/.github/workflows/render-site.yml@main
       with:
-        architecture: 'x64'
-        distribution: 'full'
-        variant: 'CS'
-        version: '8.3'
-
-    - name: Cache Racket dependencies
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cache/racket
-          ~/.local/share/racket
-        key: ${{ runner.os }}-racket-8.3
-
-    - run: raco pkg install --auto --skip-installed pollen
-    - run: raco pollen render sources
-    - run: raco pollen publish sources site 
-    - run: rm site/template.html site/README.md site/Dockerfile
+        source_dir: sources
+        output_dir: site
 
     - name: Publish
       uses: netlify/actions/cli@master
       with:
-        args: deploy --dir=site
+        args: deploy --dir=site --prod
       env:
         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
