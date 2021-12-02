@@ -2,7 +2,7 @@
 
 ◊(define-meta title "A swarm of replicated state machines")
 ◊(define-meta keywords "ic")
-◊(define-meta summary "Let's look at the Internet Computer through the lens of state machine replication.")
+◊(define-meta summary "A glance on the Internet Computer replicas through the lens of state machine replication.")
 ◊(define-meta doc-publish-date "2021-12-01")
 ◊(define-meta doc-updated-date "2021-12-01")
 
@@ -16,8 +16,8 @@ We shall take a close look at some design choices that make the IC fast, scalabl
 
 ◊p{
 Before we dive into the internals of the protocol, let's first define the ◊a[#:href "https://en.wikipedia.org/wiki/Finite-state_machine"]{state machine} that we'll be dealing with.
-Nodes participating in the Internet Computer are grouped into units called ◊em{subnets}.
-Nodes in the same subnet run their own instance of the consensus protocol.
+Nodes participating in the Internet Computer are grouped into units called ◊em{subnet blockchains}, or simply ◊em{subnets}.
+Nodes in the same subnet run their own instance of the core Internet Computer Protocol (i.e., they form an independent peer-to-peer network and reach consensus independently from other subnets).
 We'll model as a state machine the computation that nodes in the same subnet perform.
 }
 ◊p{
@@ -88,49 +88,6 @@ Let's call those persistent snapshots ◊em{checkpoints}.
 ◊figcaption{Components of the state machine: blocks as inputs, states, state trees as outputs, and checkpoints.}
 }
 
-◊section["threshold-signatures"]{Threshold signatures}
-◊p{
-The state machine relies on ◊em{threshold signatures} for constructing proofs of data authenticity.
-Let's take a quick look at this technology, which lies at the heart of the ◊a[#:href "https://dfinity.org/howitworks/chain-key-technology"]{chain key technology}.
-}
-◊p{
-The idea is relatively simple: we require nodes to collaborate to construct cryptographic signatures in such a way that ⅔ of the subnet nodes must sign the same data for the signature to be valid.
-The implementation relies on ◊a[#:href "https://en.wikipedia.org/wiki/Public-key_cryptography"]{Public-key cryptography}.
-}
-◊p{
-Imagine that we have a box with an asymmetric lock: only the owner of a special secret key can lock the box.
-The key opening the box is public.
-If you receive a locked box, open it with the public key, and get a letter, you can be sure that the person who put the letter into that box had the private key.
-This is analogous to how simple digital signatures work.
-Note, however, that our analogy is imperfect: unlike physical locked boxes, digital signatures can be copied perfectly.
-}
-◊p{
-Threshold signatures add a slight twist to the setup: let's say we want four parties to collaborate on a document, and we want to be sure that at least three of those parties agreed on the contents.
-We construct a fancier box that has six locks on it and distribute sets of locking keys among the participants.
-Each participant gets three keys in such a way that at least three parties have to use their sets of keys for the box to be fully locked.
-One possible arrangement of key sets is depicted below.
-}
-
-◊figure[#:class "grayscale-diagram"]{
-◊p{◊(embed-svg "images/02-key-shares.svg")}
-◊figcaption{One way to distribute sets of keys among four parties to implement threshold signatures.}
-}
-
-◊p{
-As before, anyone can unlock the box.
-If you get a fully locked box, you can be sure that the majority of the participants agreed on the contents of the document inside that box.
-}
-
-◊p{
-The sets of keys in our analogy are called ◊em{key shares}.
-The public set of keys opening all the locks is called ◊em{subnet key}.
-Replicas use a secure protocol to distribute key shares among the nodes, but we won't dive into details of this protocol.
-}
-
-◊p{
-In this article we'll also use term ◊em{certification} of some value X, which means collecting a threshold signature for a cryptographic hash of X (or the root hash of a merkle tree containing X).
-}
-
 ◊section["state-trees"]{State trees}
 ◊p{
 The transition function is complex, but its details aren't very important for our discussion.
@@ -144,11 +101,11 @@ There are quite a few bits of information that we want to access, for example:
 ◊ul[#:class "arrows"]{
 ◊li{Replies to user requests.}
 ◊li{Canister metadata, like module hashes or certified data entries.}
-◊li{Messages that need to be routed to other state machines (inter-subnet messages).}
+◊li{Messages for other state machines (inter-subnet messages).}
 }
 ◊p{
 Furthermore, since we cannot trust any particular node, we want to have some authenticity guarantees for the data we get back.
-Sounds easy: hash all the relevant bits of the state, collect a threshold signature on that hash, and use the signature as a proof of state authenticity.
+Sounds easy: hash all the relevant bits of the state, collect a ◊a[#:href "https://en.wikipedia.org/wiki/Threshold_cryptosystem"]{threshold signature} on that hash, and use the signature as a proof of state authenticity.
 Problem solved?
 }
 ◊p{
@@ -167,8 +124,8 @@ Enter state trees.
 }
 
 ◊p{
-State tree is a data structure that contains all outputs of our state machine in a form of a ◊a[#:href "https://en.wikipedia.org/wiki/Merkle_tree"]{merkle tree}.
-Once the gears of the execution stopped, the system computes the root hash of the state tree corresponding to the newly computed state, initiates the process of certification for that hash, and moves on to the next block.
+The state tree is a data structure that contains all outputs of our state machine in a form of a ◊a[#:href "https://en.wikipedia.org/wiki/Merkle_tree"]{merkle tree}.
+Once the gears of the execution stopped, the system computes the root hash of the state tree corresponding to the newly computed state, starts collecting a threshold signature for that hash, and moves on to the next block.
 }
 
 ◊subsection["tree-lookup"]{Lookup}
@@ -180,7 +137,7 @@ As we now know, the system will put the reply into a state tree, so let's make a
 ◊p{The replica processes our request in the following way}
 ◊ol-circled{
   ◊li{Check that the caller has permission to look at the paths listed in the ◊code{read_state} request.}
-  ◊li{Get the latest certified state tree.}
+  ◊li{Get the latest certified state tree (i.e. the state tree with a complete threshold signature on its root hash).}
   ◊li{Build the result tree that includes all the paths from the ◊code{read_state} request, with all the pruned branches replaced by their hashes.}
   ◊li{Combine the result tree with the threshold signature to form a full certified reply.}
 }
@@ -237,7 +194,7 @@ How does our poor replica decide which state it needs to fetch?
 }
 
 ◊p{
-As you might have guessed, the consensus subsystem armed with ◊a[#:href "#threshold-signatures"]{threshold signatures} comes to the rescue again.
+As you might have guessed, the consensus subsystem armed with ◊a[#:href "https://en.wikipedia.org/wiki/Threshold_cryptosystem"]{threshold signatures} comes to the rescue again.
 Replicas gather a threshold signature on a full state hash and use that signature as a proof of checkpoint authenticity.
 The result is an artifact containing a state height, a full state hash, and a threshold signature.
 We'll call this artifact a ◊em{catch-up package}.
@@ -250,7 +207,7 @@ The interaction between the replica consensus module and the state machine is so
 Consensus sees a catch-up package for state 100 with a valid threshold signature and the state hash is ◊code{H◊sub{100}}.
 Consensus asks the state machine "Hey, what's your state height?".
 }
-◊li{State machine: "It's nine. Why?".}
+◊li{State machine: "It's nine. Why?"}
 ◊li{Consensus: "We're missing out. Fetch the checkpoint for state 100, but only if it has root hash ◊code{H◊sub{100}}."}
 ◊li{State machine: "Sure, I'm on it." The state machine starts looking for state artifact advertisements with a matching hash.}
 }
@@ -287,7 +244,7 @@ In this article, we
 }
 ◊ul[#:class "arrows"]{
 ◊li{◊a[#:href "#state-machine"]{Abstracted} the complexity of block execution into a transition function of a finite state machine.}
-◊li{Marveled at how ◊a[#:href "#state-trees"]{state trees} and ◊a[#:href "#threshold-signatures"]{threshold signatures} allow clients retrieve authentic replies by consulting only one replica.}
+◊li{Marveled at how ◊a[#:href "#state-trees"]{state trees} and ◊a[#:href "https://en.wikipedia.org/wiki/Threshold_cryptosystem"]{threshold signatures} allow clients retrieve authentic replies by consulting only one replica.}
 ◊li{Learned how replicas can their transfer states ◊a[#:href "#incremental-sync"]{quickly} and ◊a[#:href "#trigger-transfer"]{securely}.}
 }
 ◊p{
