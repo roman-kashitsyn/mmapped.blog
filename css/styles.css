@@ -9,6 +9,10 @@ body {
   font-weight: bold;
 }
 
+dt {
+  font-style: italic;
+}
+
 ul.posts {
   padding-left: 0px;
 }
@@ -140,6 +144,15 @@ pre.bad {
   background-color: #ffe6d8;
 }
 
+figure p {
+  text-align: center;
+}
+figcaption {
+  font-style: italic;
+  text-align: center;
+  font-size: smaller;
+}
+
 .github-link::before {
   background-size: 1em 1em;
   width: 1em;
@@ -192,5 +205,9 @@ pre.bad {
 
 .github-link::before {
   background-image: url(/images/GitHub-Mark-Light-32px.png);
+}
+
+figure.grayscale-diagram svg {
+  filter: invert(100%);
 }
 }
