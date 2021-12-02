@@ -150,7 +150,7 @@ figure p {
 figcaption {
   font-style: italic;
   text-align: center;
-  font-size: 0.8em;
+  font-size: smaller;
 }
 
 .github-link::before {
