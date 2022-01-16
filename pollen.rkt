@@ -1,9 +1,12 @@
 #lang racket
 
 (require pollen/core
+         pollen/setup
+         xml
          txexpr)
 
 (provide source-code
+         embed-svg
          section
          subsection
          advice
@@ -11,6 +14,9 @@
          circled
          circled-ref
          ol-circled)
+
+(define (embed-svg path)
+  (string->xexpr (file->string (build-path (current-project-root) path))))
 
 (define (source-code attr . elems)
   (txexpr* 'div '((class "source-countainer"))
