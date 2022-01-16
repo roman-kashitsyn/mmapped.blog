@@ -12,7 +12,7 @@
 
 ◊p{
   I was lucky enough to see how ◊a[#:href "https://github.com/dfinity/ic"]{the Internet Computer (IC) Rust codebase} has grown from a few files to almost 350,000 lines of code within just about two years.
-  We learned that code organization that works just fine for relatively small projects might start dragging you down over time.
+  The team learned that code organization that works just fine for relatively small projects might start dragging you down over time.
   In this article, we shall evaluate code organization options that Rust gives us and look at how to use them well.
 }
 
@@ -170,7 +170,7 @@ In contrast, the package dependency graph must be acyclic.
   Generally, there are two ways to break a circular dependency:
     (1) to move common definitions into another package, or
     (2) to merge two packages into a single one.
-  We didn't want to merge interfaces with the replicated state.
+  Merging interfaces with the replicated state was not an option.
   So we conceived ◊code{types} to contain types that both ◊code{interfaces} and ◊code{replicated_state} depend on.
 }
 ◊p{
@@ -215,7 +215,7 @@ trait StateManager {
 ◊advice["dyn-polymorphism"]{Prefer runtime polymorphism.}
 
 ◊p{
-  One of the big questions we had when we were designing the component architecture is how to connect components.
+  One of the big questions that the team had when we were designing the component architecture is how to connect components.
   Should we pass instances of components around as ◊code{Arc<dyn StateManager>} (runtime polymorphism) or rather as generic arguments (compile-time polymorphism)?
 }
 
@@ -241,7 +241,7 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
 
 ◊p{
   Compile-time polymorphism is an indispensable tool, but a heavy-weight one.
-  We found that the code becomes easier to write, read, and understand if we use runtime polymorphism for composition.
+  Most team members also found that the code becomes easier to write, read, and understand when we use runtime polymorphism for composition.
   Delaying work until runtime also helps with compile times.
 }
 
