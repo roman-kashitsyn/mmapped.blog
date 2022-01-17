@@ -128,7 +128,7 @@ In contrast, the package dependency graph must be acyclic.
 
 ◊figure[#:class "grayscale-diagram"]{
   ◊p{◊(embed-svg "images/03-dep-hubs.svg")}
-  ◊figcaption{A small subgraph of the Internet Computer project package dependency graph. ◊code{types} and ◊code{interfaces} are type-one dependency hubs, ◊code{replica} is a type-two dependency hub, ◊code{test-utils} is both type-one and type-two hub.}
+  ◊figcaption{A small subgraph of the Internet Computer project package dependency graph. ◊code{types} and ◊code{interfaces} are type-one dependency hubs, ◊code{replica} is a type-two dependency hub, ◊code{test-utils} is both a type-one and a type-two hub.}
 }
 
 ◊p{
