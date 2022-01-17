@@ -109,6 +109,9 @@ In contrast, the package dependency graph must be acyclic.
 
 ◊section["code-organization-advice"]{Advice on code organization}
 
+As usual, do not follow this advice blindly.
+Check if it makes your code structure clearer and your compilation times shorter.
+
 ◊advice["avoid-dependency-hubs"]{Split dependency hubs.}
 
 ◊p{There are two types of dependency hubs:}
@@ -317,9 +320,10 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
 ◊advice["dedup-dependencies"]{Deduplicate dependencies.}
 
 ◊p{
-  Cargo makes it easy to add dependencies to your code, but it does not provide any tools to consolidate and maintain them in a large workspace.
+  Cargo makes it easy to add dependencies to your code, but it provides few tools to consolidate and maintain those dependencies in a large workspace.
   At least until cargo developers implement ◊a[#:href "https://github.com/rust-lang/rfcs/pull/2906"]{RFC 2906}.
-  Until then, every time you bump a version of a dependency, try to do it consistently in all the packages in your workspace.
+  Until then, every time you bump a dependency version, try to do it consistently in all the packages in your workspace.
+  ◊a[#:href "https://doc.rust-lang.org/cargo/commands/cargo-update.html"]{Cargo update} can help you with that.
 }
 ◊p{
   The same applies to package features: if you use the same dependency with different feature sets in different packages, that dependency needs to be compiled twice.
