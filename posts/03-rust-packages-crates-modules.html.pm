@@ -7,7 +7,9 @@
 ◊(define-meta doc-updated-date "2022-01-20")
 
 ◊blockquote{
-  Good decisions come from experience. Experience comes from making bad decisions.
+  ◊p{
+    Good decisions come from experience. Experience comes from making bad decisions.
+  }
 }
 
 ◊p{
@@ -24,7 +26,10 @@ I believe one of the reasons for that is that the term ◊em{crate} is somewhat 
 Even the first edition of the venerable ◊a[#:href "https://doc.rust-lang.org/1.25.0/book/"]{The Rust Programming Language} book contained the following misleading passage
 }
 ◊blockquote[#:cite "https://doc.rust-lang.org/1.25.0/book/first-edition/crates-and-modules.html"]{
-Rust has two distinct terms that relate to the module system: ‘crate’ and ‘module’. A crate is synonymous with a ‘library’ or ‘package’ in other languages. Hence “Cargo” as the name of Rust’s package management tool: you ship your crates to others with Cargo. Crates can produce an executable or a library, depending on the project.
+◊p{
+  Rust has two distinct terms that relate to the module system: ‘crate’ and ‘module’. A crate is synonymous with a ‘library’ or ‘package’ in other languages.
+  Hence “Cargo” as the name of Rust’s package management tool: you ship your crates to others with Cargo. Crates can produce an executable or a library, depending on the project.
+}
 }
 ◊p{
 Wait a minute, `library` and `package` are different things, aren't they?
@@ -296,7 +301,7 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
   }
 }
 ◊p{
-  The official documentation of the venerable ◊a[#:href "https://crates.io/crates/slog"]{slog} package also recommends passing loggers explicitly:
+  The official documentation of the venerable ◊a[#:href "https://crates.io/crates/slog"]{slog} package also ◊a[#:href "https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around"]{recommends passing loggers explicitly}:
 }
 ◊blockquote[#:cite "https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around"]{
   ◊p{
