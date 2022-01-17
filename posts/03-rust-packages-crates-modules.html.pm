@@ -208,7 +208,7 @@ trait StateManager {
 }
 
 ◊p{
-  This little trick safes us a lot of compilation time:
+  This little trick saves us a lot of compilation time:
   Now we do not need to recompile the ◊code{interfaces} package and its numerous dependencies every time we add a new field to the replicated state.
 }
 
@@ -265,7 +265,7 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
 }
 ◊li{
   Cargo runs tests in parallel by default.
-  If you're not careful with how you're passing loggers between threads, your test output might become an untangeable mess.
+  If you're not careful with how you're passing loggers between threads, your test output might become an intangible mess.
   Especially if your code uses loggers in background threads.
   Passing loggers explicitly eliminates that problem.
 }
