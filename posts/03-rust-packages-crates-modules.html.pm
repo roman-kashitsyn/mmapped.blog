@@ -260,7 +260,7 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
   That's a very good question.
   I would ask the same thing two years ago!
   Sure, global variables are ◊em{bad}, but my previous experience suggested that loggers and metrics are somehow special.
-  Oh well, there aren't after all.
+  Oh well, they aren't after all.
 }
 ◊p{
   The usual problems with implicit state dependencies are especially prominent in Rust.
