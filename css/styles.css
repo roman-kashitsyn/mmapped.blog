@@ -28,6 +28,13 @@ nav ul {
   padding: 0px;
 }
 
+blockquote {
+  font-size: 90%;
+  margin-left: 0px;
+  padding-left: 1em;
+  border-left: 4px solid;
+}
+
 nav li {
   display: inline;
   margin: 0 1.5em 0 0;
@@ -183,6 +190,9 @@ body {
 .github-link::before {
   background-image: url(/images/GitHub-Mark-32px.png);
 }
+blockquote {
+  color: #3b4252;
+}
 /* end of light theme */
 
 @media(prefers-color-scheme: dark) {
@@ -193,6 +203,10 @@ a {
 body {
   color: #eceff4;
   background-color: #2e3440;
+}
+
+blockquote {
+  color: #e5e9f0;
 }
 
 pre.good {
