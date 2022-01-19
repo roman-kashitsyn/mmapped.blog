@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/0bdb7e4b-61b1-4538-8727-39e2512fe945/deploy-status)](https://app.netlify.com/sites/infallible-khorana-f0cacc/deploys)
+
 # mmap(Blog)
 
 This repository contains the full source of my personal blog hosted at https://mmapped.blog/.
