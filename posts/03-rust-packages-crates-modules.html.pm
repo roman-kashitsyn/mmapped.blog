@@ -640,3 +640,10 @@ fn test_foo_frobnication() {
   Rust's module system is very convenient, but packing many modules into a single crate tend to have negative effect on the build speeds.
   Our experience suggests that factoring the system into many cohesive packages instead is a better approach in most cases.
 }
+
+◊section["links"]{Links}
+
+◊ul[#:class "arrows"]{
+  ◊li{◊a[#:href "https://www.reddit.com/r/rust/comments/s818q3/blog_post_rust_at_scale_packages_crates_and/"]{Discussion on r/rust}}
+  ◊li{A fantastic series of articles by ◊a[#:href "https://github.com/matklad"]{Alexey Kladov} titled ◊a[#:href "https://matklad.github.io/2021/09/05/Rust100k.html"]{One Hundred Thousand Lines of Rust}.}
+}
