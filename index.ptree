@@ -3,6 +3,7 @@
 index.html
 
 ◊posts.html{
+  posts/04-square-joy-trapped-rain-water.html
   posts/03-rust-packages-crates-modules.html
   posts/02-ic-state-machine-replication.html
   posts/01-effective-rust-canisters.html
