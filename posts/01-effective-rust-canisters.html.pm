@@ -360,7 +360,7 @@ service {
 ◊source-code["good"]{
 type CreateEntityResult = variant {
   Ok  : record { entity_id : EntityId; };
-  Err : variant {
+  Err : opt variant {
     EntityAlreadyExists : null;
     NoSpaceLeftInThisShard : null;
   }
@@ -376,6 +376,59 @@ service : {
   There is probably not much benefit from adding error variants like ◊code{InvalidArgument} or ◊code{Unauthorized}.
   There is no meaningful way to recover from such errors programmatically.
   So rejecting malformed, invalid, or unauthorized requests is probably the right thing to do in most cases.
+}
+
+◊p{
+  So you decided to follow the advice and represented your errors as a ◊code{variant}.
+  How do you add more error constructors as your interface evolves?
+}
+
+◊advice["candid-variant-extensibility"]{Make your variant types extensible.}
+
+◊p{
+  Candid variant types are tricky to evolve in a backward-compatible manner.
+  One approach is to make the variant field optional:
+}
+
+◊source-code["good"]{
+type CreateEntityResult = variant {
+  Ok : record { /* */ };
+  Err : ◊b{opt} variant { /* * /}
+};
+}
+
+◊p{
+  If some clients of your canister use an outdated version of your interface, the Candid decoder could replace unknown constructors with a ◊code{null}.
+  This approach has two main issues:
+}
+◊ul[#:class "arrows"]{
+  ◊li{The Candid decoder does not yet implement this magic (see ◊a[#:href "https://github.com/dfinity/candid/issues/295"]{dfinity/candid#295}).}
+  ◊li{Diagnosing a problem if all you see is a ◊code{null} might be a daunting task.}
+}
+
+◊p{
+  An alternative is to make your error type immutable and rely on a loosely typed catch-all case (and documentation) for extensibility.
+}
+
+◊source-code["good"]{
+type CreateEntityResult = variant {
+  Ok : record { /* */ };
+  Err : variant {
+    EntityAlreadyExists : null;
+    NoSpaceLeftInThisShard : null;
+    // Currently defined errors
+    // ========================
+    // error_code = 401 : Unauthorized.
+    // error_code = 429 : Too many requests.
+    // error_code = 503 : Canister overloaded.
+    Other : record { error_code : nat; error_message : text }
+  }
+};
+}
+
+◊p{
+  If you follow this approach, your clients will see a nice textual description if they experience a newly introduced error.
+  Unfortunately, handing generic errors programmatically is more cumbersome and error-prone compared to well-typed extensible variants.
 }
 
 ◊section["infra"]{Infrastructure}
@@ -473,6 +526,30 @@ assert_eq!(data, expected_value);
 ◊p{
   This should give you some confidence that if you upgrade your canister, the state is preserved, and the users can't tell if there was an upgrade or not.
   Of course, it's also a good idea to test that your canister can be safely upgraded from the previous version.
+}
+
+◊advice["upgrade-hook-panics"]{Do not trap in the ◊code{pre_upgrade} hook.}
+
+◊p{
+  The ◊code{pre_upgrade} and ◊code{post_upgrade} hooks appear to be symmetrical.
+  If either of these hooks traps, the canister goes back to the pre-upgrade state.
+  However, this symmetry is deceptive.
+}
+
+◊p{
+  If your ◊code{pre_upgrade} hook succeeds, but the ◊code{post_upgrade} hook traps, the hope is not lost.
+  You can figure out what went wrong and build another version of your canister that will not fail on the upgrade.
+  You might need to devise a complex multi-stage upgrade procedure, but at least there is a way out.
+}
+
+◊p{
+  On the other hand, if your ◊code{pre_upgrade} hook traps, there is not much you can do about it.
+  Changing canister behavior needs an upgrade, but that is what a broken ◊code{pre_upgrade} hook prevents you from doing.
+}
+
+◊p{
+  The ◊code{pre_upgrade} hook will not let you down if you do not have one.
+  The following advice will help you to get rid of that hook.
 }
 
 ◊advice["stable-memory-main"]{Consider using stable memory as your main storage.}
