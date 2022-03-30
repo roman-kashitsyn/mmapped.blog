@@ -57,6 +57,12 @@
 }
 
 ◊section["record-your-observations"]{Record your observations}
+◊blockquote{
+  First we have an observation, then we have numbers that we measure, then we have a law which summarizes all the numbers.
+  But the real glory of science is that we can find a way of thinking such that the law is evident.
+  ◊br{}
+  [Richard Feynman, The Feynman Lectures on Physics, Volume I, Mainly Mechanics, Radiation, and Heat]
+}
 
 ◊p{
   It is only a few weeks before the next major release, and you have just encountered a critical bug.
