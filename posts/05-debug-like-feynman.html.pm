@@ -337,7 +337,7 @@
 }
 
 ◊p{
-  You are very proud of your multi-threaded lock-free queue implementation.
+  You are proud of your multi-threaded lock-free queue implementation.
   Your colleagues reviewed it thoroughly and agreed that it is correct.
   Hours of testing did not reveal any issues.
   After two weeks in production, servers start to hang.
@@ -391,5 +391,9 @@
   Software engineering is applied science, even though it does not always feel like it.
   We are lucky because our experiments are cheap and easy to replicate.
   We can iterate and learn from our mistakes much quicker than researchers in more traditional fields.
-  So the next time you debug that legacy system, be proud of who you are: a scientist a few steps away from discovery.
+  On the other hand, we tend to ignore centuries of experience accumulated by mainstream science.
+  Being aware of the scientific methodology and insights will help you build better systems faster and have more fun.
+}
+◊p{
+  The next time you debug that legacy system, be proud of who you are: a scientist a few steps away from discovery.
 }
