@@ -42,7 +42,7 @@
   Before we had the scientific method, we understood the world around us through the lens of arbitrary apriori beliefs,
   such as that ◊a[#:href "https://en.wikipedia.org/wiki/Geocentric_model"]{the Earth is the center of the universe},
   that ◊a[#:href "https://en.wikipedia.org/wiki/Humorism"]{all illnesses come from the disbalance of bodily fluids},
-  or that everything should be an object.
+  or that ◊a[#:href "https://en.wikipedia.org/wiki/Smalltalk"]{everything should be an object}.
 }
 ◊p{
   A few years ago, it dawned on me that debugging a program is similar to conducting scientific experiments.
@@ -66,7 +66,7 @@
 
 ◊p{
   It is only a few weeks before the next major release, and you have just encountered a critical bug.
-  You open the bag tracker and search for the error message.
+  You open the bug tracker and search for the error message.
   Great, there is an issue with a promising title!
   Your former teammate closed it a year ago.
   Full of hope, you open the issue.
