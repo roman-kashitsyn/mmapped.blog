@@ -302,6 +302,13 @@
 }
 
 ◊p{
+  You are probably skeptical at this point (you should be).
+  I talked about the scientific method, logic, and experiments, and most of this section is a plain argument from authority.
+  However, mental models nicely fit into the scientific method: you need models to interpret observations.
+  Each bug report is an unexpected result of an experiment; a good model will help you backtrack from the outcome to a potential cause and develop a new hypothesis to test.
+}
+
+◊p{
   How do you build a good mental model?
   I do not think there is a universal answer.
   Different people will prefer to use various analogies depending on their background and the system.
@@ -386,6 +393,92 @@
   Unlike other formal methods I tried, this tool is easy to pick up.
 }
 
+◊section["question-method"]{Question your method}
+◊blockquote{
+  There’s nothing quite as frightening as someone who knows they are right.
+  ◊br{}
+  [Michael Faraday]
+}
+
+◊p{
+  A new manager joined your team two months ago.
+  Since then, you started practicing ◊a[#:href "https://www.scrum.org/"]{Scrum}: you work in ◊a[#:href "https://www.scrum.org/resources/what-is-a-sprint-in-scrum"]{sprints} on ◊a[#:href "https://www.atlassian.com/agile/project-management/user-stories"]{user stories}, play ◊a[#:href "https://en.wikipedia.org/wiki/Planning_poker"]{planning poker}, groom your ◊a[#:href "https://www.atlassian.com/software/jira"]{Jira} tickets, and hold ◊a[#:href "https://www.scrum.org/resources/what-is-a-sprint-retrospective"]{retrospective} and ◊a[#:href "https://www.agile-academy.com/en/scrum-master/daily-standup/"]{daily standup} meetings.
+  Your users are just as unhappy and frustrated as they were two months ago.
+}
+◊p{
+  We are living in the best of times.
+  The ideas of rapid iteration, ◊a[#:href "https://agilemanifesto.org/"]{agile development}, and ◊a[#:href "https://continuousdelivery.com/"]{continuous delivery} are taking over the world.
+  Software shops are churning features at a stunning rate.
+}
+◊p{
+  We are living in the worst of times.
+  Our software is bloated, slow, and buggy.
+  Our interfaces are overly complicated, often on the border of being enraging.
+  Our users are frustrated and depressed.
+  Try ◊a[#:href "https://images.google.com/?q=frustration"]{searching Google images for "frustration."}
+  How many pictures have computers on them?
+}
+◊p{
+  The amount of material on software development methodology is overwhelming.
+  ◊a[#:href "https://agilemanifesto.org/"]{Agile}, ◊a[#:href "https://en.wikipedia.org/wiki/Extreme_programming"]{XP}, ◊a[#:href "https://scrum.org"]{Scrum}, ◊a[#:href "https://en.wikipedia.org/wiki/Kanban_(development)"]{Kanban}, ◊a[#:href "https://www.lean.org/"]{Lean}, ◊a[#:href "https://en.wikipedia.org/wiki/Test-driven_development"]{TDD}, ◊a[#:href "https://en.wikipedia.org/wiki/Behavior-driven_development"]{BDD}, and the list goes on.
+  It is easy to get the impression that everyone knows the best way to develop software but you.
+  This impression is false.
+  No one has a clue.
+}
+◊p{
+  Many project management techniques focus on being ◊em{efficient} and producing more features in less time.
+  This goal is fundamentally flawed.
+  We should not be after efficiency.
+  In my experience, the main problem with software is that people waste time on non-essential work.
+}
+◊p{
+  Note that the same rule applies to personal productivity.
+  You become productive not by packing your day with tasks but by clearing up room for things that matter.
+  If you have not read ◊a[#:href "https://www.amazon.com/-/en/dp/1455586692"]{Deep Work} yet, do it.
+  This book will change your life.
+}
+◊p{
+  So we want to throw out insignificant ideas and focus on the relevant ones.
+  Does it sound familiar?
+  The scientific method can also help us with the creative side of software engineering.
+}
+◊p{
+  Assume Ben thinks that implementing feature X is essential.
+  We enter the first step of the scientific method.
+  How can we prove Ben wrong?
+}
+◊ul[#:class "arrows"]{
+  ◊li{
+    Think of the most straightforward experiment that can reject Ben's belief.
+    Looking at the contents of your database or implementing a prototype and gathering usage statistics, for example.
+  }
+  ◊li{
+    Conduct the "experiment": go look at the data, implement the most straightforward solution, or gather user feedback.
+    Your solution does not have to be perfect right away.
+    Remember, we do not want to waste our life polishing features that make no difference.
+  }
+  ◊li{
+    Analyze the outcome.
+    Users do not care?
+    Remove the feature.
+    Users love the feature and want it to be polished?
+    Congratulate Ben and go back to step one.
+  }
+}
+◊p{
+  This approach is similar to the iterative development promoted by agile methodologies and extreme programming.
+  Note how we came to this idea naturally by applying our analogy.
+  In this light, the ◊a[#:href "https://en.wikipedia.org/wiki/Waterfall_model"]{waterfall model} is similar to postulating a theory from apriori principles: an approach doomed to fail.
+  Does this mean that you need a scrum master to be productive?
+  It seems unlikely to me, but I am sure you know how to check ideas at this point.
+}
+◊p{
+  Be critical of your method.
+  Blindly following the procedures should not feel right to you.
+  Challenge the status quo, stop, and think.
+  ◊em{Why am I doing this?} ◊em{Is it worth my time?}
+}
+
 ◊section["conclusion"]{Conclusion}
 ◊p{
   Software engineering is applied science, even though it does not always feel like it.
@@ -396,4 +489,13 @@
 }
 ◊p{
   The next time you debug that legacy system, be proud of who you are: a scientist a few steps away from discovery.
+}
+
+◊p{
+  ◊a[#:href "https://www.reddit.com/r/programming/comments/ttld4n/1st_april_blog_post_debug_like_feynman_test_like/"]{Discuss this article on Reddit.}
+}
+
+◊section["acknowledgements"]{Acknowledgements}
+◊p{
+  Thanks to Nikolay Komarevskiy for his suggestions for the original version of this article.
 }
