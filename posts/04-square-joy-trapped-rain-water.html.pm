@@ -6,11 +6,14 @@
 ◊(define-meta doc-publish-date "2022-02-15")
 ◊(define-meta doc-updated-date "2022-02-15")
 
+◊section{
 ◊p{
   In this article, we will explore one of my favorite programming puzzles using the ◊a[#:href "https://en.wikipedia.org/wiki/Array_programming"]{array programming} paradigm.
 }
+}
 
-◊section["the-why"]{But why?}
+◊section{
+◊section-title["the-why"]{But why?}
 
 ◊p{
   I am always looking for new perspectives on software engineering and programming.
@@ -39,8 +42,10 @@
 ◊p{
   Time to have some fun!
 }
+}
 
-◊section["the-problem"]{The problem: heavy rains in Flatland}
+◊section{
+◊section-title["the-problem"]{The problem: heavy rains in Flatland}
 
 ◊p{
   Imagine that we live in a two-dimensional city, where all buildings have the same unit width and stand next to one another.
@@ -53,19 +58,21 @@
   More dryly: given an array of non-negative integers ◊em{H}, representing heights of unit-width bars placed next to one another, compute the total area of water trapped by the configuration after it rains.
 }
 
-◊subsection["example-2d"]{Example}
+◊subsection-title["example-2d"]{Example}
 ◊dl{
 ◊dt{Input} ◊dd{◊pre{0 1 0 2 1 0 1 3 2 1 2 1}}
 ◊dt{Output} ◊dd{◊pre{6}}
 }
 ◊figure{
+ ◊marginnote["mn-example"]{The configuration of bars with heights 0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1, and the water trapped by this configuration.}
  ◊p{
    ◊img[#:src "/images/04-viewmat-2d.png" #:alt "a picture of the example"]
  }
- ◊figcaption{The configuration of bars with heights 0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1, and the water trapped by this configuration.}
+}
 }
 
-◊section["a-solution"]{A solution}
+◊section{
+◊section-title["a-solution"]{A solution}
 ◊p{
  A natural question to ask is what is the water level above each bar?
  If we knew that, summing contributions of levels above each bar would give us the answer.
@@ -90,8 +97,10 @@
  The difference between the water level and the bar height gives us the amount of water trapped at this position.
  Summing up these amounts gives us the answer.
 }
+}
 
-◊section["translating-to-j"]{Translating our idea to J}
+◊section{
+◊section-title["translating-to-j"]{Translating our idea to J}
 
 ◊p{
   J is an interpreted language and it has a ◊a[#:href "https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop"]{REPL}.
@@ -218,8 +227,10 @@ NB. Machine output is not.
   One of the interesting properties of array languages is that often it is not worth it to name functions.
   Their full body is shorter and more expressive than any name you can come up with.
 }
+}
 
-◊section["drawing-solutions"]{Drawing solutions}
+◊section{
+◊section-title["drawing-solutions"]{Drawing solutions}
 
 ◊p{
   Knowing the answer is great, but being able to ◊em{see} it at a glance would be even better.
@@ -409,8 +420,10 @@ The effect is that all zeros got replaced with a space, ones — with a watery-l
    ◊img[#:src "/images/04-plot-2d.png" #:alt "2D plot graph"]
  }
 }
+}
 
-◊section["3d"]{Breaking out of Flatland}
+◊section{
+◊section-title["3d"]{Breaking out of Flatland}
 ◊p{
   One of the ways to better understand a problem is to generalize it.
   Let us break out into the third dimension.
@@ -451,7 +464,7 @@ The effect is that all zeros got replaced with a space, ones — with a watery-l
 6 5 4 3 3 4 5 6
 }
 
-◊subsection["solution-3d"]{Solution}
+◊subsection-title["solution-3d"]{Solution}
 
 ◊p{
   Let us play the same trick: pick an arbitrary place on the grid and think of the water level we will observe at that place.
@@ -666,8 +679,10 @@ _ _ _ _ _ _ _ 0
     +/, (levels C) - C
 40
 }
+}
 
-◊section["back-to-2d"]{Looking back at Flatland}
+◊section{
+◊section-title["back-to-2d"]{Looking back at Flatland}
 
 ◊p{
   Did we learn anything new about the Flatland after considering three dimensions?
@@ -715,6 +730,7 @@ _ _ _ _ _ _ _ 0
 }
 
 ◊figure{
+ ◊marginnote["mn-c-dijkstra"]{The equivalent of the Dijkstra algorithm in the two-dimensional case.}
 ◊source-code["C"]{
 static inline int int_min(int l, int r) { return l < r ? l : r; }
 
@@ -733,10 +749,11 @@ long trapped_water(int H[], int N) {
   return S;
 }
 }
- ◊figcaption{The equivalent of the Dijkstra algorithm in the two-dimensional case.}
+}
 }
 
-◊section["where-to-go-next"]{Where to go next}
+◊section{
+◊section-title["where-to-go-next"]{Where to go next}
 ◊p{
   That is all J magic for today!
   If you are confused and intrigued, I can recommend the following resources:
@@ -746,4 +763,5 @@ long trapped_water(int H[], int N) {
   ◊li{Watch ◊a[#:href "https://youtu.be/ftcIcn8AmSY"]{Four Solutions to a Trivial Problem}, a talk by Guy Steele where he explores the same problem from different angles.}
   ◊li{Read some ◊a[#:href "https://code.jsoftware.com/wiki/Books"]{Books on J}.}
   ◊li{Listen to the ◊a[#:href "https://arraycast.com/"]{Arraycast podcast}.}
+}
 }

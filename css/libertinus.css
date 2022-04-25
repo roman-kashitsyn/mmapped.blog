@@ -24,7 +24,7 @@
   font-weight: 400;
   src: local("Libertinus Sans"),
        local("Linux Biolinum O"),
-       url("/fonts/LibertinusSans-Regular.otf") format("opentype");
+       url("/fonts/LibertinusSans-Regular.otf") format("opentype"),
        url("/fonts/LibertinusSans-Regular.woff2") format("woff2");
 }
 
