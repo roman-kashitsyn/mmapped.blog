@@ -67,10 +67,6 @@ img.portrait {
   margin: 10px 20px 20px 0px;
 }
 
-ul.arrows, ol.circled {
-  padding-left: 2.5rem;
-}
-
 ul.arrows > li:before {
   position: absolute;
   margin-left: -2.5rem;
