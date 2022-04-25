@@ -514,6 +514,10 @@ label.margin-toggle:not(.sidenote-number) {
     height: 100%;
 }
 
+p.svg {
+    overflow: scroll;
+}
+
 @media (max-width: 760px) {
     body {
         width: 84%;
@@ -521,8 +525,14 @@ label.margin-toggle:not(.sidenote-number) {
         padding-right: 8%;
     }
 
+    nav ul {
+        font-size: 14px;
+    }
+
     hr,
     section > p,
+    article > footer,
+    div.container > p,
     section > div.source-container,
     section > footer,
     section > table {
