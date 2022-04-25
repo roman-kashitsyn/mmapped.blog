@@ -2,13 +2,17 @@
 
 (require pollen/core
          pollen/setup
+         pollen/tag
          xml
          txexpr)
 
 (provide source-code
          embed-svg
-         section
-         subsection
+         epigraph
+         section-title
+         subsection-title
+         sidenote
+         marginnote
          advice
          anchor
          circled
@@ -19,17 +23,28 @@
   (string->xexpr (file->string (build-path (current-project-root) path))))
 
 (define (source-code attr . elems)
-  (txexpr* 'div '((class "source-countainer"))
+  (txexpr* 'div '((class "source-container"))
           (txexpr 'pre `((class ,(string-append "source " attr)))
                   (list (txexpr 'code '() elems)))))
 
-(define (section anchor name)
+(define (section-title anchor name)
   (txexpr* 'h2 `((id ,anchor))
            (txexpr* 'a `((href ,(string-append "#" anchor))) name)))
 
-(define (subsection anchor name)
+(define (subsection-title anchor name)
   (txexpr* 'h3 `((id ,anchor))
            (txexpr* 'a `((href ,(string-append "#" anchor))) name)))
+
+(define (epigraph . elems)
+  (txexpr 'div `((class "epigraph")) elems))
+
+(define (sidenote id . elems)
+  (@ (txexpr 'label '((class "margin-toggle sidenote-number")))
+     (txexpr 'input `((type "checkbox") (id ,id) (class , "margin-toggle")))
+     (txexpr 'span '((class "sidenote")) elems)))
+
+(define (marginnote . elems)
+  (txexpr 'span `((class "marginnote")) elems))
 
 (define (anchor name)
   (txexpr* 'a `((class "anchor") (href ,(string-append "#" name))) #x261B))

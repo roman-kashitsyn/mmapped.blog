@@ -6,7 +6,8 @@
 ◊(define-meta doc-publish-date "2021-10-25")
 ◊(define-meta doc-updated-date "2022-02-19")
 
-◊section["how-to-read"]{How to read this document}
+◊section{
+◊section-title["how-to-read"]{How to read this document}
 
 ◊p{
   This document is a compilation of useful patterns and typical pitfalls I observed in the Rust code running on the ◊a[#:href "https://internetcomputer.org/"]{Internet Computer} (IC).
@@ -18,10 +19,12 @@
   Some recommendations might change if I discover better patterns or if the state of the ecosystem improves.
   I will try to keep this document up to date.
 }
+}
 
-◊section["code-organization"]{Code organization}
+◊section{
+◊section-title["code-organization"]{Code organization}
 
-◊subsection["canister-state"]{Canister state}
+◊subsection-title["canister-state"]{Canister state}
 
 ◊p{
   The way IC canisters are structured forces developers to use a global mutable state.
@@ -195,15 +198,19 @@ pub trait Memory {
 }
 }
 
-◊subsection["async"]{Asynchrony}
+◊subsection-title["async"]{Asynchrony}
 
+◊p{
 ◊code{panics} and ◊code{traps} in canisters are somewhat special.
 If your code traps or panics, the system rolls back the state of the canister to the latest working snapshot.
 Unfortunately, this means that if your canister made a call and then panicked in the callback, the canister might never release the resources it allocated for the call.
+}
 
 ◊advice["panic-await"]{Don't panic after ◊code{await}}
 
-Let us look at an example.
+◊p{
+  Let us look at an example.
+}
 
 ◊source-code["bad"]{
 #[update]
@@ -303,7 +310,7 @@ async fn refresh_profile(user_id: UserId) {
 }
 }
 
-◊subsection["canister-interfaces"]{Canister interfaces}
+◊subsection-title["canister-interfaces"]{Canister interfaces}
 
 ◊p{
   Many people enjoy the code-first approach supported by the Motoko compiler: you write an actor with some public functions, and the compiler automatically generates the corresponding Candid file.
@@ -433,10 +440,12 @@ type CreateEntityResult = variant {
   If you follow this approach, your clients will see a nice textual description if they experience a newly introduced error.
   Unfortunately, handing generic errors programmatically is more cumbersome and error-prone compared to well-typed extensible variants.
 }
+}
 
-◊section["infra"]{Infrastructure}
+◊section{
+◊section-title["infra"]{Infrastructure}
 
-◊subsection["builds"]{Builds}
+◊subsection-title["builds"]{Builds}
 
 ◊p{
   People using your canister might want to verify that the canister does what it claims to do (especially if it moves their tokens around).
@@ -467,7 +476,7 @@ type CreateEntityResult = variant {
   Read the ◊a[#:href "https://smartcontracts.org/docs/developers-guide/tutorials/reproducible-builds.html"]{Reproducible Canister Builds} article for more advice on reproducible builds.
 }
 
-◊subsection["upgrades"]{Upgrades}
+◊subsection-title["upgrades"]{Upgrades}
 
 ◊p{Let me remind you how upgrades work:}
 ◊ol-circled{
@@ -594,7 +603,7 @@ assert_eq!(data, expected_value);
   If you plan to store gigabytes of state and upgrade the code, using stable memory as the main storage is a good option to consider.
 }
 
-◊subsection["observability"]{Observability}
+◊subsection-title["observability"]{Observability}
 
 ◊p{
   At ◊a[#:href "https://dfinity.org/"]{dfinity}, we use metrics extensively and record a lot of data about our production services.
@@ -668,12 +677,15 @@ fn http_request(req: HttpRequest) -> HttpResponse {
 ◊li{Sizes of internal data structures.}
 ◊li{Last time the canister was upgraded.}
 }
+}
 
-◊section["references"]{References}
+◊section{
+◊section-title["references"]{References}
 ◊p{
   Below are a few examples of heavily used Rust canisters you might draw inspiration from.
 }
 ◊ul[#:class "arrows"]{
 ◊li{◊a[#:href "https://github.com/dfinity/internet-identity/tree/main/src/internet_identity"]{Internet Identity Backend} is a good example of a canister that uses stable memory as the main storage, obtains secure randomness from the system, and exposes Prometheus metrics.}
 ◊li{◊a[#:href "https://github.com/dfinity/certified-assets"]{Certified Assets Canister} is a good example of a canister that produces certified HTTP responses.}
+}
 }

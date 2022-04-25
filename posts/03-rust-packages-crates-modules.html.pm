@@ -6,10 +6,13 @@
 ◊(define-meta doc-publish-date "2022-01-20")
 ◊(define-meta doc-updated-date "2022-01-20")
 
+◊section{
+◊epigraph{
 ◊blockquote{
   ◊p{
     Good decisions come from experience. Experience comes from making bad decisions.
   }
+}
 }
 
 ◊p{
@@ -17,8 +20,10 @@
   The team learned that code organization that works just fine for relatively small projects might start dragging you down over time.
   In this article, we shall evaluate code organization options that Rust gives us and look at how to use them well.
 }
+}
 
-◊section["personae"]{Dramatis Personae}
+◊section{
+◊section-title["personae"]{Dramatis Personae}
 
 ◊p{
 Rust terminology might be confusing for newcomers.
@@ -61,8 +66,10 @@ Let us become familiar with the code organization concepts we will be dealing wi
    Packages can contain one or more crates: at most one library and any number of executables.
  }
 }
+}
 
-◊section["modules-vs-crates"]{Modules vs Crates}
+◊section{
+◊section-title["modules-vs-crates"]{Modules vs Crates}
 
 ◊p{
   In this section, I will use the terms "crate" and "package" almost interchangeably, assuming that most of your crates are libraries.
@@ -111,11 +118,15 @@ In contrast, the package dependency graph must be acyclic.
   Modules are very convenient, but they don't help the compiler do less work.
   Packages are less convenient, but they deliver a better overall development experience as the code base grows.
 }
+}
 
-◊section["code-organization-advice"]{Advice on code organization}
+◊section{
+◊section-title["code-organization-advice"]{Advice on code organization}
 
+◊p{
 As usual, do not follow this advice blindly.
 Check if it makes your code structure clearer and your compilation times shorter.
+}
 
 ◊advice["avoid-dependency-hubs"]{Split dependency hubs.}
 
@@ -135,8 +146,8 @@ Check if it makes your code structure clearer and your compilation times shorter
 }
 
 ◊figure[#:class "grayscale-diagram"]{
+  ◊marginnote{A small subgraph of the Internet Computer project package dependency graph. ◊code{types} and ◊code{interfaces} are type-one dependency hubs, ◊code{replica} is a type-two dependency hub, ◊code{test-utils} is both a type-one and a type-two hub.}
   ◊p{◊(embed-svg "images/03-dep-hubs.svg")}
-  ◊figcaption{A small subgraph of the Internet Computer project package dependency graph. ◊code{types} and ◊code{interfaces} are type-one dependency hubs, ◊code{replica} is a type-two dependency hub, ◊code{test-utils} is both a type-one and a type-two hub.}
 }
 
 ◊p{
@@ -187,6 +198,7 @@ Check if it makes your code structure clearer and your compilation times shorter
 }
 
 ◊figure{
+◊marginnote{An example of a trait definition from the ◊code{interfaces} package that depends on the ◊code{ReplicatedState} type.}
 ◊source-code["good"]{
 trait StateManager {
   fn get_latest_state(&self) -> ReplicatedState;
@@ -194,7 +206,6 @@ trait StateManager {
   fn commit_state(&self, state: ReplicatedState, version: Version);
 }
 }
-◊figcaption{An example of a trait definition from the ◊code{interfaces} package that depends on the ◊code{ReplicatedState} type.}
 }
 
 ◊p{
@@ -203,6 +214,7 @@ trait StateManager {
 }
 
 ◊figure{
+◊marginnote{A generic version of the ◊code{StateManager} trait that does not depend on ◊code{ReplicatedState}.}
 ◊source-code["good"]{
 trait StateManager {
   type State; //< We turned a specific type into an associated type.
@@ -212,7 +224,6 @@ trait StateManager {
   fn commit_state(&self, state: State, version: Version);
 }
 }
-◊figcaption{A generic version of the ◊code{StateManager} trait that does not depend on ◊code{ReplicatedState}.}
 }
 
 ◊p{
@@ -228,23 +239,23 @@ trait StateManager {
 }
 
 ◊figure{
+◊marginnote{Composing components using runtime polymorphism.}
 ◊source-code["good"]{
 pub struct Consensus {
   Arc<dyn ArtifactPool> artifact_pool;
   Arc<dyn StateManager> state_manager;
 }
 }
-◊figcaption{Composing components using runtime polymorphism.}
 }
 
 ◊figure{
+◊marginnote{Composing components using compile-time polymorphism.}
 ◊source-code["bad"]{
 pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
   AP artifact_pool;
   SM state_manager;
 }
 }
-◊figcaption{Composing components using compile-time polymorphism.}
 }
 
 ◊p{
@@ -345,6 +356,7 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
   Rust allows you to write unit tests right next to your production code.
 }
 ◊figure{
+◊marginnote{A module that has unit tests and production code in the same file, ◊code{foo.rs}.}
 ◊source-code["bad"]{
 pub fn frobnicate(x: &Foo) -> u32 {
     todo!("implement frobnication")
@@ -360,7 +372,6 @@ mod tests {
     }
 }
 }
-◊figcaption{A module that has unit tests and production code in the same file, ◊code{foo.rs}.}
 }
 ◊p{
   That's very convenient, but we found that it can slow down test compilation time considerably.
@@ -369,6 +380,7 @@ mod tests {
 }
 
 ◊figure{
+◊marginnote{Moving unit tests into ◊code{foo/tests.rs}.}
 ◊source-code["good"]{
 pub fn frobnicate(x: &Foo) -> u32 {
     todo!("implement frobnication")
@@ -378,21 +390,22 @@ pub fn frobnicate(x: &Foo) -> u32 {
 #[cfg(test)]
 mod tests;
 }
-◊figcaption{Moving unit tests into ◊code{foo/tests.rs}.}
 }
 
 ◊p{
   This technique tightened our edit-check-test loop and made the code easier to navigate.
 }
+}
 
-◊section["common-pitfalls"]{Common pitfalls}
+◊section{
+◊section-title["common-pitfalls"]{Common pitfalls}
 
 ◊p{
   In this section, we will take a look at some tricky issues that Rust newcomers might run into.
   I experienced these issues myself, and I saw several collegues running into them as well.
 }
 
-◊subsection["confusing-crates-and-packages"]{Confusing crates and packages}
+◊subsection-title["confusing-crates-and-packages"]{Confusing crates and packages}
 
 ◊p{
 Imagine you have package ◊code{image-magic} that defines a library for working with images and also provides a command-line utility for image transformation called ◊code{transmogrify}.
@@ -401,6 +414,7 @@ Your ◊code{Cargo.toml} file will look like the following snippet of code.
 }
 
 ◊figure{
+◊marginnote{Contents of ◊code{image-magic/Cargo.toml}.}
 ◊source-code["good"]{
 [package]
 name = "image-magic"
@@ -415,7 +429,6 @@ path = "src/transmogrify.rs"
 
 # dependencies...
 }
-◊figcaption{Contents of ◊code{image-magic/Cargo.toml}.}
 }
 
 
@@ -460,11 +473,13 @@ use image_magic::{Image, transform_image}; //< OK.
 }
 }
 
-◊subsection["quasi-circular"]{Quasi-circular dependencies}
+◊subsection-title["quasi-circular"]{Quasi-circular dependencies}
 
+◊p{
 To understand this issue, we'll first have to learn about ◊a[#:href "https://doc.rust-lang.org/cargo/reference/profiles.html"]{Cargo build profiles}.
 Build profiles are named compiler configurations that cargo uses when compiling a crate.
 For example:
+}
 ◊dl{
  ◊dt{release}
  ◊dd{
@@ -500,6 +515,7 @@ For example:
 }
 
 ◊figure{
+◊marginnote{Contents of ◊code{foo/Cargo.toml}.}
 ◊source-code["good"]{
 [package]
 name = "foo"
@@ -511,10 +527,10 @@ edition = "2018"
 [dev-dependencies]
 foo-test-utils = { path = "../foo-test-utils" }
 }
-◊figcaption{Contents of ◊code{foo/Cargo.toml}.}
 }
 
 ◊figure{
+◊marginnote{Contents of ◊code{foo-test-utils/Cargo.toml}.}
 ◊source-code["good"]{
 [package]
 name = "foo-test-utils"
@@ -526,7 +542,6 @@ edition = "2018"
 [dependencies]
 foo = { path = "../foo" }
 }
-◊figcaption{Contents of ◊code{foo-test-utils/Cargo.toml}.}
 }
 
 ◊p{
@@ -535,11 +550,12 @@ foo = { path = "../foo" }
 }
 
 ◊figure[#:class "grayscale-diagram"]{
+  ◊marginnote{Dependency diagram for ◊code{foo} library test.}
   ◊p{◊(embed-svg "images/03-foo-test-profile.svg")}
-  ◊figcaption{Dependency diagram for ◊code{foo} library test.}
 }
 
 ◊figure{
+◊marginnote{Contents of ◊code{foo-test-utils/src/lib.rs}.}
 ◊source-code["good"]{
 use foo::Foo;
 
@@ -549,12 +565,11 @@ pub fn make_test_foo() -> Foo {
         age: 32,
     }
 }
-
 }
-◊figcaption{Contents of ◊code{foo-test-utils/src/lib.rs}.}
 }
 
 ◊figure{
+◊marginnote{Contents of ◊code{foo/src/lib.rs}.}
 ◊source-code["bad"]{
 #[derive(Debug)]
 pub struct Foo {
@@ -576,7 +591,6 @@ fn test_private_fun() {
     private_fun(&x);
 }
 }
-◊figcaption{Contents of ◊code{foo/src/lib.rs}.}
 }
 
 ◊p{
@@ -608,6 +622,7 @@ error[E0308]: mismatched types
 }
 
 ◊figure{
+◊marginnote{Contents of ◊code{foo/tests/foo_test.rs}.}
 ◊source-code["good"]{
 #[test]
 fn test_foo_frobnication() {
@@ -615,7 +630,6 @@ fn test_foo_frobnication() {
     assert_eq!(foo::frobnicate(&foo), 2);
 }
 }
-◊figcaption{Contents of ◊code{foo/tests/foo_test.rs}.}
 }
 
 ◊p{
@@ -623,8 +637,8 @@ fn test_foo_frobnication() {
 }
 
 ◊figure[#:class "grayscale-diagram"]{
+  ◊marginnote{Dependency diagram for ◊code{foo_test} integration test.}
   ◊p{◊(embed-svg "images/03-foo-dev-profile.svg")}
-  ◊figcaption{Dependency diagram for ◊code{foo_test} integration test.}
 }
 
 ◊p{
@@ -632,18 +646,23 @@ fn test_foo_frobnication() {
   They also tend to have negative effect on compilation time.
   My advice is to avoid them when possible.
 }
+}
 
-◊section["conclusion"]{Conclusion}
+◊section{
+◊section-title["conclusion"]{Conclusion}
 
 ◊p{
   In this article, we looked at the tools that Rust gives us to organize our code.
   Rust's module system is very convenient, but packing many modules into a single crate tend to have negative effect on the build speeds.
   Our experience suggests that factoring the system into many cohesive packages instead is a better approach in most cases.
 }
+}
 
-◊section["links"]{Links}
+◊section{
+◊section-title["links"]{Links}
 
 ◊ul[#:class "arrows"]{
   ◊li{◊a[#:href "https://www.reddit.com/r/rust/comments/s818q3/blog_post_rust_at_scale_packages_crates_and/"]{Discussion on r/rust}}
   ◊li{A fantastic series of articles by ◊a[#:href "https://github.com/matklad"]{Alexey Kladov} titled ◊a[#:href "https://matklad.github.io/2021/09/05/Rust100k.html"]{One Hundred Thousand Lines of Rust}.}
+}
 }

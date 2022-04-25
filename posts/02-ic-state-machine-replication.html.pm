@@ -6,13 +6,16 @@
 ◊(define-meta doc-publish-date "2021-12-01")
 ◊(define-meta doc-updated-date "2021-12-01")
 
+◊section{
 ◊p{
 In this article, we shall view the Internet Computer (IC) through the lens of distributed system design.
 As most other blockchains, the IC achieves fault-tolerance using strategy called ◊a[#:href "https://en.wikipedia.org/wiki/State_machine_replication"]{state machine replication}.
 We shall take a close look at some design choices that make the IC fast, scalable, and secure.
 }
+}
 
-◊section["state-machine"]{The state machine}
+◊section{
+◊section-title["state-machine"]{The state machine}
 
 ◊p{
 Before we dive into the internals of the protocol, let's first define the ◊a[#:href "https://en.wikipedia.org/wiki/Finite-state_machine"]{state machine} that we'll be dealing with.
@@ -63,9 +66,11 @@ It's as boring as it gets.
 }
 }
 
+◊p{
 I call these state machines (one for each subnet) ◊em{replicated} because each honest node on a subnet has an exact copy of the machine.
+}
 
-◊subsection["checkpoints"]{Checkpoints}
+◊subsection-title["checkpoints"]{Checkpoints}
 ◊p{
 Let's say we want to add a new node to an existing subnet because a flood destroyed one of the data centers hosting the subnet.
 This new node cannot start processing and proposing new blocks until it has the right state, the state that results from execution of all the blocks produced by this subnet so far.
@@ -84,11 +89,13 @@ Let's call those persistent snapshots ◊em{checkpoints}.
 }
 
 ◊figure[#:class "grayscale-diagram"]{
+◊marginnote{Components of the state machine: blocks as inputs, states, state trees as outputs, and checkpoints.}
 ◊p{◊(embed-svg "images/02-states.svg")}
-◊figcaption{Components of the state machine: blocks as inputs, states, state trees as outputs, and checkpoints.}
+}
 }
 
-◊section["state-trees"]{State trees}
+◊section{
+◊section-title["state-trees"]{State trees}
 ◊p{
 The transition function is complex, but its details aren't very important for our discussion.
 We can treat block processing as a black box.
@@ -119,8 +126,8 @@ Enter state trees.
 
 
 ◊figure[#:class "grayscale-diagram"]{
+◊marginnote{The logical structure of a state tree.}
 ◊p{◊(embed-svg "images/02-state-tree.svg")}
-◊figcaption{The logical structure of a state tree.}
 }
 
 ◊p{
@@ -128,7 +135,7 @@ The state tree is a data structure that contains all outputs of our state machin
 Once the gears of the execution stopped, the system computes the root hash of the state tree corresponding to the newly computed state, starts collecting a threshold signature for that hash, and moves on to the next block.
 }
 
-◊subsection["tree-lookup"]{Lookup}
+◊subsection-title["tree-lookup"]{Lookup}
 ◊p{
 Let's look at an example to see how the state tree does its magical zooming.
 Assume that you sent a request with id ◊code{1355...48de} to the IC and you want to get back the reply.
@@ -146,17 +153,19 @@ The tree that you'll get back will look something like this:
 }
 
 ◊figure[#:class "grayscale-diagram"]{
+◊marginnote{The logical structure of a tree containing a response to an ingress message.}
 ◊p{ ◊(embed-svg "images/02-pruned-state-tree.svg") }}
-◊figcaption{The logical structure of a tree containing a response to an ingress message.}
 
 ◊p{
 Even though the pruned tree is much smaller than the full state tree, both trees have exactly the same root hash.
 So we can validate the authenticity of the pruned tree using the threshold signature that consensus collected for the root hash of the full state tree.
 }
+}
 
-◊section["state-transfer"]{State transfer}
+◊section{
+◊section-title["state-transfer"]{State transfer}
 
-◊subsection["state-artifact"]{State as an artifact}
+◊subsection-title["state-artifact"]{State as an artifact}
 ◊p{
 As we discussed in the ◊a[#:href "#checkpoints"]{checkpoints} section, replicas periodically persist snapshots of its state to disk.
 The main purpose of these snapshots is to speed up state recovery.
@@ -182,11 +191,11 @@ Replicas use the hash of the manifest itself when they advertise a checkpoint in
 }
 
 ◊figure[#:class "grayscale-diagram"]{
+◊marginnote{A replica advertising a checkpoint as an artifact.}
 ◊p{ ◊(embed-svg "images/02-checkpoint-artifact.svg") }
-◊figcaption{A replica advertising a checkpoint as an artifact.}
 }
 
-◊subsection["trigger-transfer"]{Triggering state transfer}
+◊subsection-title["trigger-transfer"]{Triggering state transfer}
 ◊p{
 Let's assume that we have a replica that needs to fetch the latest checkpoint.
 It listens to the peers, and discovers a few state artifacts with different hashes advertised by different peers.
@@ -213,7 +222,7 @@ Consensus asks the state machine "Hey, what's your state height?".
 }
 ◊p{Yes, the consensus module can be a bit bossy sometimes, but it always acts with the best of intentions.}
 
-◊subsection["incremental-sync"]{Fetching states incrementally}
+◊subsection-title["incremental-sync"]{Fetching states incrementally}
 ◊p{
 Let's now have a brief look at the most juicy part of state transfer, the actual state fetch protocol.
 Let's suppose that we have a replica that has state 9 and it wants to catch up to state 100 with hash ◊code{H}.
@@ -230,15 +239,17 @@ Why waste network bandwidth and fetch data you already have?
 }
 ◊p{When there are no more chunks to fetch, checkpoint 100 is complete, and the replica is ready to go.}
 ◊figure[#:class "grayscale-diagram"]{
+◊marginnote{A replica constructing a fresh checkpoint by re-using existing chunks and fetching the missing ones.}
 ◊p{◊(embed-svg "images/02-state-sync.svg")}
-◊figcaption{A replica constructing a fresh checkpoint by re-using existing chunks and fetching the missing ones.}
 }
 ◊p{
 As you can see, the state transfer procedure is incremental: if the catching-up replica was offline for a brief period of time, it needs to fetch only the data that actually changed in the meantime.
 Of course, a replica that has no checkpoints at all will have to fetch all the chunks to construct its first checkpoint.
 }
+}
 
-◊section["conclusion"]{Conclusion}
+◊section{
+◊section-title["conclusion"]{Conclusion}
 ◊p{
 In this article, we
 }
@@ -255,4 +266,5 @@ From that prospective, the IC as a whole is really a swarm of replicated state m
 I made a few simplifications and omitted a lot of details to keep us focused on the replication aspect.
 For example, we didn't look at how different subnets communicate with one another, how individual worker bees form the swarm.
 This is a great topic that deserves an article of its own, so stay tuned!
+}
 }

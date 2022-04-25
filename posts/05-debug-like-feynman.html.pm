@@ -6,6 +6,8 @@
 ◊(define-meta doc-publish-date "2022-04-01")
 ◊(define-meta doc-updated-date "2022-04-01")
 
+◊section{
+
 ◊p{
   Complex systems are all around us.
 }
@@ -55,13 +57,18 @@
   Science is about understanding and describing complex systems, which is a large part of what programmers do (the other part being constructing overly complex systems that others have to understand and describe).
   In this article, we shall look at the similarities between tinkering with software and scientific endeavors and learn a thing or two from the giants on whose shoulders we stand.
 }
+}
 
-◊section["record-your-observations"]{Record your observations}
+◊section{
+◊section-title["record-your-observations"]{Record your observations}
+◊epigraph{
 ◊blockquote{
+  ◊p{
   First we have an observation, then we have numbers that we measure, then we have a law which summarizes all the numbers.
   But the real glory of science is that we can find a way of thinking such that the law is evident.
-  ◊br{}
-  [Richard Feynman, The Feynman Lectures on Physics, Volume I, Mainly Mechanics, Radiation, and Heat]
+  }
+  ◊footer{Richard Feynman, The Feynman Lectures on Physics, Volume I, Mainly Mechanics, Radiation, and Heat}
+}
 }
 
 ◊p{
@@ -107,12 +114,17 @@
   You should now record your observations about that bug you are working on.
   Maybe your data will help someone get a Turing Award one day?
 }
+}
 
-◊section["test-causality"]{Test causality}
+◊section{
+◊section-title["test-causality"]{Test causality}
+◊epigraph{
 ◊blockquote{
-  In the strict formulation of the law of causality—if we know the present, we can calculate the future—it is not the conclusion that is wrong but the premise.
-  ◊br{}
-  [Werner Heisenberg]
+  ◊p{
+    In the strict formulation of the law of causality—if we know the present, we can calculate the future—it is not the conclusion that is wrong but the premise.
+  }
+  ◊footer{Werner Heisenberg}
+}
 }
 ◊p{
   Phew, hunting down that bug took you a while.
@@ -160,15 +172,20 @@
   It seems that apologists of ◊a[#:href "https://en.wikipedia.org/wiki/Test-driven_development"]{test-driven development} are onto something, though I have never heard the causality argument from them.
   Unfortunately, there is no tooling checking that each test you write used to fail before it became green.
 }
+}
 
-◊section["know-your-data"]{Know your data}
+◊section{
+◊section-title["know-your-data"]{Know your data}
+◊epigraph{
 ◊blockquote[#:cite "https://www.atomicarchive.com/resources/documents/trinity/fermi.html"]{
+  ◊p{
   About 40 seconds after the explosion the air blast reached me.
   I tried to estimate its strength by dropping from about six feet small pieces of paper before, during and after the passage of the blast wave.
   Since at the time, there was no wind I could observe very distinctly and actually measure the displacement of the pieces of paper that were in the process of falling while the blast was passing.
   The shift was about 2 ◊string->symbol{frac12} meters, which, at the time, I estimated to correspond to the blast that would be produced by ten thousand tons of T.N.T.
-  ◊br{}
-  [Enrico Fermi, My Observations During the Explosion at Trinity on July 16, 1945]
+  }
+  ◊footer{Enrico Fermi, ◊a[#:href "https://www.atomicarchive.com/resources/documents/trinity/fermi.html"]{My Observations During the Explosion at Trinity on July 16, 1945}}
+}
 }
 ◊p{
   A guy from the OPS team stops by your desk.
@@ -233,14 +250,19 @@
   Having all these data at your disposal will enable you to perform ◊a[#:href "https://en.wikipedia.org/wiki/Back-of-the-envelope_calculation"]{back-of-envelope calculations}, of which Enrico Fermi was an absolute master.
   Next time that OPS guy comes to your desk, you will have an answer for him.
 }
+}
 
-◊section["debug-mental-models"]{Debug mental models}
+◊section{
+◊section-title["debug-mental-models"]{Debug mental models}
 
+◊epigraph{
 ◊blockquote{
-  So the guy says, "What are you doing? You come to fix the radio, but you're only walking back and forth!"
-  I say, "I'm thinking!" 
-  ◊br{}
-  [Richard Feynman, "Surely You're Joking, Mr. Feynman!", "He Fixes Radios by Thinking!"]
+  ◊p{
+    So the guy says, "What are you doing? You come to fix the radio, but you're only walking back and forth!"
+    I say, "I'm thinking!" 
+  }
+  ◊footer{Richard Feynman, "Surely You're Joking, Mr. Feynman!", "He Fixes Radios by Thinking!"}
+}
 }
 
 ◊p{
@@ -281,10 +303,12 @@
 }
 
 ◊blockquote[#:cite "https://lkml.org/lkml/2000/9/6/65"]{
+  ◊p{
   It's that you have to look at the level ◊em{above} sources.
   At the meaning of things.
   Without a debugger, you basically have to go the next step: understand what the program does.
   Not just that particular line.
+  }
 }
 
 ◊p{
@@ -292,13 +316,14 @@
 }
 
 ◊blockquote[#:cite "https://www.informit.com/articles/article.aspx?p=1941206"]{
+  ◊p{
   When something went wrong, I'd reflexively start to dig in to the problem, examining stack traces, sticking in print statements, invoking a debugger, and so on.
   But Ken would just stand and think, ignoring me and the code we'd just written.
   After a while I noticed a pattern: Ken would often understand the problem before I would, and would suddenly announce, "I know what's wrong."
   He was usually correct.
   I realized that Ken was building a mental model of the code and when something broke it was an error in the model.
-  ◊br{}
-  [Rob Pike, "The Best Programming Advice I Ever Got"]
+  }
+  ◊footer{Rob Pike, ◊a[#:href "https://www.informit.com/articles/article.aspx?p=1941206"]{The Best Programming Advice I Ever Got}}
 }
 
 ◊p{
@@ -320,27 +345,33 @@
 }
 
 ◊blockquote{
+  ◊p{
   I had a scheme, which I still use today when somebody is explaining something that I'm trying to understand: I keep making up examples.
   For instance, the mathematicians would come in with a terrific theorem, and they're all excited.
   As they're telling me the conditions of the theorem, I construct something which fits all the conditions.
   You know, you have a set (one ball) — disjoint (two balls).
   Then the balls turn colors, grow hairs, or whatever, in my head as they put more conditions on.
   Finally they state the theorem, which is some dumb thing about the ball which isn't true for my hairy green ball thing, so I say, "False!"
-  ◊br{}
-  [Richard Feynman, "Surely You're Joking, Mr. Feynman!", "A Different Box of Tools"]
+  }
+  ◊footer{Richard Feynman, "Surely You're Joking, Mr. Feynman!", "A Different Box of Tools"}
 }
 
 ◊p{
   You might prefer encoding your models as actors, state machines, or balls.
   Pick whatever clicks with your brain.
 }
+}
 
-◊section["formalize-your-models"]{Formalize your models}
+◊section{
+◊section-title["formalize-your-models"]{Formalize your models}
 
+◊epigraph{
 ◊blockquote{
-  In every department of physical science there is only so much science, properly so-called, as there is mathematics.
-  ◊br{}
-  [Immanuel Kant]
+  ◊p{
+    In every department of physical science there is only so much science, properly so-called, as there is mathematics.
+  }
+  ◊footer{Immanuel Kant}
+}
 }
 
 ◊p{
@@ -379,25 +410,33 @@
   ◊a[#:href "https://www.linkedin.com/in/chenghuang/"]{Cheng Huang}, a principle engineering manager at Microsoft, ◊a[#:href "https://lamport.azurewebsites.net/tla/industrial-use.html"]{wrote}:
 }
 ◊blockquote[#:cite "https://lamport.azurewebsites.net/tla/industrial-use.html"]{
+  ◊p{
   TLA+ uncovered a safety violation even in our most confident implementation.
   We had a lock-free data structure implementation which was carefully design & implemented, went through thorough code review, and was tested under stress for many days.
   As a result, we had high confidence about the implementation.
   We eventually decided to write a TLA+ spec, not to verify correctness, but to allow team members to learn and practice PlusCal.
   So, when the model checker reported a safety violation, it really caught us by surprise.
   This experience has become the aha moment for many team members and their de facto testimonial about TLA+.
-  ◊br{}
-  [Leslie Lamport, Industrial Use of TLA+]
+  }
+  ◊footer{
+    Leslie Lamport, ◊a[#:href "https://lamport.azurewebsites.net/tla/industrial-use.html"]{Industrial Use of TLA+}
+  }
 }
 ◊p{
   I wish I have learned about TLA+ much earlier in my career.
   Unlike other formal methods I tried, this tool is easy to pick up.
 }
+}
 
-◊section["question-method"]{Question your method}
+◊section{
+◊section-title["question-method"]{Question your method}
+◊epigraph{
 ◊blockquote{
-  There’s nothing quite as frightening as someone who knows they are right.
-  ◊br{}
-  [Michael Faraday]
+  ◊p{
+    There’s nothing quite as frightening as someone who knows they are right.
+  }
+  ◊footer{Michael Faraday}
+}
 }
 
 ◊p{
@@ -478,8 +517,10 @@
   Challenge the status quo, stop, and think.
   ◊em{Why am I doing this?} ◊em{Is it worth my time?}
 }
+}
 
-◊section["conclusion"]{Conclusion}
+◊section{
+◊section-title["conclusion"]{Conclusion}
 ◊p{
   Software engineering is applied science, even though it does not always feel like it.
   We are lucky because our experiments are cheap and easy to replicate.
@@ -494,8 +535,11 @@
 ◊p{
   ◊a[#:href "https://www.reddit.com/r/programming/comments/ttld4n/1st_april_blog_post_debug_like_feynman_test_like/"]{Discuss this article on Reddit.}
 }
+}
 
-◊section["acknowledgements"]{Acknowledgements}
+◊section{
+◊section-title["acknowledgements"]{Acknowledgements}
 ◊p{
   Thanks to Nikolay Komarevskiy for his suggestions for the original version of this article.
+}
 }
