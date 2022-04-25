@@ -64,7 +64,7 @@
 ◊dt{Output} ◊dd{◊pre{6}}
 }
 ◊figure{
- ◊marginnote{The configuration of bars with heights 0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1, and the water trapped by this configuration.}
+ ◊marginnote["mn-example"]{The configuration of bars with heights 0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1, and the water trapped by this configuration.}
  ◊p{
    ◊img[#:src "/images/04-viewmat-2d.png" #:alt "a picture of the example"]
  }
@@ -730,7 +730,7 @@ _ _ _ _ _ _ _ 0
 }
 
 ◊figure{
- ◊marginnote{The equivalent of the Dijkstra algorithm in the two-dimensional case.}
+ ◊marginnote["mn-c-dijkstra"]{The equivalent of the Dijkstra algorithm in the two-dimensional case.}
 ◊source-code["C"]{
 static inline int int_min(int l, int r) { return l < r ? l : r; }
 

@@ -146,7 +146,7 @@ Check if it makes your code structure clearer and your compilation times shorter
 }
 
 ◊figure[#:class "grayscale-diagram"]{
-  ◊marginnote{A small subgraph of the Internet Computer project package dependency graph. ◊code{types} and ◊code{interfaces} are type-one dependency hubs, ◊code{replica} is a type-two dependency hub, ◊code{test-utils} is both a type-one and a type-two hub.}
+  ◊marginnote["mn-dep-hubs"]{A small subgraph of the Internet Computer project package dependency graph. ◊code{types} and ◊code{interfaces} are type-one dependency hubs, ◊code{replica} is a type-two dependency hub, ◊code{test-utils} is both a type-one and a type-two hub.}
   ◊p{◊(embed-svg "images/03-dep-hubs.svg")}
 }
 
@@ -198,7 +198,7 @@ Check if it makes your code structure clearer and your compilation times shorter
 }
 
 ◊figure{
-◊marginnote{An example of a trait definition from the ◊code{interfaces} package that depends on the ◊code{ReplicatedState} type.}
+◊marginnote["mn-example-trait"]{An example of a trait definition from the ◊code{interfaces} package that depends on the ◊code{ReplicatedState} type.}
 ◊source-code["good"]{
 trait StateManager {
   fn get_latest_state(&self) -> ReplicatedState;
@@ -214,7 +214,7 @@ trait StateManager {
 }
 
 ◊figure{
-◊marginnote{A generic version of the ◊code{StateManager} trait that does not depend on ◊code{ReplicatedState}.}
+◊marginnote["mn-generic-sm"]{A generic version of the ◊code{StateManager} trait that does not depend on ◊code{ReplicatedState}.}
 ◊source-code["good"]{
 trait StateManager {
   type State; //< We turned a specific type into an associated type.
@@ -239,7 +239,7 @@ trait StateManager {
 }
 
 ◊figure{
-◊marginnote{Composing components using runtime polymorphism.}
+◊marginnote["mn-runtime-poly"]{Composing components using runtime polymorphism.}
 ◊source-code["good"]{
 pub struct Consensus {
   Arc<dyn ArtifactPool> artifact_pool;
@@ -249,7 +249,7 @@ pub struct Consensus {
 }
 
 ◊figure{
-◊marginnote{Composing components using compile-time polymorphism.}
+◊marginnote["mn-compile-poly"]{Composing components using compile-time polymorphism.}
 ◊source-code["bad"]{
 pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
   AP artifact_pool;
@@ -356,7 +356,7 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
   Rust allows you to write unit tests right next to your production code.
 }
 ◊figure{
-◊marginnote{A module that has unit tests and production code in the same file, ◊code{foo.rs}.}
+◊marginnote["mn-test-code"]{A module that has unit tests and production code in the same file, ◊code{foo.rs}.}
 ◊source-code["bad"]{
 pub fn frobnicate(x: &Foo) -> u32 {
     todo!("implement frobnication")
@@ -380,7 +380,7 @@ mod tests {
 }
 
 ◊figure{
-◊marginnote{Moving unit tests into ◊code{foo/tests.rs}.}
+◊marginnote["mn-moving-test"]{Moving unit tests into ◊code{foo/tests.rs}.}
 ◊source-code["good"]{
 pub fn frobnicate(x: &Foo) -> u32 {
     todo!("implement frobnication")
@@ -414,7 +414,7 @@ Your ◊code{Cargo.toml} file will look like the following snippet of code.
 }
 
 ◊figure{
-◊marginnote{Contents of ◊code{image-magic/Cargo.toml}.}
+◊marginnote["mn-im-cargo"]{Contents of ◊code{image-magic/Cargo.toml}.}
 ◊source-code["good"]{
 [package]
 name = "image-magic"
@@ -515,7 +515,7 @@ For example:
 }
 
 ◊figure{
-◊marginnote{Contents of ◊code{foo/Cargo.toml}.}
+◊marginnote["mn-foo-cargo"]{Contents of ◊code{foo/Cargo.toml}.}
 ◊source-code["good"]{
 [package]
 name = "foo"
@@ -530,7 +530,7 @@ foo-test-utils = { path = "../foo-test-utils" }
 }
 
 ◊figure{
-◊marginnote{Contents of ◊code{foo-test-utils/Cargo.toml}.}
+◊marginnote["mn-foo-test-cargo"]{Contents of ◊code{foo-test-utils/Cargo.toml}.}
 ◊source-code["good"]{
 [package]
 name = "foo-test-utils"
@@ -550,12 +550,12 @@ foo = { path = "../foo" }
 }
 
 ◊figure[#:class "grayscale-diagram"]{
-  ◊marginnote{Dependency diagram for ◊code{foo} library test.}
+  ◊marginnote["mn-dep-foo"]{Dependency diagram for ◊code{foo} library test.}
   ◊p{◊(embed-svg "images/03-foo-test-profile.svg")}
 }
 
 ◊figure{
-◊marginnote{Contents of ◊code{foo-test-utils/src/lib.rs}.}
+◊marginnote["mn-foo-test-lib"]{Contents of ◊code{foo-test-utils/src/lib.rs}.}
 ◊source-code["good"]{
 use foo::Foo;
 
@@ -569,7 +569,7 @@ pub fn make_test_foo() -> Foo {
 }
 
 ◊figure{
-◊marginnote{Contents of ◊code{foo/src/lib.rs}.}
+◊marginnote["mn-foo-lib"]{Contents of ◊code{foo/src/lib.rs}.}
 ◊source-code["bad"]{
 #[derive(Debug)]
 pub struct Foo {
@@ -622,7 +622,7 @@ error[E0308]: mismatched types
 }
 
 ◊figure{
-◊marginnote{Contents of ◊code{foo/tests/foo_test.rs}.}
+◊marginnote["mn-foo-test"]{Contents of ◊code{foo/tests/foo_test.rs}.}
 ◊source-code["good"]{
 #[test]
 fn test_foo_frobnication() {
@@ -637,7 +637,7 @@ fn test_foo_frobnication() {
 }
 
 ◊figure[#:class "grayscale-diagram"]{
-  ◊marginnote{Dependency diagram for ◊code{foo_test} integration test.}
+  ◊marginnote["mn-foo-test-dep-diag"]{Dependency diagram for ◊code{foo_test} integration test.}
   ◊p{◊(embed-svg "images/03-foo-dev-profile.svg")}
 }
 

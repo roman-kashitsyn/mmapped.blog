@@ -39,12 +39,14 @@
   (txexpr 'div `((class "epigraph")) elems))
 
 (define (sidenote id . elems)
-  (@ (txexpr 'label '((class "margin-toggle sidenote-number")))
+  (@ (txexpr 'label `((class "margin-toggle sidenote-number") (for ,id)))
      (txexpr 'input `((type "checkbox") (id ,id) (class , "margin-toggle")))
      (txexpr 'span '((class "sidenote")) elems)))
 
-(define (marginnote . elems)
-  (txexpr 'span `((class "marginnote")) elems))
+(define (marginnote id . elems)
+  (@ (txexpr* 'label `((class "margin-toggle") (for ,id)) (string (integer->char 8853)))
+     (txexpr 'input `((type "checkbox") (id ,id) (class , "margin-toggle")))
+     (txexpr 'span '((class "marginnote")) elems)))
 
 (define (anchor name)
   (txexpr* 'a `((class "anchor") (href ,(string-append "#" name))) #x261B))

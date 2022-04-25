@@ -563,7 +563,6 @@ label.margin-toggle:not(.sidenote-number) {
         display: inline;
     }
 
-    figcaption,
     .sidenote,
     .marginnote {
         display: none;

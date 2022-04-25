@@ -89,7 +89,7 @@ Let's call those persistent snapshots ◊em{checkpoints}.
 }
 
 ◊figure[#:class "grayscale-diagram"]{
-◊marginnote{Components of the state machine: blocks as inputs, states, state trees as outputs, and checkpoints.}
+◊marginnote["sm-components"]{Components of the state machine: blocks as inputs, states, state trees as outputs, and checkpoints.}
 ◊p{◊(embed-svg "images/02-states.svg")}
 }
 }
@@ -126,7 +126,7 @@ Enter state trees.
 
 
 ◊figure[#:class "grayscale-diagram"]{
-◊marginnote{The logical structure of a state tree.}
+◊marginnote["st-structure"]{The logical structure of a state tree.}
 ◊p{◊(embed-svg "images/02-state-tree.svg")}
 }
 
@@ -153,7 +153,7 @@ The tree that you'll get back will look something like this:
 }
 
 ◊figure[#:class "grayscale-diagram"]{
-◊marginnote{The logical structure of a tree containing a response to an ingress message.}
+◊marginnote["responst-structure"]{The logical structure of a tree containing a response to an ingress message.}
 ◊p{ ◊(embed-svg "images/02-pruned-state-tree.svg") }}
 
 ◊p{
@@ -191,7 +191,7 @@ Replicas use the hash of the manifest itself when they advertise a checkpoint in
 }
 
 ◊figure[#:class "grayscale-diagram"]{
-◊marginnote{A replica advertising a checkpoint as an artifact.}
+◊marginnote["checkpoint-advert"]{A replica advertising a checkpoint as an artifact.}
 ◊p{ ◊(embed-svg "images/02-checkpoint-artifact.svg") }
 }
 
@@ -239,7 +239,7 @@ Why waste network bandwidth and fetch data you already have?
 }
 ◊p{When there are no more chunks to fetch, checkpoint 100 is complete, and the replica is ready to go.}
 ◊figure[#:class "grayscale-diagram"]{
-◊marginnote{A replica constructing a fresh checkpoint by re-using existing chunks and fetching the missing ones.}
+◊marginnote["checkpoint-construct"]{A replica constructing a fresh checkpoint by re-using existing chunks and fetching the missing ones.}
 ◊p{◊(embed-svg "images/02-state-sync.svg")}
 }
 ◊p{
