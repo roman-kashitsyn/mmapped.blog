@@ -316,6 +316,10 @@ fn replace(array: &mut [u32], src: u32, dst: u32) {
     We can remove read protection from multiple consequent pages at once, removing the need to switch the execution context to the signal handler for each page.
     This optimization makes the mechanism less precise but can significantly improve execution speed.
   }
+  ◊li{
+    We can speculatively remove write protection from multiple consequent pages to speed up sequential writes.
+    We can later compare the contents of dirtied pages with the snapshot to validate our speculation.
+  }
 }
 }
 
