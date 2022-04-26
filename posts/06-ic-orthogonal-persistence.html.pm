@@ -264,12 +264,13 @@ fn replace(array: &mut [u32], src: u32, dst: u32) {
 
 ◊p{
   To keep the example simple, let us assume that the array starts at page zero, and the integer to replace is at position ◊code{2000} in the array.
+  Before the execution begins, the entire memory has protection flags ◊code{PROT_NONE}.
   As the actor executes the ◊code{replace} function, the following events occur:
 }
 ◊ol-circled{
   ◊li{
     The actor accesses ◊code{array[0]}.
-    Since the corresponding memory page is read-protected, the load instruction generates a SIGSEGV signal.
+    Since the corresponding memory page is read-protected, the load instruction generates a ◊code{SIGSEGV} signal.
     The system invokes the signal handler that marks the page as touched and sets the memory protection to ◊code{PROT_READ}.
     The context switches back to the actor code, which can now repeat the read operation successfully.
   }
@@ -286,9 +287,9 @@ fn replace(array: &mut [u32], src: u32, dst: u32) {
   }
   ◊li{
     The actor writes to ◊code{array[2000]}.
-    The corresponding memory page is write-protected, so the store instruction generates a SIGSEGV signal.
+    The corresponding memory page is write-protected, so the store instruction generates a ◊code{SIGSEGV} signal.
     The context switches to the signal handler.
-    The signal handler marks the page as dirty and removes the write protection.
+    The signal handler marks the page as dirty and removes the write protection by settings the protection flags to ◊code{PROT_READ | PROT_WRITE}.
     The actor code resumes and repeats the write, this time without interruption.
   }
 }
