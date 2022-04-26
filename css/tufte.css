@@ -513,7 +513,7 @@ label.margin-toggle:not(.sidenote-number) {
 }
 
 p.svg {
-    overflow: scroll;
+    overflow-x: auto;
 }
 
 @media (max-width: 760px) {
