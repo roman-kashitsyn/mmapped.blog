@@ -11,6 +11,10 @@ h1, h2, h3 {
   hyphens: none;
 }
 
+.publish-date {
+  font-style: italic;
+}
+
 .github-link::before {
   background-size: 1em 1em;
   width: 1em;
@@ -65,10 +69,6 @@ nav li {
 img.portrait {
   float: left;
   margin: 10px 20px 20px 0px;
-}
-
-ul.arrows, ol.circled {
-  padding-left: 2.5rem;
 }
 
 ul.arrows > li:before {
@@ -513,7 +513,7 @@ label.margin-toggle:not(.sidenote-number) {
 }
 
 p.svg {
-    overflow: scroll;
+    overflow-x: auto;
 }
 
 @media (max-width: 760px) {

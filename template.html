@@ -21,6 +21,11 @@
   </nav>
 </header>
 <h1><a href="/◊|here|">◊(hash-ref metas 'title)</a></h1>
+◊when/splice[(hash-ref metas 'doc-publish-date #f)]{
+<p class="publish-date">
+  Published: <span itemprop="datePublished">◊(hash-ref metas 'doc-publish-date)</span>
+</p>
+}
 <hr>
 ◊(->html doc #:splice? #t)
 ◊(define posts (children 'posts.html (current-pagetree)))

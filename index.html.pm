@@ -13,6 +13,9 @@
 ◊(define prev-page (next last-post page-tree))
 
 ◊h1{◊a[#:href ◊(symbol->string last-post)]{◊(select-from-metas 'title last-post-metas)}}
+◊p[#:class "publish-date"]{
+  Published: ◊span[#:itemprop "datePublished"]{◊(select-from-metas 'doc-publish-date last-post-metas)}
+}
 ◊@{◊(get-doc last-post)}
 
 ◊when/splice[(and prev-page (member prev-page all-posts))]{
