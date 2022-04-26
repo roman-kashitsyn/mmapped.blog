@@ -11,6 +11,10 @@ h1, h2, h3 {
   hyphens: none;
 }
 
+.publish-date {
+  font-style: italic;
+}
+
 .github-link::before {
   background-size: 1em 1em;
   width: 1em;
