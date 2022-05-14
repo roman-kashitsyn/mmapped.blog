@@ -13,6 +13,7 @@
          subsection-title
          sidenote
          marginnote
+         math
          advice
          anchor
          circled
@@ -36,11 +37,11 @@
            (txexpr* 'a `((href ,(string-append "#" anchor))) name)))
 
 (define (epigraph . elems)
-  (txexpr 'div `((class "epigraph")) elems))
+  (txexpr 'div '((class "epigraph")) elems))
 
 (define (sidenote id . elems)
   (@ (txexpr 'label `((class "margin-toggle sidenote-number") (for ,id)))
-     (txexpr 'input `((type "checkbox") (id ,id) (class , "margin-toggle")))
+     (txexpr 'input `((type "checkbox") (id ,id) (class "margin-toggle")))
      (txexpr 'span '((class "sidenote")) elems)))
 
 (define (marginnote id . elems)
@@ -60,6 +61,9 @@
 
 (define (circled n)
   (string (integer->char (+ #x2460 (- n 1)))))
+
+(define (math . elems)
+  (txexpr 'span '((class "math")) elems))
 
 (define (make-li-enumerator n)
   (lambda (elem)

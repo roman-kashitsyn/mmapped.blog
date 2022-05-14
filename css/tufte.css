@@ -145,6 +145,10 @@ pre.bad > code {
   background-color: #ffe6d8;
 }
 
+.math {
+  font-family: "Neo Euler", "Libertinus Serif", et-book, Palatino, serif;
+}
+
 /* Tufte CSS styles */
 html {
     font-size: 15px;
@@ -514,6 +518,7 @@ label.margin-toggle:not(.sidenote-number) {
 
 p.svg {
     overflow-x: auto;
+    text-align: center;
 }
 
 @media (max-width: 760px) {

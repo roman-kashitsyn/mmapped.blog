@@ -28,3 +28,9 @@
        url("/fonts/LibertinusSans-Regular.woff2") format("woff2");
 }
 
+@font-face {
+  font-family: "Neo Euler";
+  font-style:  normal;
+  font-weight: 400;
+  src: url("/fonts/NeoEuler.otf") format("opentype"); 
+}
