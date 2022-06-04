@@ -2,151 +2,160 @@
 
 /* Customized styles */
 
-h1, h2, h3 {
-  font-family: "Libertinus Sans", sans-serif;
-  font-feature-settings: "smcp" on;
-  text-decoration: none;
-  text-transform: lowercase;
-  font-style: normal;
-  hyphens: none;
+h1,
+h2,
+h3 {
+    font-family: "Libertinus Sans", sans-serif;
+    font-feature-settings: "smcp" on;
+    text-decoration: none;
+    text-transform: lowercase;
+    font-style: normal;
+    hyphens: none;
 }
 
 .publish-date {
-  font-style: italic;
+    font-style: italic;
 }
 
 .github-link::before {
-  background-size: 1em 1em;
-  width: 1em;
-  height: 1em;
-  display: inline-block;
-  vertical-align: middle;
-  content: "";
-  margin-right: 5px;
+    background-size: 1em 1em;
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: middle;
+    content: "";
+    margin-right: 5px;
 }
 
 .github-link::before {
-  background-image: url(/images/GitHub-Mark-32px.png);
+    background-image: url(/images/GitHub-Mark-32px.png);
 }
 
 .blog-title {
-  font-weight: bold;
+    font-weight: bold;
 }
 
-figure > div.source-container {
-  width: 100%;
+figure>div.source-container {
+    width: 100%;
 }
 
-div.source-container > pre > code {
+div.source-container>pre>code {
     padding: 1rem;
 }
 
 ul.posts {
-  padding-left: 0px;
-}
-.posts h2 {
-  margin-bottom: 0.1em;
+    padding-left: 0px;
 }
 
-ul.posts > li {
-  list-style: none;
+.posts h2 {
+    margin-bottom: 0.1em;
+}
+
+ul.posts>li {
+    list-style: none;
 }
 
 nav ul {
-  padding: 0px;
+    padding: 0px;
 }
 
 dt {
-  font-style: italic;
+    font-style: italic;
 }
 
 nav li {
-  display: inline;
-  margin: 0 1.5em 0 0;
-  font-feature-settings: "smcp" on;
+    display: inline;
+    margin: 0 1.5em 0 0;
+    font-feature-settings: "smcp" on;
 }
 
 img.portrait {
-  float: left;
-  margin: 10px 20px 20px 0px;
+    float: left;
+    margin: 10px 20px 20px 0px;
 }
 
-ul.arrows > li:before {
-  position: absolute;
-  margin-left: -2.5rem;
-  content: "➞ ";
+ul.arrows>li:before {
+    position: absolute;
+    margin-left: -2.5rem;
+    content: "➞ ";
 }
 
-ul.arrows > li {
-  list-style: none;
+ul.arrows>li {
+    list-style: none;
 }
 
-ol.circled > li {
-  list-style: none;
+ol.circled>li {
+    list-style: none;
 }
 
-ol.circled > li:before {
-  position: absolute;
-  margin-left: -2.5rem;
-  content: attr(data-num-glyph);
+ol.circled>li:before {
+    position: absolute;
+    margin-left: -2.5rem;
+    content: attr(data-num-glyph);
 }
 
 .circled-ref {
-  font-family: "Libertinus Serif", serif;
+    font-family: "Libertinus Serif", serif;
 }
 
 a.anchor {
-  float: left;
-  font-size: 0.8em;
-  text-decoration: none;
+    float: left;
+    font-size: 0.8em;
+    text-decoration: none;
+}
+
+a>code {
+    text-transform: none;
 }
 
 a {
-  text-decoration: none;
-  text-decoration-color: initial;
-  text-transform: lowercase;
-  font-feature-settings: "smcp" on;
-  font-style: normal;
-  hyphens: none;
+    text-decoration: none;
+    text-decoration-color: initial;
+    text-transform: lowercase;
+    font-feature-settings: "smcp" on;
+    font-style: normal;
+    hyphens: none;
 }
 
 div.advice {
-  padding: 5px 0px;
+    padding: 5px 0px;
 }
 
-div.advice > p {
-  width: 100%;
-  font-size: 1.2rem;
-  font-style: italic;
-  text-align: center;
+div.advice>p {
+    width: 100%;
+    font-size: 1.2rem;
+    font-style: italic;
+    text-align: center;
 }
 
 footer {
-  text-align: center;
-  width: 55%;
+    text-align: center;
+    width: 55%;
 }
 
 #next-prev-nav {
-  width: 55%;
-  min-height: 2em;
+    width: 55%;
+    min-height: 2em;
 }
+
 #newer {
-  float: left;
+    float: left;
 }
+
 #older {
-  float: right;
+    float: right;
 }
 
-pre.good > code {
-  background-color: #dcedc8;
+pre.good>code {
+    background-color: #dcedc8;
 }
 
-pre.bad > code {
-  background-color: #ffe6d8;
+pre.bad>code {
+    background-color: #ffe6d8;
 }
 
 .math {
-  font-family: "Neo Euler", "Libertinus Serif", et-book, Palatino, serif;
+    font-family: "Neo Euler", "Libertinus Serif", et-book, Palatino, serif;
 }
 
 /* Tufte CSS styles */
@@ -173,20 +182,20 @@ body {
         color: #ddd;
     }
 
-    pre.good > code {
-       background-color: rgba(38, 205, 77, 0.3)
+    pre.good>code {
+        background-color: rgba(38, 205, 77, 0.3)
     }
 
-    pre.bad > code {
-      background-color: rgba(255, 106, 105, 0.15);
+    pre.bad>code {
+        background-color: rgba(255, 106, 105, 0.15);
     }
 
     .github-link::before {
-      background-image: url(/images/GitHub-Mark-Light-32px.png);
+        background-image: url(/images/GitHub-Mark-Light-32px.png);
     }
 
     figure.grayscale-diagram svg {
-      filter: invert(100%);
+        filter: invert(100%);
     }
 }
 
@@ -272,23 +281,24 @@ div.epigraph {
     margin: 5em 0;
 }
 
-div.epigraph > blockquote {
+div.epigraph>blockquote {
     margin-top: 3em;
     margin-bottom: 3em;
 }
 
-div.epigraph > blockquote,
-div.epigraph > blockquote > p {
+div.epigraph>blockquote,
+div.epigraph>blockquote>p {
     font-style: italic;
 }
 
-div.epigraph > blockquote > footer {
+div.epigraph>blockquote>footer {
     font-style: normal;
 }
 
-div.epigraph > blockquote > footer > cite {
+div.epigraph>blockquote>footer>cite {
     font-style: italic;
 }
+
 /* end chapter epigraphs styles */
 
 blockquote {
@@ -306,19 +316,19 @@ blockquote footer {
     text-align: right;
 }
 
-div.container > p,
-section > p,
-section > div.source-container,
-section > div.advice,
-section > footer,
-section > table {
+div.container>p,
+section>p,
+section>div.source-container,
+section>div.advice,
+section>footer,
+section>table {
     width: 55%;
 }
 
 /* 50 + 5 == 55, to be the same width as paragraph */
-section > dl,
-section > ol,
-section > ul {
+section>dl,
+section>ol,
+section>ul {
     width: 50%;
     -webkit-padding-start: 5%;
 }
@@ -363,14 +373,20 @@ a:visited {
 }
 
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
-    a:link, .tufte-underline, .hover-tufte-underline:hover {
+
+    a:link,
+    .tufte-underline,
+    .hover-tufte-underline:hover {
         background-position-y: 87%, 87%, 87%;
     }
 }
 
 /* Adds dark mode */
 @media (prefers-color-scheme: dark) {
-    a:link, .tufte-underline, .hover-tufte-underline:hover {
+
+    a:link,
+    .tufte-underline,
+    .hover-tufte-underline:hover {
         text-shadow: 0.03em 0 #151515, -0.03em 0 #151515, 0 0.03em #151515, 0 -0.03em #151515, 0.06em 0 #151515, -0.06em 0 #151515, 0.09em 0 #151515, -0.09em 0 #151515, 0.12em 0 #151515, -0.12em 0 #151515, 0.15em 0 #151515, -0.15em 0 #151515;
     }
 }
@@ -446,41 +462,43 @@ div.table-wrapper {
     letter-spacing: .03em;
 }
 
-code, pre > code {
+code,
+pre>code {
     font-family: monospace;
     font-size: 1.0rem;
     line-height: 1.42;
-    -webkit-text-size-adjust: 100%; /* Prevent adjustments of font size after orientation changes in iOS. See https://github.com/edwardtufte/tufte-css/issues/81#issuecomment-261953409 */
+    -webkit-text-size-adjust: 100%;
+    /* Prevent adjustments of font size after orientation changes in iOS. See https://github.com/edwardtufte/tufte-css/issues/81#issuecomment-261953409 */
 }
 
-.sans > code {
+.sans>code {
     font-size: 1.2rem;
 }
 
-h1 > code,
-h2 > code,
-h3 > code {
+h1>code,
+h2>code,
+h3>code {
     font-size: 0.80em;
 }
 
-.marginnote > code,
-.sidenote > code {
+.marginnote>code,
+.sidenote>code {
     font-size: 1rem;
 }
 
-pre > code {
+pre>code {
     font-size: 0.9rem;
     overflow-x: auto;
     display: block;
 }
 
-pre.fullwidth > code {
+pre.fullwidth>code {
     width: 90%;
 }
 
 .fullwidth {
     max-width: 90%;
-    clear:both;
+    clear: both;
 }
 
 span.newthought {
@@ -494,7 +512,8 @@ input.margin-toggle {
 
 label.sidenote-number {
     display: inline-block;
-    max-height: 2rem; /* should be less than or equal to paragraph line-height */
+    max-height: 2rem;
+    /* should be less than or equal to paragraph line-height */
 }
 
 label.margin-toggle:not(.sidenote-number) {
@@ -503,7 +522,8 @@ label.margin-toggle:not(.sidenote-number) {
 
 .iframe-wrapper {
     position: relative;
-    padding-bottom: 56.25%; /* 16:9 */
+    padding-bottom: 56.25%;
+    /* 16:9 */
     padding-top: 25px;
     height: 0;
 }
@@ -533,24 +553,24 @@ p.svg {
     }
 
     hr,
-    section > p,
-    article > footer,
-    section > div.container,
-    div.container > p,
-    section > div.advice,
-    section > div.source-container,
-    section > footer,
-    section > table {
+    section>p,
+    article>footer,
+    section>div.container,
+    div.container>p,
+    section>div.advice,
+    section>div.source-container,
+    section>footer,
+    section>table {
         width: 100%;
     }
 
-    pre > code {
+    pre>code {
         width: 97%;
     }
 
-    section > dl,
-    section > ol,
-    section > ul {
+    section>dl,
+    section>ol,
+    section>ul {
         width: 90%;
     }
 
@@ -583,8 +603,8 @@ p.svg {
         display: none;
     }
 
-    .margin-toggle:checked + .sidenote,
-    .margin-toggle:checked + .marginnote {
+    .margin-toggle:checked+.sidenote,
+    .margin-toggle:checked+.marginnote {
         display: block;
         float: left;
         left: 1rem;
