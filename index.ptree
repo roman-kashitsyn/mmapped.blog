@@ -3,6 +3,7 @@
 index.html
 
 ◊posts.html{
+  posts/07-square-joy-pre-order.html
   posts/06-ic-orthogonal-persistence.html
   posts/05-debug-like-feynman.html
   posts/04-square-joy-trapped-rain-water.html
