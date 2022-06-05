@@ -3,8 +3,8 @@
 ◊(define-meta title "Square joy: pre-order")
 ◊(define-meta keywords "j,arrays,puzzles")
 ◊(define-meta summary "Restoring a binary tree from its pre-order traversal.")
-◊(define-meta doc-publish-date "2022-05-30")
-◊(define-meta doc-updated-date "2022-05-30")
+◊(define-meta doc-publish-date "2022-06-05")
+◊(define-meta doc-updated-date "2022-06-05")
 
 ◊section{
 ◊p{
@@ -84,6 +84,20 @@
 }
 ◊p{
   The pre-order vector specifies the vertical order of the nodes; the depth vector specifies how far these nodes lie horizontally.
+}
+◊source-code["j"]{
+   ((D>:/H) + (T+1) * D=/ H =. i.1+>./D) ◊"{" ' .APLJKQFUN'
+Q
+.P
+..A
+..J
+...L
+...K
+.U
+..F
+..N
+}
+◊p{
   This representation has many benefits, but it is not convenient for our problem.
 }
 
@@ -410,10 +424,12 @@ void restore_tree(int Pre[], int P[], int N) {
 ◊section-title["where-to-go-next"]{Where to go next}
 ◊ul[#:class "arrows"]{
   ◊li{Solve this problem on ◊a[#:href "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/"]{Leetcode}.}
+  ◊li{Solve a similar◊sidenote["nm-post-order"]{Hint: all of the tricks we discussed in this article will work.} problem: recover a tree from its in-order and post-order traversals.}
   ◊li{Read the previous "square joy" article, ◊a[#:href "/posts/04-square-joy-trapped-rain-water.html"]{trapped rainwater}.}
   ◊li{Watch Aaron Hsu's talk, ◊a[#:href "https://www.youtube.com/watch?v=hzPd3umu78g"]{High-performance Tree Wrangling, the APL way}.}
   ◊li{Read Aaron Hsu's dissertation, ◊a[#:href "https://scholarworks.iu.edu/dspace/handle/2022/24749"]{A data parallel compiler hosted on GPU}.
     It goes deep into tree representations and conversions between these representations.
     There are many exciting algorithms on the parent vector representation, too.}
+  ◊li{Listen to the ◊a[#:href "https://arraycast.com/"]{Arraycast} podcast.}
 }
 }
