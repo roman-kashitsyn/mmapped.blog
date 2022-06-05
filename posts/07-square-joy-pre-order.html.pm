@@ -18,7 +18,7 @@
 ◊section-title["the-problem"]{The problem: recover a binary tree}
 ◊p{
   Given two sequences of distinct values, ◊code{inorder} and ◊code{preorder},
-  where ◊code{inorder} is a ◊a[#:href "https://en.wikipedia.org/wiki/Tree_traversal#In-order,_LNR"]{in-order traversal} of a binary tree,
+  where ◊code{inorder} is an ◊a[#:href "https://en.wikipedia.org/wiki/Tree_traversal#In-order,_LNR"]{in-order traversal} of a binary tree,
   and ◊code{preorder} is a ◊a[#:href "https://en.wikipedia.org/wiki/Tree_traversal#Pre-order,_NLR"]{pre-order traversal} of the ◊em{same} tree, recover the tree structure.
 }
 ◊p{
@@ -75,7 +75,7 @@
 }
 ◊subsection-title["depth-vector"]{Depth vector}
 ◊p{
-  Depth vector is a tree representation that you often see in graphical user interfaces, such as text editors displaying the project file structure.
+  The depth vector is a tree representation that you often see in graphical user interfaces, such as text editors displaying the project file structure.
   This representation consists of the vector of nodes as they appear in the pre-order traversal and the vector of corresponding node depths.
 }
 ◊source-code["j"]{
@@ -103,7 +103,7 @@ Q
 
 ◊subsection-title["parent-vector"]{Parent vector}
 ◊p{
-  ◊a[#:href "https://dl.acm.org/doi/10.1145/586058.586060"]{Parent vector} is an array mapping nodes to their parents.
+  The ◊a[#:href "https://dl.acm.org/doi/10.1145/586058.586060"]{parent vector} is an array mapping nodes to their parents.
   Technically, the root node does not have a parent, but many algorithms become more elegant if we extend the definition of parent to work for the root node as well: we declare that the parent of the root node is the root node itself.
 }
 ◊p{
@@ -117,7 +117,7 @@ Q
   We will use a couple of J primitives: ◊a[#:href "https://code.jsoftware.com/wiki/Vocabulary/icapdot"]{◊code{I.} (indices)} returning the indices of set bits in a boolean mask, and ◊a[#:href "https://code.jsoftware.com/wiki/Vocabulary/edot#dyadic"]{◊code{e.} (member in)} returning a boolean mask that has the shape of the left argument and has bits set for items that appear in the right argument.
 }
 ◊p{
-  Let us find the tree root, a◊sidenote["mn-forest"]{Parent vector representation also works for ◊a[#:href "https://en.wikipedia.org/wiki/Tree_(graph_theory)#Forest"]{forests}.} node that is its parent.
+  Let us find the◊sidenote["mn-forest"]{Parent vector representation also works for ◊a[#:href "https://en.wikipedia.org/wiki/Tree_(graph_theory)#Forest"]{forests}.} tree root, the node that is its parent.
 }
 ◊source-code["j"]{
     P = i.#P
@@ -424,7 +424,10 @@ void restore_tree(int Pre[], int P[], int N) {
 ◊section-title["where-to-go-next"]{Where to go next}
 ◊ul[#:class "arrows"]{
   ◊li{Solve this problem on ◊a[#:href "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/"]{Leetcode}.}
-  ◊li{Solve a similar◊sidenote["nm-post-order"]{Hint: all of the tricks we discussed in this article will work.} problem: recover a tree from its in-order and post-order traversals.}
+  ◊li{
+    Solve a similar problem: recover a tree from its in-order and post-order traversals.
+    Hint: all of the tricks discussed in this article will work after changing the direction.
+  }
   ◊li{Read the previous "square joy" article, ◊a[#:href "/posts/04-square-joy-trapped-rain-water.html"]{trapped rainwater}.}
   ◊li{Watch Aaron Hsu's talk, ◊a[#:href "https://www.youtube.com/watch?v=hzPd3umu78g"]{High-performance Tree Wrangling, the APL way}.}
   ◊li{Read Aaron Hsu's dissertation, ◊a[#:href "https://scholarworks.iu.edu/dspace/handle/2022/24749"]{A data parallel compiler hosted on GPU}.
