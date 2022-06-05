@@ -423,6 +423,7 @@ void restore_tree(int Pre[], int P[], int N) {
 ◊section{
 ◊section-title["where-to-go-next"]{Where to go next}
 ◊ul[#:class "arrows"]{
+  ◊li{Discuss this article on ◊a[#:href "https://www.reddit.com/r/apljk/comments/v5cr09/blog_post_square_joy_preorder/"]{Reddit}.}
   ◊li{Solve this problem on ◊a[#:href "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/"]{Leetcode}.}
   ◊li{
     Solve a similar problem: recover a tree from its in-order and post-order traversals.
