@@ -26,6 +26,7 @@
     There are still good reasons to assign multiple nodes in a data center to the same subnet, such as increasing query call capacity and speeding up recovery in case of a replica restart.
   }.
   The goal is to improve availability: a disaster in a single data center cannot take down an entire subnet.
+  The ◊em{registry} smart contract maintains the assignment of nodes to physical machines, and the ◊a[#:href "https://dfinity.org/howitworks/network-nervous-system-nns"]{Network Nervous System} governs all the changes to the registry.
 }
 ◊p{
   Nodes from different subnets can live in the same data center.
@@ -41,7 +42,10 @@
 }
 ◊p{
   XNet protocol is not limited to the same-datacenter communication; any node from one subnet can talk to any other node from another subnet.
-  However, the replica prefers contacting close peers to reduce the message delivery latency.
+  However, the replica prefers contacting close◊sidenote["mn-proximity"]{
+    The replica uses network latency as the measure of proximity.
+    It randomly contacts nodes from other subnets , assigning higher weights to nodes with lower latency.
+  } peers to reduce the message delivery latency.
 }
 }
 
@@ -60,14 +64,14 @@
 ◊p{
   XNet payload builder pulls messages from nodes assigned to other subnets using a simple HTTP protocol.
   ◊em{XNet endpoint} is a component that serves messages destined for other subnets over secure TLS connections, accepting connections only from other nodes◊sidenote["sn-xnet-tls"]{This measure does not imply privacy because malicious nodes can access the data; but ensures that network providers cannot read the messages.}.
-  XNet endpoint fetches the complete list of nodes, their subnet assignment, IP addresses, and public keys (required to establish a TLS connection) from the registry, a component that handles global system configuration.
+  XNet endpoint fetches the complete list of nodes, their subnet assignment, IP addresses, and public keys (required to establish a TLS connection) from the registry.
 }
 
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-endpoint"]{
     The data flow in the XNet protocol.
-    The subnet Y produces a signed stream of messages for subnet X and exposes this stream via an HTTP endpoint.
-    The subnet X pulls messages from one of the nodes on the subnet Y.
+    Subnet ◊math{Y} produces a signed stream of messages for subnet X and exposes this stream via an HTTP endpoint.
+    Subnet ◊math{X} pulls messages from one of the nodes on subnet Y.
   }
   ◊p{◊(embed-svg "images/08-xnet-endpoint.svg")}
 }
@@ -144,14 +148,14 @@
 ◊p{
   From my experience, the interplay of message indices and signals is notoriously hard to grasp, so let us look at an example.
   The diagram below depicts two subnets, ◊math{X} and ◊math{Y}, caught in the middle of communication.
-  The ◊math{X} subnet gets a prefix of ◊math{Y}'s stream and the header, allowing ◊math{X} to induct new messages and garbage-collect its messages and signals.
+  Subnet ◊math{X} gets a prefix of ◊math{Y}'s stream and the header, allowing ◊math{X} to induct new messages and garbage-collect its messages and signals.
   ◊math{X} also publishes signals for the newly received messages and updates its indices accordingly so that ◊math{Y} could garbage-collect its messages and signals in the next round of communication.
 }
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-signals"]{
     Two subnets, ◊math{X} and ◊math{Y}, communicating over the XNet protocol.
-    In previous communications, the ◊math{Y} subnet consumed messages ◊math{[0,10)} from ◊math{X}'s stream and has recently received messages ◊math{10} and ◊math{11}.
-    Now, the ◊math{X} subnet receives a prefix of ◊math{Y}'s stream and the matching header and removes messages ◊math{10} and ◊math{11} from its stream because ◊math{Y} will not need them anymore.
+    In previous communications, subnet ◊math{Y} consumed messages ◊math{[0,10)} from ◊math{X}'s stream and has recently received messages ◊math{10} and ◊math{11}.
+    Now, subnet ◊math{X} receives a prefix of ◊math{Y}'s stream and the matching header and removes messages ◊math{10} and ◊math{11} from its stream because ◊math{Y} will not need them anymore.
     ◊math{X} also includes signals for the newly received messages into the ◊math{X → Y} stream header and removes an obsolete signal for message ◊math{Y◊sub{1}} it consumed before.
   }
   ◊p{◊(embed-svg "images/08-signals.svg")}
@@ -165,10 +169,9 @@
 ◊section-title["stream-certification"]{Stream certification}
 ◊p{
   Since no two nodes in the network can blindly trust each other, we need a mechanism to validate the contents of XNet payloads.
+  More specifically, we want proof that the stream prefix in the payload is the same on all honest nodes in the subnet that produced the stream.
   In the previous article, we have seen how nodes use threshold signatures on ◊a[#:href "/posts/02-ic-state-machine-replication.html#state-trees"]{state trees} as authenticity proofs for call replies.
   The XNet protocol relies on the same trick: nodes include streams destined for other subnets into their state trees and use threshold signatures as proofs of authenticity for nodes from other subnets.
-  Conceptually, a node requesting messages from a subnet is not different from a client requesting a response.
-  This similarity enables us to use the same authentication mechanism in both cases.
 }
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-certification"]{
@@ -177,12 +180,15 @@
   ◊p{◊(embed-svg "images/08-certification.svg")}
 }
 ◊p{
-  Currently, there is a minor difference in how we represent certificates in the XNet protocol and the ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#_certificate"]{IC HTTP} interface.
-  The HTTP interface certificates combine the data and the hashes required to check the authenticity in a single data structure, the ◊em{hash tree}.
-  The XNet protocol separates the raw message data and the hashes (called the ◊em{witness}) into separate data structures.
-  The reason for that distinction is purely historical.
-  We implemented the XNet protocol significantly earlier than the response authentication, so we could not benefit from the brilliance of ◊a[#:href "https://www.joachim-breitner.de/blog"]{Joachim Breitner}.
-  Joachim took the XNet authentication scheme as the starting point and simplified it for the IC Interface Specification.
+  Conceptually, a node requesting messages from a subnet is not different from a client requesting a response.
+  This similarity allows us to use the same◊sidenote["sn-same-auth"]{
+    Currently, there is a minor difference in how we represent certificates in the XNet protocol and the ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#_certificate"]{IC HTTP} interface.
+    The HTTP interface certificates combine the data and the hashes required to check the authenticity in a single data structure, the ◊em{hash tree}.
+    The XNet protocol separates the raw message data and the hashes (called the ◊em{witness}) into separate data structures.
+    The reason for that distinction is purely historical.
+    We implemented the XNet protocol significantly earlier than the response authentication, so we could not benefit from ◊a[#:href "https://www.joachim-breitner.de/blog"]{Joachim Breitner's} brilliance.
+    Joachim took the XNet authentication scheme as the starting point and simplified it for the IC Interface Specification.
+  } authentication mechanism in both cases.
 }
 ◊p{
   The tree structure of the certificate comes in handy for buffering messages on the receiver: the receiver can maintain a slightly larger pool of messages than a single block can fit, asynchronously fetching new messages and appending them to the pool, merging the certificates appropriately.
