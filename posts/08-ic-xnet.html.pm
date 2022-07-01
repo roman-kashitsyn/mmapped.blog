@@ -50,38 +50,10 @@
 }
 
 ◊section{
-◊section-title["block-payloads"]{Block payloads}
-◊p{
-  The job of the consensus protocol is to aggregate messages from the outside world and pack them into a neat block.
-  The consensus includes several types of messages into blocks, such as user ingress messages, Bitcoin transactions (for subnets with enabled Bitcoin integration), and inter-canister messages from other subnets.
-  We call messages paired with the data required for their validation a ◊em{payload}.
-  We call components that pull payloads from the network ◊em{payload builders}.
-}
-◊figure[#:class "grayscale-diagram"]{
-  ◊marginnote["mn-payloads"]{The consensus algorithm aggregates messages from the outside world into blocks.}
-  ◊p{◊(embed-svg "images/08-block-payloads.svg")}
-}
-◊p{
-  XNet payload builder pulls messages from nodes assigned to other subnets using a simple HTTP protocol.
-  ◊em{XNet endpoint} is a component that serves messages destined for other subnets over secure TLS connections, accepting connections only from other nodes◊sidenote["sn-xnet-tls"]{This measure does not imply privacy because malicious nodes can access the data; but ensures that network providers cannot read the messages.}.
-  XNet endpoint fetches the complete list of nodes, their subnet assignment, IP addresses, and public keys (required to establish a TLS connection) from the registry.
-}
-
-◊figure[#:class "grayscale-diagram"]{
-  ◊marginnote["mn-endpoint"]{
-    The data flow in the XNet protocol.
-    Subnet ◊math{Y} produces a signed stream of messages for subnet X and exposes this stream via an HTTP endpoint.
-    Subnet ◊math{X} pulls messages from one of the nodes on subnet Y.
-  }
-  ◊p{◊(embed-svg "images/08-xnet-endpoint.svg")}
-}
-}
-
-◊section{
 ◊section-title["message-streams"]{Message streams}
 ◊p{
   Messages start their journey in the output queues of canisters hosted on the source subnet.
-  The subnet sorts these messages based on the destination subnet and conflates them into a flat message stream (one stream per destination subnet).
+  The subnet sorts these messages based on the destination subnet and interleaves them into flat message streams (one stream per destination subnet).
   Each message in the stream gets a unique monotonically increasing index.
 }
 ◊figure[#:class "grayscale-diagram"]{
@@ -92,7 +64,7 @@
   ◊p{◊(embed-svg "images/08-message-streams.svg")}
 }
 ◊p{
-  The component conflating the queues (aptly called ◊em{stream builder}) should satisfy a few constraints:
+  The component merging the queues (aptly called ◊em{stream builder}) should satisfy a few constraints:
 }
 ◊dl{
   ◊dt{Determinism}
@@ -118,6 +90,34 @@
 }
 
 ◊section{
+◊section-title["block-payloads"]{Block payloads}
+◊p{
+  The job of the consensus protocol is to aggregate messages from the outside world and pack them into a neat block.
+  Consensus includes several types of messages into blocks, such as user ingress messages, Bitcoin transactions (for subnets with enabled Bitcoin integration), and inter-canister messages from other subnets.
+  We call messages paired with the data required for their validation a ◊em{payload}.
+  We call components that pull payloads from the network ◊em{payload builders}.
+}
+◊figure[#:class "grayscale-diagram"]{
+  ◊marginnote["mn-payloads"]{The consensus algorithm aggregates messages from the outside world into blocks.}
+  ◊p{◊(embed-svg "images/08-block-payloads.svg")}
+}
+◊p{
+  XNet payload builder pulls messages from nodes assigned to other subnets using a simple HTTP protocol.
+  ◊em{XNet endpoint} is a component that serves messages destined for other subnets over secure TLS connections, accepting connections only from other nodes◊sidenote["sn-xnet-tls"]{This measure does not imply privacy because malicious nodes can access the data; but ensures that network providers cannot read the messages.}.
+  XNet endpoint fetches the complete list of nodes, their subnet assignment, IP addresses, and public keys (required to establish a TLS connection) from the registry.
+}
+
+◊figure[#:class "grayscale-diagram"]{
+  ◊marginnote["mn-endpoint"]{
+    The data flow in the XNet protocol.
+    Subnet ◊math{Y} produces a signed stream of messages for subnet X and exposes this stream via an HTTP endpoint.
+    Subnet ◊math{X} pulls messages from one of the nodes on subnet Y.
+  }
+  ◊p{◊(embed-svg "images/08-xnet-endpoint.svg")}
+}
+}
+
+◊section{
 ◊section-title["garbage-collection"]{Garbage collection}
 ◊p{
   We now know how one subnet accumulates messages destined for another subnet.
@@ -135,13 +135,13 @@
     The full range of message indices in the forward stream ◊math{X → Y}.
   }
   ◊li{
-    The signals for the ◊em{reverse} stream (◊math{Y → X}): for each message index in the reverse stream, ◊math{Y} tells whether ◊math{X} can garbage collect the message (an ◊code{ACK} signal) or should reschedule the message (a ◊code{REJECT} signal).
-    A ◊code{REJECT} signal indicates that the destination canister moved, so ◊math{X} should insert the message into another stream.
+    The signals for the ◊em{reverse} stream (◊math{Y → X}): for each message index in the reverse stream, ◊math{Y} tells whether ◊math{X} can garbage collect the message (an ◊code{ACK} signal) or should reroute the message (a ◊code{REJECT} signal).
+    A ◊code{REJECT} signal indicates that the destination canister moved, so ◊math{X} should route the message into another stream.
   }
 }
 ◊p{
   Signals solve the issue of collecting obsolete messages, but they introduce another problem now we also need to garbage-collect signals!
-  Luckily, we already have all the information we need: we keep signals only for messages that are still present in the remote stream.
+  Luckily, we already have all the information we need: we keep signals only for messages that are still present in the reverse stream.
   Once we notice (by looking at the range of message indices) that the remote subnet dropped messages from its stream, we can remove the corresponding signals from our header.
   
 }
@@ -161,7 +161,7 @@
   ◊p{◊(embed-svg "images/08-signals.svg")}
 }
 ◊p{
-  Signals and stream messages are like snakes eating each other tails on the ◊a[#:href "https://theneverendingstory.fandom.com/wiki/Auryn"]{Auryn}: the sender drops messages when it sees signals, and the receiver drops signals when it sees stream bounds.
+  Signals and stream messages are like snakes eating each other's tails on the ◊a[#:href "https://theneverendingstory.fandom.com/wiki/Auryn"]{Auryn}: the sender drops messages when it sees signals, and the receiver drops signals when it sees stream bounds advancing.
 }
 }
 
