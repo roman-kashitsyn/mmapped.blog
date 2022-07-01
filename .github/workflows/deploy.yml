@@ -27,7 +27,7 @@ jobs:
         path: |
           ~/.cache/racket
           ~/.local/share/racket
-        key: ${{ runner.os }}-racket-8.5
+        key: ${{ runner.os }}-racket-8.3
 
     - run: raco pkg install --auto --skip-installed "git+https://git.sr.ht/~mbutterick/pollen"
     - run: raco pollen render sources
