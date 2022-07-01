@@ -10,14 +10,14 @@
 ◊section-title["introduction"]{Introduction}
 ◊p{
   This article continues the previous post on state machine replication in the Internet Computer (IC), ◊a[#:href "/posts/02-ic-state-machine-replication.html"]{A swarm of replicated state machines}.
-  This time, we shall closely examine the ◊em{XNet protocol}, the protocol over which independent state machines (also known as ◊em{subnets}) communicate.
+  This time, we shall examine the protocol over which independent state machines (also known as ◊em{subnets}) communicate, the ◊em{XNet protocol}. 
 }
 }
 
 ◊section{
 ◊section-title["subnets"]{Subnets}
 ◊p{
-  A ◊em{subnet} is a collection of nodes participating in a single instance of the consensus protocol.
+  A ◊em{subnet} is a collection of nodes participating in a single instance of the ◊a[#:href "https://dfinity.org/howitworks/consensus"]{consensus protocol}.
   All the nodes in a subnet have the same state and apply the same blocks.
 }
 ◊p{
@@ -25,8 +25,8 @@
   However, the opposite is usually true: subnet nodes are often geographically distributed across independent data centers◊sidenote["sn-dc-nodes"]{
     There are still good reasons to assign multiple nodes in a data center to the same subnet, such as increasing query call capacity and speeding up recovery in case of a replica restart.
   }.
-  The goal is to improve availability: a disaster in a single data center cannot take down an entire subnet.
-  The ◊em{registry} smart contract maintains the assignment of nodes to physical machines, and the ◊a[#:href "https://dfinity.org/howitworks/network-nervous-system-nns"]{Network Nervous System} governs all the changes to the registry.
+  The goal is to improve availability: a disaster in a single data center cannot take down the entire subnet.
+  The ◊em{registry} canister maintains the assignment of nodes to physical machines, and the ◊a[#:href "https://dfinity.org/howitworks/network-nervous-system-nns"]{Network Nervous System} governs all the changes to the registry.
 }
 ◊p{
   Nodes from different subnets can live in the same data center.
@@ -43,8 +43,8 @@
 ◊p{
   XNet protocol is not limited to the same-datacenter communication; any node from one subnet can talk to any other node from another subnet.
   However, the replica prefers contacting close◊sidenote["mn-proximity"]{
-    The replica uses network latency as the measure of proximity.
-    It randomly contacts nodes from other subnets , assigning higher weights to nodes with lower latency.
+    The replica uses network latency as the proximity measure.
+    It randomly contacts nodes from other subnets, assigning higher weights to nodes with lower latency.
   } peers to reduce the message delivery latency.
 }
 }
@@ -122,12 +122,12 @@
 ◊p{
   We now know how one subnet accumulates messages destined for another subnet.
   This knowledge begs another question: how do replicas remove messages that the destination subnet has already consumed?
-  We need a feedback mechanism allowing the consumer subnet to tell the producer subnet that it will not look at some stream prefix.
+  We need a feedback mechanism allowing the consumer subnet to tell the producer subnet that it does not need some stream prefix anymore.
   We call this mechanism ◊em{signals}.
 }
 ◊p{
   Signals are a part of the XNet payload specifying the prefix of the ◊em{reverse} stream that the sending subnet can drop.
-  When a node from subnet ◊math{X} fetches XNet payload from a node from subnet ◊math{Y}, in addition to actual messages, the ◊math{Y} node includes ◊em{stream header}.
+  When a node from subnet ◊math{X} fetches XNet payload from a node from subnet ◊math{Y}, in addition to actual messages, the ◊math{Y} node includes the ◊em{stream header}.
   The stream header describes the state of the ◊math{X ↔ Y} communication:
 }
 ◊ul[#:class "arrows"]{
@@ -220,7 +220,7 @@
 ◊section{
 ◊section-title["credits"]{Credits}
 ◊p{
-  Finally, I shall give due credit to people who played an essential role in developing the protocol.
+  Finally, I shall give due credit to people who played an essential role in the protocol development.
 }
 ◊ul[#:class "arrows"]{
 ◊li{
@@ -233,5 +233,7 @@
   ◊a[#:href "https://www.linkedin.com/in/alin-sinpalean-8451b8139/"]{Alin Sinpalean} implemented the protocol in the ◊a[#:href "https://github.com/dfinity/ic/tree/3fe4137c86ab0521c39089954c03d7fb29e2c3d2/rs/xnet"]{IC replica} and developed many optimizations.
 }
 }
-
+◊p{
+  My main contributions are stream certification and TLS integration.
+}
 }
