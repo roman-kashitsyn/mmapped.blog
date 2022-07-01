@@ -26,7 +26,7 @@ jobs:
           ~/.local/share/racket
         key: ${{ runner.os }}-racket-8.3
 
-    - run: raco pkg install --auto --skip-installed pollen
+    - run: raco pkg install --auto --skip-installed "git+https://git.sr.ht/~mbutterick/pollen"
     - run: raco pollen render sources
     - run: raco pollen publish sources site 
     - run: rm site/template.html site/README.md site/Dockerfile
