@@ -218,6 +218,22 @@
 }
 
 ◊section{
+◊section-title["references"]{Code references}
+◊p{
+  A few pointers to the code implementing designs from this article:
+}
+◊ul[#:class "arrows"]{
+  ◊li{The ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/registry/routing_table/src/lib.rs#L213"]{routing table}.}
+  ◊li{The ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/messaging/src/routing/stream_builder.rs#L237"]{stream builder}.}
+  ◊li{The ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/payload_builder/src/lib.rs#L665"]{payload builder} and the ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/payload_builder/src/certified_slice_pool.rs#L1042"]{XNet message buffer}.}
+  ◊li{The ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/endpoint/src/lib.rs#L93"]{XNet endpoint} and the ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/payload_builder/src/proximity.rs#L118"]{node proximity metric} computation.}
+  ◊li{The ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/messaging/src/routing/stream_handler.rs#L557"]{induction of messages} into the state machine state.}
+  ◊li{The garbage collection of ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/messaging/src/routing/stream_handler.rs#L391-L426"]{messages} and ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/messaging/src/routing/stream_handler.rs#L428-L465"]{signals}.}
+  ◊li{The ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/canonical_state/src/lazy_tree/conversion.rs#L254-L284"]{mapping of streams} to the tree structure, ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/state_manager/src/stream_encoding.rs#L40"]{tree encoding}, and ◊a[#:href "https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/state_manager/src/lib.rs#L2912-L2972"]{validation}.}
+}
+}
+
+◊section{
 ◊section-title["credits"]{Credits}
 ◊p{
   Finally, I shall give due credit to people who played an essential role in the protocol development.
