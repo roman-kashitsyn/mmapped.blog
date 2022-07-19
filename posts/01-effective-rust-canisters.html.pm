@@ -463,7 +463,7 @@ type CreateEntityResult = variant {
 }
 ◊p{
   Instructions are not cycles, but there is a ◊a[#:href "https://github.com/dfinity/ic/blob/c01d7d1b2e18490a2f70d2fdf5b6aceccab5860c/rs/cycles_account_manager/src/lib.rs#L730-L738"]{simple linear function} that converts instructions to cycles.
-  As of July 2022, ten instructions are equivalent to four cycles on a ◊a[#:href "https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L288-L289"]{verified application} subnet.
+  As of July 2022, ten instructions are equivalent to four cycles on an ◊a[#:href "https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L288-L289"]{application} subnet.
 }
 ◊p{
   Note that the value that ◊code{performance_counter} returns has meaning only within a single execution.
