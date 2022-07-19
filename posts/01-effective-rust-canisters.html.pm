@@ -786,7 +786,7 @@ $ ic-wasm -o counter_optimized.wasm counter.wasm shrink
 }
 ◊p{
   For typical WebAssembly files that do not embed compressed assets, GZip-compression can often cut the module size in half.
-  Compressing the counter canister after shrinks the module size from 340KiB to 115KiB (about 5% of the 2.2MiB module we started with!).
+  Compressing the counter canister shrinks the module size from 340KiB to 115KiB (about 5% of the 2.2MiB module we started with!).
 }
 
 }
