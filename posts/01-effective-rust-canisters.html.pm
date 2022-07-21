@@ -4,7 +4,7 @@
 ◊(define-meta keywords "rust, ic, canisters")
 ◊(define-meta summary "A compilation of useful patterns for developing IC canisters in Rust.")
 ◊(define-meta doc-publish-date "2021-10-25")
-◊(define-meta doc-updated-date "2022-02-19")
+◊(define-meta doc-updated-date "2022-07-18")
 
 ◊section{
 ◊section-title["how-to-read"]{How to read this document}
@@ -443,6 +443,358 @@ type CreateEntityResult = variant {
 }
 
 ◊section{
+◊section-title["optimization"]{Optimization}
+◊subsection-title["cycle-consumption"]{Reducing cycle consumption}
+◊p{
+  The first step towards an optimized system is profiling.
+}
+
+◊advice["instruction-counter"]{Measure the number of instructions your endpoints consume.}
+
+◊p{
+  The ◊a[#:href "https://docs.rs/ic-cdk/0.5.3/ic_cdk/api/fn.instruction_counter.html"]{◊code{instruction_counter}} API will tell you the number of ◊em{instructions} your code consumed since the last ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#entry-points"]{entry point}.
+  Instructions are the internal currency of the IC runtime.
+  One IC instruction is the ◊a[#:href "https://en.wikipedia.org/wiki/Quantum"]{quantum} of work that the system can do, such as loading a 32-bit integer from a memory address.
+  The system assigns an instruction cost equivalent to each ◊a[#:href "https://sourcegraph.com/github.com/dfinity/ic@cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156/-/blob/rs/embedders/src/wasm_utils/instrumentation.rs?L155-177"]{WebAssembly instruction} and ◊a[#:href "https://sourcegraph.com/github.com/dfinity/ic@cfdbbf5/-/blob/rs/embedders/src/wasmtime_embedder/system_api_complexity.rs?L40-107"]{system call}.
+  It also defines all its limits in terms of instructions.
+  As of July 2022, these limits are:
+}
+◊ul[#:class "arrows"]{
+◊li{One message execution: ◊a[#:href "https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L19"]{5 billion} instructions.}
+◊li{One round◊sidenote["sn-round"]{Each block produced by consensus initiates a round of execution.}: ◊a[#:href "https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L46"]{7 billion} instructions.}
+◊li{Canister upgrade: ◊a[#:href "https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L56"]{200 billion} instructions.}
+}
+◊p{
+  Instructions are not cycles, but there is a ◊a[#:href "https://github.com/dfinity/ic/blob/c01d7d1b2e18490a2f70d2fdf5b6aceccab5860c/rs/cycles_account_manager/src/lib.rs#L730-L738"]{simple linear function} that converts instructions to cycles.
+  As of July 2022, ten instructions are equivalent to four cycles on an ◊a[#:href "https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L288-L289"]{application} subnet.
+}
+◊p{
+  Note that the value that ◊code{performance_counter} returns has meaning only within a single execution.
+  You should not compare values of the instruction counter measured across async boundaries.
+}
+
+◊source-code["bad"]{
+#[update]
+async fn transfer(from: Account, to: Account, amount: Nat) -> Result<TxId, Error> {
+  let start = ic_cdk::api::instruction_counter();
+
+  let tx = apply_transfer(from, to, amount)?;
+  let tx_id = archive_transaction(tx).◊b{await}?;
+
+  ◊em{// ◊b{BAD}: the await point above resets the instruction counter.}
+  let end = ic_cdk::api::instruction_counter();
+  record_measurement(end - start);
+
+  Ok(tx_id)
+}
+}
+
+◊advice["serde-bytes"]{Encode byte arrays using the ◊a[#:href "https://crates.io/crates/serde_bytes"]{◊code{serde_bytes}} package.}
+
+◊p{
+  ◊a[#:href "https://github.com/dfinity/candid"]{Candid} is the standard interface definition language on the IC.
+  The Rust implementation of Candid relies on a popular ◊a[#:href "https://serde.rs/"]{serde} framework and inherits all of serde's quirks.
+  One such quirk is the inefficient encoding of byte arrays (◊code{Vec<u8>} and ◊code{[u8]}) in most serialization formats.
+  Due to Rust ◊a[#:href "https://rust-lang.github.io/rfcs/1210-impl-specialization.html"]{limitations}, serde cannot treat byte arrays specially and encodes each byte as a separate element in a generic array, increasing the number of instructions required to encode or decode the message (often by a factor of ten or more).
+}
+◊p{
+  The ◊code{HttpResponse} from the canister http protocol is a good example.
+}
+◊source-code["bad"]{
+#[derive(CandidType, Deserialize)]
+struct HttpResponse {
+    status_code: u16,
+    headers: Vec<(String, String)>,
+    ◊em{// ◊b{BAD}: inefficient}
+    body: Vec<u8>,
+}
+}
+
+◊p{
+  The ◊code{body} field can be large; let us tell serde to encode this field more efficiently using the ◊a[#:href "https://serde.rs/field-attrs.html#with"]{◊code{with}} attribute.
+}
+
+◊source-code["good"]{
+#[derive(CandidType, Deserialize)]
+struct HttpResponse {
+    status_code: u16,
+    headers: Vec<(String, String)>,
+    ◊em{// ◊b{OK}: encoded efficiently}
+    #[serde(with = "serde_bytes")]
+    body: Vec<u8>,
+}
+}
+
+◊p{
+  Alternatively, we can use the ◊a[#:href "https://docs.serde.rs/serde_bytes/struct.ByteBuf.html"]{◊code{ByteBuf}} type for this field.
+}
+
+◊source-code["good"]{
+#[derive(CandidType, Deserialize)]
+struct HttpResponse {
+    status_code: u16,
+    headers: Vec<(String, String)>,
+    ◊em{// ◊b{OK}: also efficient}
+    body: serde_bytes::ByteBuf,
+}
+}
+
+◊p{I wrote a tiny canister to measure the savings.}
+
+◊figure{
+◊marginnote["mn-http-response-canister"]{
+  A canister endpoint measuring the number of instructions required to encode an HTTP response.
+  We have to use a ◊a[#:href "https://docs.rs/ic-cdk/latest/ic_cdk/api/call/struct.ManualReply.html"]{◊code{ManualReply}} to measure the encoding time.
+}
+◊source-code["rust"]{
+#[query(manual_reply = true)]
+fn http_response() -> ManualReply<HttpResponse> {
+    let start = ic_cdk::api::instruction_counter();
+    let reply = ManualReply::one(HttpResponse {
+        status_code: 200,
+        headers: vec![("Content-Length".to_string(), "1000000".to_string())],
+        body: vec![0; 1_000_000],
+    });
+    let end = ic_cdk::api::instruction_counter();
+    ic_cdk::api::print(format!("Consumed {} instructions", end - start));
+    reply
+}
+}
+}
+◊p{
+  The unoptimized version consumes 130 million instructions to encode one megabyte, and the version with ◊code{serde_bytes} needs only 12 million instructions.
+}
+
+◊p{
+  In the case of the ◊a[#:href "https://github.com/dfinity/internet-identity/"]{Internet Identity} canister, this change alone reduced the instruction consumption in HTTP queries by ◊a[#:href "https://github.com/dfinity/internet-identity/pull/184"]{order of magnitude}.
+  You should apply the same technique for all types deriving serde's ◊code{Serialize} and ◊code{Deserialize} traits, not just for types you encode as Candid.
+  A ◊a[#:href "https://github.com/dfinity/ic/commit/1b98a5d984176b1c948d0cb92227d88ad5ee8044"]{similar change} boosted the ICP ledger archive upgrades (the canister uses ◊a[#:href "https://cbor.io"]{CBOR} for state serialization).
+}
+
+◊advice["avoid-copies"]{Avoid copying large values.}
+
+◊p{
+  Experience shows that canisters spend a lot of their instructions copying bytes◊sidenote["sn-bulk-ops"]{
+    Spending a lot of time in ◊code{memcpy} and ◊code{memset} is a common trait of many WebAssembly programs.
+    That observation led to the ◊a[#:href "https://github.com/WebAssembly/bulk-memory-operations/blob/dcaa1b6791401c29b67e8cd7929ec80949f1f849/proposals/bulk-memory-operations/Overview.md"]{bulk memory operations} proposal included in the ◊a[#:href "https://webassembly.github.io/spec/core/appendix/changes.html?highlight=proposals#bulk-memory-and-table-instructions"]{WebAssembly 2.0 release}.}.
+  Reducing the number of unnecessary copies often affects cycle consumption.
+}
+◊p{
+  Let us imagine that we work on a canister that serves a single dynamic asset.
+}
+◊source-code["rust"]{
+thread_local!{
+    static ASSET: RefCell<Vec<u8>> = RefCell::new(init_asset());
+}
+
+#[derive(CandidType, Deserialize)]
+struct HttpResponse {
+    status_code: u16,
+    headers: Vec<(String, String)>,
+    #[serde(with = "serde_bytes")]
+    body: Vec<u8>,
+}
+
+#[query]
+fn http_request(_request: HttpRequest) -> HttpResponse {
+    ◊em{// ◊b{NOTE}: we are making a full copy of the asset.}
+    let body = ASSET.with(|cell| cell.borrow().clone());
+
+    HttpResponse {
+        status_code: 200,
+        headers: vec![("Content-Length".to_string(), body.len().to_string())],
+        body
+    }
+}
+}
+◊p{
+  The ◊code{http_request} endpoint makes a deep copy of the asset for every request.
+  This copy is unnecessary because the CDK encodes the response into the reply buffer as soon as the endpoint returns.
+  There is no need for the encoder to own the body.
+  Unfortunately, the current macro API makes it unnecessarily hard to eliminate copies: the type of reply must have ◊code{'static} lifetime.
+  There are a few ways to work around this issue.
+}
+◊p{
+  One solution is to wrap the asset body into a ◊a[#:href "https://doc.rust-lang.org/std/sync/struct.Arc.html"]{reference-counting smart pointer}.
+}
+◊figure{
+◊marginnote["mn-rc-bytes"]{
+  Using a reference-counting pointer for large values.
+  Note that the type of the ◊code{ASSET} variable has to change: all copies of the data must be behind the smart pointer.
+}
+◊source-code["rust"]{
+thread_local!{
+    static ASSET: RefCell<RcBytes> = RefCell::new(init_asset());
+}
+
+struct RcBytes(Arc<serde_bytes::ByteBuf>);
+
+impl CandidType for RcBytes { /* */ }
+impl Deserialize for RcBytes { /* */ }
+
+#[derive(CandidType, Deserialize)]
+struct HttpResponse {
+    status_code: u16,
+    headers: Vec<(String, String)>,
+    body: RcBytes,
+}
+}
+}
+◊p{
+  This approach enables you to save on copies without changing the overall structure of your code.
+  A ◊a[#:href "https://github.com/dfinity/certified-assets/commit/47804eb70f44d2e5c73da26f0009540330293eb2"]{similar change} cut instruction consumption by 30% in the certified assets canister.
+}
+
+◊p{
+  Another solution is to enrich your types with lifetimes and use the ◊a[#:href "https://docs.rs/ic-cdk/latest/ic_cdk/api/call/struct.ManualReply.html"]{◊code{ManualReply}} API.
+}
+◊source-code["rust"]{
+use std::borrow::Cow;
+use serde_bytes::Bytes;
+
+#[derive(CandidType, Deserialize)]
+struct HttpResponse<'a> {
+    status_code: u16,
+    headers: Vec<(Cow<'a, str>, Cow<'a, str>)>,
+    body: Cow<'a, serde_bytes::Bytes>,
+}
+
+#[query(manual_reply = true)]
+fn http_response(_request: HttpRequest) -> ManualReply<HttpResponse<'static>> {
+    ASSET.with(|asset| {
+        let asset = &*asset.borrow();
+        ic_cdk::api::call::reply((&HttpResponse {
+            status_code: 200,
+            headers: vec![(
+                Cow::Borrowed("Content-Length"),
+                Cow::Owned(asset.len().to_string()),
+            )],
+            body: Cow::Borrowed(Bytes::new(asset)),
+        },));
+    });
+    ManualReply::empty()
+}
+}
+◊p{
+  This approach allows you to get rid of all the unnecessary copies, but it complicates the code significantly.
+  You should prefer the reference-counting approach unless you have to work with data structures that already have explicit lifetimes (◊a[#:href "https://docs.rs/ic-certified-map/0.3.0/ic_certified_map/enum.HashTree.html"]{◊code{HashTree}} from the ◊a[#:href "https://crates.io/crates/ic-certified-map"]{◊code{ic-certified-map}} package is a good example).
+}
+◊p{
+  I experimented with a one-megabyte asset and measured that the original code relying on a deep copy consumed 16 million instructions.
+  At the same time, versions with reference counting and explicit lifetimes needed only 12 million instructions◊sidenote["sn-candid-copy"]{
+    The 25% improvement shows that our code does little but copy bytes.
+    The code did at least ◊em{three} copies: ◊circled-ref[1] from a ◊code{thread_local} to an ◊code{HttpResponse}, ◊circled-ref[2] from the ◊code{HttpResponse} to candid's ◊a[#:href "https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L28"]{value buffer}, and ◊circled-ref[3] from candid's ◊a[#:href "https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L61"]{value buffer} to the call's ◊a[#:href "https://sourcegraph.com/github.com/dfinity/cdk-rs@39cd49a3b2ca6736d7c3d3bf3605e567302825b7/-/blob/src/ic-cdk/src/api/call.rs?L481-500"]{argument buffer}.
+    We removed ⅓ of copies and got ¼ improvement in instruction consumption.
+    So only ¼ of our instructions contributed to work not related to copying the asset's byte array.
+  }.
+}
+
+◊subsection-title["module-size"]{Reducing module size}
+
+◊p{
+  By default, ◊code{cargo} spits out huge WebAssembly modules.
+  Even the tiny ◊a[#:href "https://github.com/dfinity/cdk-rs/tree/58d276340c2592aa9dcbc4a3e79ef4ac4fca023b/examples/counter/src/counter_rs"]{counter} canister compiles to a whopping 2.2MiB monster under the default cargo ◊code{release} profile.
+  In this section, we shall explore simple techniques for reducing canister sizes.
+}
+
+◊advice["compile-size"]{Compile canister modules with size and link-time optimizations.}
+◊p{
+  The code that the Rust compiler considers fast is not always the most compact code.
+  We can ask the compiler to optimize our code for size with the ◊code{opt-level = 'z'} ◊a[#:href "https://doc.rust-lang.org/cargo/reference/profiles.html#opt-level"]{option}.
+  Unfortunately, that option alone does not affect the counter canister module size.
+}
+◊p{
+  ◊a[#:href "https://doc.rust-lang.org/cargo/reference/profiles.html#lto"]{Link-time optimization} is a more aggressive option that asks the compiler to apply optimizations across module boundaries.
+  This optimization slows down the compilation but its ability to prune unnecessary code is crucial for obtaining compact canister modules.
+  Adding ◊code{lto = true} to the build profile shrinks the counter canister module from 2.2MiB to 820KiB.
+  Add the following section to the ◊code{Cargo.toml} file at the root of your Rust project to enable size optimizations:
+}
+◊source-code["good"]{
+[profile.release]
+lto = true
+opt-level = 'z'
+}
+
+◊p{
+  Another option you can play with is ◊a[#:href "https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units"]{◊code{codegen-units}}.
+  Decreasing this option reduces the parallelism in the code generation pipeline but enables the compiler to optimize even harder.
+  Setting ◊code{codegen-units = 1} in the cargo release profile shrinks the counter module size from 820KiB to 777KiB.
+}
+
+◊advice["size-optimizer"]{Strip off unused custom sections.}
+
+◊p{
+  By default, the Rust compiler emits debugging information allowing tools to link back WebAssembly instructions to source-level constructs such as function names.
+  This information spans several ◊a[#:href "https://webassembly.github.io/spec/core/binary/modules.html#custom-section"]{custom WebAssembly sections} that the Rust compiler attaches to the module.
+  Currently, there is no use for debugging information on the IC. 
+  You can safely remove unused sections using the ◊a[#:href "https://github.com/dfinity/ic-wasm"]{ic-wasm} tool.
+}
+◊source-code["shell"]{
+$ cargo install ic-wasm
+$ ic-wasm -o counter_optimized.wasm counter.wasm shrink
+}
+◊p{
+  The ◊code{ic-admin shrink} step shrinks the counter canister size from 820KiB to 340KiB.
+  ◊code{ic-wasm} is clever enough to preserve custom sections that the ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#state-tree-canister-information"]{IC understands}.
+}
+
+◊advice["twiggy"]{Use the ◊a[#:href "https://rustwasm.github.io/twiggy/"]{◊code{twiggy}} tool to find the source of code bloat.}
+
+◊p{
+  Some Rust language design choices (for example, ◊a[#:href "https://rustc-dev-guide.rust-lang.org/backend/monomorph.html"]{monomorphization}) trade execution speed for binary size.
+  Sometimes changing the design of your code or switching a library can significantly reduce of the module size.
+  As with any optimization process, you need a profiler to guide your experiments.
+  The ◊a[#:href "https://rustwasm.github.io/twiggy/"]{◊code{twiggy}}◊sidenote["sn-twiggy-order"]{
+    ◊code{twiggy} needs debug info to display function names.
+    Run it ◊em{before} you shrink your module with ◊code{ic-wasm}.
+  } tool is excellent for finding the largest functions in your WebAssembly modules.
+}
+
+◊figure{
+◊marginnote["mn-counter-twiggy"]{
+  Top contributors to the size of the WebAssembly module of the ◊a[#:href "https://github.com/dfinity/cdk-rs/tree/58d276340c2592aa9dcbc4a3e79ef4ac4fca023b/examples/counter/src/counter_rs"]{counter} canister.
+  Custom sections with debugging information dominate the output, but we have to keep these sections to see function names in twiggy's output.
+  Serde-based candid deserializer is the worst offender when it comes to code size.
+}
+◊source-code["shell"]{
+  $ cargo install twiggy
+  $ twiggy top -n 12 counter.wasm
+ Shallow Bytes │ Shallow % │ Item
+───────────────┼───────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────
+        130610 ┊    16.42% ┊ custom section '.debug_str'
+        101788 ┊    12.80% ┊ "function names" subsection
+         75270 ┊     9.46% ┊ custom section '.debug_info'
+         60862 ┊     7.65% ┊ custom section '.debug_line'
+         52522 ┊     6.60% ┊ data[0]
+         46581 ┊     5.86% ┊ custom section '.debug_pubnames'
+         34800 ┊     4.38% ┊ custom section '.debug_ranges'
+         15721 ┊     1.98% ┊ <&mut candid::de::Deserializer as serde::de::Deserializer>::deserialize_any::h6f19d3c43b6b4e95
+         12878 ┊     1.62% ┊ <candid::binary_parser::ConsType as binread::BinRead>::read_options::hb957a7f286706947
+         12546 ┊     1.58% ┊ candid::de::IDLDeserialize::new::h3afa758d80a71068
+         11974 ┊     1.51% ┊ <&mut candid::de::Deserializer as serde::de::Deserializer>::deserialize_ignored_any::hb61449316ff3dae4
+          9015 ┊     1.13% ┊ core::fmt::float::float_to_decimal_common_shortest::h1e6cfda96af3f1c0
+        230729 ┊    29.01% ┊ ... and 1195 more.
+        795296 ┊   100.00% ┊ Σ [1207 Total Rows]
+}
+}
+◊p{
+  Once you have identified the library that contributes to the code bloat the most, you can try to find a less bulky alternative.
+  For example, we shrank the ICP ledger canister module by 600KiB by ◊a[#:href "https://github.com/dfinity/ic/commit/6f79736085f85dfd01493319816c9a3c9a563b73"]{switching} from ◊a[#:href "https://crates.io/crates/serde_cbor"]{◊code{serde_cbor}} to ◊a[#:href "https://crates.io/crates/ciborium"]{◊code{ciborium}} for ◊a[#:href "https://cbor.io"]{CBOR} deserialization.
+}
+
+◊advice["compress-modules"]{GZip-compress canister modules.}
+◊p{
+  The IC has the concept of a ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#ic-install_code"]{canister module}, the equivalent of an executable file in operating systems.
+  Starting from ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#0_18_4"]{version 0.18.4} of the IC specification, canister modules can be not only binary-encoded WebAssembly files but also GZip-compressed WebAssembly files.
+}
+◊p{
+  For typical WebAssembly files that do not embed compressed assets, GZip-compression can often cut the module size in half.
+  Compressing the counter canister shrinks the module size from 340KiB to 115KiB (about 5% of the 2.2MiB module we started with!).
+}
+
+}
+
+◊section{
 ◊section-title["infra"]{Infrastructure}
 
 ◊subsection-title["builds"]{Builds}
@@ -687,5 +1039,25 @@ fn http_request(req: HttpRequest) -> HttpResponse {
 ◊ul[#:class "arrows"]{
 ◊li{◊a[#:href "https://github.com/dfinity/internet-identity/tree/main/src/internet_identity"]{Internet Identity Backend} is a good example of a canister that uses stable memory as the main storage, obtains secure randomness from the system, and exposes Prometheus metrics.}
 ◊li{◊a[#:href "https://github.com/dfinity/certified-assets"]{Certified Assets Canister} is a good example of a canister that produces certified HTTP responses.}
+}
+
+◊section{
+◊section-title["changelog"]{Changelog}
+◊table{
+  ◊tbody{
+    ◊tr{
+      ◊td{2022-07-18}
+      ◊td{Add a new section on ◊a[#:href "#optimization"]{canister optimization}.}
+    }
+    ◊tr{
+      ◊td{2022-02-19}
+      ◊td{Add notes on ◊a[#:href "#errors-variant"]{candid variant extensibility} and ◊a[#:href "#upgrade-hook-panics"]{panics in upgrade hooks}.}
+    }
+    ◊tr{
+      ◊td{2021-10-25}
+      ◊td{The first version.}
+    }
+  }
+}
 }
 }
