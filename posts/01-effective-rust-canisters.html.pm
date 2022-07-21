@@ -449,12 +449,15 @@ type CreateEntityResult = variant {
   The first step towards an optimized system is profiling.
 }
 
-◊advice["performance-counter"]{Measure the number of instructions your endpoints consume.}
+◊advice["instruction-counter"]{Measure the number of instructions your endpoints consume.}
 
 ◊p{
-  The ◊a[#:href "https://docs.rs/ic-cdk/0.5.2/ic_cdk/api/call/fn.performance_counter.html"]{◊code{performance_counter}} API will tell you the number of ◊em{instructions} your code consumed since the last ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#entry-points"]{entry point}.
-  Instructions are the internal currency of the IC runtime: the system defines all its limits in terms of instructions.
-  As of July 2022, the limits are:
+  The ◊a[#:href "https://docs.rs/ic-cdk/0.5.3/ic_cdk/api/fn.instruction_counter.html"]{◊code{instruction_counter}} API will tell you the number of ◊em{instructions} your code consumed since the last ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#entry-points"]{entry point}.
+  Instructions are the internal currency of the IC runtime.
+  One IC instruction is the ◊a[#:href "https://en.wikipedia.org/wiki/Quantum"]{quantum} of work that the system can do, such as loading a 32-bit integer from a memory address.
+  The system assigns an instruction cost equivalent to each ◊a[#:href "https://sourcegraph.com/github.com/dfinity/ic@cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156/-/blob/rs/embedders/src/wasm_utils/instrumentation.rs?L155-177"]{WebAssembly instruction} and ◊a[#:href "https://sourcegraph.com/github.com/dfinity/ic@cfdbbf5/-/blob/rs/embedders/src/wasmtime_embedder/system_api_complexity.rs?L40-107"]{system call}.
+  It also defines all its limits in terms of instructions.
+  As of July 2022, these limits are:
 }
 ◊ul[#:class "arrows"]{
 ◊li{One message execution: ◊a[#:href "https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L19"]{5 billion} instructions.}
@@ -473,13 +476,13 @@ type CreateEntityResult = variant {
 ◊source-code["bad"]{
 #[update]
 async fn transfer(from: Account, to: Account, amount: Nat) -> Result<TxId, Error> {
-  let start = instruction_counter();
+  let start = ic_cdk::api::instruction_counter();
 
   let tx = apply_transfer(from, to, amount)?;
   let tx_id = archive_transaction(tx).◊b{await}?;
 
   ◊em{// ◊b{BAD}: the await point above resets the instruction counter.}
-  let end = instruction_counter();
+  let end = ic_cdk::api::instruction_counter();
   record_measurement(end - start);
 
   Ok(tx_id)
@@ -508,7 +511,7 @@ struct HttpResponse {
 }
 
 ◊p{
-  The ◊code{body} field can be large, let us tell serde to encode this field more efficiently using the ◊a[#:href "https://serde.rs/field-attrs.html#with"]{◊code{with}} attribute.
+  The ◊code{body} field can be large; let us tell serde to encode this field more efficiently using the ◊a[#:href "https://serde.rs/field-attrs.html#with"]{◊code{with}} attribute.
 }
 
 ◊source-code["good"]{
@@ -540,7 +543,7 @@ struct HttpResponse {
 
 ◊figure{
 ◊marginnote["mn-http-response-canister"]{
-  A canister endpoint that measures the number of instructions required to encode an HTTP response.
+  A canister endpoint measuring the number of instructions required to encode an HTTP response.
   We have to use a ◊a[#:href "https://docs.rs/ic-cdk/latest/ic_cdk/api/call/struct.ManualReply.html"]{◊code{ManualReply}} to measure the encoding time.
 }
 ◊source-code["rust"]{
