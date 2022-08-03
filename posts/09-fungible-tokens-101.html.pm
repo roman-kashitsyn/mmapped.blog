@@ -15,7 +15,7 @@
 }
 ◊p{
   This article is a gentle introduction to fungible tokens and ledgers.
-  We shall frame the concept of the ledger and design choices in designing a practical accounting system, laying the ground for more subtle technical topics that will come in future articles.
+  We shall frame the concept of the ledger and options available when designing a practical accounting system, laying the ground for more subtle technical topics that will come in future articles.
 }
 }
 
