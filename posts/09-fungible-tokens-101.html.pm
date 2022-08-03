@@ -95,7 +95,7 @@
 }
 ◊p{
   The tip ledger is unusual because it allows negative balances like credit cards.
-  This setup works well when all the participants know and trust each other.
+  This setup works well when all the participants know and trust one other.
   Digital ledgers such as Bitcoin are much stricter: you must have enough tokens on your account before making a transfer.
   But how do the first tokens get into the system?
 }
@@ -109,16 +109,16 @@
 }
 ◊p{
   Let us get back to our tip ledger example.
-  Imagine now that Geneviève does not trust the folks she hangs out with, but she wants to use the convenience of virtual money.
+  Imagine now that Geneviève does not trust the folks she hangs out with, but she wants to continue enjoying the convenience of virtual money.
   Whenever someone transfers her virtual tokens on a piece of paper, she wants to be sure she can claim her buck back.
 }
 ◊p{
   One way to approach the issue is to set up a piggy bank at the office.
   Anyone who puts ◊math{$1} into the bank gets a virtual ◊math{$1} on the ledger.
-  The transaction that converts a physical bill into a virtual token is a ◊em{mint} transaction.
+  The transaction converting a physical bill into a virtual token is a ◊em{mint} transaction.
 }
 ◊p{
-  One day Geneviève, Allen, and Meriam put ◊math{$10} each into the piggy and get their virtual tip money minted on the ledger.
+  One day Geneviève, Allen, and Meriam put ◊math{$10} each into the piggy and get their virtual money minted on the ledger.
 }
 ◊table[#:class "table-4"]{
 ◊thead{
@@ -148,8 +148,8 @@
 }
 ◊p{
   The main difference with the original scheme is that now Geneviève can exit the group and get her money back at any point.
-  All she needs is to open the piggy under a supervision of a trusted party, get her ◊math{$14} and record a ◊em{burn} transaction on the ledger by sending her tokens to the void.
-  The sum of all balances on the ledger must be equal to the amount of money in the piggy bank.
+  All she needs is to open the piggy under a supervision of a trusted party, get her ◊math{$14}, and record a ◊em{burn} transaction on the ledger by sending her tokens to the void.
+  The sum of all balances on the ledger is always equal to the amount of money in the piggy bank.
 }
 ◊table[#:class "table-4"]{
 ◊thead{
@@ -171,7 +171,7 @@
 ◊subsection-title["subaccounts"]{Subaccounts}
 ◊p{
   Geneviève and her colleagues have a tradition: when someone has a birthday, other colleagues raise funds to buy a little present.
-  Next week Allen turns thirty-three, so the department tasked Geneviève to buy something nice for him.
+  Next week Allen turns thirty-three, so the department asked Geneviève to buy something nice for him.
   This time they decided to use the piggy bank ledger discussed in the previous section to transfer funds for the present.
   However, there is one little issue: if everyone transfers gift money to Geneviève directly, how will she separate her money from the gift money?
 }
