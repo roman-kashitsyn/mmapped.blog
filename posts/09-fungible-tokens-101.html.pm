@@ -97,7 +97,7 @@
   The tip ledger is unusual because it allows negative balances like credit cards.
   This setup works well when all the participants know and trust each other.
   Digital ledgers such as Bitcoin are much stricter: you must have enough tokens on your account before making a transfer.
-  But do how then the first tokens get into the system?
+  But how do the first tokens get into the system?
 }
 
 ◊subsection-title["minting-burning"]{Minting and burning}
