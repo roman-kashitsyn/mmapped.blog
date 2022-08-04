@@ -10,7 +10,7 @@
 ◊section-title["intro"]{Introduction}
 ◊p{
   I am currently involved in the effort to deliver the ◊a[#:href "https://github.com/dfinity/ICRC-1"]{ICRC-1} fungible token standard for the ◊a[#:href "https://internetcomputer.org"]{Internet Computer}.
-  The two most heated discussions in the working group centered on using ◊a[#:href "#subaccounts"]{subaccounts} and the core payment flow for smart contracts (in particular, the ◊code{approve}/◊code{transferFrom} flow popularized by the ◊a[#:href "https://eips.ethereum.org/EIPS/eip-20"]{ERC-20} token standard).
+  The two most heated discussions in the ◊a[#:href "https://forum.dfinity.org/t/announcing-token-standard-as-topic-of-the-first-meeting-of-the-ledger-tokenization-working-group/11925"]{Ledger & Tokenization} working group centered on using ◊a[#:href "#subaccounts"]{subaccounts} and the core payment flow for smart contracts (in particular, the ◊code{approve}/◊code{transferFrom} flow popularized by the ◊a[#:href "https://eips.ethereum.org/EIPS/eip-20"]{ERC-20} token standard).
   At first glance, these issues seemed unrelated, but surprising connections revealed themselves under closer scrutiny, begging for analysis and exploration.
 }
 ◊p{
@@ -48,17 +48,19 @@
   The most prominent examples of fungible tokens in the digital world are digital assets such as ◊a[#:href "https://bitcoin.org/"]{Bitcoin}, ◊a[#:href "https://ethereum.org/en/eth/"]{Ether}, and ◊a[#:href "https://wiki.internetcomputer.org/wiki/ICP_token"]{ICP} utility tokens.
   An ◊a[#:href "https://www.investopedia.com/terms/a/asset-ledger.asp"]{asset ledger} is a concept lying at the heart of these systems.
   Ledgers are journals of transactions the system executed; they keep track of fund movements between accounts.
-  Each purchase you make with bitcoin becomes a record in the Bitcoin ledger packed into a block in the blockchain.
+  Each purchase you make using bitcoin becomes a record in the Bitcoin ledger packed into a block in the blockchain.
 }
 ◊p{
-  My ex-colleagues from ◊a[#:href "https://ya.ru"]{Yandex} used to use a simple ledger to keep track of tip money.
+  My nerdy ex-colleagues from ◊a[#:href "https://ya.ru"]{Yandex} used to use a simple ledger to keep track of tip money.
   I will use and evolve their scheme to demonstrate the concept of a ledger and its variations.
 }
 ◊p{
-  Geneviève goes into a small restaurant with two of her colleagues, Allen and Meriam.
+  Geneviève works in a small accounting firm.
+  One day she goes into a small restaurant with two of her colleagues, Allen and Meriam.
   They get a fantastic meal and decide to tip ◊math{$20}.
-  Allen and Meriam do not have ◊math{$6.66} to share the burden equally, so they ◊quoted{transfer} Geneviève imaginary money in a notebook with the word ◊quoted{LEDGER} on the cover.
-  Each page in the notebook is a table with three columns.
+  Unfortunately, Allen and Meriam do not have ◊math{$6.66} to share the burden equally.
+  So they get a notebook, write ◊quoted{Ledger} on the cover, and split the first page into three columns.
+  Then Allen and Meriam transfer Geneviève imaginary money on that ledger.
 }
 ◊table[#:class "table-3"]{
 ◊thead{
@@ -71,7 +73,7 @@
 }
 ◊p{
   Now Allen and Meriam have ◊math{-$6.66} on their ◊quoted{accounts}, and Geneviève has ◊math{$13.32}.
-  The next day, they go to a fancy coffee shop and tip ◊math{$15}.
+  The next day, they go to a coffee shop and tip ◊math{$15}.
   This time Allen pays for everyone, and Geneviève and Meriam add new entries to the ledger.
 }
 ◊table{
@@ -94,9 +96,13 @@
   This ledger has an interesting property: the sum of all balances is always zero because we started with no funds, and each record only moves funds.
 }
 ◊p{
+  This simple scheme describes a fully functional and practical ledger that helps balance the financial burden of tipping.
+  The person with the lowest balance on the ledger pays for the whole company when they go out.
+}
+◊p{
   The tip ledger is unusual because it allows negative balances like credit cards.
-  This setup works well when all the participants know and trust one other.
-  Digital ledgers such as Bitcoin are much stricter: you must have enough tokens on your account before making a transfer.
+  This setup works well when all the participants know and trust one another.
+  Digital ledgers such as Bitcoin are like debit cards: you must have enough tokens on your account before transferring them.
   But how do the first tokens get into the system?
 }
 
@@ -105,20 +111,22 @@
   All ledgers have a way to produce, or ◊em{mint}◊sidenote["sn-newton-ming"]{Did you know that Sir Isaac Newton worked at the ◊a[#:href "https://newtonandthemint.history.ox.ac.uk/"]{Royal Mint} for three decades?}, tokens out of thin air.
   Bitcoin network mints tokens as a reward for participants that help the ledger grow.
   The IC mints ICP utility tokens to reward participants in the network governance and node providers.
-  Another popular scheme is ◊em{wrapped tokens}, where the ledger mints tokens as proxies for other assets.
 }
 ◊p{
-  Let us get back to our tip ledger example.
+  Another popular scheme is ◊em{wrapped tokens}, where the ledger mints tokens as proxies for other assets.
+  Let us extend the tip ledger example to make it operate on wrapped dollars.
+}
+◊p{
   Imagine now that Geneviève does not trust the folks she hangs out with, but she wants to continue enjoying the convenience of virtual money.
   Whenever someone transfers her virtual tokens on a piece of paper, she wants to be sure she can claim her buck back.
 }
 ◊p{
   One way to approach the issue is to set up a piggy bank at the office.
-  Anyone who puts ◊math{$1} into the bank gets a virtual ◊math{$1} on the ledger.
+  Anyone who puts ◊math{$1} into the bank gets a ◊em{wrapped} ◊math{$1} on the ledger.
   The transaction converting a physical bill into a virtual token is a ◊em{mint} transaction.
 }
 ◊p{
-  One day Geneviève, Allen, and Meriam put ◊math{$10} each into the piggy and get their virtual money minted on the ledger.
+  One day Geneviève, Allen, and Meriam put ◊math{$10} each into the piggy and mint their wrapped money on the ledger.
 }
 ◊table[#:class "table-4"]{
 ◊thead{
@@ -132,7 +140,7 @@
 }
 ◊p{
   Then they all go to a coffee shop where Geneviève tips ◊math{$6} for the group.
-  Allen and Meriam transfer their shares to Geneviève virtually. 
+  Allen and Meriam transfer their shares to Geneviève on the ledger.
 }
 ◊table[#:class "table-4"]{
 ◊thead{
@@ -148,7 +156,7 @@
 }
 ◊p{
   The main difference with the original scheme is that now Geneviève can exit the group and get her money back at any point.
-  All she needs is to open the piggy under a supervision of a trusted party, get her ◊math{$14}, and record a ◊em{burn} transaction on the ledger by sending her tokens to the void.
+  All she needs is to open the piggy under a supervision of a trusted party, get her ◊math{$14}, and record a ◊em{burn} transaction on the ledger by sending her tokens to the void (sometimes called the ◊em{minting account}).
   The sum of all balances on the ledger is always equal to the amount of money in the piggy bank.
 }
 ◊table[#:class "table-4"]{
@@ -216,7 +224,7 @@
 }
 ◊p{
   Geneviève could transfer some budget to Alex before he goes out, and he could transfer her the leftover when he is back.
-  That solves the problem, but Geneviève cannot use the locked funds herself during that time.
+  That solves the problem, but Geneviève cannot use the locked funds herself during that time because, technically, they belong to Alex.
 }
 ◊p{
   Another approach popularized by the Etherium community is to introduce the notion of ◊em{approvals}.
@@ -265,7 +273,7 @@
 ◊subsection-title["fees"]{Fees}
 ◊p{
   Peppy was a lovely five-year-old girl who came to the office space to see how her mother, Meriam, spends her days.
-  Peppy loved numbers, could write her name, and were unusually rational for her age.
+  Peppy loved numbers, could write her name, and was unusually rational for her age.
   Her favorite game was finding holes in ad-hoc rules that grown-ups invent all day.
   Her eyes caught a little devilish fire when she saw how her mother used the legder notebook.
 }
@@ -352,7 +360,7 @@
 ◊section-title["summary"]{Summary}
 ◊p{
   We have seen that fungible tokens are an essential part of our daily life.
-  We learned that ◊a[#:href "#asset-ledgers"]{ledger} is a robust accounting mechanism that we can adapt to the task at hand with various features: ◊a[#:href "#minting-burning"]{mints}, ◊a[#:href "#subaccounts"]{subaccounts}, ◊a[#:href "#approvals"]{approvals}, and ◊a[#:href "#fees"]{transfer fees}.
+  We learned that ◊a[#:href "#asset-ledgers"]{ledger} is a robust accounting mechanism that we can adapt to the task at hand by adopting various features: ◊a[#:href "#minting-burning"]{mints}, ◊a[#:href "#subaccounts"]{subaccounts}, ◊a[#:href "#approvals"]{approvals}, and ◊a[#:href "#fees"]{transfer fees}.
   In the following article, we will discuss protocols allowing clients to exchange tokens for service, known as ◊em{payment flows}.
 }
 }
