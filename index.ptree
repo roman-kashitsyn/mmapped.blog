@@ -3,6 +3,7 @@
 index.html
 
 ◊posts.html{
+  posts/09-fungible-tokens-101.html
   posts/08-ic-xnet.html
   posts/07-square-joy-pre-order.html
   posts/06-ic-orthogonal-persistence.html

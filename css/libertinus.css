@@ -34,3 +34,10 @@
   font-weight: 400;
   src: url("/fonts/NeoEuler.otf") format("opentype"); 
 }
+
+@font-face {
+  font-family: "Comic Sans Mono";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/fonts/ComicMono.ttf") format("truetype")
+}

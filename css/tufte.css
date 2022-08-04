@@ -457,9 +457,47 @@ div.table-wrapper {
     font-family: "Trebuchet MS", "Gill Sans", "Gill Sans MT", sans-serif;
 }
 
+table {
+    border-collapse: collapse;
+}
+
+th, td {
+    text-align: left;
+}
+
+table > thead > tr:last-child > td,
+table > tbody > tr:last-child > th {
+    padding-bottom: 0.5rem;
+    font-variant: small-caps;
+}
+
+.table-3 td, .table-3 th {
+    width: 33%;
+}
+.table-4 td, .table-4 th {
+    width: 25%;
+}
+.table-5 td, .table-5 th {
+    width: 20%;
+}
+.num-col {
+    text-align: right;
+    padding-right: 4em;
+}
+
+table > tbody > tr:first-child > td,
+table > tbody > tr:first-child > th {
+    padding-top: 0.5rem;
+    border-top: 1px solid;
+}
+
 .sans {
     font-family: "Libertinus Sans", "Gill Sans", "Gill Sans MT", Calibri, sans-serif;
     letter-spacing: .03em;
+}
+
+.fun {
+    font-family: "Comic Sans Mono", "Comic Sans", cursive;
 }
 
 code,
@@ -499,6 +537,14 @@ pre.fullwidth>code {
 .fullwidth {
     max-width: 90%;
     clear: both;
+}
+
+.strikethrough {
+    text-decoration: line-through;
+}
+
+.smallcaps {
+    font-variant: small-caps;
 }
 
 span.newthought {

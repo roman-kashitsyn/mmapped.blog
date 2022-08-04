@@ -18,7 +18,17 @@
          anchor
          circled
          circled-ref
-         ol-circled)
+         ol-circled
+         ul-arrows
+         td-num
+         num-cell
+         quoted
+         smallcaps
+         numsp
+         ellipsis
+         mid-ellipsis
+         middot
+         mdash)
 
 (define (embed-svg path)
   (let [(xml (string->xexpr (file->string (build-path (current-project-root) path))))]
@@ -81,3 +91,24 @@
 
 (define (ol-circled . elems)
   (txexpr 'ol '((class "circled")) (map (make-li-enumerator 1) elems)))
+
+(define (ul-arrows . elems)
+  (txexpr 'ul '((class "arrows")) elems))
+
+(define (td-num . elems)
+  (txexpr 'td '((class "num-col")) elems))
+
+(define (num-cell . elems)
+  (td-num (apply math elems)))
+
+(define (quoted . elems)
+  (txexpr 'span '() (append (cons (string->symbol "ldquo") elems) (list (string->symbol "rdquo")))))
+
+(define (smallcaps . elems)
+  (txexpr 'span '((class "smallcaps")) elems))
+
+(define (numsp) (string->symbol "numsp"))
+(define (ellipsis) (string->symbol "hellip"))
+(define (mid-ellipsis) (string (integer->char #x22EF)))
+(define (middot) (string->symbol "middot"))
+(define (mdash) (string->symbol "mdash"))
