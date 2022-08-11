@@ -10,7 +10,7 @@
 ◊section-title["intro"]{Introduction}
 ◊p{
   I am currently involved in the effort to deliver the ◊a[#:href "https://github.com/dfinity/ICRC-1"]{ICRC-1} fungible token standard for the ◊a[#:href "https://internetcomputer.org"]{Internet Computer}.
-  The two most heated discussions in the ◊a[#:href "https://forum.dfinity.org/t/announcing-token-standard-as-topic-of-the-first-meeting-of-the-ledger-tokenization-working-group/11925"]{Ledger & Tokenization} working group centered on using ◊a[#:href "#subaccounts"]{subaccounts} and the core payment flow for smart contracts (in particular, the ◊code{approve}/◊code{transferFrom} flow popularized by the ◊a[#:href "https://eips.ethereum.org/EIPS/eip-20"]{ERC-20} token standard).
+  The two topics the ◊a[#:href "https://forum.dfinity.org/t/announcing-token-standard-as-topic-of-the-first-meeting-of-the-ledger-tokenization-working-group/11925"]{Ledger & Tokenization} working group discussed most heatedly are the use of ◊a[#:href "#subaccounts"]{subaccounts} and the core payment flow for smart contracts (in particular, the ◊code{approve}/◊code{transferFrom} flow popularized by the ◊a[#:href "https://eips.ethereum.org/EIPS/eip-20"]{ERC-20} token standard).
   At first glance, these issues seemed unrelated, but surprising connections revealed themselves under closer scrutiny, begging for analysis and exploration.
 }
 ◊p{
@@ -227,7 +227,7 @@
   That solves the problem, but Geneviève cannot use the locked funds herself during that time because, technically, they belong to Alex.
 }
 ◊p{
-  Another approach popularized by the Etherium community is to introduce the notion of ◊em{approvals}.
+  Another approach popularized by the Ethereum community is to introduce the notion of ◊em{approvals}.
   The ledger could have another table with spending allowances between two people.
 }
 ◊table[#:class "table-3"]{
@@ -275,7 +275,7 @@
   Peppy was a lovely five-year-old girl who came to the office space to see how her mother, Meriam, spends her days.
   Peppy loved numbers, could write her name, and was unusually rational for her age.
   Her favorite game was finding holes in ad-hoc rules that grown-ups invent all day.
-  Her eyes caught a little devilish fire when she saw how her mother used the legder notebook.
+  Her eyes caught a little devilish fire when she saw how her mother used the ledger notebook.
 }
 ◊p{
   ◊quoted{How much can I send you, Mom?} asked Peppy.
