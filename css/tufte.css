@@ -194,7 +194,7 @@ body {
         background-image: url(/images/GitHub-Mark-Light-32px.png);
     }
 
-    figure.grayscale-diagram svg {
+    figure.grayscale-diagram svg, figure.grayscale-diagram img {
         filter: invert(100%);
     }
 }
