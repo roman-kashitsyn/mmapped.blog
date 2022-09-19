@@ -28,7 +28,9 @@
          ellipsis
          mid-ellipsis
          middot
-         mdash)
+         mdash
+         ballot-x
+         check)
 
 (define (embed-svg path)
   (let [(xml (string->xexpr (file->string (build-path (current-project-root) path))))]
@@ -112,3 +114,5 @@
 (define (mid-ellipsis) (string (integer->char #x22EF)))
 (define (middot) (string->symbol "middot"))
 (define (mdash) (string->symbol "mdash"))
+(define (ballot-x) (string (integer->char #x2718)))
+(define (check) (string (integer->char #x2714)))
