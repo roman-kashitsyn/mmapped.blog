@@ -13,7 +13,7 @@
 ◊section-title["introduction"]{Introduction}
 ◊p{
   In the previous article, ◊a[#:href "/posts/09-fungible-tokens-101.html"]{Fungible tokens 101}, I introduced the concept of a ledger and various extensions that can help us solve practical problems.
-  In this article, we shall analyze a few ◊em{payment flows}, protocols built on top of a ledger allowing clients to exchange tokens for a service.
+  In this article, we shall analyze a few ◊em{payment flows}◊mdash{}protocols built on top of a ledger allowing clients to exchange tokens for a service◊mdash{}in the context of the ◊a[#:href "https://internetcomputer.org"]{Internet Computer}.
 }
 }
 
@@ -21,14 +21,14 @@
 ◊section-title["prerequisites"]{Prerequisites}
 ◊subsection-title["the-payment-scenario"]{The payment scenario}
 ◊p{
-  Abstract protocols can be dull and hard to comprehend, so let us model a specific payment scenario: me buying a new laptop online and paying for it in ◊smallcaps{wxdr} (wrapped ◊a[#:href "https://en.wikipedia.org/wiki/Special_drawing_rights"]{SDR}) tokens locked in a ledger hosted on the ◊a[#:href "https://internetcomputer.org"]{Internet Computer}.
+  Abstract protocols can be dull and hard to comprehend, so let us model a specific payment scenario: me buying a new laptop online and paying for it in ◊smallcaps{wxdr} (wrapped ◊a[#:href "https://en.wikipedia.org/wiki/Special_drawing_rights"]{SDR}) tokens locked in a ledger hosted on the Internet Computer.
 }
 ◊p{
   I open the website of the hardware vendor I trust, select the configuration (the memory capacity, the number of cores, etc.) that suits my needs, fill in the shipment details, and go to the payment page.
   I choose an option to pay in ◊smallcaps{wxdr}.
 }
 ◊p{
-  In the rest of the article, we will fantasize about what the webpage can look like and how it can interact with the shop.
+  In the rest of the article, we will fantasize about what the payment page can look like and how it can interact with the shop.
 }
 
 ◊subsection-title["participants"]{Participants}
@@ -39,7 +39,7 @@
 ◊tbody{
 ◊tr{
   ◊td[#:style "border-top: 0px; min-width:50px; min-height:50px;"]{◊img-icon{me}}
-  ◊td[#:style "border-top: 0px;"]{◊em{Me}: a merry human sitting in front of the computer and ordering a new laptop.}
+  ◊td[#:style "border-top: 0px;"]{◊em{Me}: a merry human sitting in front of a computer and ordering a new laptop.}
 }
 ◊tr{
   ◊td{◊img-icon{shop}}
@@ -79,7 +79,7 @@
   ◊li{
     ◊em{The notification phase}.
     The shop receives a payment notification for the Invoice ID, validates the payment, and updates the order status.
-    The ◊em{web page} displays a cheerful message, completing the flow.
+    The ◊em{web page} displays an upbeat message, completing the flow.
   }
 }
 }
@@ -123,8 +123,8 @@ service : {
     In the payment phase, I use my wallet to execute the ◊code{transfer({ amount = Price, to = Shop, to_subaccount = InvoiceId})} call on the ledger.
   }
   ◊li{
-    In the notification phase, I click on the ◊quoted{Done} button dispatching a notification to the ◊em{shop} indicating that I paid the invoice (the webpage can to remember the ◊em{InvoiceId} on the client side, so I do not have to type it in).
-    Upon receiving the notification, the shop attempts to transfer the amount from its ◊em{Invoice ID} subaccount to its default account, calling ◊code{transfer({ amount = Price - Fee, from_subaccount = InvoiceId, to = Shop })} on the ledger.
+    In the notification phase, I click on the ◊quoted{Done} button dispatching a notification to the ◊em{shop} indicating that I paid the invoice (the webpage can remember the ◊em{Invoice ID} on the client side, so I do not have to type it in).
+    Upon receiving the notification, the shop attempts to transfer the amount from its ◊em{Invoice ID} subaccount to its default account, calling ◊code{transfer({ amount = Price - Fee, from_subaccount = InvoiceID, to = Shop })} on the ledger.
     If that final transfer succeeds, the order is complete.
   }
 }
@@ -166,7 +166,7 @@ service : {
 
 ◊p{
   The approve-transfer-from pattern relies on the ◊a[#:href "/posts/09-fungible-tokens-101.html#approvals"]{approvals} ledger feature, first appearing in the ◊a[#:href "https://ethereum.org/en/developers/docs/standards/tokens/erc-20/"]{ERC-20} token standard.
-  The flow uses two new ledger primitives, ◊code{approve} and ◊code{transfer_from}, and defines three parties:
+  The flow uses two new ledger primitives, ◊code{approve} and ◊code{transfer_from}, and involves three parties:
 }
 ◊ol-circled{
   ◊li{The ◊em{owner} holds tokens on the ledger. The owner can ◊em{approve} transfers from its account to a ◊em{delegate}.}
@@ -257,6 +257,7 @@ service : {
 ◊p{
   One strong side of the approve-transfer-from flow is that it supports recurring payments.
   For example, if I were buying a subscription with monthly installments, I could have approved transfers for the entire year, allowing the shop to transfer from my account once a month.
+  Of course, I must trust the shop not to charge the whole yearly amount in one go.
 }
 }
 
@@ -269,8 +270,8 @@ service : {
 }
 ◊p{
   There is one issue we need to sort out, however.
-  When we relied on the webpage to send the notification, we could include the ◊em{InvoiceID} into the payload, making it possible for the shop to identify the relevant order.
-  If we ask the ledger to send the payment notification, we must pass the ◊em{InvoiceID} in that message.
+  When we relied on the webpage to send the notification, we could include the ◊em{Invoice ID} into the payload, making it possible for the shop to identify the relevant order.
+  If we ask the ledger to send the payment notification, we must pass the ◊em{Invoice ID} in that message.
   The common way to address this issue is to add the ◊code{memo} argument to the transfer arguments, allowing the caller to attach an arbitrary payload to the transaction details.
 }
 
@@ -298,9 +299,9 @@ service : {
   ◊li{In the negotiation phase, the webpage displays the payment details and starts polling the shop for payment confirmation.}
   ◊li{In the payment phase, I use my wallet to execute the ◊code{transfer_notify({to = Shop, amount = Price, memo = InvoiceID})} call on the ledger.}
   ◊li{
-    Once the transfer succeeds, the ledger notifies the shop about the payment, providing the amount and the ◊code{memo} containing the ◊em{InvoiceID}.
+    Once the transfer succeeds, the ledger notifies the shop about the payment, providing the amount and the ◊code{memo} containing the ◊em{Invoice ID}.
     The shop consumes the notification and changes the order status.
-    The next time the webpage polls the shop, the shop replies with a confirmation, and I see an upbeat message.
+    The next time the webpage polls the shop, the shop replies with a confirmation, and I see a positive message.
   }
 }
 
@@ -331,7 +332,7 @@ service : {
   }
   ◊li{
     The ledger sends the notification on-chain, making it very likely that the shop will receive the notification.
-    Still, there is a possibility that the notification will not get through if the system is overloaded.
+    Still, there is a possibility that the notification will not get through if the destination is overloaded.
   }
 }
 }
@@ -400,7 +401,7 @@ service : {
   ◊li{The ledger must process at least two messages: a ◊code{transfer} from me and a ◊code{fetch} request from the shop.}
   ◊li{
     The ledger charges one fee for my transfer.
-    The transaction details are usually publicly available and require no fee.
+    The transaction details are usually publicly available and require no access fee.
   }
   ◊li{The ledger does not need to store any additional information for the payment flow.}
   ◊li{The flow support unlimited concurrency.}
@@ -409,7 +410,8 @@ service : {
     Little additional complexity is usually required to enable the flow.
   }
   ◊li{
-    The failure cases are very similar to the ◊a[#:href "#invoice-account"]{invoice-account} flow.
+    The failure cases are very similar to the ◊a[#:href "#invoice-account"]{invoice-account} flow, except that there is no easy way to monitor outstanding invoices.
+    One possible recovery is constructing an index of all the ledger transactions and scanning for transfers matching the open orders.
   }
 }
 }
