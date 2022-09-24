@@ -16,3 +16,7 @@ docker run --rm mmapped-blog cat blog.tar.gz > blog.tar.gz
 ```
 
 The resulting archive contains the full website contents that can be hosted statically.
+
+# License
+
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
