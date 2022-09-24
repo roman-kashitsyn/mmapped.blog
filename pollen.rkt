@@ -30,7 +30,8 @@
          middot
          mdash
          ballot-x
-         check)
+         check
+         toc)
 
 (define (embed-svg path)
   (let [(xml (string->xexpr (file->string (build-path (current-project-root) path))))]
@@ -43,13 +44,16 @@
           (txexpr 'pre `((class ,(string-append "source " attr)))
                   (list (txexpr 'code '() elems)))))
 
+(define (local-link anchor)
+  (string-append "#" anchor))
+
 (define (section-title anchor name)
   (txexpr* 'h2 `((id ,anchor))
-           (txexpr* 'a `((href ,(string-append "#" anchor))) name)))
+           (txexpr* 'a `((href ,(local-link anchor))) name)))
 
 (define (subsection-title anchor name)
   (txexpr* 'h3 `((id ,anchor))
-           (txexpr* 'a `((href ,(string-append "#" anchor))) name)))
+           (txexpr* 'a `((href ,(local-link anchor))) name)))
 
 (define (epigraph . elems)
   (txexpr 'div '((class "epigraph")) elems))
@@ -65,7 +69,7 @@
      (txexpr 'span '((class "marginnote")) elems)))
 
 (define (anchor name)
-  (txexpr* 'a `((class "anchor") (href ,(string-append "#" name))) #x261B))
+  (txexpr* 'a `((class "anchor") (href ,(local-link name))) #x261B))
 
 (define (advice bookmark . elems)
   (txexpr* 'div `((class "advice") (id ,bookmark))
@@ -79,6 +83,34 @@
 
 (define (math . elems)
   (txexpr 'span '((class "math")) elems))
+
+(define (tok-collect-h2 elem section-elems)
+  (match elem
+    [(txexpr tag attrs elems)
+     #:when (and (eq? tag 'h2) (assoc 'id attrs))
+     (list (txexpr
+            'li '((class "toc toc-level-1"))
+            (append elems (list (txexpr 'ul '((class "toc toc-level-2")) (append-map tok-collect-h3 section-elems))))))]
+    [_ null]
+    ))
+
+(define (tok-collect-h3 elem)
+  (match elem
+    [(txexpr tag attrs elems)
+     #:when (and (eq? tag 'h3) (assoc 'id attrs))
+     (list (txexpr 'li '((class "toc level-2")) elems))]
+    [_ null]))
+
+(define (tok-collect-sections elem)
+  (match elem
+    [(txexpr tag attrs elems)
+     #:when (eq? tag 'section) (append-map (lambda (elem) (tok-collect-h2 elem elems)) elems)
+     ]
+    [(txexpr _ _ elems) (append-map tok-collect-sections elems)]
+    [_ null]))
+
+(define (toc doc)
+  (txexpr 'ul '((class "toc toc-level-1")) (append-map tok-collect-sections (get-elements doc))))
 
 (define (make-li-enumerator n)
   (lambda (elem)
