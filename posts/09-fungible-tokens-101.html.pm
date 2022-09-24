@@ -40,9 +40,7 @@
   Maybe your aunt gave you some to buy a treat, or perhaps you saved some from your lunch money.
   You did not care which instance of the desired sort of ice cream◊sidenote["plombieres"]{My absolute favorite is ◊a[#:href "https://en.wikipedia.org/wiki/Plombi%C3%A8res-les-Bains#Plombir_ice_cream"]{Plombières}.} you would get.
 }
-}
 
-◊section{
 ◊subsection-title["asset-ledgers"]{Asset ledgers}
 ◊p{
   The most prominent examples of fungible tokens in the digital world are digital assets such as ◊a[#:href "https://bitcoin.org/"]{Bitcoin}, ◊a[#:href "https://ethereum.org/en/eth/"]{Ether}, and ◊a[#:href "https://wiki.internetcomputer.org/wiki/ICP_token"]{ICP} utility tokens.

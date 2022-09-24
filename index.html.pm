@@ -16,6 +16,9 @@
 ◊p[#:class "publish-date"]{
   Published: ◊span[#:itemprop "datePublished"]{◊(select-from-metas 'doc-publish-date last-post-metas)}
 }
+◊hr{}
+◊toc{◊(get-doc last-post)}
+◊hr{}
 ◊@{◊(get-doc last-post)}
 
 ◊when/splice[(and prev-page (member prev-page all-posts))]{

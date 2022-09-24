@@ -27,6 +27,10 @@
 </p>
 }
 <hr>
+◊when/splice[(hash-ref metas 'doc-publish-date #f)]{
+◊(->html (toc doc))
+<hr>
+}
 ◊(->html doc #:splice? #t)
 ◊(define posts (children 'posts.html (current-pagetree)))
 ◊(define next-page (next here))
