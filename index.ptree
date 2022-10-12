@@ -3,6 +3,7 @@
 index.html
 
 ◊posts.html{
+  posts/11-ii-stable-memory.html
   posts/10-payment-flows.html
   posts/09-fungible-tokens-101.html
   posts/08-ic-xnet.html
