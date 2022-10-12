@@ -3,15 +3,15 @@
 ◊(define-meta title "IC internals: Internet Identity storage")
 ◊(define-meta keywords "ic")
 ◊(define-meta summary "How the Internet Identity canister uses its stable memory to achieve safe upgrades.")
-◊(define-meta doc-publish-date "2022-10-14")
-◊(define-meta doc-updated-date "2022-10-14")
+◊(define-meta doc-publish-date "2022-10-12")
+◊(define-meta doc-updated-date "2022-10-12")
 
 ◊section{
 ◊section-title["introduction"]{Introduction}
 ◊p{
   The Internet Identity canister innovated a passwordless approach to authentication on the ◊a[#:href "https://internetcomputer.org"]{Internet Computer} (IC).
   I was lucky to be among the first members of the team that launched this service.
-  Despite the time shortage, the team introduced many engineering innovations, some of which later caught up in other services:
+  Despite the time shortage, the team pioneered a few engineering solutions, some of which later caught up in other services:
 }
 ◊ul[#:class "arrows"]{
   ◊li{Stable memory as the primary storage.}
