@@ -24,6 +24,8 @@
 ◊when/splice[(hash-ref metas 'doc-publish-date #f)]{
 <p class="publish-date">
   Published: <span itemprop="datePublished">◊(hash-ref metas 'doc-publish-date)</span>
+  &nbsp;
+  Last updated: <span itemprop="dateModified">◊(hash-ref metas 'doc-updated-date)</span>
 </p>
 }
 <hr>
