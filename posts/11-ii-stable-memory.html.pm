@@ -178,7 +178,7 @@
     Entry ◊code{2345} (◊code{12345 - MinAnchor}) holds the data for anchor ◊code{12345}.
   }
   ◊li{
-    Read the first two bytes at offset ◊code{EntryStart = 512 bytes + 2345 * 2MiB} as a 16-bit integer (◊a[#:href "https://en.wikipedia.org/wiki/Endianness"]{little-endian}).
+    Read the first two bytes at offset ◊code{EntryStart = 512 bytes + 2345 * 2KiB} as a 16-bit integer (◊a[#:href "https://en.wikipedia.org/wiki/Endianness"]{little-endian}).
     The decoded value ◊code{N} determines the size of the blob we have to read next.
   }
   ◊li{
