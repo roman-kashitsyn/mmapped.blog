@@ -2,7 +2,7 @@
 
 ◊(define-meta title "Designing error types in Rust")
 ◊(define-meta keywords "rust")
-◊(define-meta summary "An optinionated guide to designing good error types in Rust.")
+◊(define-meta summary "An optinionated guide to designing humane error types in Rust.")
 ◊(define-meta doc-publish-date "2022-11-15")
 ◊(define-meta doc-updated-date "2022-11-15")
 
@@ -10,8 +10,10 @@
 ◊section-title["introduction"]{Introduction}
 ◊p{
   If I had to pick my favorite ◊a[#:href "https://www.rust-lang.org/"]{Rust language} feature, that would be its systematic approach to error handling.
-  Sum types, generics (such as ◊a[#:href "https://doc.rust-lang.org/std/result/enum.Result.html"]{◊code{Result<T, E>}}), and a holistic standard library design perfectly match my obsession with edge cases.
-  Rust error handling is so good that even ◊a[#:href "https://haskell.org/"]{Haskell} looks bleak and woefully unsafe.
+  Sum types, generics (such as ◊a[#:href "https://doc.rust-lang.org/std/result/enum.Result.html"]{◊code{Result<T, E>}}), and a holistic standard library design perfectly◊sidenote["sn-polimorphic-variants"]{◊em{Almost} perfectly: I miss ◊a[#:href "https://dev.realworldocaml.org/variants.html#scrollNav-4"]{polymorphic variants} badly.} match my obsession with edge cases.
+  Rust error handling is so good that even ◊a[#:href "https://haskell.org/"]{Haskell} looks bleak and woefully unsafe◊sidenote["sn-haskell-exceptions"]{
+    Haskell can replicate Rust's approach to error handling, but the standard library chose the route of runtime exceptions, and ◊a[#:href "https://www.fpcomplete.com/haskell/tutorial/exceptions/"]{practitioners} followed the lead.
+  }.
   This article explains how I approach errors when I design library interfaces in Rust.
 }
 }
@@ -19,7 +21,7 @@
 ◊section{
 ◊section-title["library-vs-apps"]{Libraries vs. applications}
 ◊p{
-  My approach to errors differs depending on whether I am writing a general-purpose library, a background daemon, or a command line tool.
+  My approach to errors differs depending on whether I am writing a general-purpose library, a background daemon, or a command-line tool.
 }
 ◊p{
   Applications interface humans.
@@ -27,11 +29,11 @@
 }
 ◊p{
   Library code interfaces other code.
-  Libraries do their job well when they provide programmers with a complete list of error cases and a clear explanation of how to handle each case.
+  Libraries do their job well when they recover from errors transparently and provide programmers with a complete list of error cases from which they cannot recover.
 }
 ◊p{
   This guide targets library design because that is the area with which I am most familiar.
-  However, the core ◊a[#:href "empathy"]{principle of empathy} applies equally well to designing machine-machine and human-machine interfaces.
+  However, the core ◊a[#:href "empathy"]{principle of empathy} applies equally well to designing machine-machine, human-machine, and human-human interfaces.
 }
 }
 
@@ -39,7 +41,7 @@
 ◊section-title["design-heuristics"]{Design heuristics}
 ◊p{
   Most issues in the error type design stem from the same root: making error cases easy for the code author at the expense of the caller.
-  All the strategies I describe in this article are a paricular case of the following mantra:
+  All the strategies I describe in this article are applications of the following mantra:
 }
 ◊advice["empathy"]{
   Be empathetic to your user.
@@ -85,7 +87,9 @@ pub fn frobnicate(n: u64) -> Result<String, ProjectWideError> { /* ◊ellipsis{}
 }
 
 ◊p{
-  These approaches might work fine for you, but I found them unsatisfactory in the long run: they facilitate ◊em{propagating} errors (often with little context about the operation that caused the error), not ◊em{handling} errors.
+  These approaches might work fine for you, but I found them unsatisfactory for library design◊sidenote["sn-anyhow"]{
+    However, I often use the ◊code{anyhow} approach to simplify structuring errors in command-line tools and daemons.
+  } in the long run: they facilitate ◊em{propagating} errors (often with little context about the operation that caused the error), not ◊em{handling} errors.
 }
 ◊p{
   When it comes to interface clarity and simplicity, nothing beats ◊a[#:href "https://en.wikipedia.org/wiki/Algebraic_data_type"]{algebraic data types} (◊smallcaps{adt}s).
@@ -151,8 +155,8 @@ fn test_frobnicate_on_mondays() {
 }
 ◊p{
   The primary purpose of ◊a[#:href "https://doc.rust-lang.org/std/macro.panic.html"]{◊code{panics}} in Rust is to indicate bugs in your program.
-  Resist the temptation to use panics for input validation.
-  People rarely read documentation, they can easily miss your warnings.
+  Resist the temptation to use panics for input validation, even if you document panics meticulously.
+  People rarely read documentation and they can easily miss your warnings.
   Use the type system to guide them.
 }
 ◊figure{
@@ -192,13 +196,13 @@ pub fn remove_from_tree<K: Ord, V>(tree: &mut Tree<K, V>, key: &K) -> Option<V> 
 ◊subsection-title["lift-input-validation"]{Lift input validation}
 ◊p{
   Good functions do not panic on invalid inputs.
-  Great functions do not even have to validate their inputs.
-  Let me demonstrate.
+  Great functions do not have to validate inputs.
+  Let us consider the following interface of a function that sends an email.
 }
 
 ◊figure{
 ◊marginnote["mn-input-validation"]{
-  A function validating email addresses and sending emails.
+  The ◊code{send_mail} function validates email addresses and sends emails.
 }
 ◊source-code["bad"]{
 pub enum SendMailError {
@@ -254,12 +258,12 @@ pub fn send_mail(to: &EmailAddress, cc: &[&EmailAddress], body: &str) -> SendMai
   You should do it even if you do not mean it.
 }
 ◊p{
-  Some callers might care about something other than your beautiful design, shoveling your errors into a ◊code{Box<Error>} or ◊code{anyhow::Result} and move on.
+  Some callers might care about something other than your beautiful design, shoveling your errors into a ◊code{Box<Error>} or ◊code{anyhow::Result} and moving on.
   They may be building a little command line tool that does not need to handle ◊a[#:href "https://xkcd.com/619/"]{machines with 4096 CPUs}.
   If you implement ◊code{std::error::Error} for your error types, you will make their lives easier.
 }
 ◊p{
-  If you find that implementing the ◊code{std::error::Error} trait is too much work, try the ◊a[#:href "https://crates.io/crates/thiserror"]{◊code{thiserror}} package.
+  If you find that implementing the ◊code{std::error::Error} trait is too much work, try using the ◊a[#:href "https://crates.io/crates/thiserror"]{◊code{thiserror}} package.
 }
 
 ◊figure{
@@ -299,8 +303,7 @@ pub enum FetchTxError {
 
 pub fn fetch_signed_transaction(
   id: Txid,
-  pk: Pubkey,
-  algorithm: SignatureAlgorithm,
+  pk: &[u8],
 ) -> Result<Option<Tx>, FetchTxError> { /* ◊ellipsis{} */ }
 }
 }
@@ -321,11 +324,11 @@ pub fn fetch_signed_transaction(
  ◊li{
    Your clients must read the leaked dependencies documentation to learn about possible error cases.
    Look at ◊a[#:href "https://docs.rs/openssl/0.10.42/openssl/ssl/struct.Error.html"]{◊code{openssl::ssl::Error}}, for example.
-   Can you devise a good recovery strategy without knowing what ◊code{openssl} library function returned this error?
+   Can you devise a good recovery strategy without knowing which ◊code{openssl} library function returned this error?
  }
  ◊li{
    Your clients must add ◊code{openssl} and ◊code{serde_cbor} to direct dependencies to handle your errors.
-   If you decide to switch from ◊code{openssl} to ◊code{libressl}, your clients will have to adapt their code.
+   If you decide to switch from ◊code{openssl} to ◊code{libressl} or from ◊code{serde_cbor} to ◊code{ciborium}, your clients will have to adapt their code.
  }
 }
 
@@ -358,11 +361,10 @@ pub enum FetchTxError {
     error_message: String,
   },
 
-  ◊em{/// The transaction body does not match the Txid.}
-  ◊em{/// Most likely, the peer tampered with the data.}
-  TxidMismatch { // ◊circled-ref[4]
-    txid: Txid,
-    body: Bytes,
+  ◊em{/// The public key is malformed.}
+  MalformedPublicKey { // ◊circled-ref[4]
+    key_bytes: Vec<u8>,
+    reason: String,
   },
 
   ◊em{/// The transaction signature does not match the public key.}
@@ -375,8 +377,7 @@ pub enum FetchTxError {
 
 pub fn fetch_signed_transaction(
   id: Txid,
-  pk: Pubkey,
-  algorithm: SignatureAlgorithm,
+  pk: &[u8],
 ) -> Result<Tx, FetchTxError> { /* ◊ellipsis{} */ }
 }
 }
@@ -396,8 +397,8 @@ pub fn fetch_signed_transaction(
   }
   ◊li{
     We replaced generic crypto errors with two specific cases: ◊code{TxidMismatch} and ◊code{SignatureVerificationFailed}.
-    Our fellow programmer has more context to make rational decisions: ◊code{TxidMismatch} indicates that we should try again with another peer.
-    In contrast, ◊code{SignatureVerificationFailed} suggests that the end user supplied the wrong public key.
+    Our fellow programmer has more context to make rational decisions: the ◊code{MalformedPublicKey} case indicates that the user supplied the wrong key.
+    The ◊code{SignatureVerificationFailed} case can indicate that the peer tampered with the data, so we should try connecting to another peer.
   }
 }
 
@@ -496,6 +497,7 @@ pub fn verify_sig(
   ◊li{
     Wrapping ◊code{std::io::Error} is acceptable if you include enough context, such as the attempted operation and the paths involved.
     ◊code{std::io::Error} does not bring extra dependencies and is familiar to any seasoned Rust programmer, so it adds little cognitive load.
+    ◊code{std::io::Error}s also can contain low-level ◊a[#:href "https://doc.rust-lang.org/std/io/struct.Error.html#method.raw_os_error"]{OS error codes} that can help diagnose tricky cases.
   }
   ◊li{
     It is often acceptable to convert a lower-level error to a string and attach that string to your errors, as long as the containing error type constructor is descriptive enough.
@@ -514,7 +516,7 @@ pub fn verify_sig(
 }
 ◊ol-circled{
   ◊li{◊a[#:href "https://web.archive.org/web/20110818020758/http://www.univ-orleans.fr/lifo/Members/David.Teller/publications/ml2008.pdf"]{Catch me if you can: Looking for type-safe, hierarchical, lightweight, polymorphic and efficient error management in OCaml} by David Teller, Arnaud Spiwack, and Till Varoquaux.}
-  ◊li{◊a[#:href "https://www.parsonsmatt.org/2018/11/03/trouble_with_typed_errors.html"]{The Trouble with Typed Errors} by Matt Parsons.}
   ◊li{The ◊a[#:href "https://wiki.haskell.org/Error_vs._Exception"]{Error vs. Exception} article on Haskell Wiki.}
+  ◊li{◊a[#:href "https://www.parsonsmatt.org/2018/11/03/trouble_with_typed_errors.html"]{The Trouble with Typed Errors} by Matt Parsons.}
 }
 }
