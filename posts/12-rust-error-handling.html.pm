@@ -519,4 +519,7 @@ pub fn verify_sig(
   ◊li{The ◊a[#:href "https://wiki.haskell.org/Error_vs._Exception"]{Error vs. Exception} article on Haskell Wiki.}
   ◊li{◊a[#:href "https://www.parsonsmatt.org/2018/11/03/trouble_with_typed_errors.html"]{The Trouble with Typed Errors} by Matt Parsons.}
 }
+◊p{
+  You can discuss this article on ◊a[#:href "https://www.reddit.com/r/rust/comments/yvdz6l/blog_post_designing_error_types_in_rust"]{Reddit}.
+}
 }
