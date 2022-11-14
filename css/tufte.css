@@ -140,6 +140,9 @@ div.advice>p {
     font-style: italic;
     text-align: center;
 }
+div.advice code {
+    font-style: italic;
+}
 
 footer {
     text-align: center;
@@ -533,13 +536,17 @@ pre>code {
 
 h1>code,
 h2>code,
-h3>code {
-    font-size: 0.80em;
+h3>code,
+a>code {
+    font-size: 1rem;
 }
 
 .marginnote>code,
-.sidenote>code {
-    font-size: 1rem;
+.marginnote>a>code,
+.sidenote>code,
+.sidenote>a>code
+{
+    font-size: 0.8rem;
 }
 
 pre>code {
