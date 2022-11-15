@@ -38,7 +38,20 @@
 }
 
 ◊section{
-◊section-title["design-heuristics"]{Design heuristics}
+◊section-title["design-heuristics"]{Design goals}
+◊epigraph{
+  ◊blockquote[#:cite "https://youtu.be/W2tWOdzgXHA?t=107"]{
+    ◊p{
+      I didn't want to call these guidelines, and I didn't want to call these rules.
+      I wanted them to be goals.
+      These are the things that you should strive for in your code, that are not always easy to accomplish.
+      And maybe you can't always pull them off.
+      But the closer you come, the better your code will be.
+    }
+    ◊footer{Sean Parent, ◊a[#:href "https://youtu.be/W2tWOdzgXHA?t=107"]{◊quoted{C++ Seasoning}}}
+  }
+}
+
 ◊p{
   Most issues in the error type design stem from the same root: making error cases easy for the code author at the expense of the caller.
   All the strategies I describe in this article are applications of the following mantra:
