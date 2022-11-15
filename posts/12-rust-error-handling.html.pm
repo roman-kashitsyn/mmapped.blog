@@ -33,7 +33,7 @@
 }
 ◊p{
   This guide targets library design because that is the area with which I am most familiar.
-  However, the core ◊a[#:href "empathy"]{principle of empathy} applies equally well to designing machine-machine, human-machine, and human-human interfaces.
+  However, the core ◊a[#:href "#empathy"]{principle of empathy} applies equally well to designing machine-machine, human-machine, and human-human interfaces.
 }
 }
 
@@ -515,9 +515,20 @@ pub fn verify_sig(
   The following resources made the most profound imprint on my thinking about errors.
 }
 ◊ol-circled{
-  ◊li{◊a[#:href "https://web.archive.org/web/20110818020758/http://www.univ-orleans.fr/lifo/Members/David.Teller/publications/ml2008.pdf"]{Catch me if you can: Looking for type-safe, hierarchical, lightweight, polymorphic and efficient error management in OCaml} by David Teller, Arnaud Spiwack, and Till Varoquaux.}
-  ◊li{The ◊a[#:href "https://wiki.haskell.org/Error_vs._Exception"]{Error vs. Exception} article on Haskell Wiki.}
-  ◊li{◊a[#:href "https://www.parsonsmatt.org/2018/11/03/trouble_with_typed_errors.html"]{The Trouble with Typed Errors} by Matt Parsons.}
+  ◊li{
+    ◊a[#:href "https://web.archive.org/web/20110818020758/http://www.univ-orleans.fr/lifo/Members/David.Teller/publications/ml2008.pdf"]{Catch me if you can: Looking for type-safe, hierarchical, lightweight, polymorphic and efficient error management in OCaml} by David Teller, Arnaud Spiwack, and Till Varoquaux.
+    This article demonstrates how features of a high-level functional language give rise to a powerful new way of dealing with errors.
+  }
+  ◊li{
+    The ◊a[#:href "https://wiki.haskell.org/Error_vs._Exception"]{Error vs. Exception} article on Haskell Wiki has a few through-provoking parallels between ◊code{panic}s (called ◊quoted{errors} in the article) and recoverable errors (called ◊quoted{exceptions}).
+  }
+  ◊li{
+    ◊a[#:href "https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/"]{Parse, don't validate} by Alexis King is a beautiful introduction to type-driven design and error handling.
+  }
+  ◊li{
+    ◊a[#:href "https://www.parsonsmatt.org/2018/11/03/trouble_with_typed_errors.html"]{The Trouble with Typed Errors} by Matt Parsons.
+    I share Matt's passion for precisely expressing errors in types, even though I would not try to replicate his Haskell-specific ideas in Rust.
+  }
 }
 ◊p{
   You can discuss this article on ◊a[#:href "https://www.reddit.com/r/rust/comments/yvdz6l/blog_post_designing_error_types_in_rust"]{Reddit}.
