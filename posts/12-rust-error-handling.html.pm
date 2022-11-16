@@ -4,7 +4,7 @@
 ◊(define-meta keywords "rust")
 ◊(define-meta summary "An optinionated guide to designing humane error types in Rust.")
 ◊(define-meta doc-publish-date "2022-11-15")
-◊(define-meta doc-updated-date "2022-11-15")
+◊(define-meta doc-updated-date "2022-11-16")
 
 ◊section{
 ◊section-title["introduction"]{Introduction}
@@ -168,8 +168,8 @@ fn test_frobnicate_on_mondays() {
 }
 ◊p{
   The primary purpose of ◊a[#:href "https://doc.rust-lang.org/std/macro.panic.html"]{◊code{panics}} in Rust is to indicate bugs in your program.
-  Resist the temptation to use panics for input validation, even if you document panics meticulously.
-  People rarely read documentation and they can easily miss your warnings.
+  Resist the temptation to use panics for input validation if there is a chance that the inputs come from the end user, even if you document panics meticulously.
+  People rarely read documentation; they can easily miss your warnings.
   Use the type system to guide them.
 }
 ◊figure{
@@ -205,6 +205,11 @@ pub fn remove_from_tree<K: Ord, V>(tree: &mut Tree<K, V>, key: &K) -> Option<V> 
 }
 }
 }
+◊p{
+  You can panic on invalid inputs if the failure indicates a severe bug in the caller's program.
+  Good examples are ◊a[#:href "https://doc.rust-lang.org/1.62.0/std/ops/trait.Index.html#panics"]{out-of-bound indices} or trait implementations that do not obey laws (e.g., if an ◊a[#:href "https://doc.rust-lang.org/1.62.0/std/cmp/trait.Ord.html"]{◊code{Ord}} type violates the ◊a[#:href "https://en.wikipedia.org/wiki/Total_order"]{total order} requirements).
+}
+
 
 ◊subsection-title["lift-input-validation"]{Lift input validation}
 ◊p{
@@ -517,7 +522,23 @@ pub fn verify_sig(
     However, you should check that these strings do not contain sensitive information, such as email addresses or secret keys.
   }
 }
-
+◊p{
+  You might prefer to wrap a ◊code{Box<dyn Error>} instead of converting the error to string so the caller can ◊a[#:href "https://doc.rust-lang.org/1.62.0/std/error/trait.Error.html#method.downcast"]{downcast} the error, delay the conversion to string, and traverse the error stack using the ◊a[#:href "https://doc.rust-lang.org/1.62.0/std/error/trait.Error.html#method.source"]{◊code{source}} method.
+  I found that boxing errors does not help me much in practice:
+}
+◊ul[#:class "arrows"]{
+  ◊li{
+    If the caller needs to access information from the original error programmatically, embed the relevant bits or add more type constructors.
+    Downcasting is a short-term solution.
+  }
+  ◊li{
+    The client must depend on the same semantic version of the transitive dependency to downcast the error.
+    The client code can silently break if the versions diverge (◊code{0.3} in the client code vs. ◊code{0.4} in your code, for example).
+  }
+  ◊li{
+    The error types become impossible to clone and serialize (my errors often cross process boundaries).
+  }
+}
 }
 
 ◊section{
