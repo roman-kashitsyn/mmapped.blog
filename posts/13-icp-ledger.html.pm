@@ -29,11 +29,12 @@
   ◊li{
     We must have a full record of all ICP transactions for regulatory purposes.
     When strict Swiss tax authorities asks you how you got your tokens, you better have an answer for them.
+    Since there Internet Computer blocks distributed across multiple ◊a[#:href "/posts/08-ic-xnet.html#subnets"]{subnets} and hard to access, detailed ICP accounting would be virtually impossible.
   }
   ◊li{
     We want centralized exchanges, such as ◊a[#:href "https://www.coinbase.com/"]{Coinbase}, to trade ICP.
-    The industry standard for integration with centralized exachanges is ◊a[#:href "https://rosetta-api.org/"]{rosetta-api}.
-    Since most of the canister state is private, the original design did not allow us to implement a specification-compliant Rosetta node.
+    The industry standard for integration with centralized exachanges is the ◊a[#:href "https://rosetta-api.org/"]{Rosetta API}.
+    Since most of the network state is inaccessible to general public, the original design did not allow us to implement a specification-compliant Rosetta node.
   }
 }
 ◊p{
@@ -46,12 +47,19 @@
 ◊p{
   The ICP ledger identifies accounts using 32-byte blobs computed from the owner's ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#principal"]{principal} and the ◊a[#:href "/posts/09-fungible-tokens-101.html#subaccounts"]{subaccount}, which is an arbitrary 32-byte blob identifying accounts belonging to the same owner.
 }
+◊figure{
+◊marginnote["mn-account-id"]{
+  The pseudocode for computing an account identifier for a given ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec#principal"]{principal} and a subaccount (an arbitrary 32-byte array).
+  The computation uses the ◊a[#:href "https://crypto.stackexchange.com/questions/43430/what-is-the-reason-to-separate-domains-in-the-internal-hash-algorithm-of-a-merkl"]{domain separation} technique.
+  The ◊code{0x0A} byte in the domain separator indicates the length of the ◊quoted{account-id} string.
+}
 ◊source-code["pseudocode"]{
-account_identifier := CRC32(h) || h
+account_identifier(principal, subaccount) := CRC32(h) || h
     ◊em{where} h = SHA224("\x0Aaccount-id" || principal || subaccount)
 }
+}
 ◊p{
-  This design decision has quite a few upsides:
+  This design decision offers several benefits:
 }
 ◊ul[#:class "arrows"]{
   ◊li{
@@ -83,25 +91,59 @@ account_identifier := CRC32(h) || h
 }
 
 ◊section{
+◊section-title["blocks-and-transactions"]{Blocks and transactions}
+◊p{
+  The ◊a[#:href "https://rosetta-api.org"]{Rosetta API} expects a blockchain to have ◊em{blocks} containing ◊em{transactions}.
+  Smart contracts on the IC do not have access to raw blocks and messages within them, so the ICP ledger models its own ◊quoted{blockchain} to satisfy the Rosetta data model. 
+  Each ledger operation, such as minting or transferring tokens, becomes a transaction that the ledger wraps into a unique block and adds to the chain.
+}
+
+◊p{
+  The ICP ledger uses ◊a[#:href "https://developers.google.com/protocol-buffers"]{Protocol Buffers} to encode transactions and blocks.
+  This encoding offers a few benefits:
+}
+◊ul[#:class "arrows"]{
+  ◊li{
+    Protocol Buffers offer solid tooling (including a ◊a[#:href "https://docs.buf.build/breaking/overview"]{breaking change detector}) that allowed the team to launch the ledger quicker.
+  }
+  ◊li{
+    The ◊a[#:href "https://developers.google.com/protocol-buffers/docs/encoding"]{encoding} is simple and easy to implement in a memory-constrained device, such as a ◊a[#:href "https://www.ledger.com/"]{Ledger} hardware wallet.
+  }
+  ◊li{
+    The encoding is compact and efficient, comparable to the custom ◊a[#:href "https://developer.bitcoin.org/reference/transactions.html#raw-transaction-format"]{Bitcoin serialization format}.
+  }
+}
+◊p{
+  The main disadvantage of the Protocol Buffers encoding is its ◊a[#:href "https://developers.google.com/protocol-buffers/docs/encoding#implications"]{non-determinism}.
+  If you start from a block, decode it into a data structure, and encode it back accoriding to the ◊a[#:href "https://github.com/dfinity/ic/blob/5248f11c18ca564881bbb82a4eb6915efb7ca62f/rs/rosetta-api/icp_ledger/proto/ic_ledger/pb/v1/types.proto"]{Protocol Buffer scheme}, you might end up with bytes that differ from the original.
+}
+◊p{
+  The ICP ledger uses a deterministic Protocol Buffer encoder to mitigate the non-determinism issue.
+  The ICP ledger specification describes the ◊a[#:href "https://internetcomputer.org/docs/current/references/ledger/#_chaining_ledger_blocks"]{exact encoding} that implementations should use.
+}
+}
+
+
+◊section{
 ◊section-title["tx-dedup"]{Transaction deduplication}
 ◊p{
   The IC has a mechanism protecting against message replay attacks.
   Each ingress message has an explicit ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#authentication"]{expiry time}; the IC remembers the message until it expires.
   The allowed expiry window is only a few minutes for scalability reasons: the larger the expiry window, the more message the IC must remember.
 }
-}
-
-◊section{
-◊section-title["block-encoding"]{Block encoding}
 ◊p{
+  Centralized exchanges such as Coinbase often offer ◊a[#:href "https://www.coindesk.com/learn/what-is-crypto-custody/"]{custody services}: they hold the private key controlling your tokens in a safe place for a fee.
 }
 }
-
 ◊section{
 ◊section-title["certification"]{Certification scheme}
 ◊p{
   The ICP ledger uses the ◊a[#:href ""]{certified variables} feature of the Internet Computer.
 }
+}
+
+◊section{
+◊section-title["block-archives"]{Block archives}
 }
 
 ◊section{
