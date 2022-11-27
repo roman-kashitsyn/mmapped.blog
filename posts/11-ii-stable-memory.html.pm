@@ -41,7 +41,7 @@
     The Internet Identity system allows users to log into DApps that support the authentication protocol.
     The DApps will see the same user identity (also known as the ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec/#principal"]{principal}) consistently, regardless of which device the user used for authentication.
   }
-  ◊p[#:style "text-align:center;"]{◊img[#:src "/images/11-ii-model.png" #:width "50%" #:height "50%"]{}}
+  ◊p[#:style "text-align:center;"]{◊(embed-svg "images/11-ii-model.svg")}
 }
 ◊p{
   The Internet Identity service maintains three core data structures:
@@ -67,7 +67,7 @@
     In the pre-upgrade hook, the canister marshals its data into stable memory storage.
     In the post-upgrade hook, the canister unmarshals the contents of stable memory to reconstruct the convenient data representation.
   }
-  ◊p[#:style "text-align:center;"]{◊img[#:src "/images/11-conventional-upgrade.png" #:alt "Conventional model of canister code upgrades" #:width "60%" #:height "60%"]{}}
+  ◊p[#:style "text-align:center;"]{◊(embed-svg "images/11-conventional-upgrade.svg")}
 }
 
 ◊p{
@@ -115,7 +115,7 @@
     The anchor data lives directly in stable memory.
     The pre-upgrade is unnecessary; the post-upgrade hook does little work.
   }
-  ◊p[#:style "text-align:center;"]{◊img[#:src "/images/11-ii-upgrade-model.png" #:alt "The Internet Identity storage mode." #:width "60%" #:height "60%"]{}}
+  ◊p[#:style "text-align:center;"]{◊(embed-svg "images/11-ii-upgrade-model.svg")}
 }
 
 ◊subsection-title["ii-memory-layout"]{The memory layout}
@@ -130,7 +130,8 @@
     The system reserves the first 512 bytes for static configuration and divides the rest into 2KiB blocks.
     Each such block holds data associated with a single anchor.
    }
-  ◊p[#:style "text-align:center;"]{◊img[#:src "/images/11-ii-layout.png" #:alt "The Internet Identity stable memory layout." #:width "80%" #:height "80%"]{}}
+  ◊p[#:style "text-align:center;"]{◊(embed-svg "images/11-ii-layout.svg")}
+
 }
 
 ◊p{
