@@ -58,6 +58,10 @@ account_identifier(principal, subaccount) := CRC32(h) || h
     ◊em{where} h = SHA224("\x0Aaccount-id" || principal || subaccount)
 }
 }
+◊figure[#:class "grayscale-diagram"]{
+◊marginnote["mn-account-id-diagram"]{}
+◊p[#:style "text-align:center;"]{◊(embed-svg "images/13-account-id.svg")}
+}
 ◊p{
   This design decision offers several benefits:
 }
@@ -81,7 +85,9 @@ account_identifier(principal, subaccount) := CRC32(h) || h
   ◊li{
     Account identifier is a one-way function and the principal and the subaccount.
     This property makes the ledger less transaprent and complicates error recovery.
-    For example, if one of the clients uses custom subaccounts but at some point forgets what they were, this client loses tokens.
+    For example, if a client uses custom subaccounts but then forgets what they were, this client can lose tokens.
+    Another example: one developer used an invalid subaccount during the account identifier computation and lost a few hundred ICP.
+    Since the ledger sees hashed data, it cannot validate the inputs.
   }
   ◊li{
     Opaqueness of identifiers limits types of applications and payment flows developers can build on top of the ledger.
@@ -91,11 +97,16 @@ account_identifier(principal, subaccount) := CRC32(h) || h
 }
 
 ◊section{
-◊section-title["blocks-and-transactions"]{Blocks and transactions}
+◊section-title["transactions-and-blocks"]{Transactions and blocks}
 ◊p{
   The ◊a[#:href "https://rosetta-api.org"]{Rosetta API} expects a blockchain to have ◊em{blocks} containing ◊em{transactions}.
   Smart contracts on the IC do not have access to raw blocks and messages within them, so the ICP ledger models its own ◊quoted{blockchain} to satisfy the Rosetta data model. 
   Each ledger operation, such as minting or transferring tokens, becomes a transaction that the ledger wraps into a unique block and adds to the chain.
+}
+
+◊figure{
+◊marginnote["mn-blocks"]{}
+◊;◊p{◊(embed-svg "images/13-blocks.svg")}
 }
 
 ◊p{
@@ -136,9 +147,23 @@ account_identifier(principal, subaccount) := CRC32(h) || h
 }
 }
 ◊section{
-◊section-title["certification"]{Certification scheme}
+◊section-title["validation"]{Block validation}
 ◊p{
-  The ICP ledger uses the ◊a[#:href ""]{certified variables} feature of the Internet Computer.
+  Clients talking to the ledger from the outside of the IC, such as Rosetta nodes, need to validate that the transaction data they receive from the internet is trustworthy.
+  Bitcoin blocks are inherently expensive to fake because they rely on ◊a[#:href "https://en.wikipedia.org/wiki/Proof_of_work"]{proof-of-work} mechanism.
+  The ICP ledger, on the other hand, relies on the chain-key cryptography for block validation.
+}
+◊p{
+  The only way to validate a block with a specific index is to request this block from the ledger together with a proof of authenticity.
+  Such a request usually takes only a few seconds, but authenticating each block separately is impractical: fetching a million blocks individually at speed one block per second would take more than thirty years.
+}
+◊p{
+  Luckily, we need IC signatures to validate only the latest block, we can follow the parent hash links starting from the oldest block to authenticate the rest.
+  This approach enables us to fetch most of the chain using blazingly fast unauthenticated queries, reducing the time of synching a million blocks to a few minutes.
+}
+◊p{
+  The ◊a[#:href "https://medium.com/dfinity/how-internet-computer-responses-are-certified-as-authentic-2ff1bb1ea659"]{certified variables} feature of the IC enables another minor optimization.
+  Each time the ledger records a new ◊a[#:href "#transactions-and-blocks"]{block}, it writes the block hash to the ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec#state-tree-certified-data"]{certified data} section, slightly speeding up the last block validation check.
 }
 }
 
