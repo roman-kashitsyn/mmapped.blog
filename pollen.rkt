@@ -37,7 +37,7 @@
   (let [(xml (string->xexpr (file->string (build-path (current-project-root) path))))]
     ;; draw.io embeds its encoding of the diagram in the "contents" attribute.
     ;; There is no need to include this encoding into the HTML file.
-    (attr-set xml 'content "")))
+    (txexpr* 'p '((class "svg")) (attr-set xml 'content ""))))
 
 (define (source-code attr . elems)
   (txexpr* 'div '((class "source-container"))
