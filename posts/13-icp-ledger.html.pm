@@ -29,7 +29,7 @@
 ◊ol-circled{
   ◊li{
     The ◊a[#:href "https://dfinity.org/"]{Foundation} must record all ICP transactions for regulatory purposes.
-    When strict Swiss tax authorities ask you how you got your tokens, you better have an answer for them.
+    When Swiss tax authorities ask you how you got your tokens, you better have an answer for them.
     Since the IC blocks are distributed across multiple ◊a[#:href "/posts/08-ic-xnet.html#subnets"]{subnets} and are hard to access, a detailed ICP accounting would be virtually impossible.
   }
   ◊li{
