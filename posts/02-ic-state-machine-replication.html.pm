@@ -90,7 +90,7 @@ Let's call those persistent snapshots ◊em{checkpoints}.
 
 ◊figure[#:class "grayscale-diagram"]{
 ◊marginnote["sm-components"]{Components of the state machine: blocks as inputs, states, state trees as outputs, and checkpoints.}
-◊p{◊(embed-svg "images/02-states.svg")}
+◊(embed-svg "images/02-states.svg")
 }
 }
 
@@ -127,7 +127,7 @@ Enter state trees.
 
 ◊figure[#:class "grayscale-diagram"]{
 ◊marginnote["st-structure"]{The logical structure of a state tree.}
-◊p{◊(embed-svg "images/02-state-tree.svg")}
+◊(embed-svg "images/02-state-tree.svg")
 }
 
 ◊p{
@@ -154,7 +154,8 @@ The tree that you'll get back will look something like this:
 
 ◊figure[#:class "grayscale-diagram"]{
 ◊marginnote["responst-structure"]{The logical structure of a tree containing a response to an ingress message.}
-◊p{ ◊(embed-svg "images/02-pruned-state-tree.svg") }}
+◊(embed-svg "images/02-pruned-state-tree.svg")
+}
 
 ◊p{
 Even though the pruned tree is much smaller than the full state tree, both trees have exactly the same root hash.
@@ -192,7 +193,7 @@ Replicas use the hash of the manifest itself when they advertise a checkpoint in
 
 ◊figure[#:class "grayscale-diagram"]{
 ◊marginnote["checkpoint-advert"]{A replica advertising a checkpoint as an artifact.}
-◊p{ ◊(embed-svg "images/02-checkpoint-artifact.svg") }
+◊(embed-svg "images/02-checkpoint-artifact.svg")
 }
 
 ◊subsection-title["trigger-transfer"]{Triggering state transfer}
@@ -240,7 +241,7 @@ Why waste network bandwidth and fetch data you already have?
 ◊p{When there are no more chunks to fetch, checkpoint 100 is complete, and the replica is ready to go.}
 ◊figure[#:class "grayscale-diagram"]{
 ◊marginnote["checkpoint-construct"]{A replica constructing a fresh checkpoint by re-using existing chunks and fetching the missing ones.}
-◊p{◊(embed-svg "images/02-state-sync.svg")}
+◊(embed-svg "images/02-state-sync.svg")
 }
 ◊p{
 As you can see, the state transfer procedure is incremental: if the catching-up replica was offline for a brief period of time, it needs to fetch only the data that actually changed in the meantime.

@@ -149,7 +149,7 @@ fn main() {
   Dotted pages represent pages inherited from the checkpoint, dotted vertical lines — message execution boundaries, bold shapes — page deltas.
   Note that the system shares the contents of dirtied page among snapshots.
 }
-◊p[#:class "svg"]{◊(embed-svg "images/06-snapshot-deltas.svg")}
+◊(embed-svg "images/06-snapshot-deltas.svg")
 }
 ◊p{
   The runtime uses page maps in the following way:
@@ -299,7 +299,7 @@ fn replace(array: &mut [u32], src: u32, dst: u32) {
   States of the memory mapping during ◊code{replace} function execution.
   Rectangles represent memory pages, hollow arrows — reads, solid arrows — writes.
 }
-◊p[#:class "svg"]{◊(embed-svg "images/06-memory-mapping-states.svg")}
+◊(embed-svg "images/06-memory-mapping-states.svg")
 }
 
 ◊p{

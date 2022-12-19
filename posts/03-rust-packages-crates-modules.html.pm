@@ -147,7 +147,7 @@ Check if it makes your code structure clearer and your compilation times shorter
 
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-dep-hubs"]{A small subgraph of the Internet Computer project package dependency graph. ◊code{types} and ◊code{interfaces} are type-one dependency hubs, ◊code{replica} is a type-two dependency hub, ◊code{test-utils} is both a type-one and a type-two hub.}
-  ◊p[#:class "svg"]{◊(embed-svg "images/03-dep-hubs.svg")}
+  ◊(embed-svg "images/03-dep-hubs.svg")
 }
 
 ◊p{
@@ -551,7 +551,7 @@ foo = { path = "../foo" }
 
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-dep-foo"]{Dependency diagram for ◊code{foo} library test.}
-  ◊p[#:class "svg"]{◊(embed-svg "images/03-foo-test-profile.svg")}
+  ◊(embed-svg "images/03-foo-test-profile.svg")
 }
 
 ◊figure{
@@ -638,7 +638,7 @@ fn test_foo_frobnication() {
 
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-foo-test-dep-diag"]{Dependency diagram for ◊code{foo_test} integration test.}
-  ◊p[#:class "svg"]{◊(embed-svg "images/03-foo-dev-profile.svg")}
+  ◊(embed-svg "images/03-foo-dev-profile.svg")
 }
 
 ◊p{

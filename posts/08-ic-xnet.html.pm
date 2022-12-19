@@ -38,7 +38,7 @@
     Solid lines represent peer-to-peer communication within a subnet; dotted lines — cross-subnet communication.
     Not all XNet connections are present in the picture.
   }
-  ◊p{◊(embed-svg "images/08-subnets.svg")}
+  ◊(embed-svg "images/08-subnets.svg")
 }
 ◊p{
   XNet protocol is not limited to the same-datacenter communication; any node from one subnet can talk to any other node from another subnet.
@@ -61,7 +61,7 @@
     The flow of messages within a subnet.
     Canisters push messages into their output queues; the stream builder picks up these messages and constructs a flat outgoing message stream for each subnet.
   }
-  ◊p{◊(embed-svg "images/08-message-streams.svg")}
+  ◊(embed-svg "images/08-message-streams.svg")
 }
 ◊p{
   The component merging the queues (aptly called ◊em{stream builder}) should satisfy a few constraints:
@@ -99,7 +99,7 @@
 }
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-payloads"]{The consensus algorithm aggregates messages from the outside world into blocks.}
-  ◊p{◊(embed-svg "images/08-block-payloads.svg")}
+  ◊(embed-svg "images/08-block-payloads.svg")
 }
 ◊p{
   XNet payload builder pulls messages from nodes assigned to other subnets using a simple HTTP protocol.
@@ -113,7 +113,7 @@
     Subnet ◊math{Y} produces a signed stream of messages for subnet X and exposes this stream via an HTTP endpoint.
     Subnet ◊math{X} pulls messages from one of the nodes on subnet Y.
   }
-  ◊p{◊(embed-svg "images/08-xnet-endpoint.svg")}
+  ◊(embed-svg "images/08-xnet-endpoint.svg")
 }
 }
 
@@ -158,7 +158,7 @@
     Now, subnet ◊math{X} receives a prefix of ◊math{Y}'s stream and the matching header and removes messages ◊math{10} and ◊math{11} from its stream because ◊math{Y} will not need them anymore.
     ◊math{X} also includes signals for the newly received messages into the ◊math{X → Y} stream header and removes an obsolete signal for message ◊math{Y◊sub{1}} it consumed before.
   }
-  ◊p{◊(embed-svg "images/08-signals.svg")}
+  ◊(embed-svg "images/08-signals.svg")
 }
 ◊p{
   Signals and stream messages are like snakes eating each other's tails on the ◊a[#:href "https://theneverendingstory.fandom.com/wiki/Auryn"]{Auryn}: the sender drops messages when it sees signals, and the receiver drops signals when it sees stream bounds advancing.
@@ -177,7 +177,7 @@
   ◊marginnote["mn-certification"]{
     The encoding of subnet message streams in the ◊a[#:href "/posts/02-ic-state-machine-replication.html#state-trees"]{state tree}.
   }
-  ◊p{◊(embed-svg "images/08-certification.svg")}
+  ◊(embed-svg "images/08-certification.svg")
 }
 ◊p{
   Conceptually, a node requesting messages from a subnet is not different from a client requesting a response.

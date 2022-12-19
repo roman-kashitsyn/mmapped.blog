@@ -38,7 +38,7 @@
   A tree corresponding to inputs ◊code{inorder = A P L J K Q F U N} and ◊code{preorder = Q P A J L K U F N}.
   We will use this tree as our primary example throughout the article.
 }
-◊p{◊(embed-svg "images/07-problem-tree.svg")}
+◊(embed-svg "images/07-problem-tree.svg")
 }
 }
 
@@ -67,7 +67,7 @@
 ◊marginnote["mn-tree-perm"]{
   The example tree after we changed node labels to be integers corresponding to the in-order traversal.
 }
-◊p{◊(embed-svg "images/07-problem-tree-digits.svg")}
+◊(embed-svg "images/07-problem-tree-digits.svg")
 }
 ◊p{
   The next step is to decide on the tree representation.
@@ -221,7 +221,7 @@ Q
 }
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-left-children"]{The left children follow a pattern in a pre-order vector: whenever a smaller node index follows a larger one, the larger index must be the parent of the smaller.}
-  ◊p{◊(embed-svg "images/07-left-children.svg")}
+  ◊(embed-svg "images/07-left-children.svg")
 }
 ◊p{
   Let us put this observation into code.
@@ -268,7 +268,7 @@ Q
 }
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-left-children"]{The right children follow a pattern in a pre-order vector: their parent node is the largest index earlier in the vector smaller than their index.}
-  ◊p{◊(embed-svg "images/07-right-children.svg")}
+  ◊(embed-svg "images/07-right-children.svg")
 }
 ◊p{
   This observation gives us an algorithm: we need to find the largest value to the left smaller than the node for each position in the array.
@@ -395,7 +395,7 @@ recover_tree =. (i. i.@#) ◊"{" ((<: * ]) (◊"{". , ◊"}":))~ >. >./@((] < �
 }
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-loop-solution"]{The run of the recursive parent search algorithm for the first two layers of the example tree.}
-  ◊p{◊(embed-svg "images/07-loop-solution.svg")}
+  ◊(embed-svg "images/07-loop-solution.svg")
 }
 ◊figure{
   ◊marginnote["mn-loop-solution-code"]{
