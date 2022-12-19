@@ -238,7 +238,7 @@ account_identifier(principal, subaccount) := CRC32(h) || h
   The team plans to move the balance map to the stable memory storage, significantly increasing the size limit.
 }
 }
-
+
 ◊section{
 ◊section-title["tx-sigs"]{Transaction signatures}
 ◊p{
@@ -267,7 +267,7 @@ account_identifier(principal, subaccount) := CRC32(h) || h
   SegWit transactions require signatures for validation, but ◊a[#:href "https://en.bitcoinwiki.org/wiki/Simplified_Payment_Verification"]{Simple Payment Verification} nodes get blocks without signatures to save storage space and bandwidth.
 }
 }
-
+
 ◊section{
 ◊section-title["references"]{References}
 ◊ul[#:class "arrows"]{
