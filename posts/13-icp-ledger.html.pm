@@ -107,7 +107,7 @@ account_identifier(principal, subaccount) := CRC32(h) || h
   Each ledger operation, such as minting or transferring tokens, becomes a transaction that the ledger wraps into a unique block and adds to the chain.
 }
 
-◊figure{
+◊figure[#:class "grayscale-diagram"]{
 ◊marginnote["mn-blocks"]{
   The structure of a block in the ICP ledger.
   Each block contains one transaction and the previous block's hash for the chain validation.
@@ -155,7 +155,7 @@ account_identifier(principal, subaccount) := CRC32(h) || h
   Luckily, we need the IC signatures to validate only the latest block; we can follow the parent hash links starting from the oldest block to authenticate the rest.
   This approach enables us to fetch most of the chain using fast queries, reducing the synching time of a million blocks to a few minutes.
 }
-◊figure{
+◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-block-validation"]{
     The validation scheme for the ICP block synchronization protocol.
     The validator fetches a certificate for the tip of the chain and follows the hash links to validate older blocks.
@@ -208,7 +208,7 @@ account_identifier(principal, subaccount) := CRC32(h) || h
   When the transaction history grows above a pre-configured threshold, the ledger creates a new canister, an ◊em{archive node}, and moves old transactions to the archive memory.
   The ledger spawns a new archive node when the previous archive node becomes full.
 }
-◊figure{
+◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-archives"]{
     The ICP ledger delegates the storage of past transactions to archive canisters, reserving its memory for data structures required to validate new transactions.
   }
@@ -274,6 +274,9 @@ account_identifier(principal, subaccount) := CRC32(h) || h
   ◊li{
     The ◊a[#:href "https://github.com/dfinity/ic/tree/59ad371332f26ee1af54a15c568dd10a2093224c/rs/rosetta-api/icp_ledger/ledger"]{ICP ledger implementation} in Rust.
     This code moves your ICP tokens on the IC.
+  }
+  ◊li{
+    The official developer documentation for the ◊a[#:href "https://internetcomputer.org/docs/current/developer-docs/integrations/ledger/"]{ICP ledger} and the ◊a[#:href "https://internetcomputer.org/docs/current/developer-docs/integrations/rosetta/"]{Rosetta node}.
   }
   ◊li{
     The ICP ledger ◊a[#:href "https://internetcomputer.org/docs/current/references/ledger"]{specification}.
