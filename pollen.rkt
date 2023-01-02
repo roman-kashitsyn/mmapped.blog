@@ -29,6 +29,7 @@
          mid-ellipsis
          middot
          mdash
+         ndash
          ballot-x
          check
          toc)
@@ -146,5 +147,6 @@
 (define (mid-ellipsis) (string (integer->char #x22EF)))
 (define (middot) (string->symbol "middot"))
 (define (mdash) (string->symbol "mdash"))
+(define (ndash) (string->symbol "ndash"))
 (define (ballot-x) (string (integer->char #x2718)))
 (define (check) (string (integer->char #x2714)))
