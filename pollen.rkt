@@ -6,7 +6,8 @@
          xml
          txexpr)
 
-(provide source-code
+(provide root
+	 source-code
          embed-svg
          epigraph
          section-title
@@ -33,6 +34,9 @@
          ballot-x
          check
          toc)
+
+(define (root . elements)
+  (txexpr 'div '() elements))
 
 (define (embed-svg path)
   (let [(xml (string->xexpr (file->string (build-path (current-project-root) path))))]
