@@ -13,7 +13,7 @@
   Canisters hosted on the Internet Computer (IC) are mutable: a canisters's controller can upgrade the code to add new features or fix bugs without changing the canister's identity.
 }
 ◊p{
-  Since the ◊a[#:href "/posts/06-ic-orthogonal-persistence.html#upgrades"]{orthogonal persistence} feature cannot handle upgrades, the IC allows canisters to use an additional storage, called ◊em{stable memory}, to facilitate the data transfer between code versions.
+  Since the ◊a[#:href "/posts/06-ic-orthogonal-persistence.html#upgrades"]{orthogonal persistence} feature cannot handle upgrades, the IC allows canisters to use an additional storage, called ◊em{stable }, to facilitate the data transfer between code versions.
   The ◊a[#:href "/posts/11-ii-stable-memory.html#conventional-memory-management"]{conventional approach} to canister state persistence is to serialize the entire state to stable memory in the ◊code{pre_upgrade} hook and decode it back in the ◊code{post_upgrade} hook.
   This approach is easy to implement and works well for relatively small datasets.
   Unfortunately, it does not scale well and can render a canister non-upgradable, so I ◊a[#:href "/posts/01-effective-rust-canisters.html#stable-memory-main"]{recommend} using stable memory as the main storage when possible.
@@ -63,6 +63,11 @@
     ◊em{Compatibility with ◊a[#:href "https://github.com/WebAssembly/multi-memory/blob/master/proposals/multi-memory/Overview.md"]{multi-memory} WebAssembly.}
     The design should work in the world when canisters have multiple stable memories since this feature is on the ◊a[#:href "https://forum.dfinity.org/t/proposal-wasm-native-stable-memory/15966#proposal-7"]{IC roadmap}.
   }
+}
+◊p{
+  As a result of these goals, using the library requires some planning.
+  For example, you might need to set an ◊a[#:href "#max-size-attribute"]{upper bound} on a value size that you will not be able to adjust in future without data migration.
+  There are other libraries with similar goals whose authors chose a slightly different set of traidoffs, such as ◊a[#:href "https://crates.io/crates/ic-stable-memory"]{◊code{ic-stable-memory}}.
 }
 }
 
@@ -120,7 +125,7 @@ pub trait ◊b{Memory} {
     ◊code{RestrictedMemory} works best for allocating relatively small fixed-size memories.
   }
 }
-◊figure[#:class "grayscale-diagram"]{
+◊figure[#:id "restricted-memory" #:class "grayscale-diagram"]{
 ◊marginnote["mn-restricted-memory"]{
   Restricted memory limits the primary memory to a contiguous page range.
   The example on the diagram demonstrates splitting a 5-page primary memory into two memories: the first memory spans pages from zero to two (exclusive), the second memory spans pages from two to five (exclusive).
@@ -132,7 +137,7 @@ pub trait ◊b{Memory} {
   This utility interleaves up to 255 non-intersecting memories in a single address space, acting similarly to a virtual memory subsystem in modern operating systems.
   The memory manager uses part of the parent memory to keep a dynamic translation table assigning page ranges to virtual memories.
 }
-◊figure[#:class "grayscale-diagram"]{
+◊figure[#:id "memory-manager" #:class "grayscale-diagram"]{
 ◊marginnote["mn-memory-manager"]{
   The memory manager interleaves multiple virtual memories in a single primary memory, using the first few pages to store metadata.
 }
@@ -160,7 +165,7 @@ pub trait ◊b[#:id "storable-trait"]{Storable} {
     ◊em{/// Deserializes a value of a storable type from a byte array.}
     ◊em{///}
     ◊em{/// ◊b{REQUIREMENT}: Self::from_bytes(self.to_bytes().to_vec()) == self}
-    fn ◊b{from_bytes}(bytes: Vec<u8>) -> Self;
+    fn ◊b{from_bytes}(bytes: Cow<[u8]>) -> Self;
 }
 }
 }
@@ -189,7 +194,9 @@ pub trait ◊b[#:id "bounded-storable-trait"]{BoundedStorable}: ◊a[#:href "#st
 }
 }
 ◊p{
-  The library implements these traits for a few basic types, such as integers, allowing you to get away without any serialization libraries if you store only primitives.
+  The library implements these traits for a few basic types, such as integers, fixed-size arrays, and tuples, allowing you to get away without any serialization libraries if you store only primitives.
+  It also provides efficient variable-size bounded byte arrays, the ◊code{Blob<N>} type, where ◊code{N} is the maximal number of bytes this type can hold.
+  For example, you can persist an IC ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec#principal"]{principal} as a ◊code{Blob<29>}.
 }
 }
 
@@ -315,6 +322,10 @@ impl<T: ◊a[#:href "#storable-types"]{◊code{BoundedStorable}}, Data: ◊a[#:h
   }
   ◊(embed-svg "images/14-vec.svg")
 }
+◊p{
+  The ◊a[#:href "/posts/11-ii-stable-memory.html#ii-memory-layout"]{stable structure} powering the Internet Identity service is a stable vector in disguise, though a less generic one.
+}
+
 ◊subsection-title["stable-log"]{Stable log}
 ◊p{
   A ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/log/struct.Log.html"]{Log} is an append-only list of arbitrary-sized values, similar to ◊a[#:href "https://redis.io/docs/data-types/streams/"]{streams} in Redis.
@@ -326,14 +337,19 @@ impl<T: ◊a[#:href "#storable-types"]{◊code{BoundedStorable}}, Data: ◊a[#:h
   The core interface of the ◊code{Log} stable structure.
 }
 ◊source-code["rust"]{
-impl<Index: ◊a[#:href "#memory"]{◊code{Memory}}, Data: ◊a[#:href "#memory"]{◊code{Memory}}> struct ◊b{Log}<Index, Data> {
+impl<T, Index, Data> struct ◊b{Log}<T, Index, Data>
+where
+  T: ◊a[#:href "#storable-trait"]{◊code{Storable}},
+  Index: ◊a[#:href "#memory"]{◊code{Memory}},
+  Data: ◊a[#:href "#memory"]{◊code{Memory}},
+{
     ◊em{/// Adds a new entry to the log.}
     ◊em{/// Complexity: O(entry size).}
-    pub fn ◊b{append}(&self, bytes: &[u8]) -> Result<usize, WriteError>;
+    pub fn ◊b{append}(&self, bytes: &T) -> Result<usize, WriteError>;
 
     ◊em{/// Returns the entry at the specified index.}
     ◊em{/// Complexity: O(entry size).}
-    pub fn ◊b{get}(&self, idx: usize) -> Option<Vec<u8>>;
+    pub fn ◊b{get}(&self, idx: usize) -> Option<T>;
 
     ◊em{/// Returns the number of entries in the log.}
     ◊em{/// Complexity: O(1).}
@@ -369,15 +385,23 @@ impl<Index: ◊a[#:href "#memory"]{◊code{Memory}}, Data: ◊a[#:href "#memory"
 ◊p{
   The ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/btreemap/struct.BTreeMap.html"]{◊code{BTreeMap}} stable structure is an associative container that can hold any ◊a[#:href "#storable-types"]{bounded storable types}.
   The map needs to know sizes of the keys and values because it allocates nodes from a pool of fixed-size tree nodes◊sidenote["sn-"]{
-    The ◊a[#:href "https://github.com/dfinity/stable-structures/blob/ed2fb6de50e56d2f93e67c2bfaa170fa4b1be60a/src/btreemap/allocator.rs#L13"]{tree allocator} the ◊a[#:href "https://en.wikipedia.org/wiki/Free_list"]{free list} allocator, which is the ◊a[#:href "#radical-simplicity"]{simplest allocator} capable of freeing memory.
+    The ◊a[#:href "https://github.com/dfinity/stable-structures/blob/ed2fb6de50e56d2f93e67c2bfaa170fa4b1be60a/src/btreemap/allocator.rs#L13"]{tree allocator} a ◊a[#:href "https://en.wikipedia.org/wiki/Free_list"]{free-list} allocator, which is the ◊a[#:href "#radical-simplicity"]{simplest allocator} capable of freeing memory.
   }.
+}
+◊p{
+  The interface of stable ◊code{BTreeMap} will look familiar to any seasoned Rust programmer.
 }
 ◊figure{
 ◊marginnote["mn-log-interface"]{
   The core interface of the ◊code{BTreeMap} stable structure.
 }
 ◊source-code["rust"]{
-impl<K: ◊a[#:href "#bounded-storable-trait"]{◊code{BoundedStorable}}, V: ◊a[#:href "#bounded-storable-trait"]{◊code{BoundedStorable}}, M: ◊a[#:href "#memory"]{◊code{Memory}}> struct ◊b{BTreeMap}<K, V, M> {
+impl<K, V, M> struct ◊b{BTreeMap}<K, V, M>
+where
+  K: ◊a[#:href "#bounded-storable-trait"]{◊code{BoundedStorable}} + Ord + Clone,
+  V: ◊a[#:href "#bounded-storable-trait"]{◊code{BoundedStorable}},
+  M: ◊a[#:href "#memory"]{◊code{Memory}},
+{
     ◊em{/// Adds a new entry to the map.}
     ◊em{/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).}
     pub fn ◊b{insert}(&self, key: K, value: V) -> Result<Option<V>, InsertError>;
@@ -390,20 +414,125 @@ impl<K: ◊a[#:href "#bounded-storable-trait"]{◊code{BoundedStorable}}, V: ◊
     ◊em{/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).}
     pub fn ◊b{remove}(&self, key: &K) -> Option<V>;
 
+    ◊em{/// Returns an iterator over the entries in the specified key range.}
+    pub fn ◊b{range}(&self, range: impl RangeBounds<K>) -> impl Iterator<Item = (K, V)>;
+
     ◊em{/// Returns the number of entries in the map.}
     ◊em{/// Complexity: O(1).}
     pub fn ◊b{len}() -> usize;
 }
 }
 }
-
+◊figure[#:class "grayscale-diagram"]{
+  ◊marginnote["mn-btree"]{
+    A ◊code{BTreeMap} is an associative container storing data in fixed-size dynamically-allocated ◊em{nodes}.
+    Each node stores an array of key-value mappings ordered by key.
+    The tree uses the ◊a[#:href "https://en.wikipedia.org/wiki/Free_list"]{free-list} technique for allocating and freeing nodes.
+    Dotted boxes represent the logical tree structure.
+  }
+  ◊(embed-svg "images/14-btree.svg")
+}
 ◊p{
   If you need a ◊code{BTreeSet<K>}, you can use ◊code{BTreeMap<K, ()>} instead.
+}
+
+◊subsection-title["constructing-ss"]{Constructing stable structures}
+◊p{
+  We have to declare stable structures before we can use them.
+  Each data structure ◊code{T} in the library declares at least three constructors:
+}
+◊ul[#:class "arrows"]{
+  ◊li{◊code{T::new} allocates a new copy of ◊code{T} in the given ◊a[#:href "#memory"]{memory}, potentially overwriting previous memory content.}
+  ◊li{◊code{T::load} recovers a previously constructed ◊code{T} from the given ◊a[#:href "#memory"]{memory}.}
+  ◊li{◊code{T::init} is a ◊a[#:href "https://en.wikipedia.org/wiki/DWIM"]{DWIM} constructor acting as ◊code{T::new} if the given ◊a[#:href "#memory"]{memory} is empty and as ◊code{T::load} otherwise.}
+}
+◊p{
+  In practice, most canisters need only ◊code{T::init}.
 }
 }
 
 
 ◊section{
 ◊section-title["tying-together"]{Tying it all together}
+◊p{
+  Let us declare data structures for a ledger canister compatible with the ◊a[#:href "https://github.com/dfinity/ICRC-1/blob/3c64844bc6219e1d07ce05e27ec636df1e562114/standards/ICRC-1/README.md"]{ICRC-1} specification as an excercise.
+  We will need three collections:
+}
+◊ol-circled{
+  ◊li{
+    A ◊a[#:href "#stable-cell"]{◊code{Cell}} to store the ledger metadata.
+  }
+  ◊li{
+    A ◊a[#:href "#stable-btree"]{◊code{StableBTreeMap}} to map accounts ◊sidenote["sn-account"]{An ◊a[#:href "https://github.com/dfinity/ICRC-1/blob/3c64844bc6219e1d07ce05e27ec636df1e562114/standards/ICRC-1/README.md#account"]{account} is a pair of a principal and a 32-byte subaccount.} to their current balance.
+  }
+  ◊li{A ◊a[#:href "#stable-log"]{◊code{StableLog}} for transaction history.}
+}
+◊p{
+  The ledger metadata is relatively small, it should fit into two megabytes, or sixteen WebAssembly memory pages.
+  We will allocate the metadata cell in a ◊a[#:href "#restricted-memory"]{restricted memory}, partitioning the rest of stable memory using the ◊a[#:href "#memory-manager"]{memory manager}.
 }
 
+◊figure{
+  ◊marginnote["mn-ledger-example"]{}
+◊source-code["rust"]{
+use ic_stable_structures::{
+  StableBTreeMap, StableLog, StableCell,
+  RestrictedMemory as RM,
+  DefaultMemoryImpl as Mem,
+};
+use ic_stable_structures::memory_manager::{
+  MemoryId,
+  MemoryManager as MM,
+  VirtualMemory as VM,
+};
+use ic_stable_structures::storable::Blob;
+use std::cell::RefCell;
+◊hr{}
+type Account = (Blob<29>, [u8; 32]);
+type Amount = u64;
+
+struct Metadata {
+  // ...
+}
+
+impl Storable for Metadata { /* ... */ }
+
+enum Tx {
+  Mint { /* ... */ }
+  Burn { /* ... */ }
+  Transfer { /* ... */ }
+}
+
+impl Storable for Tx { /* ... */ }
+◊hr{}
+const BALANCES_MEM_ID: MemoryId = MemoryId(0);
+const LOG_INDX_MEM_ID: MemoryId = MemoryId(1);
+const LOG_DATA_MEM_ID: MemoryId = MemoryId(2);
+
+thread_local!{
+  static ◊b{METADATA}: RefCell<StableCell<Option<Metadata>, VM>> =
+    RefCell::new(
+      None,
+      RM::new(Mem::default, 0..16),
+    );
+
+  static ◊b{MEMORY_MANAGER}: RefCell<MM<VM>> = RefCell::new(
+    MM::init(RM::new(Mem::default(), 16..))
+  );
+
+  static ◊b{BALANCES}: RefCell<StableBTreeMap<Account, Amount, VM>> =
+    MEMORY_MANAGER.with(|mm| {
+      RefCell::new(StableBTreeMap::init(mm.get(BALANCES_MEM_ID)));
+    });
+
+  static ◊b{TX_LOG}: RefCell<StableLog<Tx, VM, VM>> =
+    MEMORY_MANAGER.with(|mm| {
+      RefCell::new(StableLog::init(
+        mm.get(LOG_INDX_MEM_ID),
+        mm.get(LOG_DATA_MEM_ID),
+      ));
+    });
+}
+}
+}
+}
