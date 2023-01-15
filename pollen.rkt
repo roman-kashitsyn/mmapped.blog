@@ -19,6 +19,7 @@
          anchor
          circled
          circled-ref
+	 code-ref
          ol-circled
          ul-arrows
          td-num
@@ -85,6 +86,9 @@
 
 (define (circled n)
   (string (integer->char (+ #x2460 (- n 1)))))
+
+(define (code-ref ref . elems)
+  (txexpr* 'a `((href ,ref) (class "code-ref")) (txexpr 'code '() elems)))
 
 (define (math . elems)
   (txexpr 'span '((class "math")) elems))

@@ -3,23 +3,30 @@
 ◊(define-meta title "Tutorial: stable-structures")
 ◊(define-meta keywords "ic, rust")
 ◊(define-meta summary "An introduction into the stable-structures library.")
-◊(define-meta doc-publish-date "2022-01-10")
-◊(define-meta doc-updated-date "2022-01-10")
+◊(define-meta doc-publish-date "2022-01-20")
+◊(define-meta doc-updated-date "2022-01-20")
+
+◊epigraph{
+  ◊blockquote[#:cite "https://youtu.be/rX0ItVEVjHc?t=1360"]{
+    ◊p{Only purpose of any code is to transform data.}
+    ◊footer{Mike Acton, ◊quoted{Data-Oriented Design and C++}, CppCon 2014}
+  }
+}
 
 
 ◊section{
 ◊section-title["introduction"]{Introduction}
 ◊p{
-  Canisters hosted on the Internet Computer (IC) are mutable: a canisters's controller can upgrade the code to add new features or fix bugs without changing the canister's identity.
+  Canisters hosted on the Internet Computer (IC) are mutable: canister controllers can upgrade the code to add new features or fix bugs without changing the canister's identity.
 }
 ◊p{
-  Since the ◊a[#:href "/posts/06-ic-orthogonal-persistence.html#upgrades"]{orthogonal persistence} feature cannot handle upgrades, the IC allows canisters to use an additional storage, called ◊em{stable }, to facilitate the data transfer between code versions.
+  Since the ◊a[#:href "/posts/06-ic-orthogonal-persistence.html#upgrades"]{orthogonal persistence} feature cannot handle upgrades, the IC allows canisters to use additional storage, called ◊em{stable memory}, to facilitate the data transfer between code versions.
   The ◊a[#:href "/posts/11-ii-stable-memory.html#conventional-memory-management"]{conventional approach} to canister state persistence is to serialize the entire state to stable memory in the ◊code{pre_upgrade} hook and decode it back in the ◊code{post_upgrade} hook.
   This approach is easy to implement and works well for relatively small datasets.
-  Unfortunately, it does not scale well and can render a canister non-upgradable, so I ◊a[#:href "/posts/01-effective-rust-canisters.html#stable-memory-main"]{recommend} using stable memory as the main storage when possible.
+  Unfortunately, it does not scale well and can render a canister non-upgradable, so I ◊a[#:href "/posts/01-effective-rust-canisters.html#stable-memory-main"]{recommend} using stable memory as the primary storage when possible.
 }
 ◊p{
-  The ◊a[#:href "https://github.com/dfinity/stable-structures"]{stable-structures} library aims to simplify managing data structures directly in stable memory.
+  The ◊a[#:href "https://github.com/dfinity/stable-structures"]{ic-stable-structures} library aims to simplify managing data structures directly in stable memory.
   This article explains the philosophy behind the library and how to use it effectively.
 }
 }
@@ -27,6 +34,13 @@
 
 ◊section{
 ◊section-title["design-principles"]{Design principles}
+◊epigraph{
+  ◊blockquote[#:cite "https://youtu.be/rX0ItVEVjHc?t=1464"]{
+    ◊p{Understand the data to understand the problem.}
+    ◊footer{Mike Acton, ◊quoted{Data-Oriented Design and C++}, CppCon 2014}
+  }
+}
+
 ◊p{
   Software designs reflect their creators' values.
   The following principles shaped the ◊code{stable-structures} library design.
@@ -35,9 +49,9 @@
   ◊li{
     ◊em[#:id "radical-simplicity"]{Radical simplicity.}
     Programming stable memory is significantly easier than working with conventional file systems.
-    The IC solves many issues with which any respectable storage must deal: data integrity, partial writes, power outages, and atomicity of multiple writes.
-    Even with all these issues sorted out, a complicated designs would be hard to implementation, debug, and maintain.
-    Each data structure follows the simplest design that solves the problem at hand.
+    The IC solves many issues with which any good storage must deal: data integrity, partial writes, power outages, and atomicity of multiple writes.
+    Even with all these issues sorted out, complicated designs would be hard to implement, debug, and maintain.
+    Each data structure follows the most straightforward design that solves the problem at hand.
   }
   ◊li{
     ◊em[#:id "backward-compatibility"]{Backward compatibility.}
@@ -57,17 +71,18 @@
   ◊li{
     ◊em{No reallocation.}
     Moving large amounts of data is expensive and can lead to prohibitively high cycle consumption.
-    All data structures must manage their memory without expensive moves.
+    All data structures must manage their memory without costly moves.
   }
   ◊li{
     ◊em{Compatibility with ◊a[#:href "https://github.com/WebAssembly/multi-memory/blob/master/proposals/multi-memory/Overview.md"]{multi-memory} WebAssembly.}
-    The design should work in the world when canisters have multiple stable memories since this feature is on the ◊a[#:href "https://forum.dfinity.org/t/proposal-wasm-native-stable-memory/15966#proposal-7"]{IC roadmap}.
+    The design should work when canisters have multiple stable memories since this feature is on the ◊a[#:href "https://forum.dfinity.org/t/proposal-wasm-native-stable-memory/15966#proposal-7"]{IC roadmap}.
   }
 }
 ◊p{
-  As a result of these goals, using the library requires some planning.
-  For example, you might need to set an ◊a[#:href "#max-size-attribute"]{upper bound} on a value size that you will not be able to adjust in future without data migration.
-  There are other libraries with similar goals whose authors chose a slightly different set of traidoffs, such as ◊a[#:href "https://crates.io/crates/ic-stable-memory"]{◊code{ic-stable-memory}}.
+  As a result of these goals, using the library requires planning and understanding your data shape.
+  For example, you might need to set an ◊a[#:href "#max-size-attribute"]{upper bound} on a value size that you cannot adjust without data migration.
+  Or you might have to decide how many memory pages you want to allocate for canister configuration.
+  There are other libraries with similar goals whose authors chose a slightly different set of traideoffs, such as ◊code-ref["https://crates.io/crates/ic-stable-memory"]{ic-stable-memory}.
 }
 }
 
@@ -76,9 +91,9 @@
 ◊section-title["abstractions"]{Abstractions}
 ◊subsection-title["memory"]{Memory}
 ◊p{
-  The core abstraction of the library is the ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/trait.Memory.html"]{◊code{Memory}} trait that models a WebAssembly ◊a[#:href "https://webassembly.github.io/multi-memory/core/exec/runtime.html#memory-instances"]{memory instance}◊sidenote["sn-multiple-memories"]{
+  The core abstraction of the library is the ◊code-ref["https://docs.rs/ic-stable-structures/latest/ic_stable_structures/trait.Memory.html"]{Memory} trait that models a WebAssembly ◊a[#:href "https://webassembly.github.io/multi-memory/core/exec/runtime.html#memory-instances"]{memory instance}◊sidenote["sn-multiple-memories"]{
     That design decision is not a coincidence.
-    Eventually, canisters will have access to multiple memories, and each data structure will be able to reside in its own memory instance.
+    Eventually, canisters will access multiple stable memories, and each data structure might reside in a dedicated memory instance.
   }.
 }
 ◊source-code["rust"]{
@@ -98,29 +113,30 @@ pub trait ◊b{Memory} {
 }
 ◊figure[#:class "grayscale-diagram"]{
 ◊marginnote["mn-memory-trait"]{
-  The ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/trait.Memory.html"]{◊code{Memory}} trait models the WebAssembly ◊a[#:href "https://webassembly.github.io/multi-memory/core/exec/runtime.html#memory-instances"]{memory instance}.
+  The ◊code-ref["https://docs.rs/ic-stable-structures/latest/ic_stable_structures/trait.Memory.html"]{Memory} trait models the WebAssembly ◊a[#:href "https://webassembly.github.io/multi-memory/core/exec/runtime.html#memory-instances"]{memory instance}.
   It allocates memory in 64KiB pages: the zero page spans addresses ◊code{0◊ndash{}ffff}, the first page◊mdash{}◊code{10000◊ndash{}1ffff}, etc.
 }
 ◊(embed-svg "images/14-memory.svg")
 }
 
 ◊p{
-  Some important instances of the ◊code{Memory} trait are:
+  Some instances of the ◊code{Memory} trait are:
 }
 ◊ul[#:class "arrows"]{
   ◊li{
-    The ◊a[#:href "https://github.com/dfinity/stable-structures/blob/3d22d483b9c55b79f7b869e3cf930883687d9fda/src/ic0_memory.rs"]{◊code{Ic0StableMemory}} type delegates calls to the ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec#system-api-stable-memory"]{IC System API}.
+    The ◊code-ref["https://github.com/dfinity/stable-structures/blob/3d22d483b9c55b79f7b869e3cf930883687d9fda/src/ic0_memory.rs"]{Ic0StableMemory} type delegates calls to the ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec#system-api-stable-memory"]{IC System API}.
   }
   ◊li{
-    ◊a[#:href "https://github.com/dfinity/stable-structures/blob/3d22d483b9c55b79f7b869e3cf930883687d9fda/src/vec_mem.rs#L11"]{◊code{RefCell<Vec<u8>>}} implements the ◊code{Memory} interface for a byte array.
+    ◊code-ref["https://github.com/dfinity/stable-structures/blob/3d22d483b9c55b79f7b869e3cf930883687d9fda/src/vec_mem.rs#L11"]{RefCell<Vec<u8>>} implements the ◊code{Memory} interface for a byte array.
     This type is helpful for unit tests.
   }
   ◊li{
-    The ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/type.DefaultMemoryImpl.html"]{◊code{DefaultMemoryImpl}} type alias points to ◊code{Ic0StableMemory} when compiled to WebAssembly, otherwise it points to a memory backed by a byte array.
+    The ◊code-ref["https://docs.rs/ic-stable-structures/latest/ic_stable_structures/type.DefaultMemoryImpl.html"]{DefaultMemoryImpl} type alias points to ◊code{Ic0StableMemory} when compiled to WebAssembly.
+    Otherwise it expands to a memory backed by a byte array.
     This alias allows you to compile your canister to ◊a[#:href "/posts/01-effective-rust-canisters.html#target-independent"]{native code} with minimal effort.
   }
   ◊li{
-    ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/struct.RestrictedMemory.html"]{◊code{RestrictedMemory}} is a view of another memory restricted to a contiguous page range.
+    ◊code-ref["https://docs.rs/ic-stable-structures/latest/ic_stable_structures/struct.RestrictedMemory.html"]{RestrictedMemory} is a view of another memory restricted to a contiguous page range.
     You can use this type to split a large memory into non-intersecting regions if you know the size of the chunk in advance.
     ◊code{RestrictedMemory} works best for allocating relatively small fixed-size memories.
   }
@@ -128,12 +144,12 @@ pub trait ◊b{Memory} {
 ◊figure[#:id "restricted-memory" #:class "grayscale-diagram"]{
 ◊marginnote["mn-restricted-memory"]{
   Restricted memory limits the primary memory to a contiguous page range.
-  The example on the diagram demonstrates splitting a 5-page primary memory into two memories: the first memory spans pages from zero to two (exclusive), the second memory spans pages from two to five (exclusive).
+  The example on the diagram demonstrates splitting a 5-page primary memory into two memories: the first memory spans pages from zero to two (exclusive), and the second memory spans pages from two to five (exclusive).
 }
 ◊(embed-svg "images/14-restricted-memory.svg")
 }
 ◊p{
-  The most powerful and convenient way to create memories is to use the ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/memory_manager/struct.MemoryManager.html"]{◊code{MemoryManager}}.
+  The most powerful and convenient way to create memories is to use the ◊code-ref["https://docs.rs/ic-stable-structures/latest/ic_stable_structures/memory_manager/struct.MemoryManager.html"]{MemoryManager}.
   This utility interleaves up to 255 non-intersecting memories in a single address space, acting similarly to a virtual memory subsystem in modern operating systems.
   The memory manager uses part of the parent memory to keep a dynamic translation table assigning page ranges to virtual memories.
 }
@@ -144,12 +160,12 @@ pub trait ◊b{Memory} {
 ◊(embed-svg "images/14-memory-manager.svg")
 }
 ◊p{
-  Virtual memories can be represented non-contiguously, so a single write can translate to multiple system calls.
+  Virtual memories have a non-contiguous representation, so a single write can translate to multiple system calls.
 }
 
 ◊subsection-title["storable-types"]{Storable types}
 ◊p{
-  The library does not impose any serialization format on you, and it does not provide a default.
+  The library does not impose any serialization format on you and does not provide a default.
   Depending on your needs, you might prefer ◊a[#:href "https://github.com/dfinity/candid"]{Candid}, ◊a[#:href "https://developers.google.com/protocol-buffers"]{Protocol Buffers}, ◊a[#:href "https://cbor.io/"]{CBOR}, ◊a[#:href "https://borsh.io/"]{Borsh}, ◊a[#:href "https://en.wikipedia.org/wiki/X.690#DER_encoding"]{DER}, or something else.
   The ◊code{Storable} trait abstracts data structures over your choice of serialization format.
 }
@@ -170,16 +186,16 @@ pub trait ◊b[#:id "storable-trait"]{Storable} {
 }
 }
 ◊p{
-  Some data structures, such as ◊a[#:href "stable-vector"]{stable vector}, need to know how much memory they need to allocate for each instance of your storable type.
-  Such types rely on an extension of this trait providing this important metadata, ◊code{BoundedStorable}.
-  ◊code{BoundedStorable} types are analogous in their function to ◊a[#:href "https://doc.rust-lang.org/std/marker/trait.Sized.html"]{◊code{Sized}} types, except that the compiler cannot deduce serialized sizes for you.
+  Some data structures, such as ◊a[#:href "stable-vector"]{stable vectors}, need to know how much memory they must allocate for each instance of your storable type.
+  Such types rely on an extension of this trait, providing this necessary metadata, ◊code{BoundedStorable}.
+  ◊code{BoundedStorable} types are analogous in their function to ◊code-ref["https://doc.rust-lang.org/std/marker/trait.Sized.html"]{Sized} types, except that the compiler cannot deduce serialized sizes for you.
 }
 ◊figure{
 ◊marginnote["mn-storable-trait"]{
   Some data structures require their values to implement ◊code{BoundedStorable} trait to know how much space they need to allocate for each item.
 }
 ◊source-code["rust"]{
-pub trait ◊b[#:id "bounded-storable-trait"]{BoundedStorable}: ◊a[#:href "#storable-trait"]{◊code{◊b{Storable}}} {
+pub trait ◊b[#:id "bounded-storable-trait"]{BoundedStorable}: ◊code-ref["#storable-trait"]{◊b{Storable}} {
     ◊em{/// The maximum slice length that ◊b{to_bytes} can return.}
     ◊em{///}
     ◊em{/// ◊b{REQUIREMENT}: self.to_bytes().len() ≤ Self::MAX_SIZE as usize}
@@ -194,7 +210,7 @@ pub trait ◊b[#:id "bounded-storable-trait"]{BoundedStorable}: ◊a[#:href "#st
 }
 }
 ◊p{
-  The library implements these traits for a few basic types, such as integers, fixed-size arrays, and tuples, allowing you to get away without any serialization libraries if you store only primitives.
+  The library implements these traits for a few basic types, such as integers, fixed-size arrays, and tuples, allowing you to get away without serialization libraries if you store only primitives.
   It also provides efficient variable-size bounded byte arrays, the ◊code{Blob<N>} type, where ◊code{N} is the maximal number of bytes this type can hold.
   For example, you can persist an IC ◊a[#:href "https://internetcomputer.org/docs/current/references/ic-interface-spec#principal"]{principal} as a ◊code{Blob<29>}.
 }
@@ -208,13 +224,14 @@ pub trait ◊b[#:id "bounded-storable-trait"]{BoundedStorable}: ◊a[#:href "#st
 }
 ◊p{
   Stable structures do not compose◊sidenote["sn-nesting-restriction"]{
-      The reason for this restriction is simplicity: most data structures are significantly easier to implement correctly and efficiently assuming they can span an entire ◊a[#:href "#memory"]{memory}.
-  }: you cannot construct a stable map containing stable vectors as values, for example.
+      The reason for this restriction is simplicity: most data structures are significantly easier to implement correctly and efficiently, assuming they can span an entire ◊a[#:href "#memory"]{memory}.
+  }.
+  For example, you cannot construct a stable map containing stable vectors as values.
   Many conventional storage systems impose the same restriction.
-  For example, SQL databases do not allow tables to hold other tables as values, and Redis does not allow nesting its ◊a[#:href "https://redis.io/docs/data-types/"]{data types}.
+  For example, SQL databases do not allow tables to hold other tables as values, and Redis does not allow the nesting of its ◊a[#:href "https://redis.io/docs/data-types/"]{data types}.
 }
 ◊p{
-  You can work around the restriction by using ◊a[#:href "https://en.wikipedia.org/wiki/Composite_key"]{composite keys} or defining several data structures linked with ◊a[#:href "https://en.wikipedia.org/wiki/Foreign_key"]{foreign keys}.
+  Using ◊a[#:href "https://en.wikipedia.org/wiki/Composite_key"]{composite keys} or defining several data structures linked with ◊a[#:href "https://en.wikipedia.org/wiki/Foreign_key"]{foreign keys}, you can work around the restriction.
 }
 ◊figure{
 ◊source-code["bad"]{
@@ -223,6 +240,7 @@ type BalanceMap = StableBTreeMap<Principal, StableBTreeMap<Subaccount, Tokens>>;
 }
 ◊source-code["good"]{
 ◊em{// ◊b{GOOD}: use a composite key (a tuple) to avoid nesting.}
+◊em{// Use a ◊a[#:href "#range-scan-example"]{◊b{range scan}} to find all subaccounts of a principal.}
 type BalanceMap = StableBTreeMap<(Principal, Subaccount), Tokens>;
 }
 ◊source-code["bad"]{
@@ -231,6 +249,7 @@ type TxIndex = StableBTreeMap<Principal, StableVector<Transaction>>;
 }
 ◊source-code["good"]{
 ◊em{// ◊b{GOOD}: use a composite key to avoid nesting.}
+◊em{// Use a ◊a[#:href "#range-scan-example"]{◊b{range scan}} to find all transactions of a principal.}
 type TxIndex = StableBTreeMap<(Principal, TxId), Transaction>;
 }
 }
@@ -249,7 +268,7 @@ type TxIndex = StableBTreeMap<(Principal, TxId), Transaction>;
   The core interface of the ◊code{Cell} stable structure.
 }
 ◊source-code["rust"]{
-impl<T: ◊a[#:href "#storable-trait"]{◊code{Storable}}, M: ◊a[#:href "#memory"]{◊code{Memory}}> struct ◊b{Cell}<T, M> {
+impl<T: ◊code-ref["#storable-trait"]{Storable}, M: ◊code-ref["#memory"]{Memory}> struct ◊b{Cell}<T, M> {
     ◊em{/// Returns the current cell value.}
     ◊em{/// Complexity: O(1).}
     pub fn ◊b{get}(&self, idx: usize) -> Option<Vec<u8>>;
@@ -272,26 +291,26 @@ impl<T: ◊a[#:href "#storable-trait"]{◊code{Storable}}, M: ◊a[#:href "#memo
 }
 ◊ul[#:class "arrows"]{
   ◊li{The ICRC-1 Ledger Archive canister persists its initialization arguments in a ◊a[#:href "https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L49"]{cell}.}
-  ◊li{The Internet Identity Archive canister stores its init arguments in a ◊a[#:href "https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L85"]{cell}.}
+  ◊li{The Internet Identity Archive canister holds its init arguments in a ◊a[#:href "https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L85"]{cell}.}
 }
 
 ◊subsection-title["stable-vec"]{Stable vector}
 ◊p{
-  A ◊code{Vec} is a growable mutable array similar to ◊a[#:href "https://doc.rust-lang.org/std/vec/struct.Vec.html"]{◊code{std::vec::Vec}}.
-  Stable vector stores its items by value, so it must know how much space it needs to allocate for each item, hence the ◊a[#:href "#bounded-storable-trait"]{◊code{BoundedStorable}} bound on the item type.
+  A ◊code{Vec} is a growable mutable array similar to ◊code-ref["https://doc.rust-lang.org/std/vec/struct.Vec.html"]{std::vec::Vec}.
+  A stable vector stores its items by value, so it must know how much space it needs to allocate for each item, hence the ◊code-ref["#bounded-storable-trait"]{BoundedStorable} bound on the item type.
 }
 ◊p{
-  Stable vector takes advantage of the ◊a[#:href "#is-fixed-size-attribute"]{◊code{T::IS_FIXED_SIZE}} attribute of the item type.
-  If the value size is not fixed, the vector allocates a few extra bytes to store the actual entry size in addition to the ◊a[#:href "#max-size-attribute"]{◊code{T::MAX_SIZE}} bytes required for each value.
-  If all the values have the same size, the vector implementation use ◊a[#:href "#max-size-attribute"]{◊code{T::MAX_SIZE}} for the item slot, saving up to 4 bytes per entry.
-  This reduction is mostly helpful for vectors of primitives (e.g., ◊code{StableVec<u64>}).
+  Stable vector takes advantage of the ◊code-ref["#is-fixed-size-attribute"]{T::IS_FIXED_SIZE} attribute of the item type.
+  If the value size is not fixed, the vector allocates a few extra bytes to store the actual entry size and the ◊code-ref["#max-size-attribute"]{T::MAX_SIZE} bytes required for each value.
+  If all the values are the same size, the vector implementation uses ◊code-ref["#max-size-attribute"]{T::MAX_SIZE} for the item slot, saving up to 4 bytes per entry.
+  This reduction is primarily helpful for vectors of primitives (e.g., ◊code{StableVec<u64>}).
 }
 ◊figure{
 ◊marginnote["mn-log-interface"]{
   The core interface of the ◊code{Vec} stable structure.
 }
 ◊source-code["rust"]{
-impl<T: ◊a[#:href "#storable-types"]{◊code{BoundedStorable}}, Data: ◊a[#:href "#memory"]{◊code{Memory}}> struct ◊b{Vec}<T, Memory> {
+impl<T: ◊code-ref["#storable-types"]{BoundedStorable}, Data: ◊code-ref["#memory"]{Memory}> struct ◊b{Vec}<T, Memory> {
     ◊em{/// Adds a new item at the vector's back.}
     ◊em{/// Complexity: O(T::MAX_SIZE).}
     pub fn ◊b{push}(&self, item: &T) -> Result<usize, GrowFailed>;
@@ -316,9 +335,9 @@ impl<T: ◊a[#:href "#storable-types"]{◊code{BoundedStorable}}, Data: ◊a[#:h
 }
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-log-figure"]{
-    A ◊code{Vec} is growable mutable array.
+    A ◊code{Vec} is a growable mutable array.
     The data representation depends on the ◊code{IS_FIXED_WIDTH} attribute of the item type.
-    If the type's representation is not fixed-width, the vector implementation has to record the length of each entry.
+    If the type's representation is not fixed-width, the vector implementation must record each entry's length.
   }
   ◊(embed-svg "images/14-vec.svg")
 }
@@ -330,7 +349,7 @@ impl<T: ◊a[#:href "#storable-types"]{◊code{BoundedStorable}}, Data: ◊a[#:h
 ◊p{
   A ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/log/struct.Log.html"]{Log} is an append-only list of arbitrary-sized values, similar to ◊a[#:href "https://redis.io/docs/data-types/streams/"]{streams} in Redis.
   The log requires two memories: the ◊quoted{index} storing entry offsets and the ◊quoted{data} storing raw entry bytes.
-  The number of instructions required to access old and append new entries does not depend on the number of items in the log, only on the entry size.
+  The number of instructions needed to access old and append new entries does not depend on the number of items in the log, only on the entry size.
 }
 ◊figure{
 ◊marginnote["mn-log-interface"]{
@@ -339,9 +358,9 @@ impl<T: ◊a[#:href "#storable-types"]{◊code{BoundedStorable}}, Data: ◊a[#:h
 ◊source-code["rust"]{
 impl<T, Index, Data> struct ◊b{Log}<T, Index, Data>
 where
-  T: ◊a[#:href "#storable-trait"]{◊code{Storable}},
-  Index: ◊a[#:href "#memory"]{◊code{Memory}},
-  Data: ◊a[#:href "#memory"]{◊code{Memory}},
+  T: ◊code-ref["#storable-trait"]{Storable},
+  Index: ◊code-ref["#memory"]{Memory},
+  Data: ◊code-ref["#memory"]{Memory},
 {
     ◊em{/// Adds a new entry to the log.}
     ◊em{/// Complexity: O(entry size).}
@@ -360,20 +379,20 @@ where
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-log-figure"]{
     A ◊code{Log} is an append-only list of values.
-    Logs needs two memories: the ◊quote{index} memory storing value offsets and the ◊quoted{data} memory storing raw entries.
-    The image depics a log with two values: the first entry is 100 bytes long, the second entry is 200 bytes long.
+    Logs need two memories: the ◊quote{index} memory storing value offsets and the ◊quoted{data} memory storing raw entries.
+    The image depicts a log with two values: the first entry is 100 bytes long, and the second entry is 200 bytes long.
   }
   ◊(embed-svg "images/14-log.svg")
 }
 ◊p{
-  Log is a versatile data structure that can be helpful in almost any application:
+  The log is a versatile data structure that can be helpful in almost any application:
 }
 ◊ul[#:class "arrows"]{
   ◊li{
     The ICRC-1 Ledger Archive canister stores archived transactions in a ◊a[#:href "https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L58"]{stable log}.
   }
   ◊li{
-    The Internet Identity Archive canister stores anchor anchors in a ◊a[#:href "https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L90"]{stable log}.
+    The Internet Identity Archive canister holds events in a ◊a[#:href "https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L90"]{stable log}.
   }
   ◊li{
     The Chain-Key Bitcoin Minter canister persists all state modifications in a ◊a[#:href "https://github.com/dfinity/ic/blob/6cc83edf2cad91ca1bdbe8f7965060a9ef1d1960/rs/bitcoin/ckbtc/minter/src/storage.rs#L21"]{stable log}.
@@ -383,9 +402,9 @@ where
 
 ◊subsection-title["stable-btree"]{Stable B-tree}
 ◊p{
-  The ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/btreemap/struct.BTreeMap.html"]{◊code{BTreeMap}} stable structure is an associative container that can hold any ◊a[#:href "#storable-types"]{bounded storable types}.
-  The map needs to know sizes of the keys and values because it allocates nodes from a pool of fixed-size tree nodes◊sidenote["sn-"]{
-    The ◊a[#:href "https://github.com/dfinity/stable-structures/blob/ed2fb6de50e56d2f93e67c2bfaa170fa4b1be60a/src/btreemap/allocator.rs#L13"]{tree allocator} a ◊a[#:href "https://en.wikipedia.org/wiki/Free_list"]{free-list} allocator, which is the ◊a[#:href "#radical-simplicity"]{simplest allocator} capable of freeing memory.
+  The ◊code-ref["https://docs.rs/ic-stable-structures/latest/ic_stable_structures/btreemap/struct.BTreeMap.html"]{BTreeMap} stable structure is an associative container that can hold any ◊a[#:href "#storable-types"]{bounded storable type}.
+  The map must know the sizes of the keys and values because it allocates nodes from a pool of fixed-size tree nodes◊sidenote["sn-"]{
+    The ◊a[#:href "https://github.com/dfinity/stable-structures/blob/ed2fb6de50e56d2f93e67c2bfaa170fa4b1be60a/src/btreemap/allocator.rs#L13"]{tree allocator} is a ◊a[#:href "https://en.wikipedia.org/wiki/Free_list"]{free-list} allocator, the ◊a[#:href "#radical-simplicity"]{simplest allocator} capable of freeing memory.
   }.
 }
 ◊p{
@@ -398,13 +417,13 @@ where
 ◊source-code["rust"]{
 impl<K, V, M> struct ◊b{BTreeMap}<K, V, M>
 where
-  K: ◊a[#:href "#bounded-storable-trait"]{◊code{BoundedStorable}} + Ord + Clone,
-  V: ◊a[#:href "#bounded-storable-trait"]{◊code{BoundedStorable}},
-  M: ◊a[#:href "#memory"]{◊code{Memory}},
+  K: ◊code-ref["#bounded-storable-trait"]{BoundedStorable} + Ord + Clone,
+  V: ◊code-ref["#bounded-storable-trait"]{BoundedStorable},
+  M: ◊code-ref["#memory"]{Memory},
 {
     ◊em{/// Adds a new entry to the map.}
     ◊em{/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).}
-    pub fn ◊b{insert}(&self, key: K, value: V) -> Result<Option<V>, InsertError>;
+    pub fn ◊b{insert}(&self, key: K, value: V) -> Option<V>;
 
     ◊em{/// Returns the value associated with the specified key.}
     ◊em{/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).}
@@ -435,8 +454,43 @@ where
 ◊p{
   If you need a ◊code{BTreeSet<K>}, you can use ◊code{BTreeMap<K, ()>} instead.
 }
+◊p{
+  The ◊code{range} method is handy for selecting relevant data from a large data set.
+}
 
-◊subsection-title["constructing-ss"]{Constructing stable structures}
+◊figure[#:id "range-scan-example"]{
+◊marginnote["mn-range-scan-example"]{
+  Two examples of using the ◊code{StableBTreeMap::range} method.
+}
+◊source-code["rust"]{
+◊em{/// Selects all subaccounts of the specified principal.}
+fn ◊b{principal_subaccounts}(
+  balance_map: &StableBTreeMap<(Principal, Subaccount), Tokens>,
+  principal: Principal,
+) -> impl Iterator<Item = (Subaccount, Tokens)> + '_ {
+  balance_map
+    .◊b{range}((principal, Subaccount::default())..)
+    .take_while(|((p, _), )| p == principal)
+    .map(|((_, s), t)| (s, t))
+}
+
+◊em{/// Selects a transaction range for the specified principal.}
+fn ◊b{principal_tx_range}(
+  tx_index: &StableBTreeMap<(Principal, TxId), Transaction>,
+  principal: Principal,
+  start: TxId,
+  len: usize,
+) -> impl Iterator<Item = Transaction> + '_ {
+  tx_index
+    .◊b{range}((principal, start)..(principal, start + len as TxId))
+    .map(|((_, _), tx)| tx)
+}
+}
+}
+
+
+◊section{
+◊section-title["constructing-ss"]{Constructing stable structures}
 ◊p{
   We have to declare stable structures before we can use them.
   Each data structure ◊code{T} in the library declares at least three constructors:
@@ -450,89 +504,167 @@ where
   In practice, most canisters need only ◊code{T::init}.
 }
 }
+}
 
 
 ◊section{
 ◊section-title["tying-together"]{Tying it all together}
 ◊p{
-  Let us declare data structures for a ledger canister compatible with the ◊a[#:href "https://github.com/dfinity/ICRC-1/blob/3c64844bc6219e1d07ce05e27ec636df1e562114/standards/ICRC-1/README.md"]{ICRC-1} specification as an excercise.
+  This section contains an example of declaring several data structures for a ledger canister compatible with the ◊a[#:href "https://github.com/dfinity/ICRC-1/blob/3c64844bc6219e1d07ce05e27ec636df1e562114/standards/ICRC-1/README.md"]{ICRC-1} specification.
   We will need three collections:
 }
 ◊ol-circled{
   ◊li{
-    A ◊a[#:href "#stable-cell"]{◊code{Cell}} to store the ledger metadata.
+    A ◊code-ref["#stable-cell"]{Cell} to store the ledger metadata.
   }
   ◊li{
-    A ◊a[#:href "#stable-btree"]{◊code{StableBTreeMap}} to map accounts ◊sidenote["sn-account"]{An ◊a[#:href "https://github.com/dfinity/ICRC-1/blob/3c64844bc6219e1d07ce05e27ec636df1e562114/standards/ICRC-1/README.md#account"]{account} is a pair of a principal and a 32-byte subaccount.} to their current balance.
+    A ◊code-ref["#stable-btree"]{StableBTreeMap} to map accounts ◊sidenote["sn-account"]{An ◊a[#:href "https://github.com/dfinity/ICRC-1/blob/3c64844bc6219e1d07ce05e27ec636df1e562114/standards/ICRC-1/README.md#account"]{account} is a pair of a principal and a 32-byte subaccount.} to their current balance.
   }
-  ◊li{A ◊a[#:href "#stable-log"]{◊code{StableLog}} for transaction history.}
+  ◊li{A ◊code-ref["#stable-log"]{StableLog} for transaction history.}
 }
 ◊p{
-  The ledger metadata is relatively small, it should fit into two megabytes, or sixteen WebAssembly memory pages.
-  We will allocate the metadata cell in a ◊a[#:href "#restricted-memory"]{restricted memory}, partitioning the rest of stable memory using the ◊a[#:href "#memory-manager"]{memory manager}.
+  The ledger metadata is relatively small; it should fit into two megabytes or sixteen WebAssembly memory pages.
+  We will allocate the metadata cell in a ◊a[#:href "#restricted-memory"]{restricted memory}, partitioning the rest of the stable memory between the accounts map and the log using the ◊a[#:href "#memory-manager"]{memory manager}.
+}
+◊p{
+  Let us put these ideas to code.
+  First, we must import a few type definitions from the library.
 }
 
-◊figure{
-  ◊marginnote["mn-ledger-example"]{}
 ◊source-code["rust"]{
 use ic_stable_structures::{
-  StableBTreeMap, StableLog, StableCell,
-  RestrictedMemory as RM,
-  DefaultMemoryImpl as Mem,
+  DefaultMemoryImpl as DefMem,
+  RestrictedMemory,
+  StableBTreeMap,
+  StableCell,
+  StableLog,
+  Storable,
 };
 use ic_stable_structures::memory_manager::{
   MemoryId,
   MemoryManager as MM,
-  VirtualMemory as VM,
+  VirtualMemory,
 };
 use ic_stable_structures::storable::Blob;
+use std::borrow::Cow;
 use std::cell::RefCell;
-◊hr{}
+}
+
+◊p{
+  Next, let us define the types of data we will store in our stable structures.
+  I omit the field definitions because they are not essential for understanding the example.
+  We derive serialization boilerplate for the ◊code{Metadata} and ◊code{Tx} types using the ◊a[#:href "https://serde.rs/"]{serde} framework.
+}
+
+◊source-code["rust"]{
 type Account = (Blob<29>, [u8; 32]);
 type Amount = u64;
 
-struct Metadata {
-  // ...
+#[derive(serde::Serialize, serde::Deserialize)]
+struct ◊b{Metadata} { /* … */ }
+
+#[derive(serde::Serialize, serde::Deserialize)]
+enum ◊b{Tx} {
+  Mint { /* … */ },
+  Burn { /* … */ },
+  Transfer { /* … */ },
+}
 }
 
-impl Storable for Metadata { /* ... */ }
-
-enum Tx {
-  Mint { /* ... */ }
-  Burn { /* ... */ }
-  Transfer { /* ... */ }
+◊p{
+  The next step is to decide on the data serialization format.
+  I use ◊a[#:href "https://cbor.io/"]{Concise Binary Object Representation} in the example because this encoding served me well in production.
+  Instead of implementing the ◊code-ref["#storable-trait"]{Storable} trait for ◊code{Metadata} and ◊code{Tx}, I define a generic wrapper type ◊code{Cbor<T>} that I use for all types I want to encode as ◊smallcaps{cbor} and implement ◊code-ref["#storable-trait"]{Storable} only for the wrapper.
+  I also implement ◊code-ref["https://doc.rust-lang.org/std/ops/trait.Deref.html"]{std::ops::Deref} to improve the ergonomics of the wrapper type.
 }
 
-impl Storable for Tx { /* ... */ }
-◊hr{}
-const BALANCES_MEM_ID: MemoryId = MemoryId(0);
-const LOG_INDX_MEM_ID: MemoryId = MemoryId(1);
-const LOG_DATA_MEM_ID: MemoryId = MemoryId(2);
+◊source-code["rust"]{
+◊em{/// A helper type implementing Storable for all}
+◊em{/// serde-serializable types using the CBOR encoding.}
+#[derive(Default)]
+struct ◊b{Cbor}<T>(pub T)
+where T: serde::Serialize + serde::de::DeserializeOwned;
 
-thread_local!{
-  static ◊b{METADATA}: RefCell<StableCell<Option<Metadata>, VM>> =
-    RefCell::new(
-      None,
-      RM::new(Mem::default, 0..16),
+◊b{impl}<T> std::ops::Deref for ◊b{Cbor}<T>
+where T: serde::Serialize + serde::de::DeserializeOwned
+{
+  type Target = T;
+
+  fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+◊b{impl}<T> ◊code-ref["#storable-trait"]{Storable} for ◊b{Cbor}<T>
+where T: serde::Serialize + serde::de::DeserializeOwned
+{
+  fn to_bytes(&self) -> Cow<[u8]> {
+    let mut buf = vec![];
+    ◊code-ref["https://docs.rs/ciborium/0.2.0/ciborium/ser/fn.into_writer.html"]{ciborium::ser::into_writer}(&self.0, &mut buf).unwrap();
+    Cow::Owned(buf)
+  }
+
+  fn from_bytes(bytes: Cow<[u8]>) -> Self {
+    Self(◊code-ref["https://docs.rs/ciborium/0.2.0/ciborium/de/fn.from_reader.html"]{ciborium::de::from_reader}(bytes.as_ref()).unwrap())
+  }
+}
+}
+◊p{
+  The final and most important part is defining stable structures as ◊a[#:href "/posts/01-effective-rust-canisters.html#use-threadlocal"]{global canister variables}.
+  Note the use of ◊code-ref["#restricted-memory"]{RestrictedMemory} to split the canister memory into two non-intersecting regions and ◊code-ref["#memory-manager"]{MemoryManager} (abbreviated as ◊code{MM}) to interleave multiple data structures in the second region.
+}
+◊source-code["rust"]{
+◊em{// NOTE: ensure that all memory ids are unique and}
+◊em{// do not change across upgrades!}
+const ◊b{BALANCES_MEM_ID}: MemoryId = MemoryId::new(0);
+const ◊b{LOG_INDX_MEM_ID}: MemoryId = MemoryId::new(1);
+const ◊b{LOG_DATA_MEM_ID}: MemoryId = MemoryId::new(2);
+
+◊em{// NOTE: we allocate the first 16 pages (about 2 MiB) of the}
+◊em{// canister memory for the metadata.}
+const ◊b{METADATA_PAGES}: u64 = 16;
+
+type RM = RestrictedMemory<DefMem>;
+type VM = VirtualMemory<RM>;
+
+thread_local! {
+  static ◊b{METADATA}: RefCell<◊code-ref["#stable-cell"]{StableCell}<Cbor<Option<Metadata>>, RM>> =
+    RefCell::new(StableCell::init(
+        RM::new(DefMem::default(), 0..METADATA_PAGES),
+        Cbor::default(),
+      ).expect("failed to initialize the metadata cell")
     );
 
-  static ◊b{MEMORY_MANAGER}: RefCell<MM<VM>> = RefCell::new(
-    MM::init(RM::new(Mem::default(), 16..))
+  static ◊b{MEMORY_MANAGER}: RefCell<MM<RM>> = RefCell::new(
+    MM::init(RM::new(DefMem::default(), METADATA_PAGES..u64::MAX))
   );
 
-  static ◊b{BALANCES}: RefCell<StableBTreeMap<Account, Amount, VM>> =
+  static ◊b{BALANCES}: RefCell<◊code-ref["#stable-btree"]{StableBTreeMap}<Account, Amount, VM>> =
     MEMORY_MANAGER.with(|mm| {
-      RefCell::new(StableBTreeMap::init(mm.get(BALANCES_MEM_ID)));
+      RefCell::new(StableBTreeMap::init(mm.borrow().get(◊b{BALANCES_MEM_ID})))
     });
 
-  static ◊b{TX_LOG}: RefCell<StableLog<Tx, VM, VM>> =
+  static ◊b{TX_LOG}: RefCell<◊code-ref["#stable-log"]{StableLog}<Cbor<Tx>, VM, VM>> =
     MEMORY_MANAGER.with(|mm| {
       RefCell::new(StableLog::init(
-        mm.get(LOG_INDX_MEM_ID),
-        mm.get(LOG_DATA_MEM_ID),
-      ));
+        mm.borrow().get(◊b{LOG_INDX_MEM_ID}),
+        mm.borrow().get(◊b{LOG_DATA_MEM_ID}),
+      ).expect("failed to initialize the tx log"))
     });
 }
 }
+}
+
+◊p{
+  We are all set to start working on the ledger!
+  I left implementing the rest of the specification as an exercise for an attentive reader.
+}
+
+
+◊section{
+◊section-title["next"]{Where to go next}
+◊ul[#:class "arrows"]{
+  ◊li{Take a look at the library ◊a[#:href "https://github.com/dfinity/stable-structures/tree/main/examples/src"]{usage examples}.}
+  ◊li{Check out real-world usage examples in production-quality canisters◊sidenote["sn-outdated"]{
+    Note that these examples can use a slightly outdated library version.
+  }, such as ◊a[#:href "https://github.com/dfinity/internet-identity/blob/97e8d968aba653c8857537ecd541b35de5085608/src/archive/src/main.rs"]{II archive} and ◊a[#:href "https://github.com/dfinity/ic/blob/df57b720fd0ceed70f021f4812c797fb40d97503/rs/bitcoin/ckbtc/minter/src/storage.rs"]{ckBTC minter}.}
 }
 }
