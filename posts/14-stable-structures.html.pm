@@ -488,6 +488,7 @@ fn ◊b{principal_tx_range}(
 }
 }
 }
+}
 
 
 ◊section{
@@ -503,7 +504,6 @@ fn ◊b{principal_tx_range}(
 }
 ◊p{
   In practice, most canisters need only ◊code{T::init}.
-}
 }
 }
 
