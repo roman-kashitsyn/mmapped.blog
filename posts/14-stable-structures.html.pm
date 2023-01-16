@@ -320,7 +320,7 @@ impl<T: ◊code-ref["#storable-trait"]{Storable}, M: ◊code-ref["#memory"]{Memo
 }
 ◊p{
   Stable vector takes advantage of the ◊code-ref["#is-fixed-size-attribute"]{T::IS_FIXED_SIZE} attribute of the item type.
-  If the value size is not fixed, the vector allocates a few extra bytes to store the actual entry size and the ◊code-ref["#max-size-attribute"]{T::MAX_SIZE} bytes required for each value.
+  If the value size is not fixed, the actual value can occupy anything from zero to ◊code-ref["#max-size-attribute"]{T::MAX_SIZE} bytes, so the vector allocates ◊code-ref["#max-size-attribute"]{T::MAX_SIZE} and a few extra bytes per entry to store the actual entry size.
   If all the values are the same size, the vector implementation uses ◊code-ref["#max-size-attribute"]{T::MAX_SIZE} for the item slot, saving up to 4 bytes per entry.
   This reduction is primarily helpful for vectors of primitives (e.g., ◊code{StableVec<u64>}).
 }
