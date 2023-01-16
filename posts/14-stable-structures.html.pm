@@ -36,8 +36,10 @@
 ◊section-title["design-principles"]{Design principles}
 ◊epigraph{
   ◊blockquote[#:cite "https://youtu.be/rX0ItVEVjHc?t=1464"]{
-    ◊p{Understand the data to understand the problem.}
-    ◊footer{Mike Acton, ◊quoted{Data-Oriented Design and C++}, CppCon 2014}
+    ◊p{
+      The point is that you must decide, in advance, what the coding priorities and quality bars will be; otherwise, the team will have to waste time rewriting misconceived or substandard code.
+    }
+    ◊footer{Steve Maguire, ◊quoted{Debugging the Development Process}, ◊smallcaps{the groundwork}, p. 19}
   }
 }
 
@@ -89,6 +91,16 @@
 
 ◊section{
 ◊section-title["abstractions"]{Abstractions}
+◊epigraph{
+  ◊blockquote{
+    ◊p{
+      In solving a problem with or without a computer it is necessary to choose an abstraction of reality, i.e., to define a set of data that is to represent the real situation.
+      The choice must be guided by the problem to be solved.
+    }
+    ◊footer{Niklaus Wirth, ◊quoted{Algorithms + Data Structures = Programs}, ◊smallcaps{fundamental data structures}, p. 1}
+  }
+}
+
 ◊subsection-title["memory"]{Memory}
 ◊p{
   The core abstraction of the library is the ◊code-ref["https://docs.rs/ic-stable-structures/latest/ic_stable_structures/trait.Memory.html"]{Memory} trait that models a WebAssembly ◊a[#:href "https://webassembly.github.io/multi-memory/core/exec/runtime.html#memory-instances"]{memory instance}◊sidenote["sn-multiple-memories"]{
@@ -219,6 +231,13 @@ pub trait ◊b[#:id "bounded-storable-trait"]{BoundedStorable}: ◊code-ref["#st
 
 ◊section{
 ◊section-title["data-structures"]{Data structures}
+◊epigraph{
+  ◊blockquote{
+    ◊p{One has an intuitive feeling that data precede algorithms: you must have some objects before you can perform operations on them.}
+    ◊footer{Niklaus Wirth, ◊quoted{Algorithms + Data Structures = Programs}, ◊smallcaps{preface}, p. xiii}
+  }
+}
+
 ◊p{
   The heart of the ◊code{stable-structures} library is a collection of data structures, each spanning one or more ◊a[#:href "#memory"]{memories}.
 }
@@ -346,6 +365,15 @@ impl<T: ◊code-ref["#storable-types"]{BoundedStorable}, Data: ◊code-ref["#mem
 }
 
 ◊subsection-title["stable-log"]{Stable log}
+◊epigraph{
+  ◊blockquote{
+    ◊p{
+      Sometimes called write-ahead logs or commit logs or transaction logs, logs have been around almost as long as computers and are at the heart of many distributed data systems and real-time application architectures.
+    }
+    ◊footer{Jay Kreps, ◊a[#:href "https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"]{The Log: What every software engineer should know about real-time data's unifying abstraction}}
+  }
+}
+◊br{}
 ◊p{
   A ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/log/struct.Log.html"]{Log} is an append-only list of arbitrary-sized values, similar to ◊a[#:href "https://redis.io/docs/data-types/streams/"]{streams} in Redis.
   The log requires two memories: the ◊quoted{index} storing entry offsets and the ◊quoted{data} storing raw entry bytes.
@@ -401,6 +429,15 @@ where
 }
 
 ◊subsection-title["stable-btree"]{Stable B-tree}
+◊epigraph{
+  ◊blockquote{
+    ◊p{
+      ◊em{Deletion} of items from a B-tree is fairly straightforward in principle, but it is complicated in the details.
+    }
+    ◊footer{Niklaus Wirth, ◊quoted{Algorithms + Data Structures = Programs}, ◊smallcaps{dynamic information structures}, p. 250}
+  }
+}
+
 ◊p{
   The ◊code-ref["https://docs.rs/ic-stable-structures/latest/ic_stable_structures/btreemap/struct.BTreeMap.html"]{BTreeMap} stable structure is an associative container that can hold any ◊a[#:href "#storable-types"]{bounded storable type}.
   The map must know the sizes of the keys and values because it allocates nodes from a pool of fixed-size tree nodes◊sidenote["sn-"]{
