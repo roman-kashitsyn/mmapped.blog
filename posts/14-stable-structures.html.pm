@@ -482,7 +482,8 @@ fn ◊b{principal_tx_range}(
   len: usize,
 ) -> impl Iterator<Item = Transaction> + '_ {
   tx_index
-    .◊b{range}((principal, start)..(principal, start + len as TxId))
+    .◊b{range}((principal, start)..)
+    .take(len)
     .map(|((_, _), tx)| tx)
 }
 }
