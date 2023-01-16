@@ -271,7 +271,7 @@ type TxIndex = StableBTreeMap<(Principal, TxId), Transaction>;
 impl<T: ◊code-ref["#storable-trait"]{Storable}, M: ◊code-ref["#memory"]{Memory}> struct ◊b{Cell}<T, M> {
     ◊em{/// Returns the current cell value.}
     ◊em{/// Complexity: O(1).}
-    pub fn ◊b{get}(&self, idx: usize) -> Option<T>;
+    pub fn ◊b{get}(&self) -> Option<&T>;
 
     ◊em{/// Updates the cell value.}
     ◊em{/// Complexity: O(value size).}
