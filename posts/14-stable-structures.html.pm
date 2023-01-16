@@ -82,7 +82,7 @@
   As a result of these goals, using the library requires planning and understanding your data shape.
   For example, you might need to set an ◊a[#:href "#max-size-attribute"]{upper bound} on a value size that you cannot adjust without data migration.
   Or you might have to decide how many memory pages you want to allocate for canister configuration.
-  There are other libraries with similar goals whose authors chose a slightly different set of traideoffs, such as ◊code-ref["https://crates.io/crates/ic-stable-memory"]{ic-stable-memory}.
+  There are other libraries with similar goals whose authors chose a slightly different set of trade-offs, such as ◊code-ref["https://crates.io/crates/ic-stable-memory"]{ic-stable-memory}.
 }
 }
 
