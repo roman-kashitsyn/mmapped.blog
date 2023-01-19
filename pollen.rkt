@@ -19,6 +19,7 @@
          anchor
          circled
          circled-ref
+	 code-ref
          ol-circled
          ul-arrows
          td-num
@@ -30,6 +31,7 @@
          mid-ellipsis
          middot
          mdash
+         ndash
          ballot-x
          check
          toc)
@@ -84,6 +86,9 @@
 
 (define (circled n)
   (string (integer->char (+ #x2460 (- n 1)))))
+
+(define (code-ref ref . elems)
+  (txexpr* 'a `((href ,ref) (class "code-ref")) (txexpr 'code '() elems)))
 
 (define (math . elems)
   (txexpr 'span '((class "math")) elems))
@@ -150,5 +155,6 @@
 (define (mid-ellipsis) (string (integer->char #x22EF)))
 (define (middot) (string->symbol "middot"))
 (define (mdash) (string->symbol "mdash"))
+(define (ndash) (string->symbol "ndash"))
 (define (ballot-x) (string (integer->char #x2718)))
 (define (check) (string (integer->char #x2714)))
