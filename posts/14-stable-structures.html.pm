@@ -2,7 +2,7 @@
 
 ◊(define-meta title "Tutorial: stable-structures")
 ◊(define-meta keywords "ic, rust")
-◊(define-meta summary "An introduction into the stable-structures library.")
+◊(define-meta summary "An introduction to the stable-structures library.")
 ◊(define-meta doc-publish-date "2022-01-20")
 ◊(define-meta doc-updated-date "2022-01-20")
 
@@ -27,7 +27,9 @@
 }
 ◊p{
   The ◊a[#:href "https://github.com/dfinity/stable-structures"]{ic-stable-structures} library aims to simplify managing data structures directly in stable memory.
-  This article explains the philosophy behind the library and how to use it effectively.
+  This article explains the philosophy behind the library◊sidenote["sn-library-version"]{
+    This article describes the ◊a[#:href "https://github.com/dfinity/stable-structures/tree/v0.4.0/src"]{0.4.0} version of the library.
+  } and how to use it effectively.
 }
 }
 
@@ -142,7 +144,7 @@ pub trait ◊b{Memory} {
     ◊code-ref["https://github.com/dfinity/stable-structures/blob/3d22d483b9c55b79f7b869e3cf930883687d9fda/src/vec_mem.rs#L11"]{RefCell<Vec<u8>>} implements the ◊code{Memory} interface for a byte array.
     This type is helpful for unit tests.
   }
-  ◊li{
+  ◊li[#:id "default-memory-impl"]{
     The ◊code-ref["https://docs.rs/ic-stable-structures/latest/ic_stable_structures/type.DefaultMemoryImpl.html"]{DefaultMemoryImpl} type alias points to ◊code{Ic0StableMemory} when compiled to WebAssembly.
     Otherwise it expands to a memory backed by a byte array.
     This alias allows you to compile your canister to ◊a[#:href "/posts/01-effective-rust-canisters.html#target-independent"]{native code} with minimal effort.
@@ -370,7 +372,7 @@ impl<T: ◊code-ref["#storable-types"]{BoundedStorable}, Data: ◊code-ref["#mem
     ◊p{
       Sometimes called write-ahead logs or commit logs or transaction logs, logs have been around almost as long as computers and are at the heart of many distributed data systems and real-time application architectures.
     }
-    ◊footer{Jay Kreps, ◊a[#:href "https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"]{The Log: What every software engineer should know about real-time data's unifying abstraction}}
+    ◊footer{Jay Kreps, ◊a[#:href "https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"]{The Log}}
   }
 }
 ◊br{}
@@ -439,7 +441,7 @@ where
 }
 
 ◊p{
-  The ◊code-ref["https://docs.rs/ic-stable-structures/latest/ic_stable_structures/btreemap/struct.BTreeMap.html"]{BTreeMap} stable structure is an associative container that can hold any ◊a[#:href "#storable-types"]{bounded storable type}.
+  The ◊code-ref["https://docs.rs/ic-stable-structures/0.4.0/ic_stable_structures/btreemap/struct.BTreeMap.html"]{BTreeMap} stable structure is an associative container that can hold any ◊a[#:href "#storable-types"]{bounded storable type}.
   The map must know the sizes of the keys and values because it allocates nodes from a pool of fixed-size tree nodes◊sidenote["sn-"]{
     The ◊a[#:href "https://github.com/dfinity/stable-structures/blob/ed2fb6de50e56d2f93e67c2bfaa170fa4b1be60a/src/btreemap/allocator.rs#L13"]{tree allocator} is a ◊a[#:href "https://en.wikipedia.org/wiki/Free_list"]{free-list} allocator, the ◊a[#:href "#radical-simplicity"]{simplest allocator} capable of freeing memory.
   }.
@@ -525,11 +527,24 @@ fn ◊b{principal_tx_range}(
 }
 }
 }
+◊p{
+  Stable B-tree maps are ideal for large sets of relatively small objects (hundreds of bytes).
+  For example, the bitcoin canister uses this data structure to store bitcoin ◊a[#:href "https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/block_header_store.rs#L13"]{block headers} and ◊a[#:href "https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/utxo_set/utxos.rs"]{UTXOs}.
+}
 }
 
 
 ◊section{
 ◊section-title["constructing-ss"]{Constructing stable structures}
+◊epigraph{
+  ◊blockquote{
+    ◊p{
+      Make sure that objects are initialized before they're used.
+    }
+    ◊footer{Scott Meyers, ◊quoted{Effective C++}, third edition, Item 4, p. 26}
+  }
+}
+
 ◊p{
   We have to declare stable structures before we can use them.
   Each data structure ◊code{T} in the library declares at least three constructors:
@@ -541,6 +556,37 @@ fn ◊b{principal_tx_range}(
 }
 ◊p{
   In practice, most canisters need only ◊code{T::init}.
+}
+
+◊p{
+  The most common way to create a stable structure is by declaring a global variable.
+  This approach reminds me of the way we organize tables in relational databases.
+}
+◊figure{
+◊marginnote["mn-stable-init"]{
+  Declaring a stable data structure as a standalone global variable.
+}
+◊source-code["rust"]{
+use ic_stable_structures::{StableBTreeMap, DefaultMemoryImpl};
+use std::cell::RefCell;
+
+thread_local! {
+  static ◊b{USERS}: RefCell<◊code-ref["#stable-btree"]{StableBTreeMap}<UserId, User, ◊code-ref["#default-memory-impl"]{DefaultMemoryImpl}>> =
+    RefCell::new(StableBTreeMap::init(DefaultMemoryImpl::default()));
+}
+}
+}
+
+◊p{
+  The main benefit of this approach is that the runtime will automatically initialize the stable structure the first time you access it.
+  ◊em{Ensure that you access all such variables in the ◊code{post_upgrade} hook.}
+  Otherwise, you might only be able to catch a configuration error after the upgrade is complete.
+}
+
+◊p{
+  However, you do not have to declare each stable structure in a separate global variable.
+  You can embed stable structures into regular structures if this helps you keep the code better organized.
+  For example, the ◊a[#:href "https://github.com/dfinity/bitcoin-canister"]{Bitcoin canister} stores ◊a[#:href "https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/utxo_set/utxos.rs#L51"]{UTXOs} in multiple stable structures combined into a regular ◊code{struct}.
 }
 }
 
@@ -689,11 +735,10 @@ thread_local! {
     });
 }
 }
-}
-
 ◊p{
   We are all set to start working on the ledger!
   I left implementing the rest of the specification as an exercise for an attentive reader.
+}
 }
 
 
@@ -703,6 +748,7 @@ thread_local! {
   ◊li{Take a look at the library ◊a[#:href "https://github.com/dfinity/stable-structures/tree/main/examples/src"]{usage examples}.}
   ◊li{Check out real-world usage examples in production-quality canisters◊sidenote["sn-outdated"]{
     Note that these examples can use a slightly outdated library version.
-  }, such as ◊a[#:href "https://github.com/dfinity/internet-identity/blob/97e8d968aba653c8857537ecd541b35de5085608/src/archive/src/main.rs"]{II archive} and ◊a[#:href "https://github.com/dfinity/ic/blob/df57b720fd0ceed70f021f4812c797fb40d97503/rs/bitcoin/ckbtc/minter/src/storage.rs"]{ckBTC minter}.}
+  }, such as ◊a[#:href "https://github.com/dfinity/internet-identity/blob/97e8d968aba653c8857537ecd541b35de5085608/src/archive/src/main.rs"]{II archive} and ◊a[#:href "https://github.com/dfinity/ic/blob/df57b720fd0ceed70f021f4812c797fb40d97503/rs/bitcoin/ckbtc/minter/src/storage.rs"]{ckBTC minter}, and ◊a[#:href "https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/block_header_store.rs#L13"]{Bitcoin}.}
+  ◊li{Read the ◊a[#:href "https://docs.rs/ic-stable-structures/latest/ic_stable_structures/"]{official documentation}.}
 }
 }
