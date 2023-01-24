@@ -3,8 +3,8 @@
 ◊(define-meta title "Tutorial: stable-structures")
 ◊(define-meta keywords "ic, rust")
 ◊(define-meta summary "An introduction to the stable-structures library.")
-◊(define-meta doc-publish-date "2022-01-20")
-◊(define-meta doc-updated-date "2022-01-20")
+◊(define-meta doc-publish-date "2023-01-20")
+◊(define-meta doc-updated-date "2023-01-20")
 
 ◊epigraph{
   ◊blockquote[#:cite "https://youtu.be/rX0ItVEVjHc?t=1360"]{
