@@ -3,8 +3,8 @@
 ◊(define-meta title "Tutorial: stable-structures")
 ◊(define-meta keywords "ic, rust")
 ◊(define-meta summary "An introduction to the stable-structures library.")
-◊(define-meta doc-publish-date "2022-01-20")
-◊(define-meta doc-updated-date "2022-01-20")
+◊(define-meta doc-publish-date "2023-01-20")
+◊(define-meta doc-updated-date "2023-02-04")
 
 ◊epigraph{
   ◊blockquote[#:cite "https://youtu.be/rX0ItVEVjHc?t=1360"]{
@@ -28,7 +28,7 @@
 ◊p{
   The ◊a[#:href "https://github.com/dfinity/stable-structures"]{ic-stable-structures} library aims to simplify managing data structures directly in stable memory.
   This article explains the philosophy behind the library◊sidenote["sn-library-version"]{
-    This article describes the ◊a[#:href "https://github.com/dfinity/stable-structures/tree/v0.4.0/src"]{0.4.0} version of the library.
+    This article describes the ◊a[#:href "https://github.com/dfinity/stable-structures/tree/v0.5.0/src"]{0.5.0} version of the library.
   } and how to use it effectively.
 }
 }
@@ -285,7 +285,7 @@ type TxIndex = StableBTreeMap<(Principal, TxId), Transaction>;
   Cell's contents in stable memory updates every time you change the underlying value.
 }
 ◊figure{
-◊marginnote["mn-log-interface"]{
+◊marginnote["mn-cell-interface"]{
   The core interface of the ◊code{Cell} stable structure.
 }
 ◊source-code["rust"]{
@@ -327,7 +327,7 @@ impl<T: ◊code-ref["#storable-trait"]{Storable}, M: ◊code-ref["#memory"]{Memo
   This reduction is primarily helpful for vectors of primitives (e.g., ◊code{StableVec<u64>}).
 }
 ◊figure{
-◊marginnote["mn-log-interface"]{
+◊marginnote["mn-vec-interface"]{
   The core interface of the ◊code{Vec} stable structure.
 }
 ◊source-code["rust"]{
@@ -355,7 +355,7 @@ impl<T: ◊code-ref["#storable-types"]{BoundedStorable}, Data: ◊code-ref["#mem
 }
 }
 ◊figure[#:class "grayscale-diagram"]{
-  ◊marginnote["mn-log-figure"]{
+  ◊marginnote["mn-vec-figure"]{
     A ◊code{Vec} is a growable mutable array.
     The data representation depends on the ◊code{IS_FIXED_WIDTH} attribute of the item type.
     If the type's representation is not fixed-width, the vector implementation must record each entry's length.
@@ -394,15 +394,15 @@ where
 {
     ◊em{/// Adds a new entry to the log.}
     ◊em{/// Complexity: O(entry size).}
-    pub fn ◊b{append}(&self, bytes: &T) -> Result<usize, WriteError>;
+    pub fn ◊b{append}(&self, bytes: &T) -> Result<u64, WriteError>;
 
     ◊em{/// Returns the entry at the specified index.}
     ◊em{/// Complexity: O(entry size).}
-    pub fn ◊b{get}(&self, idx: usize) -> Option<T>;
+    pub fn ◊b{get}(&self, idx: u64) -> Option<T>;
 
     ◊em{/// Returns the number of entries in the log.}
     ◊em{/// Complexity: O(1).}
-    pub fn ◊b{len}() -> usize;
+    pub fn ◊b{len}() -> u64;
 }
 }
 }
@@ -450,7 +450,7 @@ where
   The interface of stable ◊code{BTreeMap} will look familiar to any seasoned Rust programmer.
 }
 ◊figure{
-◊marginnote["mn-log-interface"]{
+◊marginnote["mn-btreemap-interface"]{
   The core interface of the ◊code{BTreeMap} stable structure.
 }
 ◊source-code["rust"]{
