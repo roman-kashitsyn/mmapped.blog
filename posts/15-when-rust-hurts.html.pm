@@ -359,7 +359,9 @@ pub struct ◊code-ref["https://github.com/bytecodealliance/lucet/blob/51fb1ed41
     This representation is helpful for functions that construct values of type ◊code{GlobalSpec} and pass them around or put into a container.
   }
 }
-
+◊p{
+  In a language with automatic memory management we can combine the efficiency of ◊code{GlobalSpec<'a>} with the versatility of ◊code{OwnedGlobalSpec} in a single type declaration.
+}
 }
 
 
@@ -457,46 +459,39 @@ match &x_for_match[..] {
   Forget about ◊a[#:href "https://www.cs.tufts.edu/comp/150FP/archive/chris-okasaki/redblack99.pdf"]{balancing Red-Black trees} in five lines of code in Rust.
 }
 
-◊subsection-title["no-orphan-instances"]{No orphan instances}
+◊subsection-title["orphan-rules"]{Orphan rules}
 ◊p{
   Rust uses ◊a[#:href "https://doc.rust-lang.org/reference/items/implementations.html?highlight=orphan#orphan-rules"]{orphan rules} to decide whether a type can implement a trait.
   For non-generic types, these rules forbid implementating a trait for the type outside of packages defining the trait or the type.
   In other words, either the package defining the trait must depend on the package defining the type or vice versa.
 }
 ◊p{
-  This rule makes it easy for the compiler to guarantee ◊em{coherence}, which is a smart way to say that all parts of you program see the same implementation of the trait for a particular type.
+  These rules make it easy for the compiler to guarantee ◊em{coherence}, which is a smart way to say that all parts of you program see the same implementation of the trait for a particular type.
   In exchange, this rule makes your life unnecessarily complicated.
   Orphan rules significantly complicate integrating traits and types coming from an unrelated libraries.
 }
 ◊p{
-  One example that pops up often is data encoding.
-  Imagine that we want to encode our data as ◊a[#:href "https://developers.google.com/protocol-buffers"]{Protobuf}.
-  We define our message types in a bunch of ◊code{.proto} files and let the ◊a[#:href "https://github.com/tokio-rs/prost"]{Prost} library generate the corresponding Rust definitions.
-  These definitions have a lot of ◊code{Options}, so we do not want to use these definitions directly in our program.
-  Instead, we use the powerful Rust's typesystem to define types encoding invariants and define explicit conversions between loosely typed externally visible protobuf types and internal rich types◊sidenote["sn-protobuf-contamination"]{
-    If you find this step non-intuitive, you might find the ◊a[#:href "https://reasonablypolymorphic.com/blog/protos-are-wrong/index.html#protobuffers-contaminate-codebases"]{Protobuffers Contaminate Codebases} section of Sandy Maguire's ◊a[#:href "https://reasonablypolymorphic.com/blog/protos-are-wrong/index.html"]{Protobuffers Are Wrong} article interesting.
+  One example is traits that we want to use only in tests, such as ◊code-ref["https://altsysrq.github.io/rustdoc/proptest/1.0.0/proptest/arbitrary/trait.Arbitrary.html"]{Arbitrary} from the ◊a[#:href "https://crates.io/crates/proptest"]{proptest} package.
+  We can save a lot of typing if the compiler derives implementations for types from our package, but we do not want our production code to depend on the ◊code{proptest} package.
+  In the perfect setup, all the ◊code{Arbitrary} implementations would go into a separate test-only package.
+  Unfortunately, orphan rules oppose this arrangement, forcing us to bite the bullet and write proptest strategies ◊a[#:href "https://altsysrq.github.io/proptest-book/proptest/tutorial/macro-prop-compose.html"]{manually} instead◊sidenote["sn-orphan-workaround"]{
+    There are workarounds for this issue, such as using ◊a[#:href "https://doc.rust-lang.org/cargo/reference/features.html"]{cargo features} and conditional compilation, but they complicate the build setup so much that writing boilerplate is usually a better option.
   }.
-  The relation between rich types and their encodings is begging to be a trait.
 }
-◊source-code["rust"]{
-// In the `my-protobuf` package
-pub trait ◊b{AsProto} {
-  ◊em{/// The protobuf struct corresponding to this type.}
-  type Pb;
-  ◊em{/// The protobuf decoding error.}
-  type Error;
-
-  fn to_proto(self) -> Self::Pb;
-
-  fn from_proto(Self::Pb) -> Result<Self, Self::Error>;
-}
-}
-
 
 ◊p{
-  Do not get me wrong: orphan rules are a great default; Haskell folks also frown upon ◊a[#:href "https://wiki.haskell.org/Orphan_instance"]{orphan instances}.
-  It is the inability to escape these rules that makes me sad.
+  Type conversion traits, such as ◊code{From} and ◊code{Into}, are also problematic under orphan rules.
+  I often see ◊code{xxx-types} packages that start small but end up bottlenecks in the compilation chain.
+  Splitting such packages into smaller pieces is often a daunting task because of the intricate webs of type conversions connecting distant types together.
+  Orphan rules do not allow us to cut these packages on module boundaries and move all conversions into a separate package without doing a lot of tedious work.
+}
+
+◊p{
+  Do not get me wrong: orphan rules are a great default.
+  Haskell allows you to define ◊a[#:href "https://wiki.haskell.org/Orphan_instance"]{orphan instances}, but programmers frown upon this practice.
+  It is the inability to escape orphan rules that makes me sad.
   In large codebases, decomposing large packages into smaller pieces and maintaining shallow dependencies graphs are the only path to acceptable compilation speed.
+  Orphan rules often stay in the way of trimming dependency graphs.
 }
 }
 
@@ -505,11 +500,79 @@ pub trait ◊b{AsProto} {
 ◊section-title["fearless-concurrency-lie"]{Fearless concurrency is a lie}
 ◊p{
   The Rust team coined the term ◊a[#:href "https://blog.rust-lang.org/2015/04/10/Fearless-Concurrency.html"]{Fearless Concurrency} to indicate that Rust helps you avoid common pitfalls associated with parallel and concurrent programming.
+  Despite these claims, my ◊a[#:href "https://en.wikipedia.org/wiki/Cortisol"]{cortisol} level goes up every time I introduce concurrency to my Rust programs.
 }
 
 ◊subsection-title["deadlocks"]{Deadlocks}
+◊epigraph{
+  ◊blockquote{
+    ◊p{
+      So it's perfectly ◊quoted{fine} for a Safe Rust program to get deadlocked or do something nonsensical with incorrect synchronization.
+      Obviously such a program isn't very good, but Rust can only hold your hand so far.
+    }
+    ◊footer{The Rustonomicon, ◊a[#:href "https://doc.rust-lang.org/nomicon/races.html"]{Data Races and Race Conditions}}
+  }
+}
+◊p{
+  Safe Rust prevents a specific type of concurrency bugs called ◊em{data races}.
+  Concurrent Rust programs have plenty of other ways to behave incorrectly.
+}
+◊p{
+  One class of concurrency bugs that I experienced first hand is ◊a[#:href "https://en.wikipedia.org/wiki/Deadlock"]{deadlocks}.
+  A typical explanation of this class of bugs involves two locks and two processes trying to acquire the locks in opposite orders.
+  However, if the locks you use are not ◊a[#:href "https://stackoverflow.com/questions/1312259/what-is-the-re-entrant-lock-and-concept-in-general"]{re-entrant} (and Rust's locks are not), having a single lock is enough to cause a deadlock.
+}
+◊p{
+  For example, the following code is buggy because it attempts to acquire the same lock twice.
+  The bug might be hard to spot if ◊code{do_something} and ◊code{helper_function} are large and live far apart in the source file.
+}
+◊source-code["bad"]{
+impl Service {
+  pub fn do_something(&self) {
+    let guard = self.lock.read();
+    ◊em{// ◊ellipsis{}}
+    self.helper_function(); ◊em{// ◊b{BUG}: will panic or deadlock}
+    ◊em{// ◊ellipsis{}}
+  }
+
+  fn helper_function(&self) {
+    let guard = self.lock.read();
+    ◊em{// ◊ellipsis{}}
+  }
+}
+}
+◊p{
+  The documentation for ◊code-ref["https://doc.rust-lang.org/std/sync/struct.RwLock.html#method.read"]{RwLock::read} mentions that the function ◊em{might} panic if the current thread already holds the lock.
+  All I got in my case was a hanging program.
+}
+◊p{
+  Some languages tried to provide a solution to this problem in their concurrency toolkits.
+  The Clang compiler provides ◊a[#:href "https://clang.llvm.org/docs/ThreadSafetyAnalysis.html"]{Thread safety annotations} enabling a form of static analysis that can detect race conditions and deadlocks.
+  However, the best way to avoid deadlocks is not to have locks.
+  Two technologies that approach the problem fundamentally are ◊a[#:href "https://en.wikipedia.org/wiki/Software_transactional_memory"]{Software Transaction Memory} (implemented in ◊a[#:href "https://wiki.haskell.org/Software_transactional_memory"]{Haskell}, ◊a[#:href "https://clojure.org/reference/refs"]{Clojure}, and ◊a[#:href "https://nbronson.github.io/scala-stm/"]{Scala}) and the ◊a[#:href "https://en.wikipedia.org/wiki/Actor_model"]{actor model} (◊a[#:href "https://www.erlang.org/"]{Erlang} was the first language that fully embraced it).
+}
 
 ◊subsection-title["filesystem-shared-resource"]{Filesystem is a shared resource}
+◊epigraph{
+  ◊blockquote{
+    ◊p{
+      We can view a path as an ◊em{address}.
+      Then a string representing a path is a pointer, and accessing a file through a path is a pointer dereference.
+      Thus, component interference due to file overwriting can be viewed as an address collision problem: two components occupy overlapping parts of the address space.
+    }
+    ◊footer{Eelco Dolstra, ◊a[#:href "The Purely Functional Software Deployment Model"]{The Purely Functional Software Deployment Model}, p. 53}
+  }
+}
+◊p{
+  Rust gives us powerful tools to deal with shared memory.
+  However, once our programs need to interact with the outside world (e.g., use network or a filesystem), we are on our own.
+  Rust is not worse that most modern languages in this regard, however, it can give you a false sense of security.
+}
+◊p{
+  Do not forget that paths are raw pointers, even in Rust.
+  Most file manupilations are inherently unsafe and can lead to data races (in a broad sense) if you do synchronize file access properly.
+  For example, as of February 2023, I still experience a six-years-old ◊a[#:href "https://github.com/rust-lang/rustup/issues/988"]{concurrency bug} in ◊a[#:href "https://rustup.rs/"]{rustup}.
+}
 
 ◊subsection-title["implicit-arguments"]{Implicit arguments}
 
