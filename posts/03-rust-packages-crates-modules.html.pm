@@ -242,8 +242,8 @@ trait StateManager {
 ◊marginnote["mn-runtime-poly"]{Composing components using runtime polymorphism.}
 ◊source-code["good"]{
 pub struct Consensus {
-  Arc<dyn ArtifactPool> artifact_pool;
-  Arc<dyn StateManager> state_manager;
+  artifact_pool: Arc<dyn ArtifactPool>,
+  state_manager: Arc<dyn StateManager>,
 }
 }
 }
@@ -252,8 +252,8 @@ pub struct Consensus {
 ◊marginnote["mn-compile-poly"]{Composing components using compile-time polymorphism.}
 ◊source-code["bad"]{
 pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
-  AP artifact_pool;
-  SM state_manager;
+  artifact_pool: AP,
+  state_manager: SM,
 }
 }
 }
@@ -338,14 +338,15 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
 ◊p{
   Cargo makes it easy to add dependencies to your code, but it provides few tools to consolidate and maintain those dependencies in a large workspace.
   At least until cargo developers implement ◊a[#:href "https://github.com/rust-lang/rfcs/pull/2906"]{RFC 2906}.
-  Until then, every time you bump a dependency version, try to do it consistently in all the packages in your workspace.
+  Until then, every time you bump the major version of a dependency, try to do it consistently across all the packages in your workspace.
   ◊a[#:href "https://doc.rust-lang.org/cargo/commands/cargo-update.html"]{Cargo update} can help you with that.
 }
 ◊p{
-  The same applies to package features: if you use the same dependency with different feature sets in different packages, that dependency needs to be compiled twice.
+  You do not have to unify the feature sets for the same dependency across separate workspace packages.
+  Cargo compiles each dependency version once, thanks to the ◊a[#:href "https://doc.rust-lang.org/cargo/reference/features.html#feature-unification"]{feature unification} mechanism.
 }
 ◊p{
-  Unfortunately, using multiple versions of the same package might also result in correctness issues, especially with packages that have zero as their major version (◊code{0.y.z}).
+  Using multiple versions of the same package might result in correctness issues, especially with packages that have zero as their major version (◊code{0.y.z}).
   If you depend on versions ◊code{0.1} and ◊code{0.2} of the same package in a single binary, cargo will link both versions into the executable.
   If you ever pulled your hair off trying to figure out why you get that ◊a[#:href "https://github.com/awslabs/aws-lambda-rust-runtime/issues/266"]{"there is no reactor running"} error, you know how painful these issues can be to debug.
 }
@@ -652,9 +653,9 @@ fn test_foo_frobnication() {
 ◊section-title["conclusion"]{Conclusion}
 
 ◊p{
-  In this article, we looked at the tools that Rust gives us to organize our code.
-  Rust's module system is very convenient, but packing many modules into a single crate tend to have negative effect on the build speeds.
-  Our experience suggests that factoring the system into many cohesive packages instead is a better approach in most cases.
+  In this article, we looked at Rust's tools to organize our code.
+  Rust's module system is very convenient, but packing many modules into a single crate negatively affects the build time.
+  Our experience suggests that factoring the code base into many cohesive packages instead is a more scalable approach in most cases.
 }
 }
 
