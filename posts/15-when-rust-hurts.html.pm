@@ -574,6 +574,44 @@ impl Service {
   For example, as of February 2023, I still experience a six-years-old ◊a[#:href "https://github.com/rust-lang/rustup/issues/988"]{concurrency bug} in ◊a[#:href "https://rustup.rs/"]{rustup}.
 }
 
-◊subsection-title["implicit-arguments"]{Implicit arguments}
-
+◊subsection-title["implicit-async-runtimes"]{Implicit async runtimes}
+◊epigraph{
+  ◊blockquote{
+    ◊p{I cannot seriously believe in it because the theory cannot be reconciled with the idea that physics should represent a reality in time and space, free from spooky action at a distance.}
+    ◊footer{Albert Einstein, ◊a[#:href "https://books.google.ch/books?redir_esc=y&hl=de&id=HvZAAQAAIAAJ&focus=searchwithinvolume&q=spooky+action"]{The Born-Einstein letters}, p. 158.}
+  }
+}
+◊p{
+  Direct language support for asynchronous programming one of the Rust's selling points.
+  Rust supports the ◊code-ref["https://rust-lang.github.io/async-book/01_getting_started/04_async_await_primer.html"]{async/.await} syntax for defining and composing asynchronous function.
+  Unfortunately, this language feature has a very limited runtime support.
+  There are several libraries (called ◊a[#:href "https://ncameron.org/blog/what-is-an-async-runtime/"]{async runtimes}) defining asynchronous functions to interact with the operating system.
+  The most popular such runtime is the ◊a[#:href "https://crates.io/crates/tokio"]{tokio} package.
+}
+◊p{
+  One common issue with runtimes is that they rely on passing arguments implicitly.
+  For example, the tokio runtime allows you to ◊code-ref["https://docs.rs/tokio/latest/tokio/fn.spawn.html"]{spawn} a future for concurrent execution at any point in your program.
+  For this interface the work, the programmer has to create a runtime first, and the runtime registers itself as a thread-local variable.
+  This runtime is an invisible argument passed in all your functions.
+}
+◊p{
+  The value of Rust that I like the most is its focus on local reasoning.
+  Looking at the function's type signature often gives you a solid understanding of what the function can do.
+  State mutations are explicit thanks to mutability and lifetime annotations.
+  Error handling is explicit thanks to the ubiquitous ◊code{Result} type.
+  Implicit async runtimes are outliers; they often break the wonderful ◊a[#:href "https://wiki.haskell.org/Why_Haskell_just_works"]{if it compiles◊mdash{}it works} effect.
+}
+◊ul[#:class "arrows"]{
+  ◊li{
+    Implicit arguments turn compile-time errors into runtime errors.
+    If the runtime were an explicit argument, the code would not compile unless the programmer constructed a runtime and passed it as an argument.
+    When the runtime is implicit, your code might compile fine but will crash at runtime if you forget to annotate your main function with a ◊a[#:href "https://docs.rs/tokio/latest/tokio/attr.main.html"]{magical macro}.
+  }
+  ◊li{
+    Mixing libraries that chose different runtimes is ◊a[#:href "https://www.ncameron.org/blog/portable-and-interoperable-async-rust/"]{hard}.
+    The problem is even more confusing if it involves multiple major versions of the same runtime.
+    What should have been a compile error turns into a debugging adventure.
+    My experience of writing async Rust code resonates with the ◊a[#:href "https://rust-lang.github.io/wg-async/vision/submitted_stories/status_quo.html"]{Status Quo} stories that the async ◊a[#:href "https://rust-lang.github.io/wg-async/welcome.html"]{Async Working Group} collected.
+  }
+}
 }
