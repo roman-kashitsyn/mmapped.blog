@@ -3,8 +3,8 @@
 ◊(define-meta title "When Rust hurts")
 ◊(define-meta keywords "rust")
 ◊(define-meta summary "Why I am not enjoying programming in Rust.")
-◊(define-meta doc-publish-date "2023-02-10")
-◊(define-meta doc-updated-date "2023-02-10")
+◊(define-meta doc-publish-date "2023-02-14")
+◊(define-meta doc-updated-date "2023-02-14")
 
 ◊epigraph{
   ◊blockquote{
@@ -51,6 +51,15 @@
   In the context of this article, ◊em{values} are entities with a distinct identity such as numbers and strings.
   An ◊em{object} is a representation of a value in the computer memory.
   A ◊em{reference} is the address of an object that we can use to access the object or its parts.
+}
+◊figure[#:class "grayscale-diagram"]{
+◊marginnote["mn-objects-values-refs"]{
+  A visualization of values, objects, and references on an example of an integer in a 16-bit computer.
+  The value is number five, which has no inherent type.
+  The object is a 16-bit integer stored at address ◊code{0x0300} (◊a[#:href "https://en.wikipedia.org/wiki/Endianness"]{little-endian}).
+  The memory contains a reference to the number, represented as an object holding the address ◊code{0x0300}.
+}
+◊(embed-svg "images/15-objects-values-references.svg")
 }
 ◊p{
   System programming languages, such as C++ and Rust, force the programmer to deal with the distinction between objects and references.
@@ -263,7 +272,7 @@ impl S {
   The idiom's name comes from the Haskell's ◊code-ref["https://wiki.haskell.org/Newtype"]{newtype} keyword.
 }
 ◊p{
-  One of the common uses of this idiom is to work around the ◊a[#:href "#no-orphan-instances"]{orphan rules} and define trait implementation for the aliased type.
+  One of the common uses of this idiom is to work around the ◊a[#:href "#orphan-rules"]{orphan rules} and define trait implementation for the aliased type.
   For example, the following code defines an new type that displays byte vectors in hex.
 }
 
@@ -465,6 +474,13 @@ match &x_for_match[..] {
   For non-generic types, these rules forbid implementating a trait for the type outside of packages defining the trait or the type.
   In other words, either the package defining the trait must depend on the package defining the type or vice versa.
 }
+◊figure[#:class "grayscale-diagram"]{
+◊marginnote["mn-orphan-rules"]{
+  Orphan rules in Rust demand that a trait implementation must reside in the crate defining the trait or the crate defining the type.
+  Boxes represent separate crates, arrows◊mdash{}crate dependencies.
+}
+◊(embed-svg "images/15-orphan-rules.svg")
+}
 ◊p{
   These rules make it easy for the compiler to guarantee ◊em{coherence}, which is a smart way to say that all parts of you program see the same implementation of the trait for a particular type.
   In exchange, this rule makes your life unnecessarily complicated.
@@ -581,37 +597,70 @@ impl Service {
     ◊footer{Albert Einstein, ◊a[#:href "https://books.google.ch/books?redir_esc=y&hl=de&id=HvZAAQAAIAAJ&focus=searchwithinvolume&q=spooky+action"]{The Born-Einstein letters}, p. 158.}
   }
 }
-◊p{
-  Direct language support for asynchronous programming one of the Rust's selling points.
-  Rust supports the ◊code-ref["https://rust-lang.github.io/async-book/01_getting_started/04_async_await_primer.html"]{async/.await} syntax for defining and composing asynchronous function.
-  Unfortunately, this language feature has a very limited runtime support.
-  There are several libraries (called ◊a[#:href "https://ncameron.org/blog/what-is-an-async-runtime/"]{async runtimes}) defining asynchronous functions to interact with the operating system.
-  The most popular such runtime is the ◊a[#:href "https://crates.io/crates/tokio"]{tokio} package.
-}
-◊p{
-  One common issue with runtimes is that they rely on passing arguments implicitly.
-  For example, the tokio runtime allows you to ◊code-ref["https://docs.rs/tokio/latest/tokio/fn.spawn.html"]{spawn} a future for concurrent execution at any point in your program.
-  For this interface the work, the programmer has to create a runtime first, and the runtime registers itself as a thread-local variable.
-  This runtime is an invisible argument passed in all your functions.
-}
+
 ◊p{
   The value of Rust that I like the most is its focus on local reasoning.
   Looking at the function's type signature often gives you a solid understanding of what the function can do.
   State mutations are explicit thanks to mutability and lifetime annotations.
-  Error handling is explicit thanks to the ubiquitous ◊code{Result} type.
-  Implicit async runtimes are outliers; they often break the wonderful ◊a[#:href "https://wiki.haskell.org/Why_Haskell_just_works"]{if it compiles◊mdash{}it works} effect.
+  Error handling is explicit and intuitive thanks to the ubiquitous ◊code{Result} type.
+  When used correctly, these features often lead to the mystical ◊a[#:href "https://wiki.haskell.org/Why_Haskell_just_works"]{if it compiles◊mdash{}it works} effect.
+  Asynchronous programming is Rust is different, however.
+}
+◊p{
+
+}
+◊p{
+  Rust supports the ◊code-ref["https://rust-lang.github.io/async-book/01_getting_started/04_async_await_primer.html"]{async/.await} syntax for defining and composing asynchronous function, but the runtime support is limited.
+  There are several libraries (called ◊a[#:href "https://ncameron.org/blog/what-is-an-async-runtime/"]{async runtimes}) defining asynchronous functions to interact with the operating system.
+  The ◊a[#:href "https://crates.io/crates/tokio"]{tokio} package is the most popular such library.
+}
+◊p{
+  One common issue with runtimes is that they rely on passing arguments implicitly.
+  For example, the tokio runtime allows you to ◊code-ref["https://docs.rs/tokio/latest/tokio/fn.spawn.html"]{spawn} a concurrent task at any point in your program.
+  For this function the work, the programmer has to construct a runtime object in advance.
+}
+◊source-code["rust"]{
+fn innocently_looking_function() {
+  ◊code-ref["https://docs.rs/tokio/1.25.0/tokio/fn.spawn.html"]{tokio::spawn}(some_async_func());
+  // ^
+  // |
+  // ◊em{This code will panic if we remove this line. Spukhafte Fernwirkung!}
+} //                                     |
+  //                                     |
+fn main() { //                           v
+  let _rt = ◊code-ref["https://docs.rs/tokio/1.25.0/tokio/runtime/struct.Runtime.html"]{tokio::runtime::Runtime}::new().unwrap();
+  innocently_looking_function();
+}
+}
+◊p{
+  These implicit arguments turn compile-time errors into runtime errors.
+  What should have been a compile error turns into a debugging adventure:
 }
 ◊ul[#:class "arrows"]{
   ◊li{
-    Implicit arguments turn compile-time errors into runtime errors.
     If the runtime were an explicit argument, the code would not compile unless the programmer constructed a runtime and passed it as an argument.
     When the runtime is implicit, your code might compile fine but will crash at runtime if you forget to annotate your main function with a ◊a[#:href "https://docs.rs/tokio/latest/tokio/attr.main.html"]{magical macro}.
   }
   ◊li{
     Mixing libraries that chose different runtimes is ◊a[#:href "https://www.ncameron.org/blog/portable-and-interoperable-async-rust/"]{hard}.
     The problem is even more confusing if it involves multiple major versions of the same runtime.
-    What should have been a compile error turns into a debugging adventure.
     My experience of writing async Rust code resonates with the ◊a[#:href "https://rust-lang.github.io/wg-async/vision/submitted_stories/status_quo.html"]{Status Quo} stories that the async ◊a[#:href "https://rust-lang.github.io/wg-async/welcome.html"]{Async Working Group} collected.
   }
+}
+◊p{
+  Some might argue that threading ubiquitous arguments through the entire call stack is unergonomic.
+  In my experience, ◊a[#:href "http://localhost:8080/posts/03-rust-packages-crates-modules.html#explicit-dependencies"]{passing all arguments explicitly} is the only approach that scales well.
+}
+}
+
+◊section{
+◊section-title["conclusion"]{Conclusion}
+◊epigraph{
+  ◊blockquote[#:cite "https://www.stroustrup.com/quotes.html"]{
+    ◊p{There are only two kinds of languages: the ones people complain about and the ones nobody uses.}
+    ◊footer{Bjarne Stroustrup}
+  }
+}
+◊p{
 }
 }
