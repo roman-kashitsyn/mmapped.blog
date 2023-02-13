@@ -18,15 +18,15 @@
 ◊section-title["intro"]{Introduction}
 ◊p{
   ◊a[#:href "https://www.rust-lang.org/"]{Rust} is in a sweet spot in the language design space.
-  It allows us to build efficient and memory-safe programs with succinct, portable, and sometimes even pretty code.
+  It allows us to build efficient and memory-safe programs with concise, portable, and sometimes even pretty code.
 }
 ◊p{
   However, it is not all roses and sunshine.
-  Memory management details often stay in your way and make the code uglier or more repetative than it could be in a ◊quoted{higher-level} programming language, such as ◊a[#:href "https://www.haskell.org/"]{Haskell} or ◊a[#:href "https://ocaml.org"]{OCaml}.
-  In almost all the cases, these issues are not defects of the compiler but direct consequences of the design choices the Rust team made.
+  Memory management details often stay in your way and make the code uglier or more repetitive than it could be in a ◊quoted{higher-level} programming language, such as ◊a[#:href "https://www.haskell.org/"]{Haskell} or ◊a[#:href "https://ocaml.org"]{OCaml}.
+  In almost all cases, these issues are not defects of the compiler but direct consequences of the Rust's team design choices.
 }
 ◊p{
-  This article goes into detail on how frustrating Rust can be if you approach it with a functional programming mindset and why Rust has no choice but frustrate you.
+  This article details on how frustrating Rust can be if you approach it with a functional programming mindset and why Rust has no choice but to frustrate you.
 }
 }
 
@@ -45,10 +45,10 @@
 }
 
 ◊p{
-  It is helpful to understand the difference between objects, values, and references before we dive deeper into Rust.
+  Understanding the difference between objects, values, and references is helpful before diving deeper into Rust.
 }
 ◊p{
-  In the context of this article, ◊em{values} are entities with a distinct identity such as numbers and strings.
+  In the context of this article, ◊em{values} are entities with distinct identities, such as numbers and strings.
   An ◊em{object} is a representation of a value in the computer memory.
   A ◊em{reference} is the address of an object that we can use to access the object or its parts.
 }
@@ -57,13 +57,13 @@
   A visualization of values, objects, and references on an example of an integer in a 16-bit computer.
   The value is number five, which has no inherent type.
   The object is a 16-bit integer stored at address ◊code{0x0300} (◊a[#:href "https://en.wikipedia.org/wiki/Endianness"]{little-endian}).
-  The memory contains a reference to the number, represented as an object holding the address ◊code{0x0300}.
+  The memory contains a ◊em{reference} to the number, represented as a pointer to address ◊code{0x0300}.
 }
 ◊(embed-svg "images/15-objects-values-references.svg")
 }
 ◊p{
   System programming languages, such as C++ and Rust, force the programmer to deal with the distinction between objects and references.
-  This distinction allows us to write blanzingly fast code, but it comes with a high price: it is a never-ending source of bugs.
+  This distinction allows us to write blazingly fast code, but it comes with a high price: it is a never-ending source of bugs.
   It is almost always a bug to modify the contents of an object if some other part of the program references that object.
   There are multiple ways to address this issue:
 }
@@ -88,8 +88,8 @@
 ◊p{
   The distinction between objects and references is also a source of accidental complexity and choice explosion.
   A language with immutable objects and automatic memory management allows us to stay ignorant of this distinction and treat everything as a value (at least in pure code).
-  A unified storage model frees up programmer's mental resources and enables the programmer to write more expressive and elegant code.
-  What we gain in convenience, however, we lose in efficiency: pure functional programs often require more memory, can become unresponsive, and are harder to optimize (your mileage may vary).
+  A unified storage model frees up a programmer's mental resources and enables the programmer to write more expressive and elegant code.
+  However, what we gain in convenience, we lose in efficiency: pure functional programs often require more memory, can become unresponsive, and are harder to optimize (your mileage may vary).
 }
 }
 
@@ -102,7 +102,7 @@
 
 ◊subsection-title["common-expression-elimination"]{Common expression elimination}
 ◊p{
-  Extracting common expression into a variable can pose unexpected challenges.
+  Extracting a common expression into a variable can pose unexpected challenges.
   Let us start with the following snippet of code.
 }
 ◊source-code["rust"]{
@@ -119,7 +119,7 @@ f(◊b{x});
 g(◊b{x});
 }
 ◊p{
-  However, our first naive version way will not compile if the type of x does not implement the ◊code{Copy} trait.
+  However, our first naive version will only compile if the type of x implements the ◊code{Copy} trait.
   We must write the following expression instead:
 }
 ◊source-code["good"]{
@@ -129,7 +129,7 @@ g(x);
 }
 ◊p{
   We can see the extra verbosity in a positive light if we care about extra memory allocations because copying memory became explicit.
-  But it can be quite annoying in practice, nevertheless, especially when you go and add ◊code{h(x)} two months later.
+  But it can be quite annoying in practice, especially when you add ◊code{h(x)} two months later.
 }
 
 ◊source-code["bad"]{
@@ -146,7 +146,7 @@ h(x); // ← won’t compile, you need scroll up and update g(x).
 ◊subsection-title["monomorphism-restriction"]{Monomorphism restriction}
 ◊p{
   In Rust, ◊code{let x = y;} does not always mean that ◊code{x} is the same thing as ◊code{y}.
-  One example when this natural property breaks is when ◊code{y} is an overloaded function.
+  One example of when this natural property breaks is when ◊code{y} is an overloaded function.
 }
 ◊p{
   For example, let us define a short name for an overloaded function.
@@ -185,7 +185,7 @@ let y = f("string");
 
 ◊subsection-title["functional-abstraction"]{Functional abstraction}
 ◊p{
-Factoring code into a function might be harder than you expect because the compiler might not be able to reason about aliasing accross function boundaries.
+Factoring code into a function might be harder than you expect because the compiler cannot reason about aliasing across function boundaries.
 Let's say we have the following code.
 }
 ◊source-code["rust"]{
@@ -200,7 +200,7 @@ impl State {
 }
 ◊p{
   The ◊code{self.x += 1} statement appears multiple times.
-  Why not extract it into into a method◊ellipsis{}
+  Why not extract it into a method◊ellipsis{}
 }
 ◊source-code["bad"]{
 impl State {
@@ -241,7 +241,7 @@ impl S {
 }
 
 ◊p{
-  However, if we inline the definition of ◊code{or_insert_with} and the lambda function, the compiler can finally see that the borrowing rules are not broken.
+  However, if we inline the definition of ◊code{or_insert_with} and the lambda function, the compiler can finally see that the borrowing rules hold.
 }
 
 ◊source-code["good"]{
@@ -260,7 +260,7 @@ impl S {
 }
 
 ◊p{
-  When someone asks you ◊quoted{what tricks Rust closures can do that named functions cannot?}, you will know the answer: they can capture only the fields they use.
+  When someone asks you, ◊quoted{what tricks can Rust closures do that named functions cannot?} you will know the answer: they can capture only the fields they use.
 }
 
 ◊subsection-title["newtype-abstrction"]{Newtype abstraction}
@@ -269,11 +269,11 @@ impl S {
   The ◊a[#:href "https://doc.rust-lang.org/rust-by-example/generics/new_types.html"]{new type idiom}◊sidenote["sn-strong-typedef"]{
     Folks in the C++ land call this idiom ◊a[#:href "https://www.boost.org/doc/libs/1_42_0/boost/strong_typedef.hpp"]{strong typedef}.
   } in Rust allows the programmer to give a new identity to an existing type.
-  The idiom's name comes from the Haskell's ◊code-ref["https://wiki.haskell.org/Newtype"]{newtype} keyword.
+  The idiom's name comes from Haskell's ◊code-ref["https://wiki.haskell.org/Newtype"]{newtype} keyword.
 }
 ◊p{
   One of the common uses of this idiom is to work around the ◊a[#:href "#orphan-rules"]{orphan rules} and define trait implementation for the aliased type.
-  For example, the following code defines an new type that displays byte vectors in hex.
+  For example, the following code defines a new type that displays byte vectors in hex.
 }
 
 ◊source-code["rust"]{
@@ -290,10 +290,10 @@ println!("{}", Hex((0..32).collect()));
 }
 
 ◊p{
-  The new type idiom is efficient: the representation of the ◊code{Hex} type in machine's memory is identical to those of ◊code{Vec<u8>}.
-  However, the compiler does not treat our new type as a strong alias for ◊code{Vec<u8>}, despite the identical representation.
+  The new type idiom is efficient: the representation of the ◊code{Hex} type in the machine's memory is identical to those of ◊code{Vec<u8>}.
+  However, despite the identical representation, the compiler does not treat our new type as a strong alias for ◊code{Vec<u8>}.
   For example, we cannot safely transform ◊code{Vec<Hex>} to ◊code{Vec<Vec<u8>>} and back without reallocating the outer vector.
-  We also cannot safely coerce ◊code{&Vec<u8>} to ◊code{&Hex} without copying the bytes.
+  Also, without copying the bytes, we cannot safely coerce ◊code{&Vec<u8>} to ◊code{&Hex}.
 }
 
 ◊source-code["rust"]{
@@ -308,27 +308,27 @@ fn complex_function(bytes: &Vec<u8>) {
 }
 
 ◊p{
-  Overall, the new type idiom is a leaky abstraction because it is a convention, not a first-class language feature.
-  If you wonder how Haskell solved this problem, I highly recommend watching the ◊a[#:href "https://www.youtube.com/watch?v=iLZdN-R1JGk"]{Safe, Zero-Cost Coercions in Haskell} talk by Simon Peyton Jones.
+  Overall, the newtype idiom is a leaky abstraction because it is a convention, not a first-class language feature.
+  If you wonder how Haskell solved this problem, I recommend watching the ◊a[#:href "https://www.youtube.com/watch?v=iLZdN-R1JGk"]{Safe, Zero-Cost Coercions in Haskell} talk by Simon Peyton Jones.
 }
 
 ◊subsection-title["views-and-bundles"]{Views and bundles}
 ◊p{
   Each time the programmer describes a struct field or passes an argument to a function, she must decide whether the field/argument should be ◊a[#:href "#objects-values-references"]{an object or a reference}.
   Or maybe the best option is to ◊a[#:href "https://doc.rust-lang.org/std/borrow/enum.Cow.html"]{decide at runtime}?
-  That is a lot of decision making!
-  Unfortunately, sometimes there is no single optimal choice.
+  That is a lot of decision-making!
+  Unfortunately, sometimes there is no optimal choice.
   On such occasions, we grit our teeth and define several versions of the same type with slightly different field types.
 }
 
 ◊p{
   Most functions in Rust take arguments by reference and return results as a self-contained object◊sidenote["sn-view-exceptions"]{
     There are plenty of exceptions, of course.
-    Sometimes we pass arguments by value if making a copy is cheap or if the function can efficiently reuse its input to produce the result.
-    Some functions return references into one of their arguments.
+    Sometimes we pass arguments by value if making a copy is cheap or the function can efficiently reuse its input to produce the result.
+    Some functions return references to one of their arguments.
   }.
-  This pattern is so common that it might be helpful to define new terms for it.
-  I call input types with lifetime arguments ◊em{views} because they are optimal for inspecting data.
+  This pattern is so common that it might be helpful to define new terms.
+  I call input types with lifetime parameters ◊em{views} because they are optimal for inspecting data.
   I call regular output types ◊em{bundles} because they are self-contained.
 }
 
@@ -365,11 +365,11 @@ pub struct ◊code-ref["https://github.com/bytecodealliance/lucet/blob/51fb1ed41
   }
   ◊li{
     ◊code{OwnedGlobalSpec} is a ◊em{bundle}: it does not contain references to other data structures.
-    This representation is helpful for functions that construct values of type ◊code{GlobalSpec} and pass them around or put into a container.
+    This representation is helpful for functions that construct values of type ◊code{GlobalSpec} and pass them around or put them into a container.
   }
 }
 ◊p{
-  In a language with automatic memory management we can combine the efficiency of ◊code{GlobalSpec<'a>} with the versatility of ◊code{OwnedGlobalSpec} in a single type declaration.
+  In a language with automatic memory management, we can combine the efficiency of ◊code{GlobalSpec<'a>} with the versatility of ◊code{OwnedGlobalSpec} in a single type declaration.
 }
 }
 
@@ -383,7 +383,7 @@ pub struct ◊code-ref["https://github.com/bytecodealliance/lucet/blob/51fb1ed41
 ◊subsection-title["object-composition"]{Object composition}
 ◊p{
   When programmers have two distinct values, they often want to combine them into a single struct.
-  Sounds easy, right? Not in Rust.
+  Sounds easy? Not in Rust.
 }
 ◊p{
   Assume we have an object ◊code{Db} that has a method giving you another object, ◊code{Snapshot<'a>}.
@@ -405,11 +405,11 @@ struct DbSnapshot {
 }
 
 ◊p{
-  Rust folks call this arragement ◊quoted{sibling pointers}.
-  The Rust language forbids sibling pointers because they undermine the Rust's safety model.
+  Rust folks call this arrangement ◊quoted{sibling pointers}.
+  The Rust language forbids sibling pointers because they undermine Rust's safety model.
 }
 ◊p{
-  As we discussed in the ◊a[#:href "#objects-values-references"]{Objects, values, and references} section, modifying a referenced object is usually a bug.
+  As discussed in the ◊a[#:href "#objects-values-references"]{Objects, values, and references} section, modifying a referenced object is usually a bug.
   In our case, the ◊code{snapshot} object might depend on the physical location of the ◊code{db} object.
   If we move the ◊code{DbSnapshot} as a whole, the physical location of the ◊code{db} field will change, corrupting references in the ◊code{snapshot} object.
 }
@@ -436,7 +436,7 @@ match x {
 
 ◊p{
   First, we can't match a vector, only on a slice.
-  Luckily, the compiler suggests us an easy fix: we need to replace ◊code{x} with ◊code{x[..]} in the ◊code{match} expression.
+  Luckily, the compiler suggests an easy fix: we must replace ◊code{x} with ◊code{x[..]} in the ◊code{match} expression.
   Let us give it a try.
 }
 
@@ -471,24 +471,24 @@ match &x_for_match[..] {
 ◊subsection-title["orphan-rules"]{Orphan rules}
 ◊p{
   Rust uses ◊a[#:href "https://doc.rust-lang.org/reference/items/implementations.html?highlight=orphan#orphan-rules"]{orphan rules} to decide whether a type can implement a trait.
-  For non-generic types, these rules forbid implementating a trait for the type outside of packages defining the trait or the type.
-  In other words, either the package defining the trait must depend on the package defining the type or vice versa.
+  For non-generic types, these rules forbid implementing a trait for a type outside of crates defining the trait or the type.
+  In other words, the package defining the trait must depend on the package defining the type or vice versa.
 }
 ◊figure[#:class "grayscale-diagram"]{
 ◊marginnote["mn-orphan-rules"]{
-  Orphan rules in Rust demand that a trait implementation must reside in the crate defining the trait or the crate defining the type.
+  Orphan rules in Rust demand that a trait implementation resides in the crate defining the trait or the crate defining the type.
   Boxes represent separate crates, arrows◊mdash{}crate dependencies.
 }
 ◊(embed-svg "images/15-orphan-rules.svg")
 }
 ◊p{
-  These rules make it easy for the compiler to guarantee ◊em{coherence}, which is a smart way to say that all parts of you program see the same implementation of the trait for a particular type.
+  These rules make it easy for the compiler to guarantee ◊em{coherence}, which is a smart way to say that all parts of your program see the same trait implementation for a particular type.
   In exchange, this rule makes your life unnecessarily complicated.
-  Orphan rules significantly complicate integrating traits and types coming from an unrelated libraries.
+  Orphan rules significantly complicate integrating traits and types coming from an unrelated library.
 }
 ◊p{
-  One example is traits that we want to use only in tests, such as ◊code-ref["https://altsysrq.github.io/rustdoc/proptest/1.0.0/proptest/arbitrary/trait.Arbitrary.html"]{Arbitrary} from the ◊a[#:href "https://crates.io/crates/proptest"]{proptest} package.
-  We can save a lot of typing if the compiler derives implementations for types from our package, but we do not want our production code to depend on the ◊code{proptest} package.
+  One example is traits we want to use only in tests, such as ◊code-ref["https://altsysrq.github.io/rustdoc/proptest/1.0.0/proptest/arbitrary/trait.Arbitrary.html"]{Arbitrary} from the ◊a[#:href "https://crates.io/crates/proptest"]{proptest} package.
+  We can save a lot of typing if the compiler derives implementations for types from our package, but we want our production code to be independent of the ◊code{proptest} package.
   In the perfect setup, all the ◊code{Arbitrary} implementations would go into a separate test-only package.
   Unfortunately, orphan rules oppose this arrangement, forcing us to bite the bullet and write proptest strategies ◊a[#:href "https://altsysrq.github.io/proptest-book/proptest/tutorial/macro-prop-compose.html"]{manually} instead◊sidenote["sn-orphan-workaround"]{
     There are workarounds for this issue, such as using ◊a[#:href "https://doc.rust-lang.org/cargo/reference/features.html"]{cargo features} and conditional compilation, but they complicate the build setup so much that writing boilerplate is usually a better option.
@@ -497,8 +497,8 @@ match &x_for_match[..] {
 
 ◊p{
   Type conversion traits, such as ◊code{From} and ◊code{Into}, are also problematic under orphan rules.
-  I often see ◊code{xxx-types} packages that start small but end up bottlenecks in the compilation chain.
-  Splitting such packages into smaller pieces is often a daunting task because of the intricate webs of type conversions connecting distant types together.
+  I often see ◊code{xxx-types} packages that start small but end up as bottlenecks in the compilation chain.
+  Splitting such packages into smaller pieces is often daunting because of the intricate webs of type conversions connecting distant types together.
   Orphan rules do not allow us to cut these packages on module boundaries and move all conversions into a separate package without doing a lot of tedious work.
 }
 
@@ -530,17 +530,17 @@ match &x_for_match[..] {
   }
 }
 ◊p{
-  Safe Rust prevents a specific type of concurrency bugs called ◊em{data races}.
+  Safe Rust prevents a specific type of concurrency bug called ◊em{data race}.
   Concurrent Rust programs have plenty of other ways to behave incorrectly.
 }
 ◊p{
-  One class of concurrency bugs that I experienced first hand is ◊a[#:href "https://en.wikipedia.org/wiki/Deadlock"]{deadlocks}.
+  One class of concurrency bugs that I experienced firsthand is ◊a[#:href "https://en.wikipedia.org/wiki/Deadlock"]{deadlock}.
   A typical explanation of this class of bugs involves two locks and two processes trying to acquire the locks in opposite orders.
   However, if the locks you use are not ◊a[#:href "https://stackoverflow.com/questions/1312259/what-is-the-re-entrant-lock-and-concept-in-general"]{re-entrant} (and Rust's locks are not), having a single lock is enough to cause a deadlock.
 }
 ◊p{
   For example, the following code is buggy because it attempts to acquire the same lock twice.
-  The bug might be hard to spot if ◊code{do_something} and ◊code{helper_function} are large and live far apart in the source file.
+  The bug might be hard to spot if ◊code{do_something} and ◊code{helper_function} are large and live far apart in the source file or if we call ◊code{helper_function} or a rare execution path.
 }
 ◊source-code["bad"]{
 impl Service {
@@ -559,7 +559,7 @@ impl Service {
 }
 ◊p{
   The documentation for ◊code-ref["https://doc.rust-lang.org/std/sync/struct.RwLock.html#method.read"]{RwLock::read} mentions that the function ◊em{might} panic if the current thread already holds the lock.
-  All I got in my case was a hanging program.
+  All I got was a hanging program.
 }
 ◊p{
   Some languages tried to provide a solution to this problem in their concurrency toolkits.
@@ -581,13 +581,14 @@ impl Service {
 }
 ◊p{
   Rust gives us powerful tools to deal with shared memory.
-  However, once our programs need to interact with the outside world (e.g., use network or a filesystem), we are on our own.
-  Rust is not worse that most modern languages in this regard, however, it can give you a false sense of security.
+  However, once our programs need to interact with the outside world (e.g., use a network interface or a filesystem), we are on our own.
+  Rust is similar to most modern languages in this regard.
+  However, it can give you a false sense of security.
 }
 ◊p{
-  Do not forget that paths are raw pointers, even in Rust.
-  Most file manupilations are inherently unsafe and can lead to data races (in a broad sense) if you do synchronize file access properly.
-  For example, as of February 2023, I still experience a six-years-old ◊a[#:href "https://github.com/rust-lang/rustup/issues/988"]{concurrency bug} in ◊a[#:href "https://rustup.rs/"]{rustup}.
+  Remember that paths are raw pointers, even in Rust.
+  Most file operations are inherently unsafe and can lead to data races (in a broad sense) if you do synchronize file access properly.
+  For example, as of February 2023, I still experience a six-year-old ◊a[#:href "https://github.com/rust-lang/rustup/issues/988"]{concurrency bug} in ◊a[#:href "https://rustup.rs/"]{rustup}.
 }
 
 ◊subsection-title["implicit-async-runtimes"]{Implicit async runtimes}
@@ -604,15 +605,15 @@ impl Service {
   State mutations are explicit thanks to mutability and lifetime annotations.
   Error handling is explicit and intuitive thanks to the ubiquitous ◊code{Result} type.
   When used correctly, these features often lead to the mystical ◊a[#:href "https://wiki.haskell.org/Why_Haskell_just_works"]{if it compiles◊mdash{}it works} effect.
-  Asynchronous programming is Rust is different, however.
+  Asynchronous programming in Rust is different, however.
 }
 ◊p{
 
 }
 ◊p{
-  Rust supports the ◊code-ref["https://rust-lang.github.io/async-book/01_getting_started/04_async_await_primer.html"]{async/.await} syntax for defining and composing asynchronous function, but the runtime support is limited.
-  There are several libraries (called ◊a[#:href "https://ncameron.org/blog/what-is-an-async-runtime/"]{async runtimes}) defining asynchronous functions to interact with the operating system.
-  The ◊a[#:href "https://crates.io/crates/tokio"]{tokio} package is the most popular such library.
+  Rust supports the ◊code-ref["https://rust-lang.github.io/async-book/01_getting_started/04_async_await_primer.html"]{async/.await} syntax for defining and composing asynchronous functions, but the runtime support is limited.
+  Several libraries (called ◊a[#:href "https://ncameron.org/blog/what-is-an-async-runtime/"]{async runtimes}) define asynchronous functions to interact with the operating system.
+  The ◊a[#:href "https://crates.io/crates/tokio"]{tokio} package is the most popular library.
 }
 ◊p{
   One common issue with runtimes is that they rely on passing arguments implicitly.
@@ -642,14 +643,14 @@ fn main() { //                           v
     When the runtime is implicit, your code might compile fine but will crash at runtime if you forget to annotate your main function with a ◊a[#:href "https://docs.rs/tokio/latest/tokio/attr.main.html"]{magical macro}.
   }
   ◊li{
-    Mixing libraries that chose different runtimes is ◊a[#:href "https://www.ncameron.org/blog/portable-and-interoperable-async-rust/"]{hard}.
+    Mixing libraries that chose different runtimes is ◊a[#:href "https://www.ncameron.org/blog/portable-and-interoperable-async-rust/"]{complicated}.
     The problem is even more confusing if it involves multiple major versions of the same runtime.
-    My experience of writing async Rust code resonates with the ◊a[#:href "https://rust-lang.github.io/wg-async/vision/submitted_stories/status_quo.html"]{Status Quo} stories that the async ◊a[#:href "https://rust-lang.github.io/wg-async/welcome.html"]{Async Working Group} collected.
+    My experience writing async Rust code resonates with the ◊a[#:href "https://rust-lang.github.io/wg-async/vision/submitted_stories/status_quo.html"]{Status Quo} stories collected by the ◊a[#:href "https://rust-lang.github.io/wg-async/welcome.html"]{Async Working Group}.
   }
 }
 ◊p{
   Some might argue that threading ubiquitous arguments through the entire call stack is unergonomic.
-  In my experience, ◊a[#:href "http://localhost:8080/posts/03-rust-packages-crates-modules.html#explicit-dependencies"]{passing all arguments explicitly} is the only approach that scales well.
+  ◊a[#:href "http://localhost:8080/posts/03-rust-packages-crates-modules.html#explicit-dependencies"]{Explicitly passing all arguments} is the only approach that scales well.
 }
 }
 
@@ -662,5 +663,11 @@ fn main() { //                           v
   }
 }
 ◊p{
+  Rust is a disciplined language that got many important decisions right, such as an uncompromising focus on safety, the trait system design◊sidenote["sn-trait-system-cpp"]{I'm looking at you, ◊a[#:href "https://en.cppreference.com/w/cpp/language/constraints"]{C++ Concepts}.}, the lack of implicit conversions, and a holistic approach to ◊a[#:href "/posts/12-rust-error-handling.html"]{error handling}.
+  It allows us to develop robust and memory-safe programs relatively quickly without compromising execution speed.
+}
+◊p{
+  Yet, I often find myself overwhelmed with accidental complexity, especially when I care little about performance and want to get something working quickly (for example, in test code).
+  Oh well, no language is perfect for every problem.
 }
 }
