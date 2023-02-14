@@ -684,4 +684,8 @@ fn main() { //                           v
   Rust only partially eliminates the ◊a[#:href "#fearless-concurrency"]{concurrency issues}.
   Oh well, no language is perfect for every problem.
 }
+
+◊p{
+  You can discuss this article on ◊a[#:href "https://www.reddit.com/r/rust/comments/112hmga/blog_post_when_rust_hurts/"]{Reddit}.
+}
 }
