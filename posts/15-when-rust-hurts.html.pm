@@ -88,14 +88,14 @@
 ◊p{
   The distinction between objects and references is also a source of accidental complexity and choice explosion.
   A language with immutable objects and automatic memory management allows us to stay ignorant of this distinction and treat everything as a value (at least in pure code).
-  A unified storage model frees up a programmer's mental resources and enables the programmer to write more expressive and elegant code.
+  A unified storage model frees up a programmer's mental resources and enables her to write more expressive and elegant code.
   However, what we gain in convenience, we lose in efficiency: pure functional programs often require more memory, can become unresponsive, and are harder to optimize (your mileage may vary).
 }
 }
 
 
 ◊section{
-◊section-title["abstraction-is-painful"]{When abstraction is painful}
+◊section-title["abstraction-hurts"]{When abstraction hurts}
 ◊p{
   Manual memory management and the ownership-aware type system interfere with our ability to break down the code into smaller pieces.
 }
@@ -290,7 +290,7 @@ println!("{}", Hex((0..32).collect()));
 }
 
 ◊p{
-  The new type idiom is efficient: the representation of the ◊code{Hex} type in the machine's memory is identical to those of ◊code{Vec<u8>}.
+  The new type idiom is efficient: the representation of the ◊code{Hex} type in the machine's memory is identical to that of ◊code{Vec<u8>}.
   However, despite the identical representation, the compiler does not treat our new type as a strong alias for ◊code{Vec<u8>}.
   For example, we cannot safely transform ◊code{Vec<Hex>} to ◊code{Vec<Vec<u8>>} and back without reallocating the outer vector.
   Also, without copying the bytes, we cannot safely coerce ◊code{&Vec<u8>} to ◊code{&Hex}.
@@ -375,49 +375,62 @@ pub struct ◊code-ref["https://github.com/bytecodealliance/lucet/blob/51fb1ed41
 
 
 ◊section{
-◊section-title["composition-is-painful"]{When composition is painful}
+◊section-title["composition-hurts"]{When composition hurts}
 ◊p{
-  Combining a working program from smaller pieces can be frustrating in Rust.
+  Building a working program from smaller pieces can be frustrating in Rust.
 }
 
 ◊subsection-title["object-composition"]{Object composition}
 ◊p{
-  When programmers have two distinct values, they often want to combine them into a single struct.
+  When programmers have two distinct objects, they often want to combine them into a single structure.
   Sounds easy? Not in Rust.
 }
 ◊p{
   Assume we have an object ◊code{Db} that has a method giving you another object, ◊code{Snapshot<'a>}.
   The lifetime of the snapshot depends on the lifetime of the database.
 }
-◊source-code["bad"]{
+◊source-code["rust"]{
 struct Db { /* ◊ellipsis{} */ }
 
 struct Snapshot<'a> { /* ◊ellipsis{} */ }
 
 impl Db { fn snapshot<'a>(&'a self) -> Snapshot<'a>; }
+}
 
-// There is no way to define the following struct:
+◊p{
+  We might want to bundle◊sidenote["sn-db-iterator"]{
+    If you wonder why we have this strange desire, you can read comments from the ◊code-ref["https://sourcegraph.com/github.com/dfinity/ic@d14361f9939baaeb899106b874851ad4a0ce928b/-/blob/rs/artifact_pool/src/rocksdb_iterator.rs?L153-164"]{rocksdb_iterator.rs} module.
+  } the database with its snapshot, but Rust will not let us.
+}
 
+◊source-code["bad"]{
+◊em{// There is no way to define the following struct without}
+◊em{// contaminating it with lifetimes.}
 struct DbSnapshot {
-  db: Box<Db>,
-  snapshot: Snapshot<'a>,
+  snapshot: Snapshot<'a>, ◊em{// what should 'a be?}
+  db: Arc<Db>,
 }
 }
 
 ◊p{
   Rust folks call this arrangement ◊quoted{sibling pointers}.
-  The Rust language forbids sibling pointers because they undermine Rust's safety model.
+  Rust forbids sibling pointers in safe code because they undermine Rust's safety model.
 }
 ◊p{
   As discussed in the ◊a[#:href "#objects-values-references"]{Objects, values, and references} section, modifying a referenced object is usually a bug.
   In our case, the ◊code{snapshot} object might depend on the physical location of the ◊code{db} object.
   If we move the ◊code{DbSnapshot} as a whole, the physical location of the ◊code{db} field will change, corrupting references in the ◊code{snapshot} object.
+  We ◊em{know} that moving ◊code{Arc<Db>} will not change the location of the ◊code{Db} object, but there is no way to communicate this information to ◊code{rustc}.
+}
+◊p{
+  Another issue with ◊code{DbSnapshot} is that the order of its field ◊a[#:href "https://doc.rust-lang.org/stable/reference/destructors.html"]{destruction} matters.
+  If Rust allowed sibling pointers, changing the field order could introduce undefined behavior: the ◊code{snapshot}'s destructor could try to access fields of a destroyed ◊code{db} object.
 }
 
 ◊subsection-title["pattern-matching-boxes"]{Pattern matching cannot see through boxes}
 ◊p{
   In Rust, we cannot pattern-match on boxed types such as ◊code{Box}, ◊code{Arc}, ◊code{String}, and ◊code{Vec}.
-  This restriction is always a deal-breaker because we cannot avoid boxing when we define recursive data types.
+  This restriction is often a deal-breaker because we cannot avoid boxing when we define recursive data types.
 }
 
 ◊p{
@@ -483,8 +496,7 @@ match &x_for_match[..] {
 }
 ◊p{
   These rules make it easy for the compiler to guarantee ◊em{coherence}, which is a smart way to say that all parts of your program see the same trait implementation for a particular type.
-  In exchange, this rule makes your life unnecessarily complicated.
-  Orphan rules significantly complicate integrating traits and types coming from an unrelated library.
+  In exchange, this rule significantly complicates integrating traits and types from unrelated libraries.
 }
 ◊p{
   One example is traits we want to use only in tests, such as ◊code-ref["https://altsysrq.github.io/rustdoc/proptest/1.0.0/proptest/arbitrary/trait.Arbitrary.html"]{Arbitrary} from the ◊a[#:href "https://crates.io/crates/proptest"]{proptest} package.
@@ -513,7 +525,7 @@ match &x_for_match[..] {
 
 
 ◊section{
-◊section-title["fearless-concurrency-lie"]{Fearless concurrency is a lie}
+◊section-title["fearless-concurrency"]{Fearless concurrency is a lie}
 ◊p{
   The Rust team coined the term ◊a[#:href "https://blog.rust-lang.org/2015/04/10/Fearless-Concurrency.html"]{Fearless Concurrency} to indicate that Rust helps you avoid common pitfalls associated with parallel and concurrent programming.
   Despite these claims, my ◊a[#:href "https://en.wikipedia.org/wiki/Cortisol"]{cortisol} level goes up every time I introduce concurrency to my Rust programs.
@@ -540,7 +552,7 @@ match &x_for_match[..] {
 }
 ◊p{
   For example, the following code is buggy because it attempts to acquire the same lock twice.
-  The bug might be hard to spot if ◊code{do_something} and ◊code{helper_function} are large and live far apart in the source file or if we call ◊code{helper_function} or a rare execution path.
+  The bug might be hard to spot if ◊code{do_something} and ◊code{helper_function} are large and live far apart in the source file or if we call ◊code{helper_function} on a rare execution path.
 }
 ◊source-code["bad"]{
 impl Service {
@@ -563,7 +575,7 @@ impl Service {
 }
 ◊p{
   Some languages tried to provide a solution to this problem in their concurrency toolkits.
-  The Clang compiler provides ◊a[#:href "https://clang.llvm.org/docs/ThreadSafetyAnalysis.html"]{Thread safety annotations} enabling a form of static analysis that can detect race conditions and deadlocks.
+  The Clang compiler has ◊a[#:href "https://clang.llvm.org/docs/ThreadSafetyAnalysis.html"]{Thread safety annotations} enabling a form of static analysis that can detect race conditions and deadlocks.
   However, the best way to avoid deadlocks is not to have locks.
   Two technologies that approach the problem fundamentally are ◊a[#:href "https://en.wikipedia.org/wiki/Software_transactional_memory"]{Software Transaction Memory} (implemented in ◊a[#:href "https://wiki.haskell.org/Software_transactional_memory"]{Haskell}, ◊a[#:href "https://clojure.org/reference/refs"]{Clojure}, and ◊a[#:href "https://nbronson.github.io/scala-stm/"]{Scala}) and the ◊a[#:href "https://en.wikipedia.org/wiki/Actor_model"]{actor model} (◊a[#:href "https://www.erlang.org/"]{Erlang} was the first language that fully embraced it).
 }
@@ -587,7 +599,7 @@ impl Service {
 }
 ◊p{
   Remember that paths are raw pointers, even in Rust.
-  Most file operations are inherently unsafe and can lead to data races (in a broad sense) if you do synchronize file access properly.
+  Most file operations are inherently unsafe and can lead to data races (in a broad sense) if you do not correctly synchronize file access.
   For example, as of February 2023, I still experience a six-year-old ◊a[#:href "https://github.com/rust-lang/rustup/issues/988"]{concurrency bug} in ◊a[#:href "https://rustup.rs/"]{rustup}.
 }
 
@@ -668,6 +680,8 @@ fn main() { //                           v
 }
 ◊p{
   Yet, I often find myself overwhelmed with accidental complexity, especially when I care little about performance and want to get something working quickly (for example, in test code).
+  Rust can complicate ◊a[#:href "#abstraction-hurts"]{decomposing} your program into smaller pieces and ◊a[#:href "#composition-hurts"]{composing} it from smaller pieces.
+  Rust only partially eliminates the ◊a[#:href "#fearless-concurrency"]{concurrency issues}.
   Oh well, no language is perfect for every problem.
 }
 }
