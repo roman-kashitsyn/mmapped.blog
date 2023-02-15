@@ -630,7 +630,7 @@ impl Service {
 ◊p{
   One common issue with runtimes is that they rely on passing arguments implicitly.
   For example, the tokio runtime allows you to ◊code-ref["https://docs.rs/tokio/latest/tokio/fn.spawn.html"]{spawn} a concurrent task at any point in your program.
-  For this function the work, the programmer has to construct a runtime object in advance.
+  For this function to work, the programmer has to construct a runtime object in advance.
 }
 ◊source-code["rust"]{
 fn innocently_looking_function() {
