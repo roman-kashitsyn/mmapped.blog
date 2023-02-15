@@ -662,7 +662,7 @@ fn main() { //                           v
 }
 ◊p{
   Some might argue that threading ubiquitous arguments through the entire call stack is unergonomic.
-  ◊a[#:href "http://localhost:8080/posts/03-rust-packages-crates-modules.html#explicit-dependencies"]{Explicitly passing all arguments} is the only approach that scales well.
+  ◊a[#:href "/posts/03-rust-packages-crates-modules.html#explicit-dependencies"]{Explicitly passing all arguments} is the only approach that scales well.
 }
 }
 
