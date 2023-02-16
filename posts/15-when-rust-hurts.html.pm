@@ -4,7 +4,7 @@
 ◊(define-meta keywords "rust")
 ◊(define-meta summary "Why I am not enjoying programming in Rust.")
 ◊(define-meta doc-publish-date "2023-02-14")
-◊(define-meta doc-updated-date "2023-02-14")
+◊(define-meta doc-updated-date "2023-02-16")
 
 ◊epigraph{
   ◊blockquote{
@@ -106,40 +106,41 @@
   Let us start with the following snippet of code.
 }
 ◊source-code["rust"]{
-f(compute_x());
-g(compute_x());
+let x = f("a very long string".to_string());
+let y = g("a very long string".to_string());
+// ◊ellipsis{}
 }
 ◊p{
-  Look, ◊code{compute_x()} appears twice!
+  Look, ◊code{"a very long string".to_string()} appears twice!
   Our first instinct is to assign a name to the expression and use it twice:
 }
 ◊source-code["good"]{
-let ◊b{x} = compute_x();
-f(◊b{x});
-g(◊b{x});
+let ◊b{s} = "a very long string".to_string();
+let x = f(◊b{s});
+let y = g(◊b{s});
 }
 ◊p{
-  However, our first naive version will only compile if the type of x implements the ◊code{Copy} trait.
+  However, our first naive version will not compile because the ◊code{String} type does not implement the ◊code{Copy} trait.
   We must write the following expression instead:
 }
 ◊source-code["good"]{
-let x = compute_x();
-f(x◊b{.clone()});
-g(x);
+let s = "a very long string".to_string();
+f(s◊b{.clone()});
+g(s);
 }
 ◊p{
   We can see the extra verbosity in a positive light if we care about extra memory allocations because copying memory became explicit.
-  But it can be quite annoying in practice, especially when you add ◊code{h(x)} two months later.
+  But it can be quite annoying in practice, especially when you add ◊code{h(s)} two months later.
 }
 
 ◊source-code["bad"]{
-let x = compute_x();
-f(x.clone());
-g(x);
+let s = "a very long string".to_string();
+f(s.clone());
+g(s);
 
 // fifty lines of code...
 
-h(x); // ← won’t compile, you need scroll up and update g(x).
+h(s); // ← won’t compile, you need scroll up and update g(s).
 }
 
 
@@ -663,6 +664,51 @@ fn main() { //                           v
 ◊p{
   Some might argue that threading ubiquitous arguments through the entire call stack is unergonomic.
   ◊a[#:href "/posts/03-rust-packages-crates-modules.html#explicit-dependencies"]{Explicitly passing all arguments} is the only approach that scales well.
+}
+
+◊subsection-title["functions-have-colors"]{Functions have colors}
+◊epigraph{
+  ◊blockquote{
+    ◊p{At this point, a reasonable person might think the language hates us.}
+    ◊footer{Bob Nystrom, ◊a[#:href "https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/"]{What Color is Your Function?}}
+  }
+}
+
+◊p{
+  Rust's ◊code{async/.await} syntax simplifies the composition of asynchronous algorithms.
+  In return, it brings a fair amount of complexity, ◊a[#:href "https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/"]{painting every function} in ◊em{blue} (sync) or ◊em{red} (async) color.
+  There are new rules to follow:
+}
+◊ul[#:class "arrows"]{
+  ◊li{
+    Sync functions can call other sync functions and get a result.
+    Async functions can call and ◊code{.await} other async functions to get a result.
+  }
+  ◊li{
+    We cannot directly call and await async functions from sync functions.
+    We need an ◊a[#:href "implicit-async-runtimes"]{async runtime} that will execute an async function for us.
+  }
+  ◊li{
+    We can call sync functions from async functions.
+    But beware!
+    Not all sync functions are equally blue.
+  }
+}
+◊p{
+  That is it; some sync functions are secretly ◊em{purple}: they can read files, join threads, or ◊code-ref["https://doc.rust-lang.org/std/thread/fn.sleep.html"]{thread::sleep} on a couch.
+  We do not want to call these purple (blocking) functions from red (async) functions because they will block the runtime and kill the performance benefits that motivated us to step into this asynchrony mess.
+}
+◊p{
+  Unfortunately, purple functions are secretive: you cannot tell whether a function is purple without inspecting its body and the bodies of all other functions in its ◊a[#:href "https://en.wikipedia.org/wiki/Call_graph"]{call graph}.
+  These bodies evolve, so we better keep an eye on them.
+}
+◊p{
+  The real fun comes when you have a code base with shared ownership where multiple teams sandwich sync and async code.
+  Such packages tend to be bug silos, waiting for enough system load to manifest another purple defect in the sandwich that makes the system unresponsive.
+}
+◊p{
+  Languages with runtimes built around ◊a[#:href "https://en.wikipedia.org/wiki/Green_thread"]{green threads}, such as ◊a[#:href "https://haskell.org/"]{Haskell} and ◊a[#:href "https://go.dev/"]{Go}, eliminate the proliferation of function colors.
+  Building a concurrent program from independent components is easier and safer in such languages.
 }
 }
 
