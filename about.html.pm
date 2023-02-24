@@ -11,7 +11,7 @@
 
   ◊p{
   My name is ◊span[#:itemprop "name"]{Roman Kashitsyn}.
-  I'm a ◊span[#:itemprop "jobTitle"]{software engineer} at ◊a[#:href "dfinity.org"]{dfinity}, where I have been working on orthogonal persistence, state snapshotting, state certification, state sync protocol, message routing, and much more.
+  I'm a ◊span[#:itemprop "jobTitle"]{software engineer} at ◊a[#:href "https://dfinity.org"]{◊smallcaps{dfinity}}, where I have been working on orthogonal persistence, state snapshotting, state certification, state sync protocol, message routing, and much more.
   I have also co-authored a few relatively popular ◊a[#:href "https://medium.com/dfinity/software-canisters-an-evolution-of-smart-contracts-internet-computer-f1f92f1bfffb"]{canisters}: registry, ledger, internet identity backend, and certified assets canister.
   }
   ◊p{
