@@ -1,4 +1,13 @@
-<svg width="78" height="75" viewBox="0 0 78 75" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M3 2.5H64V59.5H3V2.5Z" fill="#FFFFF8" stroke="#FFFFF8" stroke-width="5"/>
-<rect x="14.5" y="15.5" width="61" height="57" stroke="#FFFFF8" stroke-width="5"/>
+<svg width="79" height="77" viewBox="0 0 79 77" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 3.5H64V60.5H3V3.5Z" fill="white" stroke="#FFFFF8" stroke-width="5"/>
+<rect x="14.5" y="16.5" width="61" height="57" stroke="#FFFFF8" stroke-width="5"/>
+<rect x="0.5" y="0.5" width="66" height="63" stroke="black"/>
+<line x1="11.5" y1="64" x2="11.5" y2="77" stroke="black"/>
+<line x1="11" y1="76.5" x2="79" y2="76.5" stroke="black"/>
+<line x1="78.5" y1="14" x2="78.5" y2="76" stroke="black"/>
+<line x1="67" y1="13.5" x2="79" y2="13.5" stroke="black"/>
+<line x1="67" y1="19.5" x2="73" y2="19.5" stroke="black"/>
+<line x1="17.5" y1="64" x2="17.5" y2="71" stroke="black"/>
+<line x1="17" y1="70.5" x2="73" y2="70.5" stroke="black"/>
+<line x1="72.5" y1="19" x2="72.5" y2="70" stroke="black"/>
 </svg>
