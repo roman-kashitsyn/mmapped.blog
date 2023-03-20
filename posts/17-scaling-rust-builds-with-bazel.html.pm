@@ -180,7 +180,7 @@
 ◊epigraph{
   ◊blockquote{
     ◊p{You are such a naïve academic. I asked you how to do it, and you told me what I should do. I know what I need to do. I just don't know how to do it.}
-    ◊footer{Attributed to Andy Groove; see ◊quoted{◊a[#:href "https://www.amazon.com/Disciplines-Execution-Achieving-Wildly-Important/dp/1491517751"]{The 4 Disciplines of Execution}} by Jim Huling, Chris McChesney, and Sean Covey, page xx.}
+    ◊footer{Attributed to ◊a[#:href "https://en.wikipedia.org/wiki/Andrew_Grove"]{Andrew Grove}; see ◊quoted{◊a[#:href "https://www.amazon.com/Disciplines-Execution-Achieving-Wildly-Important/dp/1491517751"]{The 4 Disciplines of Execution}} by Jim Huling, Chris McChesney, and Sean Covey, page xx.}
   }
 }
 
@@ -271,13 +271,17 @@
   ◊li{
     IDE support.
     The rules_rust Bazel plugin offers ◊a[#:href "https://bazelbuild.github.io/rules_rust/rust_analyzer.html"]{experimental support} for ◊a[#:href "https://rust-analyzer.github.io/"]{rust-analyzer}, which worked perfectly in the prototype but choked on our code base.
-    We invested a lot of time in making the new setup work, but we still keep cargo files around to keep developers relying on ◊a[#:href "https://intellij-rust.github.io/"]{IntelliJ Rust} happy◊sidenote["sn-intellij-rust"]{
+    We invested a lot of effort in making the new setup work, but we still keep cargo files around to keep developers relying on ◊a[#:href "https://intellij-rust.github.io/"]{IntelliJ Rust} happy◊sidenote["sn-intellij-rust"]{
       Unfortunately, IntelliJ-Rust does not support non-cargo configurations; see ◊a[#:href "https://github.com/intellij-rust/intellij-rust/issues/5594"]{issue #5594} in the ◊code{intellij-rust} repository.
     }. 
   }
   ◊li{
     Publishing packages.
     We want to publish some of our Rust packages to crates.io, and the rules_rust Bazel plugin does not provide a replacement for "cargo publish" yet.
+  }
+  ◊li{
+    Access to the ◊a[#:href "https://github.com/rust-lang/cargo/wiki/Third-party-cargo-subcommands"]{cargo ecosystem}.
+    Many helpful tools rely on cargo and don't have an analog in the Bazel world yet, such as ◊a[#:href "https://github.com/dtolnay/cargo-expand"]{◊code{cargo-expand}}.
   }
 }
 ◊p{
