@@ -3,6 +3,7 @@
 index.html
 
 ◊posts.html{
+  posts/17-scaling-rust-builds-with-bazel.html
   posts/16-building-a-second-brain.html
   posts/15-when-rust-hurts.html
   posts/14-stable-structures.html
