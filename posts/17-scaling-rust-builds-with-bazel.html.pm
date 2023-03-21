@@ -39,7 +39,7 @@
 }
 ◊p{
   These trade-offs make cargo easy to pick up but impose severe limitations in a complex project.
-  Some workarounds work up to a point, such as ◊a[#:href "https://github.com/matklad/cargo-xtask"]{xtask}, but they will only get you so far.
+  There are workarounds, such as ◊a[#:href "https://github.com/matklad/cargo-xtask"]{xtask}, but they will only get you so far.
   Let's consider an example of what many of our tests must do:
 }
 ◊ul[#:class "arrows"]{
@@ -59,7 +59,7 @@
   The ◊a[#:href "https://github.com/mozilla/sccache"]{sccache} tool can improve cache hits, but we saw no improvement from using it on our CI servers.
 }
 ◊p{
-  Furthermore, cargo does not track specific dependencies of the build artifacts.
+  Cargo's dependency tracking facilities are relatively simplistic.
   For example, we can tell cargo to ◊a[#:href "https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script"]{rerun build.rs} if some input files or environment variables change.
   Still, cargo has no idea which files or other resources tests might be accessing, so it must be conservative with caching.
   Consequently, we often build way more than we need to, and sometimes our builds fail with confusing errors that go away after ◊code{cargo clean}.
@@ -73,7 +73,7 @@
 }
 ◊subsection-title["the-nix-days"]{The nix days}
 ◊p{
-  When we started the Rust implementation in mid-2019, we relied on nix to build all our software and set up the development environment in a cross-platform way (we develop both on macOS and Linux).
+  When we started the Rust implementation in mid-2019, we relied on ◊a[#:href "https://nixos.org/"]{nix} to build all our software and set up the development environment in a cross-platform way (we develop both on macOS and Linux).
 }
 ◊p{
   As our code base grew, we started to feel nix's limitations.
@@ -83,8 +83,8 @@
 }
 ◊p{
   Unfortunately, most developers in the team were uncomfortable with nix.
-  Nix became a constant source of confusion and lost developer productivity.
-  Since nix has a steep learning curve, only a few Nix wizards could understand and modify the build rules.
+  It became a constant source of confusion and lost developer productivity.
+  Since nix has a steep learning curve, only a few nix wizards could understand and modify the build rules.
   This nix-alienation bifurcated our build environment: the CI servers built the code with nix-build, and developers built the code by entering the nix-shell and invoking cargo.
 }
 ◊subsection-title["the-iceberg"]{The iceberg}
@@ -96,14 +96,16 @@
   }.
 }
 ◊p{
-  Furthermore, the infrastructure team got a few new members unfamiliar with nix and decided to switch from nix to a more familiar technology, Docker containers.
-  The team implemented a new build system that runs regular cargo builds inside a docker container with the versions of dynamic libraries identical to those in the production environment.
+  Furthermore, the infrastructure team got a few new members unfamiliar with nix and decided to switch to a more familiar technology, Docker containers.
+  The team implemented a new build system that runs cargo builds inside a docker container with the versions of dynamic libraries identical to those in the production environment.
+}
+◊p{
   The new system grew organically and eventually evolved into a hot mess of a hundred GitLab Yaml configuration files calling shell and python scripts in the correct order.
   These scripts used the known filesystem locations and environment variables to pass the build artifacts around.
   Most integration tests ended up as shell scripts expected some inputs that the CI pipeline produces.
 }
 ◊p{
-  Of course, the new Docker-based build system lost the granular caching capabilities of nix-build.
+  The new Docker-based build system lost the granular caching capabilities of nix-build.
   The infra team attempted to build a custom caching system but eventually abandoned the project.
   Cache invalidation is a challenging problem indeed.
 }
@@ -117,7 +119,7 @@
 ◊p{
   I call this setup an "iceberg": on the surface, a developer needed only nix and cargo to work on the code, but in practice, that was only 10% of the story.
   Since most tests required a CI environment, developers had to create merge requests to check whether their code worked beyond the basic unit tests.
-  The CI didn't know developers were interested in running a specific test, making the entire setup wasteful and slowing the development cycle.
+  The CI didn't know developers were interested in running a specific test and executed the entire test suite, wasting scarce computing resources and slowing the development cycle.
 }
 ◊p{
   The tests accumulated over time, the load on the CI system grew, and eventually, the builds became unbearably slow and flaky.
@@ -212,12 +214,12 @@
   }
   ◊li{
     Use Bazel to build binaries from Rust code directly, bypassing cargo.
-    This change would significantly improve our cache hit rate and allow us to avoid running expensive tests.
+    This change would significantly improve our cache hit rate and allow us to avoid running expensive tests on every change.
   }
 }
 ◊p{
   These work streams require different skill sets, and we wanted to start working on them in parallel.
-  To unblock the first workstream, we created a simple Bazel rule that treated cargo as a black box and produced binaries for deployment and tests.
+  To unblock the first workstream, we created a simple Bazel rule, ◊code{cargo_build}, that treated cargo as a black box and produced binaries for deployment and tests.
   This way, our infrastructure experts could figure out how to build OS images with Bazel, while our Rust experts could proceed with the Rust code "bazelification".
 }
 
@@ -248,7 +250,7 @@
   }
 }
 ◊p{
-  Eventually, we could build and test every piece of our Rust code with Bazel. We then switched the OS build from the cargo_build bootstrapping to the binaries built from the source using Bazel rules.
+  Eventually, we could build and test every piece of our Rust code with Bazel. We then switched the OS build from the ◊code{cargo_build} bootstrapping to the binaries built from the source using Bazel rules.
 }
 
 ◊subsection-title["test-parity"]{Ensure test parity}
