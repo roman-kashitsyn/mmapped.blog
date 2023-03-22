@@ -56,7 +56,7 @@
 ◊p{
   Like notorious ◊a[#:href "https://en.wikipedia.org/wiki/Make_(software)"]{Make}, cargo relies on file modification timestamps for incremental builds.
   Updating code comments or switching git branches can invalidate cargo's cache, causing long rebuilds.
-  The ◊a[#:href "https://github.com/mozilla/sccache"]{sccache} tool can improve cache hits, but we saw no improvement from using it on our CI servers.
+  The ◊a[#:href "https://github.com/mozilla/sccache"]{sccache} tool can improve cache hits, but we saw no improvement from using it on our ◊a[#:href "https://en.wikipedia.org/wiki/Continuous_integration"]{continuous integration} (CI) servers.
 }
 ◊p{
   Cargo's dependency tracking facilities are relatively simplistic.
@@ -299,5 +299,9 @@
 }
 ◊p{
   Special thanks go to the developers and maintainers of the ◊a[#:href "https://bazelbuild.github.io/rules_rust/"]{rules_rust} Bazel plugin, who unblocked us many times during the migration, especially ◊a[#:href "https://github.com/UebelAndre"]{Andre Uebel} and ◊a[#:href "https://github.com/illicitonion"]{Daniel Wagner-Hall}, and to ◊a[#:href "https://github.com/matklad"]{Alex Kladov} for taking the time to share his rust-analyzer expertise.
+}
+
+◊p{
+  You can discuss this article on ◊a[#:href "https://www.reddit.com/r/rust/comments/11xxffc/blog_post_scaling_rust_builds_with_bazel/"]{Reddit}.
 }
 }
