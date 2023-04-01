@@ -42,7 +42,7 @@
 (define feed 
  `(feed [[xml:lang "en-us"] [xmlns "http://www.w3.org/2005/Atom"]]
    (title ,feed-title)
-   (link [[rel "self"] [href ,feed-site]])
+   (link [[rel "self"] [href ,(string-append feed-site "feed.xml")]])
    (generator [[uri "http://pollenpub.com/"]] "Pollen")
    (id ,feed-site)
    (updated ,(date->rfc3339 max-updated))
