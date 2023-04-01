@@ -11,7 +11,7 @@
 ◊p{
   Music is my first true love◊sidenote["zero-love"]{Computer games are my zeroeth true love.}.
   The first time I got my hands on an old untuned guitar, I didn't want to put it down.
-  I worked on an illegal summer job to buy my first instrument and pay for a teacher, and since then, music has been a constant source of joy in my life.
+  I found a summer job to buy my first instrument and pay for a teacher, and since then, music has been a constant source of joy in my life.
   Picking a CS degree at a university over a musical college education was a hard choice for me.
 }
 ◊p{
@@ -27,7 +27,7 @@
   ◊a[#:href "https://en.wikipedia.org/wiki/Johann_Sebastian_Bach"]{Johan Sebastian Bach} is the most talented and prolific musician in history.
 }
 ◊p{
-  Bach would love the ◊a[#:href "https://aplwiki.com/"]{APL} programming language:
+  Bach would love the ◊a[#:href "https://en.wikipedia.org/wiki/APL_(programming_language)"]{APL} programming language:
 }
 ◊ul[#:class "arrows"]{
   ◊li{
@@ -78,7 +78,11 @@
   If you want to learn more about J.S. Bach:
 }
 ◊ul[#:class "arrows"]{
-  ◊li{Listen to the ◊a[#:href "https://www.thegreatcourses.com/courses/bach-and-the-high-baroque"]{Bach and the High Baroque} course by professor ◊a[#:href "https://robertgreenbergmusic.com/"]{Robert Greenberg}.}
+  ◊li{
+    Listen to the ◊a[#:href "https://www.thegreatcourses.com/courses/bach-and-the-high-baroque"]{Bach and the High Baroque} course◊sidenote["sn-audible-gc"]{
+      ◊a[#:href "https://audible.com"]{Audible.com} offers subscribers all courses I mention in this article for free or at a meager price.
+    } by professor ◊a[#:href "https://robertgreenbergmusic.com/"]{Robert Greenberg}.
+  }
   ◊li{
     Read ◊a[#:href "https://www.amazon.com/Johann-Sebastian-Bach-Musician-Paperback-ebook/dp/B002GKGBLE"]{Johan Sebastian Bach: The Learned Musician} by Christoph Wolff.
   }
@@ -119,7 +123,7 @@
   ◊li{
     Mozart's music reflects the values of ◊a[#:href "https://en.wikipedia.org/wiki/Age_of_Enlightenment"]{the age of enlightenment} and appeals to everyone.
     It's clean and beautifully constructed.
-    Scheme is so simple that only a few pages are needed to introduce most of the language.
+    Scheme is so simple that a few pages can introduce most of the language.
     Before the recent switch to Python, MIT professors used Scheme for ◊a[#:href "https://www.youtube.com/watch?v=-J_xL4IGhJA&list=PLE18841CABEA24090"]{introductory Computer Science classes}.
   }
   ◊li{
@@ -200,7 +204,12 @@
   ◊li{
     Beethoven was constantly evolving his style, pushing the boundary of musical art.
     He reinvented himself three times during his career, turning his suffering into fuel for a breakthrough.
-    Similarly, Haskell evolves rapidly; the Haskell community is always looking for new ways to write and think about software.
+    Similarly, the Haskell ecosystem constantly evolves, turning pain points into new beautiful ways to write and think about software.
+    For example, issues with lazy input/output led to the invention of ◊a[#:href "https://wiki.haskell.org/Iteratee_I/O"]{iteratees}, and problems with nested record updates led to optics (such as ◊a[#:href "https://www.youtube.com/watch?v=k-QwBL9Dia0"]{lenses}) and ◊a[#:href "https://www.cis.upenn.edu/~bcpierce/papers/icmt-2009-slides.pdf"]{bidirectional programming}.
+  }
+  ◊li{
+    Beethoven turned my musical world upside down: I caught a piano bug after hearing one of his sonatas.
+    Haskell enormously influenced my professional life, forever changing my thoughts about computing.
   }
 }
 
@@ -241,11 +250,15 @@ isSublistOf as bs = match (makeTable as) bs
   If you want to learn more about Beethoven:
 }
 ◊ul[#:class "arrows"]{
-    ◊li{
-      Listen to the ◊a[#:href "https://www.thegreatcourses.com/courses/great-masters-beethoven-his-life-and-music"]{Great Masters: Beethoven◊mdash{}His Life and Music} course by professor ◊a[#:href "https://robertgreenbergmusic.com/"]{Robert Greenberg}.
-    }
+  ◊li{
+    Listen to the ◊a[#:href "https://www.thegreatcourses.com/courses/great-masters-beethoven-his-life-and-music"]{Great Masters: Beethoven◊mdash{}His Life and Music} course by professor ◊a[#:href "https://robertgreenbergmusic.com/"]{Robert Greenberg}.
+  }
   ◊li{
     Read ◊a[#:href "https://www.amazon.com/Beethoven-Revised-Maynard-Solomon/dp/0825672686"]{Beethoven} by Maynard Solomon.
+  }
+  ◊li{
+    Consider watching the ◊a[#:href "https://www.imdb.com/video/vi2964193561/"]{Immortal Beloved} movie.
+    The movie has many factual mistakes, but it's inspiring nevertheless.
   }
 }
 ◊p{
