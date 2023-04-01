@@ -46,6 +46,14 @@
   src: url("/fonts/ComicMono.ttf") format("truetype")
 }
 
+@font-face {
+  font-family: "APL385 Unicode";
+  font-style:  normal;
+  font-weight: 400;
+  src: local(APL385 Unicode),
+       url("/fonts/Apl385.ttf") format("truetype");
+}
+
 /* Customized styles */
 
 h1,
@@ -229,6 +237,11 @@ pre.good>code {
 
 pre.bad>code {
     background-color: #ffe6d8;
+}
+
+pre.apl>code {
+    font-family: "APL385 Unicode";
+    font-size: 1.5rem;
 }
 
 .math {
