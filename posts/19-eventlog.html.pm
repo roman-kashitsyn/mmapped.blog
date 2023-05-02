@@ -10,7 +10,7 @@
 ◊section-title["intro"]{Introduction}
 ◊p{
   The ◊a[#:href "https://medium.com/dfinity/chain-key-bitcoin-a-decentralized-bitcoin-twin-ceb8f4ddf95e"]{chain-key Bitcoin} (ckBTC) project became ◊a[#:href "https://twitter.com/dfinity/status/1642887821731004418"]{publicly available} on April 3, 2023.
-  ckBTC ◊em{minter} smart contract is the most novel part of the product responsible for converting Bitcoin to ckBTC tokens and back.
+  The ckBTC ◊em{minter} smart contract is the most novel part of the product responsible for converting Bitcoin to ckBTC tokens and back.
   This contract features several design choices that some developers might find insightful.
   This article describes how the ckBTC minter, which I will further refer to as ◊quoted{the minter}, organizes its storage.
 }
@@ -72,7 +72,7 @@
 
 ◊p{
   Luckily, the problem has peculiarities we could exploit.
-  All minter's state modifications are expensive: minting ckBTC requires the caller to invest at least a few dollars into a transaction on the Bitcoin network.
+  All of the minter's state modifications are expensive: minting ckBTC requires the caller to invest at least a few dollars into a transaction on the Bitcoin network.
   Withdrawal requests involve paying transaction fees.
   In addition, the volume of modifications is relatively low because of the Bitcoin network limitations.
 }
@@ -157,7 +157,7 @@
 
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-request-event"]{
-    Requests such as ingress messages come from the outside world and can trigger zero of more events.
+    Requests such as ingress messages come from the outside world and can trigger zero or more events.
   }
   ◊(embed-svg "images/19-request-event.svg")
 }
