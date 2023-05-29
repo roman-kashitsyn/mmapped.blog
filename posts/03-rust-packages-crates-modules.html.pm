@@ -403,7 +403,7 @@ mod tests;
 
 ◊p{
   In this section, we will take a look at some tricky issues that Rust newcomers might run into.
-  I experienced these issues myself, and I saw several collegues running into them as well.
+  I experienced these issues myself, and I saw several colleagues running into them as well.
 }
 
 ◊subsection-title["confusing-crates-and-packages"]{Confusing crates and packages}
