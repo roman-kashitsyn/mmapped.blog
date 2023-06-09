@@ -2,20 +2,20 @@
 
 ◊(define-meta title "Candid for engineers")
 ◊(define-meta keywords "ic")
-◊(define-meta summary "")
-◊(define-meta doc-publish-date "2023-06-01")
-◊(define-meta doc-updated-date "2023-06-01")
+◊(define-meta summary "A practical guide to the world's most advanced interface definition language.")
+◊(define-meta doc-publish-date "2023-06-20")
+◊(define-meta doc-updated-date "2023-06-20")
 
 ◊section{
 ◊section-title["introduction"]{Introduction}
 ◊p{
-  ◊a[#:href "https://github.com/dfinity/candid"]{Candid} is the main interface definition language for smart contracts hosted on the ◊a[#:href "https://internetcomputer.org/"]{Internet Computer} (IC).
+  ◊a[#:href "https://github.com/dfinity/candid"]{Candid} is the primary interface definition language for smart contracts hosted on the ◊a[#:href "https://internetcomputer.org/"]{Internet Computer} (IC).
 }
 
 ◊p{
   Most prevalent data-interchange formats, such as ◊a[#:href "https://protobuf.dev/"]{Protocol Buffers} and ◊a[#:href "https://thrift.apache.org/"]{Thrift}, come straight from ◊a[#:href "https://reasonablypolymorphic.com/blog/protos-are-wrong/#ad-hoc-and-built-by-amateurs"]{engineering departments}.
   Candid is different.
-  Candid is a child of programming language designers who grew it from first principles.
+  Candid is a child of programming language designers who grew it from ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#design-goals"]{first principles}.
   As a result, Candid ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/IDL-Soundness.md"]{makes sense}, but might feel alien to most engineers.
 }
 
@@ -52,7 +52,7 @@
   Service method definitions can refer to data types, and data types can refer to services.
   Services can accept as arguments and return references to other services and methods.
   The Candid team usually call such designs ◊quoted{higher-order cases}.
-  The ◊a[#:href "https://internetcomputer.org/docs/current/developer-docs/backend/candid/candid-concepts"]{Candid overview} introduces a higher-order function in its first example.
+  The ◊a[#:href "https://internetcomputer.org/docs/current/developer-docs/backend/candid/candid-concepts"]{Candid overview} article introduces a higher-order function in its first example.
 }
 ◊figure{
 ◊source-code["candid"]{
@@ -67,33 +67,66 @@ service counter : {
 ◊p{
   Most often developers interact with Candid through the service definition files, also known as ◊code-ref["https://internetcomputer.org/docs/current/developer-docs/backend/candid/candid-howto#the-did-file"]{.did} files.
 }
+
 ◊p{
-  A ◊code{.did} file contains type and service definitions.
-  Though a ◊code{.did} file can define multiple services, the tooling treats the syntactically last service definition as the main one.
+  A ◊code{.did} file contains type definitions and at most one main service definition, which must be the last clause in the ◊code{.did} file.
 }
 
-◊subsection-title["binary-message-anatomy"]{Binary message anatomy}
-◊p{
-  A binary Candid message defines a tuple of ◊math{n} values and logically consists of 3 parts:
+◊figure{
+◊marginnote["mn-token-interface"]{
+The definition of a token ledger registry service.
+The ◊code{service} keyword at the top level defines the main service; it must appear as the last definition in the file.
+Note the difference between a service type definition (top) and a service definition (bottom) syntactic forms.
 }
-◊ol-circled{
-  ◊li{
-    ◊em{Type table} defines custom types (◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--"]{records}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--"]{variants}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-opt-t"]{options}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t"]{vectors}, etc.) required to decode the message.
-  }
-  ◊li{
-    ◊em{Types} is an ◊math{n}-tuple of integers specifying the types ◊math{(T◊sub{1},◊ellipsis{},T◊sub{n})} of values in the next section.
-    The types are either primitives (negative integers) or pointers into the type table (non-negative integers).
-  }
-  ◊li{
-    ◊em{Values} is an ◊math{n}-tuple of serialized values ◊math{(V◊sub{1},◊ellipsis{},V◊sub{n})}.
-  }
+◊source-code["candid"]{
+// A type definition introducing the Token service interface.
+◊b{type} Token = ◊b{service} {
+  token_symbol : () -> (text) query;
+  balance : (record { of : principal }) -> (nat) query;
+  transfer : (record { to : principal; amount : nat }) -> ();
+};
+
+◊b{service} TokenRegistry : {
+  ◊em{// Returns a reference to a token ledger service given the token symbol.}
+  lookup : (symbol : text) -> (opt Token) query;
+}
+}
+}
+
+◊p{
+  There are two syntactic forms introducing a service definitions: with and without init arguments.
+  The technical term for a service defition with init arguments is ◊a[#:href "https://docs.rs/candid/0.8.4/candid/types/internal/enum.Type.html#variant.Class"]{class}.
+}
+
+◊figure{
+◊marginnote["mn-service-vs-class"]{
+  Service definitions with (top) and without (bottom) init arguments (rendered in bold font).
+}
+◊source-code["candid"]{
+◊b{service} Token : {
+  balance : (record { of : principal }) -> (nat) query;
+  ◊em{// ...}
+}
+}
+
+◊source-code["candid"]{
+◊b{service} Token : ◊b{(init_balances : vec record { principal; nat })} -> {
+  balance : (record { of : principal }) -> (nat) query;
+  ◊em{// ...}
+}
+}
+}
+
+◊p{
+  Init arguments describe the value that the canister maintainers must specify when they instantiate the canister.
+  Service clients don't need to worry about these arguments.
+  Consequently, init arguments are not part of the public interface, so most tools ignore them (◊code-ref["https://internetcomputer.org/docs/current/references/cli-reference/dfx-canister#dfx-canister-install"]{dfx canister install} is a notable exception).
 }
 
 ◊subsection-title["types"]{Types}
 
 ◊p{
-  Given that Candid designers have academic background, it's no wonder that Candid's type system is quite advanced.
-  In additional to a rich set of pritivite types, such as booleans (◊code{bool}), floats (◊code{float64}), strings (◊code{text}), and whole numbers of various widths (◊code{nat8}, ◊code{nat16}, ◊code{nat32}, ◊code{nat64}, ◊code{int8}, ◊code{int16}, ◊code{int32}, ◊code{int64}), Candid provides a few less common types and type constructors:
+  In additional to a rich set of pritivite types, such as booleans (◊code{bool}), floats (◊code{float64}), strings (◊code{text}), and whole numbers of various widths (◊code{nat8}, ◊code{nat16}, ◊code{nat32}, ◊code{nat64}, ◊code{int8}, ◊code{int16}, ◊code{int32}, ◊code{int64}), Candid provides a more advanced types and type constructors:
 }
 
 ◊ul[#:class "arrows"]{
@@ -101,18 +134,21 @@ service counter : {
     Arbitrary-precision integers (◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-nat"]{nat} and ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-int"]{int}).
   }
   ◊li{
-    The ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-opt-t"]{opt} type constructor for declaring some values as potentially missing.
+    Unique identifiers (◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-principal"]{principal}).
+  }
+  ◊li{
+    The ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-opt-t"]{opt} type constructor for marking values as potentially missing.
   }
   ◊li{
     The ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t"]{vec} type constructor for declaring collections.
   }
   ◊li{
-    ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--"]{Records} as product types with named fields, such as ◊br{}
-    ◊code{record { first_line : text; second_line : opt text; zip : text; /* ◊ellipsis{} */ }}.
+    ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--"]{Records} as product types with named fields (also known as ◊code{structs}), such as ◊br{}
+    ◊code{◊b{record} { ◊em{first_line} : text; ◊em{second_line} : ◊b{opt} text; ◊em{zip} : text; /* ◊ellipsis{} */ }}.◊br{}
   }
   ◊li{
-    ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--"]{Variants} as sum types with named alternatives, such as ◊br{}
-    ◊code{variant { cash; credit_card : record { /* ◊ellipsis{} */ } }}.
+    ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--"]{Variants} as sum types with named alternatives (also known as ◊code{enums}), such as ◊br{}
+    ◊code{◊b{variant} { ◊em{cash}; ◊em{credit_card} : ◊b{record} { /* ◊ellipsis{} */ } }}.◊br{}
   }
   ◊li{
     The ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-reserved"]{reserved} type for retiring unused fields.
@@ -133,8 +169,8 @@ service counter : {
 ◊subsection-title["structural-typing"]{Structural typing}
 
 ◊p{
-  Candid's type system is ◊a[#:href "https://en.wikipedia.org/wiki/Structural_type_system"]{structural}: Candid treats types as equal if they have identical structure.
-  You can assign a name to a type, but the name will serve only as moniker for the type structure, not as the type's identity.
+  Candid's type system is ◊a[#:href "https://en.wikipedia.org/wiki/Structural_type_system"]{structural}: it treats types as equal if they have identical structure.
+  Type names serve as monikers for the type structure, not as the type's identity.
 }
 
 ◊p{
@@ -180,6 +216,24 @@ type ◊b{S2} = service {
 }
 }
 
+◊subsection-title["binary-message-anatomy"]{Binary message anatomy}
+◊p{
+  A binary Candid message defines a tuple of ◊math{n} values and logically consists of three parts:
+}
+◊ol-circled{
+  ◊li{
+    ◊em{Type table} defines custom types (◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--"]{records}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--"]{variants}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-opt-t"]{options}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t"]{vectors}, etc.) required to decode the message.
+  }
+  ◊li{
+    ◊em{Types} is an ◊math{n}-tuple of integers specifying the types ◊math{(T◊sub{1},◊ellipsis{},T◊sub{n})} of values in the next section.
+    The types are either primitives (negative integers) or pointers into the type table (non-negative integers).
+  }
+  ◊li{
+    ◊em{Values} is an ◊math{n}-tuple of serialized values ◊math{(V◊sub{1},◊ellipsis{},V◊sub{n})}.
+  }
+}
+
+
 ◊subsection-title["encoding-a-tree"]{Example: encoding a tree}
 
 ◊p{
@@ -193,10 +247,29 @@ type ◊b{S2} = service {
 }
 
 ◊source-code["rust"]{
+◊em{// Rust}
 pub enum Tree { Leaf(i32), Forest(Vec<Tree>) }
 }
 ◊source-code["candid"]{
+◊em{// Candid}
 type Tree = variant { leaf : int32; forest : vec Tree };
+}
+}
+
+◊p{
+  Let's represent the ◊code{Tree} type using at most one composite type per type definition.
+  This ◊quoted{canonical} form will help us understand the message type table.
+}
+
+◊figure{
+
+◊marginnote["mn-rose-tree-canonical"]{
+  The canonical representation of the ◊code{Tree} type.
+}
+
+◊source-code["candid"]{
+type T0 = variant { leaf : int32; forest : T1 };
+type T1 = vec T0;
 }
 }
 
@@ -266,10 +339,16 @@ Type table ⎢ 75 ] field #0 type: int32
 }
 }
 
+◊p{
+  Note that the type table does not contain record field or variant alternative names.
+}
+
 ◊subsection-title["subtyping"]{Subtyping}
 
 ◊p{
-  One of Candid's distinctive traits is the use of structural ◊a[#:href "https://en.wikipedia.org/wiki/Subtyping"]{subtyping} for defining backward compatibility of the interface evolution.
+  One of Candid's distinctive traits is the use of structural ◊a[#:href "https://en.wikipedia.org/wiki/Subtyping"]{subtyping} for defining backward-compatible interface evolutions◊sidenote["sn-upgradable"]{
+    The Candid spec calls such evolutions ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#upgrading-and-subtyping"]{type upgrades}.
+  }.
   If a type ◊math{T} is a subtype of type ◊math{V} (denoted ◊math{T <: V}), then Candid can decode any value of type ◊math{T} into a value of type ◊math{V}.
 }
 
@@ -363,16 +442,229 @@ Type table ⎢ 75 ] field #0 type: int32
 }
 
 ◊section{
-◊section-title["interface-evolution-guidelines"]{The interface evolution guidelines}
-}
-
-◊section{
 ◊section-title["faq"]{FAQ}
 
-◊subsection-title["service-init-args"]{Are service init args part of the interface?}
+◊subsection-title["faq-remove-field"]{Can I remove a record field?}
+
 ◊p{
-  No.
+  Short answer: Sometimes you can, but please don't.
 }
+
+◊p{
+  It's always safe to remove an ◊code{opt} field, but prefer marking it ◊code{reserved} instead.
+  Reserved fields make it unlikely that future service developers will use the field name in an incompatible way.
+}
+
+◊source-code["good"]{
+◊em{// OK: the age field is optional.}
+ type User = record {
+   name : text;
+-  age : opt nat;
+ };
+
+ service UserService : {
+  add_user : (User) -> (nat);
+  get_user : (nat) -> (User) query;
+ }
+}
+
+◊source-code["good"]{
+◊em{// GOOD: marking an opt field as reserved.}
+ type User = record {
+   name : text;
+-  age : opt nat;
+-  age : ◊b{reserved};
+ };
+
+ service UserService : {
+  add_user : (User) -> (nat);
+  get_user : (nat) -> (User) query;
+ }
+}
+
+◊p{
+  The answer depends on the record type variance if the field is not ◊code{opt}.
+}
+
+◊p{
+  You can remove the field if the type appears only in method arguments, but prefer marking it ◊code{reserved} instead.
+}
+
+◊source-code["good"]{
+ service UserService : {
+-  add_user : (record { name : text;  age : nat }) -> (nat);
++  add_user : (record { name : text             }) -> (nat);
+ }
+}
+
+◊source-code["good"]{
+ service UserService : {
+-  add_user : (record { name : text; age : nat      }) -> (nat);
++  add_user : (record { name : text; ◊b{age : reserved} }) -> (nat);
+ }
+}
+
+◊p{
+   You will have to preserve the field if the type appears in a method return type.
+}
+
+◊source-code["bad"]{
+◊em{// BAD: the User type appears as an argument ◊b{and} a result.}
+ type User = record {
+   name : text;
+-  age : nat;
+};
+
+ service UserService : {
+  add_user : (User) -> (nat);
+  get_user : (nat) -> (User) query;
+ }
+}
+
+◊subsection-title["faq-remove-field"]{Can I add a record field?}
+
+◊p{
+  Adding an ◊code{opt} field is always safe.
+}
+
+◊source-code["good"]{
+ type User = record {
+   name : text;
++  age : opt nat;
+};
+
+ service UserService : {
+  add_user : (User) -> (nat);
+  get_user : (nat) -> (User) query;
+ }
+}
+
+◊p{
+  For non-◊code{opt} fields, the answer depends on the type variance.
+}
+
+◊p{
+  You can safely add a non-optional field, if the record appears only in method return types.
+}
+
+◊source-code["good"]{
+ ◊em{// BAD: breaks the client code}
+ service UserService : {
+-  get_user : (nat) -> (record { name : text            }) query;
++  get_user : (nat) -> (record { name : text; ◊b{age : nat} }) query;
+ }
+}
+
+◊p{
+  If the record appears in a method argument, adding a non-optional field breaks backward compatibility.
+}
+
+◊source-code["bad"]{
+ service UserService : {
+-  add_user : (record { name : text            }) -> (nat);
++  add_user : (record { name : text; ◊b{age : nat} }) -> (nat);
+ }
+}
+
+
+◊subsection-title["faq-remove-alternative"]{Can I remove a variant alternative?}
+
+◊p{
+  It depends on the type variance.
+}
+
+◊p{
+  You can remove alternatives if the variant appears only in method results.
+}
+
+◊source-code["good"]{
+ service CoffeeShop : {
+-  order_size : (nat) -> (variant { tiny; small; medium; large }) query;
++  order_size : (nat) -> (variant {       small; medium; large }) query;
+ }
+}
+
+◊source-code["bad"]{
+ ◊em{// BAD: this change might break clients.}
+ service CoffeeShop : {
+-  order_coffee : (record { size : variant { tiny; small; medium; large } }) -> (nat);
++  order_coffee : (record { size : variant {       small; medium; large } }) -> (nat);
+ }
+}
+
+
+◊subsection-title["faq-remove-alternative"]{Can I add a variant alternative?}
+
+◊p{
+  It depends on the type variance.
+}
+
+◊p{
+  You can safely add new alternatives, if the variant appears only in method arguments.
+}
+
+◊source-code["good"]{
+ service UserService : {
+-  add_user : (record { name : text;  age : variant { child;           adult }}) -> (nat);
++  add_user : (record { name : text;  age : variant { child; ◊b{teenager}; adult }}) -> (nat);
+ }
+}
+
+◊source-code["bad"]{
+◊em{// BAD: the User type appears as an argument ◊b{and} a result.}
+ type User = record {
+   name : text;
+-  age : variant { child;           adult }
++  age : variant { child; ◊b{teenager;} adult }
+};
+
+ service UserService : {
+  add_user : (User) -> (nat);
+  get_user : (nat) -> (User) query;
+ }
+}
+
+◊subsection-title["faq-change-init-args"]{Can I change init args?}
+◊p{
+  Short answer: yes.
+}
+
+◊p{
+  Service init args are not part of the public interface.
+  Only service maintainers need to encode the init args; service clients don't need to worry about them.
+  Service interface compatibility tools, such as ◊code-ref["https://github.com/dfinity/candid/blob/e212e096cb726548c6d6edba1189375dc5ad364e/tools/didc/README.md"]{didc check}, ignore init args.
+}
+
+◊subsection-title["faq-post-upgrade-arg"]{How do I specify the post_upgrade arg?}
+
+◊p{
+  As of June 2023, Candid service definition language does not support specifying ◊code{post_upgrade} arguments.
+}
+
+◊p{
+  However, there exists a workaround.
+  Most canister management tools use the same type definition for encoding the init args and upgrade args.
+  You can define a variant type to distinguish between these.
+}
+
+◊figure{
+◊marginnote["mn-post-upgrade-type"]{
+  Using a variant type for differentiating between service init and upgrade arguments.
+}
+
+◊source-code["candid"]{
+◊b{type} ServiceArg = variant {
+  Init    : record { minter : principal };
+  ◊em{// We might want to override the minter on upgrade.}
+  Upgrade : record { minter : ◊b{opt} principal }
+};
+
+◊b{service} TokenService : (ServiceArg) -> {
+  ◊em{// ◊ellipsis{}}
+}
+}
+}
+
 }
 
 ◊section{
@@ -383,7 +675,7 @@ Type table ⎢ 75 ] field #0 type: int32
 ◊section-title["resources"]{Resources}
 ◊ul[#:class "arrows"]{
   ◊li{
-    Joachim Breitner's ◊a[#:href "https://www.joachim-breitner.de/blog/782-A_Candid_explainer__The_rough_idea"]{Candid explainer} (the ◊a[#:href "https://www.joachim-breitner.de/blog/786-A_Candid_explainer__Quirks"]{Quirks} part is especially useful for engineers).
+    Joachim Breitner's ◊a[#:href "https://www.joachim-breitner.de/blog/782-A_Candid_explainer__The_rough_idea"]{Candid explainer} (the ◊a[#:href "https://www.joachim-breitner.de/blog/786-A_Candid_explainer__Quirks"]{Quirks} part is especially relevant for engineers).
   }
   ◊li{
     ◊a[#:href "https://internetcomputer.org/docs/current/developer-docs/build/candid/candid-intro/"]{Candid for developers}
