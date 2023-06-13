@@ -3,8 +3,8 @@
 ◊(define-meta title "Candid for engineers")
 ◊(define-meta keywords "ic")
 ◊(define-meta summary "A practical guide to the world's most advanced interface definition language.")
-◊(define-meta doc-publish-date "2023-06-20")
-◊(define-meta doc-updated-date "2023-06-20")
+◊(define-meta doc-publish-date "2023-06-14")
+◊(define-meta doc-updated-date "2023-06-14")
 
 ◊section{
 ◊section-title["introduction"]{Introduction}
@@ -14,6 +14,8 @@
 
 ◊p{
   Most prevalent data-interchange formats, such as ◊a[#:href "https://protobuf.dev/"]{Protocol Buffers} and ◊a[#:href "https://thrift.apache.org/"]{Thrift}, come straight from ◊a[#:href "https://reasonablypolymorphic.com/blog/protos-are-wrong/#ad-hoc-and-built-by-amateurs"]{engineering departments}.
+}
+◊p{
   Candid is different.
   Candid is a child of programming language designers who grew it from ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#design-goals"]{first principles}.
   As a result, Candid ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/IDL-Soundness.md"]{makes sense} but might feel alien to most engineers.
@@ -75,7 +77,7 @@
 ◊figure{
 ◊marginnote["mn-token-interface"]{
 The definition of a token ledger registry service.
-The ◊code{service} keyword at the top level defines the main service; it must appear as the last definition in the file.
+The ◊code{service} keyword at the top level defines the primary service; it must appear as the last definition in the file.
 Note the difference between a service type definition (top) and a service definition (bottom) syntactic forms.
 }
 ◊source-code["candid"]{
@@ -126,7 +128,7 @@ Note the difference between a service type definition (top) and a service defini
 ◊subsection-title["types"]{Types}
 
 ◊p{
-  In addition to a rich set of primitive types, such as booleans (◊code{bool}), floats (◊code{float64}), strings (◊code{text}), and whole numbers of various widths (◊code{nat8}, ◊code{nat16}, ◊code{nat32}, ◊code{nat64}, ◊code{int8}, ◊code{int16}, ◊code{int32}, ◊code{int64}), Candid provides a more advanced types and type constructors:
+  In addition to a rich set of primitive types, such as booleans (◊code{bool}), floats (◊code{float64}), strings (◊code{text}), and whole numbers of various widths (◊code{nat8}, ◊code{nat16}, ◊code{nat32}, ◊code{nat64}, ◊code{int8}, ◊code{int16}, ◊code{int32}, ◊code{int64}), Candid provides a few more advanced types and type constructors:
 }
 
 ◊ul[#:class "arrows"]{
@@ -141,13 +143,13 @@ Note the difference between a service type definition (top) and a service defini
   }
   ◊li{
     The ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t"]{vec} type constructor for declaring collections.
-  }
+    }
   ◊li{
-    ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--"]{Records} as product types with named fields (also known as ◊code{structs}), such as ◊br{}
+    ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--"]{Records} as product types (also known as ◊code{structs}) with named fields, such as ◊br{}
     ◊code{◊b{record} { ◊em{first_line} : text; ◊em{second_line} : ◊b{opt} text; ◊em{zip} : text; /* ◊ellipsis{} */ }}.◊br{}
   }
   ◊li{
-    ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--"]{Variants} as sum types with named alternatives (also known as ◊code{enums}), such as ◊br{}
+    ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--"]{Variants} as sum types (also known as ◊code{enums}) with named alternatives, such as ◊br{}
     ◊code{◊b{variant} { ◊em{cash}; ◊em{credit_card} : ◊b{record} { /* ◊ellipsis{} */ } }}.◊br{}
   }
   ◊li{
@@ -164,6 +166,11 @@ Note the difference between a service type definition (top) and a service defini
   }
 }
 
+◊p{
+  There are a few more obscure types, such as ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-empty"]{empty} (a type with no constructors) and ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-null"]{null} (a type containing a single value, ◊code{null}).
+  These types are essential from the type-theoretical point of view, but you'll probably never use them in practice.
+}
+
 ◊subsection-title["records-and-variants"]{Records and variants}
 
 ◊p{
@@ -171,9 +178,9 @@ Note the difference between a service type definition (top) and a service defini
 }
 
 ◊p{
-  Records and variants have similar syntax; the only difference is the keyword introducing the type.
+  Records and variants have similar syntax; the primary difference is the keyword introducing the type.
   The meanings of the constructs are complementary, however.
-  A record type indicates that ◊em{all} of its fields must be set, a variant type indicates that precisely ◊em{one} field must be set.
+  A record type indicates that ◊em{all} of its fields must be set, and a variant type indicates that precisely ◊em{one} field must be set.
 }
 
 ◊figure{
@@ -199,12 +206,17 @@ Note the difference between a service type definition (top) and a service defini
 
 ◊p{
   Similarly to Protocol Buffers, Candid uses integers to identify fields and alternatives.
-  Unlike Protocol Buffers, Candid doesn't delegate mapping symbolic field names to integers to the programmer.
-  Candid uses a ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#shorthand-symbolic-field-ids"]{hash function} to map symbolic names to field ids.
+  Unlike Protocol Buffers, Candid doesn't ask the programmer to map symbolic field names to integers, relying on a ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#shorthand-symbolic-field-ids"]{hash function} instead.
+  This design choice has two practical implications.
 }
 
-◊p{
-  In practice, this design choice means that renaming a field or an alternative is an incompatible change.
+◊ul[#:class "arrows"]{
+  ◊li{
+    Renaming a field or an alternative is a backward-incompatible change.
+  }
+  ◊li{
+    Tools cannot display field names without the service definition file.
+  }
 }
 
 ◊p{
@@ -233,19 +245,19 @@ Note the difference between a service type definition (top) and a service defini
 }
 ◊source-code["candid"]{
 ◊em{// A record with tuple fields.}
-◊em{// These entry types are equivalent.}
 ◊b{type} Entry  = ◊b{record} { text; nat };
+◊em{// The Entry and ExplicitEntry types are equivalent.}
 ◊b{type} ExplicitEntry = ◊b{record} { ◊b{0} : text; ◊b{1} : nat };
 
 service ArithmeticService : {
-  ◊em{// Argument sequences.}
+  ◊em{// Argument and result sequences.}
   div : (divident : nat, divisor : nat) -> (quotient : nat, reminder : nat) query;
 }
 }
 }
 ◊p{
   Note that Candid ignores argument and result names in method signatures; it relies solely on the argument position within the sequence.
-  Extend the argument sequence with a new optional value is safe, but adding an argument in the middle will break backward compatibility.
+  Extending the argument sequence with a new optional value is safe, but adding an argument in the middle will break backward compatibility.
   Prefer using records as arguments and result types: you'll have more freedom to rearrange or remove fields as the interface evolves.
 }
 
@@ -274,7 +286,7 @@ service ArithmeticService : {
 
 ◊p{
   Variable bindings in Rust are a good analogy for type names in Candid.
-  The ◊code{let x = 5;} statement ◊em{binds} name ◊em{x} to value ◊code{5}, but ◊em{x} does not become an identity of that value.
+  The ◊code{let x = 5;} statement ◊em{binds} name ◊em{x} to value ◊code{5}, but ◊em{x} does not become the identity of that value.
   Expressions such as ◊code{x == 5} and ◊code{{ let y = 5; y == x }} evaluate to ◊code{true}.
 }
 
@@ -291,7 +303,7 @@ type ECPoint = record { x : int; y : int };
 }
 
 ◊p{
-  Usually, you don't have to name types; you can instead inline them in service definitions (unless you define recursive types, of course).
+  Usually, you don't have to name types; you can inline them in service definitions (unless you define recursive types, of course).
   Assigning descriptive names can improve the interface readability, however.
 }
 
@@ -315,6 +327,109 @@ type ◊b{S2} = service {
 }
 }
 
+◊subsection-title["subtyping"]{Subtyping}
+
+◊p{
+  One of Candid's distinctive traits is the use of structural ◊a[#:href "https://en.wikipedia.org/wiki/Subtyping"]{subtyping} for defining backward-compatible interface evolutions◊sidenote["sn-upgradable"]{
+    The Candid spec calls such evolutions ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#upgrading-and-subtyping"]{type upgrades}.
+  }.
+  If a type ◊math{T} is a subtype of type ◊math{V} (denoted ◊math{T <: V}), then Candid can decode any value of type ◊math{T} into a value of type ◊math{V}.
+}
+
+◊p{
+  Let's inspect some of the basic subtyping rules for simple values (not functions):
+}
+
+◊ul[#:class "arrows"]{
+  ◊li{
+    Subtyping is ◊a[#:href "https://en.wikipedia.org/wiki/Reflexive_relation"]{reflexive}: any type is a subtype of itself.
+    You can't break the clients if you don't change the interface.
+  }
+  ◊li{
+    Subtyping is ◊a[#:href "https://en.wikipedia.org/wiki/Transitive_relation"]{transitive}: ◊math{T <: V} and ◊math{V <: W} implies ◊math{T <: W}.
+    A sequence of backward-compatible changes is backward-compatible.
+  }
+  ◊li{
+    Adding a new field to a record creates a subtype.◊br{}
+    ◊code{record { name : text; status : variant { user; admin } } <: record { name : text } }
+  }
+  ◊li{
+    Less intuitively, removing an ◊em{optional} field also creates a subtype.
+    ◊br{}
+    ◊code{record { name : text } <: record { name : text; status : ◊b{opt} variant { user; admin } } }
+  }
+  ◊li{
+    Removing a case in a variant creates a subtype.◊br{}
+    ◊code{variant { yes; no } <: variant { yes; no; unknown }}
+  }
+  ◊li{
+    All types are subtypes of the ◊code{reserved} type.
+    Candid will happily decode any type into a reserved field.
+  }
+}
+
+◊p{
+  Function subtyping follows the standard ◊a[#:href "https://en.wikipedia.org/wiki/Covariance_and_contravariance_(computer_science)#Function_types"]{variance rules}:
+  function ◊code{g : C -> D} is a subtype of function ◊code{f : A -> B} if ◊code{A <: C} and ◊code{D <: B}.
+  Informally, ◊code{g} must accept the same or more generic arguments as ◊code{f} and produce the same or more specific results as ◊code{f}.
+}
+
+◊p{
+  The rules mentioned in this section are by no means complete or precise; please refer to the ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#rules"]{typing rules} section of the Candid specification for a formal definition.
+}
+
+◊p{
+  Understanding the subtyping rules for functions is helpful for reasoning about safe interface migrations.
+  Let's consider a few examples of common changes that preserve backward compatibility of a function interface (note that compatibility rules for arguments and results are often reversed).
+}
+
+◊ul[#:class "arrows"]{
+  ◊li{
+    Remove an unused record field (or, better, change its type to ◊code{reserved}) from the method ◊em{input} argument.
+  }
+  ◊li{
+    Add a new case to a variant in the method ◊em{input} argument.
+  }
+  ◊li{
+    Add a new field to a record in the method ◊em{result} type.
+  }
+  ◊li{
+    Remove an optional field from a record in the method ◊em{result} type.
+  }
+  ◊li{
+    Remove an alternative from a variant type in the method ◊em{result} type.
+  }
+}
+
+◊p{
+  Before we close the subtyping discussion, let's consider a sequence of type changes where an optional field gets removed and re-introduced later with a different type.
+}
+
+◊figure{
+◊marginnote["mn-subtype-opt"]{
+  An example of the ◊em{special opt subtyping rule}.
+  Step ◊circled-ref[1] removes the optional ◊code{status} field; step ◊circled-ref[2] adds an optional field with the same name but an incompatible type.
+  The horizontal bar applies the transitive property of subtyping, eliminating the intermediate type without the ◊code{status} field.
+}
+◊source-code["candid"]{
+   record { name : text; status : opt variant { user;   admin   } }
+<: record { name : text } ◊circled-ref[1]
+<: record { name : text; status : opt variant { single; married } } ◊circled-ref[2]
+◊hr{}   record { name : text; status : opt variant { user;   admin   } }
+<: record { name : text; status : opt variant { single; married } }
+}
+}
+
+◊p{
+  Indeed, in Candid, ◊math{opt T <: opt V} holds for any types ◊math{T} and ◊math{V}.
+  This counter-intuitive property bears the name of the ◊em{special opt rule}, and it causes a lot of grief in practice.
+  Multiple developers reported changing an optional field in an incompatible way, causing the corresponding values to decode as ◊code{null} after the upgrade.
+}
+◊p{
+  Joachim Breitner's ◊a[#:href "https://www.joachim-breitner.de/blog/784-A_Candid_explainer__Opt_is_special"]{opt is special} article explores the topic in more detail and provides historical background.
+}
+
+
 ◊subsection-title["binary-message-anatomy"]{Binary message anatomy}
 ◊p{
   In Candid, a binary message defines a tuple of ◊math{n} values and logically consists of three parts:
@@ -333,7 +448,58 @@ type ◊b{S2} = service {
 }
 ◊p{
   The tuple values usually correspond to service method arguments or results.
-  For example, if we call method ◊code{transfer : (to : principal, amount : nat) -> ()}, the tuple will contain two values: the principal and the amount.
+  For example, if we call method ◊code{transfer : (to : principal, amount : nat) -> ()}, the argument tuple will contain two values: a principal and a natural number, and the result tuple will be empty.
+}
+
+◊subsection-title["encoding-an-empty-tuple"]{Example: encoding an empty tuple}
+
+◊p{
+  Let's first consider the shorted possible Candid message: an empty tuple.
+}
+
+◊figure{
+◊marginnote["mn-empty-tuple-encode-command"]{
+  The shell command to encode an empty tuple using the ◊code{didc} tool.
+}
+◊source-code["shell"]{
+$ didc encode '()'
+4449444c0000
+}
+}
+
+◊p{
+  We need six bytes to encode ◊quoted{nothing}.
+  Let's take a closer look at them.
+}
+
+◊figure{
+◊marginnote["mn-empty-tuple-ascii"]{
+  Bytes of an empty tuple encoding.
+}
+◊source-code["ascii"]{
+           ⎡ 44 ⎤ D
+    Magic  ⎢ 49 ⎥ I
+           ⎢ 44 ⎥ D
+           ⎣ 4c ⎦ L
+
+Type table [ 00 ] number of type table entries (0)
+
+    Types  [ 00 ] number of tuple elements (0)
+}
+}
+
+◊p{
+  Even this trivial message reveals a few interesting details.
+}
+
+◊ul[#:class "arrows"]{
+  ◊li{
+    All Candid messages begin with the ◊code{DIDL} byte string.
+    Most likely, ◊code{DIDL} stands for ◊quoted{◊smallcaps{dfinity} Interface Definition Language}.
+  }
+  ◊li{
+    This message's values is missing in this message because the tuple size is zero.
+  }
 }
 
 ◊subsection-title["encoding-a-tree"]{Example: encoding a tree}
@@ -405,18 +571,18 @@ $ didc encode \
            ⎢ 44 ⎥ D
            ⎣ 4c ⎦ L
 
-           ⎡ 02 ] number of table entries (2)
-           ⎢ 6b ] entry #0: variant type
+           ⎡ 02 ] number of entries (2)
+           ⎢ ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#types"]{6b} ] entry #0: variant type
            ⎢ 02 ] number of fields (2)
            ⎢ 9e ⎤
            ⎢ 87 ⎥
-           ⎢ c0 ⎥ field name ("leaf") hash
+           ⎢ c0 ⎥ hash("leaf")
            ⎢ bd ⎥
            ⎢ 04 ⎦
-Type table ⎢ 75 ] field #0 type: int32
+Type table ⎢ ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#types"]{75} ] field #0 type: int32
            ⎢ dd ⎤
            ⎢ 99 ⎥
-           ⎢ a2 ⎥ field name ("forest") hash
+           ⎢ a2 ⎥ hash("forest")
            ⎢ ec ⎥
            ⎢ 0f ⎦
            ⎢ 01 ] field #1 type: see entry #1
@@ -427,7 +593,7 @@ Type table ⎢ 75 ] field #0 type: int32
            ⎣ 00 ] type of the first element (entry #0)
 
            ⎡ 01 ] value #0: variant field #1 ("forest")
-           ⎢ 02 ] number of elemens in the vector
+           ⎢ 02 ] number of elements in the vector
            ⎢ 00 ] variant field #0 ("leaf")
            ⎢ 01 ⎤
            ⎢ 00 ⎥ 1 : int32 (little-endian)
@@ -442,108 +608,21 @@ Type table ⎢ 75 ] field #0 type: int32
 }
 
 ◊p{
-  Note that the type table does not contain record field or variant alternative names.
-}
-
-◊subsection-title["subtyping"]{Subtyping}
-
-◊p{
-  One of Candid's distinctive traits is the use of structural ◊a[#:href "https://en.wikipedia.org/wiki/Subtyping"]{subtyping} for defining backward-compatible interface evolutions◊sidenote["sn-upgradable"]{
-    The Candid spec calls such evolutions ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#upgrading-and-subtyping"]{type upgrades}.
-  }.
-  If a type ◊math{T} is a subtype of type ◊math{V} (denoted ◊math{T <: V}), then Candid can decode any value of type ◊math{T} into a value of type ◊math{V}.
-}
-
-◊p{
-  Let's inspect some of the basic subtyping rules for simple values (not functions):
+  We can observe a few interesting details about binary encoding.
 }
 
 ◊ul[#:class "arrows"]{
   ◊li{
-    Subtyping is ◊a[#:href "https://en.wikipedia.org/wiki/Reflexive_relation"]{reflexive}: any type is a subtype of itself.
-    You can't break the clients if you don't change the interface.
+    The binary format uses signed integers to represent types.
+    Negative integers correspond to built-in types and type constructors; non-negative integers are type table indices.
   }
   ◊li{
-    Subtyping is ◊a[#:href "https://en.wikipedia.org/wiki/Transitive_relation"]{transitive}: ◊math{T <: V} and ◊math{V <: W} implies ◊math{T <: W}.
-    A sequence of backward-compatible changes is backward-compatible.
+    The type table contains field hashes, not symbolic names.
   }
   ◊li{
-    Adding a new field to a record creates a subtype.◊br{}
-    ◊code{record { name : text; status : variant { user; admin } } <: record { name : text } }
+    The value encoding uses field indices within the type, not hashes.
+    Encoding small integers requires less space.
   }
-  ◊li{
-    Less intuitively, removing an ◊em{optional} field also creates a subtype.
-    ◊br{}
-    ◊code{record { name : text } <: record { name : text; status : ◊b{opt} variant { user; admin } } }
-  }
-  ◊li{
-    Removing a case in a variant creates a subtype.◊br{}
-    ◊code{variant { yes; no } <: variant { yes; no; unknown }}
-  }
-  ◊li{
-    All types are subtypes of the ◊code{reserved} type.
-    Candid will happily decode any type into a reserved field.
-  }
-}
-
-◊p{
-  Function subtyping follows the standard ◊a[#:href "https://en.wikipedia.org/wiki/Covariance_and_contravariance_(computer_science)#Function_types"]{variance rules}:
-  function ◊code{g : C -> D} is a subtype of function ◊code{f : A -> B} if ◊code{A <: C} and ◊code{D <: B}.
-  Informally, ◊code{g} must accept the same or more generic arguments as ◊code{f} and produce the same or more specific results as ◊code{f}.
-}
-
-◊p{
-  Understanding the subtyping rules for functions is helpful for reasoning about safe interface migrations.
-  Let's consider a few examples of common changes that preserve backward compatibility of a function interface (note that compatibility rules for arguments and results are often reversed).
-}
-
-◊ul[#:class "arrows"]{
-  ◊li{
-    Remove an unused record field (or, better, change its type to ◊code{reserved}) from the method ◊em{input} argument.
-  }
-  ◊li{
-    Add a new case to a variant in the method ◊em{input} argument.
-  }
-  ◊li{
-    Add a new field to the method ◊em{result} type.
-  }
-  ◊li{
-    Remove an optional field from the method ◊em{result} type.
-  }
-  ◊li{
-    Remove a case from the variant type in the method ◊em{result} type.
-  }
-}
-
-◊p{
-  The rules mentioned in this section are by no means complete or precise; please refer to the ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#rules"]{typing rules} section of the Candid specification for a formal definition.
-}
-◊p{
-  Before we close the subtyping discussion, let's consider a sequence of type changes where an optional field gets removed and re-introduced later with a different type.
-}
-
-◊figure{
-◊marginnote["mn-subtype-opt"]{
-  An example of the ◊em{special opt subtyping rule}.
-  Step ◊circled-ref[1] removes the optional ◊code{status} field; step ◊circled-ref[2] adds an optional field with the same name but an incompatible type.
-  The horizontal bar applies the transitive property of subtyping, eliminating the intermediate type without the ◊code{status} field.
-}
-◊source-code["candid"]{
-   record { name : text; status : opt variant { user;   admin   } }
-<: record { name : text } ◊circled-ref[1]
-<: record { name : text; status : opt variant { single; married } } ◊circled-ref[2]
-◊hr{}   record { name : text; status : opt variant { user;   admin   } }
-<: record { name : text; status : opt variant { single; married } }
-}
-}
-
-◊p{
-  Indeed, in Candid, ◊math{opt T <: V} holds for any types ◊math{T} and ◊math{V}.
-  This counter-intuitive property bears the name of the ◊em{special opt rule}, and it causes a lot of grief in practice.
-  Multiple developers reported changing an optional field in an incompatible way, causing the corresponding values to decode as ◊code{null} after the upgrade.
-}
-◊p{
-  Joachim Breitner's ◊a[#:href "https://www.joachim-breitner.de/blog/784-A_Candid_explainer__Opt_is_special"]{opt is special} article explores the topic in more detail and provides historical background.
 }
 
 }
@@ -580,7 +659,7 @@ Type table ⎢ 75 ] field #0 type: int32
  type User = record {
    name : text;
 -  age : opt nat;
--  age : ◊b{reserved};
++  age : ◊b{reserved};
  };
 
  service UserService : {
@@ -742,6 +821,31 @@ Type table ⎢ 75 ] field #0 type: int32
   Service interface compatibility tools, such as ◊code-ref["https://github.com/dfinity/candid/blob/e212e096cb726548c6d6edba1189375dc5ad364e/tools/didc/README.md"]{didc check}, ignore init args.
 }
 
+◊subsection-title["faq-add-result"]{Can I extend return values?}
+
+◊p{
+  Yes.
+  You can safely append a new value to a method result sequence.
+}
+
+◊source-code["good"]{
+ service TokenService : {
+-  balance : (of : principal) -> (nat) query;
++  balance : (of : principal) -> (amount : nat, last_tx_id : nat) query;
+ }
+}
+
+◊p{
+  Reordering arguments or results is a breaking change.
+}
+
+◊source-code["bad"]{
+ service TokenService : {
+-  balance : (of : principal) -> (amount : nat) query;
++  balance : (of : principal) -> (last_tx_id : nat, amount : nat) query;
+ }
+}
+
 ◊subsection-title["faq-post-upgrade-arg"]{How do I specify the post_upgrade arg?}
 
 ◊p{
@@ -771,6 +875,15 @@ Type table ⎢ 75 ] field #0 type: int32
 }
 }
 }
+
+◊subsection-title["faq-deterministic"]{Is Candid binary encoding deterministic?}
+
+◊p{
+  No.
+  Encoders have a lot of freedom in optimizing the rearranging the type table.
+  Upgrading to a newer version of the Candid library might change the exact message bytes the library produces.
+}
+
 
 }
 
