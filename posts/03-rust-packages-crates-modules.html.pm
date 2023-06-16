@@ -701,7 +701,3 @@ fn test_foo_frobnication() {
   }
 }
 }
-<<<<<<< Updated upstream
-}
-=======
->>>>>>> Stashed changes
