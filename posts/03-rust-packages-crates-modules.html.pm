@@ -2,23 +2,24 @@
 
 ◊(define-meta title "Rust at scale: packages, crates, and modules")
 ◊(define-meta keywords "rust")
-◊(define-meta summary "Lessons learned from scaling a Rust codebase.")
+◊(define-meta summary "Lessons learned from scaling a Rust code base.")
 ◊(define-meta doc-publish-date "2022-01-20")
-◊(define-meta doc-updated-date "2022-01-20")
+◊(define-meta doc-updated-date "2023-06-16")
 
 ◊section{
 ◊epigraph{
 ◊blockquote{
   ◊p{
-    Good decisions come from experience. Experience comes from making bad decisions.
+    Good judgment is the result of experience and experience the result of bad judgment.
   }
+  ◊footer{Attributed to Mark Twain.}
 }
 }
 
 ◊p{
-  I was lucky enough to see how ◊a[#:href "https://github.com/dfinity/ic"]{the Internet Computer (IC) Rust codebase} has grown from a few files to almost 350,000 lines of code within just about two years.
-  The team learned that code organization that works just fine for relatively small projects might start dragging you down over time.
-  In this article, we shall evaluate code organization options that Rust gives us and look at how to use them well.
+  The ◊a[#:href "https://internetcomputer.org"]{Internet Computer} (IC) ◊a[#:href "https://github.com/dfinity/ic"]{Rust code base} grew from an empty repository in June 2019 to almost 350,000 lines of code in early 2022.
+  This rapid growth taught me that decisions working fine for relatively small projects might start dragging the project down over time.
+  This article evaluates Rust code organization options and suggests ways to use them effectively.
 }
 }
 
@@ -26,9 +27,8 @@
 ◊section-title["personae"]{Dramatis Personae}
 
 ◊p{
-Rust terminology might be confusing for newcomers.
-I believe one of the reasons for that is that the term ◊em{crate} is somewhat overloaded in the community.
-Even the first edition of the venerable ◊a[#:href "https://doc.rust-lang.org/1.25.0/book/"]{The Rust Programming Language} book contained the following misleading passage
+Rust terminology proved to be confusing because the term ◊em{crate} is overloaded.
+For example, the first edition of the venerable ◊a[#:href "https://doc.rust-lang.org/1.25.0/book/"]{The Rust Programming Language} book contained the following misleading passage
 }
 ◊blockquote[#:cite "https://doc.rust-lang.org/1.25.0/book/first-edition/crates-and-modules.html"]{
 ◊p{
@@ -37,32 +37,31 @@ Even the first edition of the venerable ◊a[#:href "https://doc.rust-lang.org/1
 }
 }
 ◊p{
-Wait a minute, `library` and `package` are different things, aren't they?
-Mixing up these two concepts can lead to a lot of frustration, even if you already have a few months of experience with Rust under your belt.
-Tooling conventions contribute to the confusion as well: If a Rust package defines a library crate, cargo derives the library name from the package name by default (you can override the library name to be completely different, but please don't).
+Wait a minute, a library and a package are different concepts, aren't they?
+Mixing up these concepts leads to frustration, even if you already have a few months of Rust exposure.
+Tooling conventions also contribute to the confusion: If a Rust package defines a library crate, ◊code{cargo} automatically derives the library name from the package name◊sidenote["sn-library-name-override"]{You can override this behavior, but please don't.}.
 }
 ◊p{
-Let us become familiar with the code organization concepts we will be dealing with.
+Let's familiarize ourselves with the concepts we'll be dealing with.
 }
 
 ◊dl{
  ◊dt{Module}
  ◊dd{
-   A ◊a[#:href "https://doc.rust-lang.org/reference/items/modules.html"]{Module} is a language construct that acts as the basic building block of code organization within a ◊em{crate}.
-   A module is a container for functions, types, and nested modules.
-   Modules also specify the visibility for all the items that they contain or re-export.
+   A ◊a[#:href "https://doc.rust-lang.org/reference/items/modules.html"]{module} is the unit of code organization.
+   It is a container for functions, types, and nested modules.
+   Modules also specify the visibility for the names they define or re-export.
  }
  ◊dt{Crate}
  ◊dd{
-   A ◊a[#:href "https://doc.rust-lang.org/reference/crates-and-source-files.html"]{Crate} is the basic unit of compilation and linking.
-   Crates are also part of the language (◊code{crate} is a ◊a[#:href "https://doc.rust-lang.org/reference/keywords.html"]{keyword}), but you usually don't mention them much in your source code.
-   There are two main types of crates: libraries and executable files.
+   A ◊a[#:href "https://doc.rust-lang.org/reference/crates-and-source-files.html"]{crate} is the unit of compilation and linking.
+   Crates are part of the language (◊code{crate} is a ◊a[#:href "https://doc.rust-lang.org/reference/keywords.html"]{keyword}), but you don't mention them much in the source code.
+   Libraries and executables are the most common crate types.
  }
  ◊dt{Package}
  ◊dd{
-   A ◊a[#:href "https://doc.rust-lang.org/cargo/appendix/glossary.html#package"]{Package} is the basic unit of software distribution.
-   Packages are not part of the language, so you will not find them in the language reference.
-   Packages are artifacts of the Rust package manager, ◊a[#:href "https://doc.rust-lang.org/cargo/index.html"]{Cargo}.
+   A ◊a[#:href "https://doc.rust-lang.org/cargo/appendix/glossary.html#package"]{package} is the unit of software distribution.
+   Packages are not part of the language but artifacts of the Rust package manager, ◊a[#:href "https://doc.rust-lang.org/cargo/index.html"]{Cargo}.
    Packages can contain one or more crates: at most one library and any number of executables.
  }
 }
@@ -72,61 +71,53 @@ Let us become familiar with the code organization concepts we will be dealing wi
 ◊section-title["modules-vs-crates"]{Modules vs Crates}
 
 ◊p{
-  In this section, I will use the terms "crate" and "package" almost interchangeably, assuming that most of your crates are libraries.
-  As you remember, we can have at most one library crate per package.
+  When you factor a large codebase into components, there are two extremes:
+  to have a few large packages with lots of modules or
+  to have lots of small packages.
 }
 
-◊p{
-  When you factor a large codebase into components, there are two extremes you can go to:
-  (1) to have a few big packages with lots of modules in each package, or
-  (2) to have lots of tiny packages with just a bit of code in each package.
-}
-
-◊p{Having few packages with lots of modules definitely has some advantages:}
+◊p{Having few packages with lots of modules has some advantages:}
 
 ◊ul[#:class "arrows"]{
-◊li{It's less work to add or remove a module than to add or remove a package.}
-◊li{
-Modules are more flexible.
-For example, modules in the same crate can form a dependency cycle: module ◊code{foo} can use definitions from module ◊code{bar}, which in turn can use definitions from module ◊code{foo}.
-In contrast, the package dependency graph must be acyclic.
-}
-◊li{You don't have to modify your ◊code{Cargo.toml} file every time you shuffle modules around.}
+  ◊li{
+    Adding or removing a module is less work than adding or removing a package.
+  }
+  ◊li{
+    Modules are more flexible.
+    For example, modules in the same crate can form a dependency cycle: module ◊code{foo} can use definitions from module ◊code{bar}, which in turn can use definitions from module ◊code{foo}.
+    In contrast, the package dependency graph must be acyclic.
+  }
+  ◊li{
+    You don't have to modify your ◊code{Cargo.toml} file every time you rearrange your modules.
+  }
 }
 
 ◊p{
-  Sounds like modules are a clear winner.
-  In the ideal world where arbitrary-sized Rust crates compile instantly, turning the whole repository into one huge package with lots of modules would be the most convenient setup.
-  The bitter reality though is that Rust takes quite some time to compile, and modules do not help you shorten the compilation time:
+  In the ideal world where Rust compiles instantly, turning the repository into a massive package with many modules would be the most convenient setup.
+  The bitter reality is that Rust takes quite some time to compile, and modules don't help you shorten the compilation time:
 }
 
 ◊ul[#:class "arrows"]{
 ◊li{
-  The basic unit of compilation is ◊em{crate}, not ◊em{module}.
-  You have to recompile all the modules in a crate even you change only a single module.
-  The more code you have in a single crate, the longer it takes to compile.
+  The basic unit of compilation is a ◊em{crate}, not a ◊em{module}.
+  You must recompile all the modules in a crate even if you change only one.
+  The more code you put in a crate, the longer it takes to compile.
 }
 ◊li{
-  Cargo can compile crates in parallel.
-  Modules do not form translation units by themselves, so cargo cannot parallelize the compilation of a single crate.
+  Cargo parallelizes compilations across crates, not within a crate.
   You don't use the full potential of your multi-core CPU if you have a few large packages.
 }
 }
 
 ◊p{
-  It all boils down to the tradeoff between convenience and compilation speed.
-  Modules are very convenient, but they don't help the compiler do less work.
-  Packages are less convenient, but they deliver a better overall development experience as the code base grows.
+  It boils down to the tradeoff between convenience and compilation speed.
+  Modules are convenient but don't help the compiler do less work.
+  Packages are less convenient but deliver better compilation speed as the code base grows.
 }
 }
 
 ◊section{
 ◊section-title["code-organization-advice"]{Advice on code organization}
-
-◊p{
-As usual, do not follow this advice blindly.
-Check if it makes your code structure clearer and your compilation times shorter.
-}
 
 ◊advice["avoid-dependency-hubs"]{Split dependency hubs.}
 
@@ -134,67 +125,72 @@ Check if it makes your code structure clearer and your compilation times shorter
 ◊ul[#:class "arrows"]{
 ◊li{
   Packages with lots of dependencies.
-  Examples from the IC codebase are: (1) the ◊code{test-utils} package that contains auxiliary code for integration tests (
-  proptest strategies, mock and fake implementations of various components, helper functions, etc.),
-  and the ◊code{replica} package that instantiates and starts all the components.
+  Two examples from the IC codebase are the ◊code{test-utils} package containing auxiliary code for integration tests
+  (proptest strategies, mock and fake component implementations, helper functions, etc.),
+  and the ◊code{replica} package instantiating all the components.
 }
 ◊li{
   Packages with lots of ◊em{reverse dependencies}.
-  Examples from the IC codebase are ◊code{types} and ◊code{interfaces} packages that contain definitions and trait implementations
-  for common types and traits specifying interfaces of major components.
+  Examples from the IC codebase are the ◊code{types} package containing common type definitions and the ◊code{interfaces} package specifying component interfaces.
 }
 }
 
 ◊figure[#:class "grayscale-diagram"]{
-  ◊marginnote["mn-dep-hubs"]{A small subgraph of the Internet Computer project package dependency graph. ◊code{types} and ◊code{interfaces} are type-one dependency hubs, ◊code{replica} is a type-two dependency hub, ◊code{test-utils} is both a type-one and a type-two hub.}
+  ◊marginnote["mn-dep-hubs"]{A piece of the Internet Computer package dependency graph. ◊code{types} and ◊code{interfaces} are type-two dependency hubs, ◊code{replica} is a type-one dependency hub, ◊code{test-utils} is both a type-one and a type-two hub.}
   ◊(embed-svg "images/03-dep-hubs.svg")
 }
 
 ◊p{
-  The main reason why dependency hubs are undesirable is their devastating effect on incremental compilation.
-  If you modify a package with lots of reverse dependencies (e.g., ◊code{types}),
-  cargo has to re-compile all those dependencies to check that your change makes sense.
-}
-
-◊p{
-  The only way to get rid of dependency hubs is to split them into smaller packages.
+  Dependency hubs are undesirable because of their devastating effect on incremental compilation.
+  If you modify a package with many reverse dependencies (e.g., ◊code{types}), cargo must to recompile all those dependencies to check your change.
 }
 
 ◊p{
   Sometimes it is possible to eliminate a dependency hub.
-  For example, ◊code{test-utils} is a conglomeration of independent utilities.
-  We can group these utilities by component they help to test and factor them into multiple ◊code{◊em{<component>}-test-utils} packages.
+  For example, the ◊code{test-utils} package is a union of independent utilities.
+  We can group these utilities by the component they help to test and factor the code into multiple ◊code{◊em{<component>}-test-utils} packages.
 }
 
 ◊p{
-  More often, however, there is no way to get rid of a dependency hub entirely.
+  More often, however, dependency hubs will have to stay.
   Some types from ◊code{types} are pervasive.
-  The package that contains those types is doomed to be a type-one dependency hub.
-  The ◊code{replica} package contains the main function that ties everything together so it has to depend on all components.
-  The ◊code{replica} is doomed to be a type-two dependency hub.
-  The best you can do is to localize such hubs and make the code inside relatively stable.
+  The package containing these types is doomed to be a type-two dependency hub.
+  The ◊code{replica} package wiring all the components is doomed to be a type-one dependency hub.
+  The best you can do is to localize the hubs and make them small and stable.
 }
 
 ◊advice["generic-no-deps"]{Consider using generics and associated types to eliminate dependencies.}
 
 ◊p{
-  Among the first few packages that appeared in the IC codebase were: ◊code{types}, ◊code{interfaces}, and ◊code{replicated_state} (that package defines data structures that represent the state of a single subnet).
-  But why do we even need the ◊code{types} package?
-  Types are an integral part of the interface, why not define them in the ◊code{interfaces} package as well?
+  This advice needs an example, so bear with me.
+}
+
+◊p{
+  ◊code{types}, ◊code{interfaces}, and ◊code{replicated_state} were among the first packages in the IC code base.
+  The ◊code{types} package contains common type definitions, the ◊code{interfaces} package defines traits for software components, and the ◊code{replicated_state} package defines IC's replicated state machine data structures, with the ◊code{ReplicatedState} type at the root.
 }
 ◊p{
-  The problem is that some interfaces operate on instances of ◊code{ReplicatedState}.
+  But why do we need the ◊code{types} package?
+  Types are an integral part of the interface.
+  Why not define them in the ◊code{interfaces} package?
+}
+◊p{
+  The problem is that some interfaces refer to the ◊code{ReplicatedState} type.
   And the ◊code{replicated_state} package depends on type definitions from the ◊code{types} package.
-  So if all the types lived in the ◊code{interfaces} package, there would be a circular dependency between ◊code{interfaces} and ◊code{replicated_state}.
-  Generally, there are two ways to break a circular dependency:
-    (1) to move common definitions into another package, or
-    (2) to merge two packages into a single one.
-  Merging interfaces with the replicated state was not an option.
-  So we conceived ◊code{types} to contain types that both ◊code{interfaces} and ◊code{replicated_state} depend on.
+  If all the types lived in the ◊code{interfaces} package, there would be a circular dependency between ◊code{interfaces} and ◊code{replicated_state}.
+}
+◊figure{
+  ◊marginnote["mn-types-interfaces-state"]{The dependency graph for ◊code{types}, ◊code{interfaces}, and ◊code{replicated_state} packages.}
+  ◊(embed-svg "images/03-types-ifaces-state.svg")
 }
 ◊p{
-  An interesting property of trait definitions in ◊code{interfaces} is that they only depend on the ◊code{ReplicatedState} type by name.
-  These definitions do not need to know the definition of that type.
+  When we need to break a circular dependency, we can move common definitions into a new package or merge some packages.
+  The ◊code{replicated_state} package is heavy; we didn't want to merge its contents with ◊code{interfaces}.
+  So we took the first option and moved the types shared between ◊code{interfaces} and ◊code{replicated_state} into the ◊code{types} package.
+}
+◊p{
+  One property of trait definitions in the ◊code{interfaces} package is that the traits depend only on the ◊code{ReplicatedState} type ◊em{name}.
+  The traits do not need to know ◊code{ReplicatedState}'s definition.
 }
 
 ◊figure{
@@ -209,8 +205,8 @@ trait StateManager {
 }
 
 ◊p{
-  This property of the trait definitions allows us to break the direct dependency between ◊code{interfaces} and ◊code{replicated_state}.
-  We just need to replace the exact type with a generic type argument.
+  This property allows us to break the direct dependency between ◊code{interfaces} and ◊code{replicated_state}.
+  We only need to replace the exact type with a generic type argument.
 }
 
 ◊figure{
@@ -227,15 +223,14 @@ trait StateManager {
 }
 
 ◊p{
-  This little trick saves us a lot of compilation time:
-  Now we do not need to recompile the ◊code{interfaces} package and its numerous dependencies every time we add a new field to the replicated state.
+  Now, we don't need to recompile the ◊code{interfaces} package and its numerous dependencies every time we add a new field to the replicated state.
 }
 
 ◊advice["dyn-polymorphism"]{Prefer runtime polymorphism.}
 
 ◊p{
-  One of the big questions that the team had when we were designing the component architecture is how to connect components.
-  Should we pass instances of components around as ◊code{Arc<dyn StateManager>} (runtime polymorphism) or rather as generic arguments (compile-time polymorphism)?
+  One of the design choices we had was how to connect software components.
+  Should we pass instances of components as ◊code{Arc<dyn Interface>} (runtime polymorphism) or as generic type arguments (compile-time polymorphism)?
 }
 
 ◊figure{
@@ -259,19 +254,21 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
 }
 
 ◊p{
-  Compile-time polymorphism is an indispensable tool, but a heavy-weight one.
-  Most team members also found that the code becomes easier to write, read, and understand when we use runtime polymorphism for composition.
-  Delaying work until runtime also helps with compile times.
+  Compile-time polymorphism is an essential tool but a heavy-weight one.
+  Runtime polymorphism requires less code and results in less binary bloat.
+  Most team members also found the ◊code{dyn} version easier to read.
 }
 
 ◊advice["explicit-dependencies"]{Prefer explicit dependencies.}
 
 ◊p{
-  One of the most common questions that new developers ask on the dev channel is something like ◊quote{"Why do we explicitly pass around loggers? Global loggers seem to work pretty well."}.
-  That's a very good question.
-  I would ask the same thing two years ago!
-  Sure, global variables are ◊em{bad}, but my previous experience suggested that loggers and metrics are somehow special.
-  Oh well, they aren't after all.
+  One of the most common questions new developers ask on the dev channel is ◊quoted{Why do we explicitly pass around loggers? Global loggers seem to work pretty well.}
+  What a great question.
+  I would ask the same thing in 2019!
+}
+◊p{
+  Global variables are ◊a[#:href "http://wiki.c2.com/?GlobalVariablesAreBad"]{◊em{bad}}, but my previous experience suggested that loggers and metric sinks are special.
+  Oh well, they aren't, after all.
 }
 ◊p{
   The usual problems with implicit state dependencies are especially prominent in Rust.
@@ -279,37 +276,45 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
 ◊ul[#:class "arrows"]{
 ◊li{
   Most Rust libraries do not rely on true global variables.
-  The usual way to pass implicit state around is to use ◊a[#:href "https://doc.rust-lang.org/stable/std/macro.thread_local.html"]{thread-local} state.
-  This becomes a problem when you start spawning new threads: these threads tend to inherit the values of thread locals that you did not expect.
+  The usual way to pass an implicit state is to use a ◊a[#:href "https://doc.rust-lang.org/stable/std/macro.thread_local.html"]{thread-local} variable, which can become problematic when you spawn a new thread.
+  New threads tend to inherit and retain unexpected values of thread locals.
 }
 ◊li{
-  Cargo runs tests in parallel by default.
-  If you're not careful with how you're passing loggers between threads, your test output might become an intangible mess.
-  Especially if your code uses loggers in background threads.
-  Passing loggers explicitly eliminates that problem.
+  Cargo runs tests within a test binary in parallel by default.
+  The test output might become an intangible mess if you’re not careful with threading loggers through the call stack.
+  The problem usually manifests when a background thread needs to access the log.
+  Explicitly passing loggers eliminates that problem.
 }
 ◊li{
-  Testing code that relies on implicit state in a multi-threaded environment is often hard or impossible.
-  The code that records your metrics is, well, ◊em{code}.
+  Testing code relying on an implicit state often becomes hard or impossible in a multi-threaded environment.
+  The code recording your metrics is, well, ◊em{code}.
   It also deserves to be tested.
 }
 ◊li{
-  If you use a library that relies on implicit thread-local state, it is easy to introduce subtle bugs by depending on incompatible versions of the library in different packages.
-  For example, we use the ◊a[#:href "https://crates.io/crates/prometheus"]{prometheus} package to record metrics.
-  This package relies on an implicit thread local variable that holds the current metrics registry.
-  ◊p{
-    At some point we could not see metrics recorded by some of our components.
-    Our code seemed correct, yet the metrics were not there.
-    It turned out that one of the packages used prometheus version ◊code{0.9} while all other packages used ◊code{0.10}.
-    According to ◊a[#:href "https://semver.org/"]{semver}, these versions are incompatible, so cargo linked both versions into the binary, introducing ◊em{two} implicit registries.
-    Only one of these implicit registries could be exposed.
-    The HTTP endpoint never pulled the metrics recorded to the other registry.
-  }
-  ◊p{
-    Passing loggers, metrics registries, async runtimes, etc. explicitly turns a runtime bug into a compile time error: the compiler will complain if you pass incompatible types around.
-    Switching to passing the metrics registry explicitly is what helped me to discover the issue with the metrics recording.
-  }
-  }
+  If you use a library relying on implicit state, you can introduce subtle bugs if you depend on incompatible library versions in different packages.
+}
+}
+◊p{
+  The latter point desperately needs an example.
+  So here is a little detective story.
+}
+◊p{
+  We use the ◊a[#:href "https://crates.io/crates/prometheus"]{prometheus} package for metrics recording.
+  This package can keep the metrics registry in a ◊a[#:href "https://docs.rs/prometheus/0.10.0/src/prometheus/registry.rs.html#307-317"]{global variable}.
+}
+◊p{
+  One day, we discovered a bug: we could not see metrics from some of our components.
+  Our code seemed correct, yet the metrics were missing.
+}
+◊p{
+  One of the packages depended on prometheus version ◊code{0.9}, while all other packages used ◊code{0.10}.
+  According to ◊a[#:href "https://semver.org/"]{semver}, these versions are incompatible, so cargo linked both versions into the binary, introducing ◊em{two} implicit registries.
+  We exposed only the ◊code{0.10} version registry over the HTTP interface.
+  As you correctly guessed, the missing components recorded metrics to the ◊code{0.9} registry.
+}
+◊p{
+  Passing loggers, metrics registries, and async runtimes explicitly turns a runtime bug into a compile-time error.
+  Switching to explicit passing the metrics registry helped me find and fix the bug.
 }
 ◊p{
   The official documentation of the venerable ◊a[#:href "https://crates.io/crates/slog"]{slog} package also ◊a[#:href "https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around"]{recommends passing loggers explicitly}:
@@ -325,30 +330,31 @@ pub struct Consensus<AP: ArtifactPool, SM: StateManager> {
   }
 }
 ◊p{
- By passing state implicitly, you gain temporary convenience, but make your code less clear, less testable, and more error prone.
- Every type of resource that we used to pass implicitly caused hard to diagnose issues (◊a[#:href "https://crates.io/crates/slog-scope"]{scoped} loggers, ◊a[#:href "https://crates.io/crates/prometheus"]{Prometheus} metrics registries, ◊a[#:href "https://crates.io/crates/rayon"]{Rayon} thread pools, ◊a[#:href "https://crates.io/crates/tokio"]{Tokio} runtimes, to name a few) and wasted a lot of engineering time.
+ By passing state implicitly, you gain temporary convenience but make your code less clear, less testable, and more error-prone.
+ Every type of resource we passed implicitly◊sidenote["sn-resource-types"]{◊a[#:href "https://crates.io/crates/slog-scope"]{scoped} loggers, ◊a[#:href "https://crates.io/crates/prometheus"]{Prometheus} metrics registries, ◊a[#:href "https://crates.io/crates/rayon"]{Rayon} thread pools, ◊a[#:href "https://crates.io/crates/tokio"]{Tokio} runtimes, to name a few.} caused hard-to-diagnose issues and wasted a lot of engineering time.
 }
 ◊p{
-  Some people in other programming communities also realized that global loggers are evil.
-  You might enjoy reading ◊a[#:href "https://www.yegor256.com/2019/03/19/logging-without-static-logger.html"]{Logging Without a Static Logger}, for example.
+  People in other programming communities also realized that global loggers are evil.
+  You might enjoy reading ◊a[#:href "https://www.yegor256.com/2019/03/19/logging-without-static-logger.html"]{Logging Without a Static Logger}.
 }
 
 ◊advice["dedup-dependencies"]{Deduplicate dependencies.}
 
 ◊p{
-  Cargo makes it easy to add dependencies to your code, but it provides few tools to consolidate and maintain those dependencies in a large workspace.
-  At least until cargo developers implement ◊a[#:href "https://github.com/rust-lang/rfcs/pull/2906"]{RFC 2906}.
-  Until then, every time you bump the major version of a dependency, try to do it consistently across all the packages in your workspace.
-  ◊a[#:href "https://doc.rust-lang.org/cargo/commands/cargo-update.html"]{Cargo update} can help you with that.
+  Cargo makes it easy to add dependencies, but this convenience comes with a cost.
+  You might accidentally introduce incompatible version of the same package.
 }
 ◊p{
-  You do not have to unify the feature sets for the same dependency across separate workspace packages.
-  Cargo compiles each dependency version once, thanks to the ◊a[#:href "https://doc.rust-lang.org/cargo/reference/features.html#feature-unification"]{feature unification} mechanism.
-}
-◊p{
-  Using multiple versions of the same package might result in correctness issues, especially with packages that have zero as their major version (◊code{0.y.z}).
+  Multiple versions of the same package might result in correctness issues, especially with packages with zero major version component (◊code{0.y.z}).
   If you depend on versions ◊code{0.1} and ◊code{0.2} of the same package in a single binary, cargo will link both versions into the executable.
   If you ever pulled your hair off trying to figure out why you get that ◊a[#:href "https://github.com/awslabs/aws-lambda-rust-runtime/issues/266"]{"there is no reactor running"} error, you know how painful these issues can be to debug.
+}
+◊p{
+  ◊a[#:href "https://doc.rust-lang.org/cargo/reference/workspaces.html#the-dependencies-table"]{Workspace dependencies} and ◊a[#:href "https://doc.rust-lang.org/cargo/commands/cargo-update.html"]{cargo update} will help you keep your dependency graph in order.
+}
+◊p{
+  You do not have to unify the feature sets for the same dependency across the workspace packages.
+  Cargo compiles each dependency version once, thanks to the ◊a[#:href "https://doc.rust-lang.org/cargo/reference/features.html#feature-unification"]{feature unification} mechanism.
 }
 
 ◊advice["tests-in-separate-files"]{Put unit tests into separate files.}
@@ -375,7 +381,7 @@ mod tests {
 }
 }
 ◊p{
-  That's very convenient, but we found that it can slow down test compilation time considerably.
+  This feature is very convenient, but it can slow down test compilation time.
   Cargo build cache can get confused when you modify the file, tricking cargo into re-compiling the crate under both ◊code{dev} and ◊code{test} profiles, even if you touched only the test part.
   By trial and error, we discovered that the issue does not occur if the tests live in a separate file.
 }
@@ -402,16 +408,15 @@ mod tests;
 ◊section-title["common-pitfalls"]{Common pitfalls}
 
 ◊p{
-  In this section, we will take a look at some tricky issues that Rust newcomers might run into.
-  I experienced these issues myself, and I saw several colleagues running into them as well.
+  This section describes common issues Rust newcomers might run into.
+  I experienced these issues myself and saw several colleagues struggling with them.
 }
 
 ◊subsection-title["confusing-crates-and-packages"]{Confusing crates and packages}
 
 ◊p{
-Imagine you have package ◊code{image-magic} that defines a library for working with images and also provides a command-line utility for image transformation called ◊code{transmogrify}.
+Imagine you have package ◊code{image-magic} defining a library for image processing and providing a command-line utility for image transformation called ◊code{transmogrify}.
 Naturally, you want to use the library to implement ◊code{transmogrify}.
-Your ◊code{Cargo.toml} file will look like the following snippet of code.
 }
 
 ◊figure{
@@ -434,7 +439,7 @@ path = "src/transmogrify.rs"
 
 
 ◊p{
-Now you open ◊code{transmogrify.rs} and write something like:
+Now you open ◊code{transmogrify.rs} and write something like the following:
 }
 
 ◊figure{
@@ -444,7 +449,7 @@ use crate::{Image, transform_image}; //< Compile error.
 }
 
 ◊p{
-The compiler will become upset and will tell you something like
+The compiler will become upset and tell you something like
 }
 
 ◊figure{
@@ -464,6 +469,8 @@ Oh, how is that?
 Aren't ◊code{lib.rs} and ◊code{transmogrify.rs} in the same ◊em{crate}?
 No, they are not.
 The ◊code{image-magic} ◊em{package} defines two ◊em{crates}: a ◊em{library crate} named ◊code{image_magic} (note that cargo replaced the dash in the package name with an underscore) and a ◊em{binary crate} named ◊code{transmogrify}.
+}
+◊p{
 So when you write ◊code{use crate::Image} in ◊code{transmogrify.rs}, you tell the compiler to look for the type defined in the same binary.
 The ◊code{image_magic} ◊em{crate} is just as external to ◊code{transmogrify} as any other library would be, so we have to specify the library name in the use declaration:
 }
@@ -477,42 +484,41 @@ use image_magic::{Image, transform_image}; //< OK.
 ◊subsection-title["quasi-circular"]{Quasi-circular dependencies}
 
 ◊p{
-To understand this issue, we'll first have to learn about ◊a[#:href "https://doc.rust-lang.org/cargo/reference/profiles.html"]{Cargo build profiles}.
-Build profiles are named compiler configurations that cargo uses when compiling a crate.
+To understand this issue, we'll first learn about ◊a[#:href "https://doc.rust-lang.org/cargo/reference/profiles.html"]{Cargo build profiles}.
+Build profiles are named compiler configurations.
 For example:
 }
 ◊dl{
  ◊dt{release}
  ◊dd{
-   This is the profile that you want to use for the binaries you deploy to production.
+   The profile for production binaries.
    Highest optimization level, disabled debug assertions, long compile times.
-   Cargo uses this profile when you run ◊br{} ◊code{cargo build --release}.
+   Cargo uses this profile when you run ◊code{cargo build --release}.
  }
  ◊dt{dev}
  ◊dd{
-   This is the profile that you use for the normal development cycle, the profile that you get when you run ◊code{cargo build}.
-   Debug asserts and overflow checks are enabled, optimizations are disabled for much faster compile times.
+   The profile for the normal development cycle.
+   Debug asserts and overflow checks are enabled, optimizations are disabled for faster compile times.
+   Cargo uses this profile when you run ◊code{cargo build}.
  }
  ◊dt{test}
  ◊dd{
    Mostly the same as the ◊em{dev} profile.
+   When you test a library crate, cargo builds the library with the ◊code{test} profile and injects the main function executing the test harness.
    This profile is enabled when you run ◊code{cargo test}.
-   When you test a library crate, cargo builds this library with a test profile and injects the main function that executes the test harness.
-   Cargo builds dependencies of the crate being tested using the ◊em{dev} profile.
+   Cargo builds dependencies of the crate under test using the ◊em{dev} profile.
  }
 }
 
 ◊p{
-  Imagine now that you have a package with a fancy library ◊code{foo}.
-  You want to have good test coverage for that library, and you want the tests to be easy to write.
-  So you introduce another package, ◊code{foo-test-utils}, that make testing code that works with ◊code{foo} significantly easier.
+  Imagine now that you have a package with a library ◊code{foo}.
+  You want good test coverage and the tests to be easy to write.
+  So you introduce another package with many test utilities for ◊code{foo}, ◊code{foo-test-utils}.
 }
 
 ◊p{
   It also feels natural to use ◊code{foo-test-utils} for testing the ◊code{foo} itself.
   Let's add ◊code{foo-test-utils} as a dev dependency of ◊code{foo}.
-  Wait doesn't this create a dependency cycle?
-  ◊code{foo} depends on ◊code{foo-test-utils} that depends on ◊code{foo}, right?
 }
 
 ◊figure{
@@ -546,13 +552,21 @@ foo = { path = "../foo" }
 }
 
 ◊p{
-  There is no circular dependency because cargo compiles ◊code{foo} that ◊code{foo-test-utils} depends on using the ◊em{dev} profile.
-  Then cargo compiles the test version of ◊code{foo} with the test harness using the ◊em{test} profile and links it with ◊code{foo-test-utils}.
+  Wait, didn't we create a dependency cycle?
+  ◊code{foo} depends on ◊code{foo-test-utils} that depends on ◊code{foo}, right?
+}
+
+◊p{
+  There is no circular dependency because cargo compiles ◊code{foo} twice: once with ◊em{dev} profile to link with ◊code{foo-test-utils} and once with ◊em{test} profile to add the test harness.
 }
 
 ◊figure[#:class "grayscale-diagram"]{
   ◊marginnote["mn-dep-foo"]{Dependency diagram for ◊code{foo} library test.}
   ◊(embed-svg "images/03-foo-test-profile.svg")
+}
+
+◊p{
+  Time to write some tests!
 }
 
 ◊figure{
@@ -613,13 +627,13 @@ error[E0308]: mismatched types
 
 ◊p{
   What could that mean?
-  The reason we get an error is that type definitions in the test version of ◊code{foo} aren't compatible with type definitions in the dev version of ◊code{foo}.
-  These are different, incompatible crates even though these crates have the same name.
+  The compiler tells us that type definitions in the ◊em{test} and the ◊em{dev} versions of ◊code{foo} are incompatible.
+  Technically, these are different, incompatible crates even though these crates share the name.
 }
 
 ◊p{
-  The way out of this trouble is to define a separate integration test crate in the ◊code{foo} package and move the tests there.
-  You'll be limited to testing only the public interface of the ◊code{foo} library.
+  The way out of trouble is to define a separate integration test crate in the ◊code{foo} package and move the tests there.
+  This approach allows you to test only the public interface of the ◊code{foo} library.
 }
 
 ◊figure{
@@ -634,7 +648,7 @@ fn test_foo_frobnication() {
 }
 
 ◊p{
-  The test above compiles fine because both this test and ◊code{foo_test_utils} are linked against the version of the ◊code{foo} library build with the ◊em{dev} profile.
+  The test above compiles fine because cargo links the test and ◊code{foo_test_utils} with the ◊em{dev} version of ◊code{foo}.
 }
 
 ◊figure[#:class "grayscale-diagram"]{
@@ -643,8 +657,8 @@ fn test_foo_frobnication() {
 }
 
 ◊p{
-  Quasi-circular dependencies are tricky and confusing.
-  They also tend to have negative effect on compilation time.
+  Quasi-circular dependencies are confusing.
+  They also increase the incremental compilation time considerably.
   My advice is to avoid them when possible.
 }
 }
@@ -653,17 +667,41 @@ fn test_foo_frobnication() {
 ◊section-title["conclusion"]{Conclusion}
 
 ◊p{
-  In this article, we looked at Rust's tools to organize our code.
-  Rust's module system is very convenient, but packing many modules into a single crate negatively affects the build time.
-  Our experience suggests that factoring the code base into many cohesive packages instead is a more scalable approach in most cases.
+  In this article, we looked at Rust's code organization tools.
+  The key takeaways:
+}
+◊ul[#:class "arrows"]{
+  ◊li{
+    Understand the difference between modules, crates, and packages.
+  }
+  ◊li{
+    Rust's module system is convenient, but packing many modules into a single crate degrades the build time.
+  }
+  ◊li{
+    Factoring the code into many cohesive packages is the most scalable approach.
+  }
+  ◊li{
+    All implicit state is nasty.
+  }
 }
 }
 
 ◊section{
-◊section-title["links"]{Links}
+◊section-title["links"]{Further reading}
 
 ◊ul[#:class "arrows"]{
-  ◊li{◊a[#:href "https://www.reddit.com/r/rust/comments/s818q3/blog_post_rust_at_scale_packages_crates_and/"]{Discussion on r/rust}}
-  ◊li{A fantastic series of articles by ◊a[#:href "https://github.com/matklad"]{Alexey Kladov} titled ◊a[#:href "https://matklad.github.io/2021/09/05/Rust100k.html"]{One Hundred Thousand Lines of Rust}.}
+  ◊li{
+    Discuss this article on ◊a[#:href "https://www.reddit.com/r/rust/comments/s818q3/blog_post_rust_at_scale_packages_crates_and/"]{r/rust}.
+  }
+  ◊li{
+    ◊a[#:href "https://github.com/matklad"]{Alexey Kladov} wrote a fantastic blog post series on the same topic, ◊a[#:href "https://matklad.github.io/2021/09/05/Rust100k.html"]{One Hundred Thousand Lines of Rust}.
+  }
+  ◊li{
+    If you liked this article, consider reading ◊a[#:href "/posts/17-scaling-rust-builds-with-bazel.html"]{Scaling Rust builds with Bazel}.
+  }
 }
 }
+<<<<<<< Updated upstream
+}
+=======
+>>>>>>> Stashed changes
