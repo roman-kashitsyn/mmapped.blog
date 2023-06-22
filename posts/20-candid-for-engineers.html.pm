@@ -4,7 +4,7 @@
 ◊(define-meta keywords "ic")
 ◊(define-meta summary "A practical guide to the world's most advanced interface definition language.")
 ◊(define-meta doc-publish-date "2023-06-14")
-◊(define-meta doc-updated-date "2023-06-14")
+◊(define-meta doc-updated-date "2023-06-22")
 
 ◊section{
 ◊section-title["introduction"]{Introduction}
