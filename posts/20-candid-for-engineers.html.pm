@@ -97,11 +97,13 @@ Note the difference between a service type definition (top) and a service defini
 
 ◊p{
   Two syntactic forms can introduce a service definition: with and without init arguments.
-  The technical term for a service definition with init arguments is ◊a[#:href "https://docs.rs/candid/0.8.4/candid/types/internal/enum.Type.html#variant.Class"]{class}.
+  The technical term for a service definition with init arguments is ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#services"]{service constructor}◊sidenote["sn-class"]{
+    Some implementations use the term ◊quoted{◊a[#:href "https://docs.rs/candid/0.8.4/candid/types/internal/enum.Type.html#variant.Class"]{class}}.
+  }
 }
 
 ◊figure{
-◊marginnote["mn-service-vs-class"]{
+◊marginnote["mn-service-vs-constructor"]{
   Service definitions with (top) and without (bottom) init arguments (rendered in bold font).
 }
 ◊source-code["candid"]{
@@ -120,9 +122,14 @@ Note the difference between a service type definition (top) and a service defini
 }
 
 ◊p{
-  Init arguments describe the value that the canister maintainers must specify when they instantiate the canister.
-  Service clients don't need to worry about these arguments.
-  Consequently, init arguments are not part of the public interface, so most tools ignore them (◊code-ref["https://internetcomputer.org/docs/current/references/cli-reference/dfx-canister#dfx-canister-install"]{dfx canister install} is a notable exception).
+  Conceptually, a service constructor represents an uninitialized canister, whereas a service represents a deployed canister.
+  Init arguments describe the value the canister maintainers must specify when instantiating the canister.
+}
+◊p{
+  Ideally, canister ◊em{build} tools should produce a ◊b{service constructor}.
+  If the module contains no init args, the tools should use the form ◊code{service : () -> {◊ellipsis{}}}.
+  Canister ◊em{deploy} tools, such as ◊code-ref["https://internetcomputer.org/docs/current/references/cli-reference/dfx-deploy"]{dfx deploy}, should use the init args to install the canister, and use the ◊b{service} as the public metadata, stripping out the init args.
+  As of July 2023, Motoko compiler and Rust CDK don't follow these conventions, so people often conflate the two concepts.
 }
 
 ◊subsection-title["types"]{Types}
@@ -156,6 +163,15 @@ Note the difference between a service type definition (top) and a service defini
     The ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-reserved"]{reserved} type for retiring unused fields.
   }
   ◊li{
+    The ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-empty"]{empty} that has no constructors.
+    It might be helpful for marking some alternatives as impossible, for example, ◊code{variant { Ok : int; Err : empty }}.
+  }
+  ◊li{
+    The ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-null"]{null} type (also known as the ◊a[#:href "https://en.wikipedia.org/wiki/Unit_type"]{unit type}) containing a single value, ◊code{null}, .
+    You use it implicitly every time you define variant alternatives not containing any data.
+    For example, ◊code{variant { A; B }} and ◊code{variant { A : null; B : null }} are equivalent types.
+  }
+  ◊li{
     The ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-func---"]{func} type family describing actor method signatures.
     Values of such types represent references to actor methods (actor address + method) of the corresponding type.
   }
@@ -167,8 +183,12 @@ Note the difference between a service type definition (top) and a service defini
 }
 
 ◊p{
-  There are a few more obscure types, such as ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-empty"]{empty} (a type with no constructors) and ◊code-ref["https://internetcomputer.org/docs/current/references/candid-ref#type-null"]{null} (a type containing a single value, ◊code{null}).
-  These types are essential from the type-theoretical point of view, but you'll probably never use them in practice.
+  Candid also allows recursive and mutually-recursive types.
+}
+
+◊source-code["good"]{
+type tree = variant { leaf : nat; children : forest };
+type forest = vec tree;
 }
 
 ◊subsection-title["records-and-variants"]{Records and variants}
@@ -374,6 +394,14 @@ type ◊b{S2} = service {
   Informally, ◊code{g} must accept the same or more generic arguments as ◊code{f} and produce the same or more specific results as ◊code{f}.
 }
 
+◊figure[#:class "grayscale-diagram"]{
+  ◊marginnote["mn-function-variance"]{
+    Function subtyping rules.
+    As the interface evolves, the input types become more general, while output types become more restricted.
+  }
+  ◊(embed-svg "images/21-function-variance.svg")
+}
+
 ◊p{
   The rules mentioned in this section are by no means complete or precise; please refer to the ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/Candid.md#rules"]{typing rules} section of the Candid specification for a formal definition.
 }
@@ -436,7 +464,7 @@ type ◊b{S2} = service {
 }
 ◊ol-circled{
   ◊li{
-    The ◊em{type table} part defines custom types (◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--"]{records}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--"]{variants}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-opt-t"]{options}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t"]{vectors}, etc.) required to decode the message.
+    The ◊em{type table} part defines composite types (◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--"]{records}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--"]{variants}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-opt-t"]{options}, ◊a[#:href "https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t"]{vectors}, etc.) required to decode the message.
   }
   ◊li{
     The ◊em{types} part is an ◊math{n}-tuple of integers specifying the types ◊math{(T◊sub{1},◊ellipsis{},T◊sub{n})} of values in the next section.
@@ -454,7 +482,7 @@ type ◊b{S2} = service {
 ◊subsection-title["encoding-an-empty-tuple"]{Example: encoding an empty tuple}
 
 ◊p{
-  Let's first consider the shorted possible Candid message: an empty tuple.
+  Let's first consider the shortest possible Candid message: an empty tuple.
 }
 
 ◊figure{
@@ -756,7 +784,26 @@ Type table ⎢ ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/C
 ◊subsection-title["faq-remove-alternative"]{Can I remove a variant alternative?}
 
 ◊p{
-  It depends on the type variance.
+  Changing optional variant fields is always◊sidenote["sn-remove-candid-0.9"]{
+    If you use Rust, make sure you use ◊a[#:href "https://crates.io/crates/candid"]{candid} package version 0.9 or higher.
+  } safe.
+}
+
+◊source-code["good"]{
+ ◊em{// OK: changing an optional field}
+ type OrderDetails = record {
+-  size : ◊b{opt} variant { tiny; small; medium; large }
++  size : ◊b{opt} variant {       small; medium; large }
+};
+
+ service UserService : {
+   order_coffee : (OrderDetails) -> (nat);
+   get_order : (nat) -> (OrderDetails) query;
+ }
+}
+
+◊p{
+  If the variant field is not optional, the answer depends on the type variance.
 }
 
 ◊p{
@@ -782,7 +829,27 @@ Type table ⎢ ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/C
 ◊subsection-title["faq-remove-alternative"]{Can I add a variant alternative?}
 
 ◊p{
-  It depends on the type variance.
+  Changing optional variant fields is always◊sidenote["sn-remove-candid-0.9"]{
+    If you use Rust, make sure you use ◊a[#:href "https://crates.io/crates/candid"]{candid} package version 0.9 or higher.
+  } safe.
+}
+
+◊source-code["good"]{
+ ◊em{// OK: changing an optional field}
+ type User = record {
+   name : text;
+-  age : ◊b{opt} variant { child;           adult }
++  age : ◊b{opt} variant { child; ◊b{teenager;} adult }
+};
+
+ service UserService : {
+   add_user : (User) -> (nat);
+   get_user : (nat) -> (User) query;
+ }
+}
+
+◊p{
+  If the variant field is not optional, the answer depends on the type variance.
 }
 
 ◊p{
@@ -805,8 +872,8 @@ Type table ⎢ ◊a[#:href "https://github.com/dfinity/candid/blob/master/spec/C
 };
 
  service UserService : {
-  add_user : (User) -> (nat);
-  get_user : (nat) -> (User) query;
+   add_user : (User) -> (nat);
+   get_user : (nat) -> (User) query;
  }
 }
 
