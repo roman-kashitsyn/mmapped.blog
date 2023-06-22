@@ -50,12 +50,13 @@
 }
 
 ◊p{
-  Candid, on the other hand, ties binary format and service definition language into a knot.
+  Candid, on the other hand, ties the message format and service definition language into a knot.
   Service method definitions can refer to data types, and data types can refer to services.
   Services can accept as arguments and return references to other services and methods.
   The Candid team usually calls such designs ◊quoted{higher-order cases}.
   The ◊a[#:href "https://internetcomputer.org/docs/current/developer-docs/backend/candid/candid-concepts"]{Candid overview} article introduces a higher-order function in its first example.
 }
+
 ◊figure{
 ◊source-code["candid"]{
 ◊b{service} counter : {
@@ -63,6 +64,11 @@
   subscribe : (func (int) -> ()) -> ();
 }
 }
+}
+
+◊p{
+  Another distinctive Candid feature is ◊a[#:href "#subtyping"]{subtyping rules} for defining backward-compatible service evolution.
+  That's when you want formal language designers on your team.
 }
 
 ◊subsection-title["service-definitions"]{Service definitions}
