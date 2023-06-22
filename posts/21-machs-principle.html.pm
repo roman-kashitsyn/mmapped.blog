@@ -2,28 +2,52 @@
 
 ◊(define-meta title "Mach's principle")
 ◊(define-meta keywords "ic")
-◊(define-meta summary "Applying Ernst Mach's ideas to software engineering and life.")
+◊(define-meta summary "Why is it so hard to change things?")
 ◊(define-meta doc-publish-date "2023-07-01")
 ◊(define-meta doc-updated-date "2023-07-01")
 
 ◊section{
+◊section-title["inertia-mystery"]{The mystery of inertia}
 ◊epigraph{
 ◊blockquote{
   ◊p{
-    inertia originates in a kind of interaction between bodies
+    ◊ellipsis{}inertia originates in a kind of interaction between bodies◊ellipsis{}
   }
-  ◊footer{Albert Einstein}
+  ◊footer{Albert Einstein, letter to Ernst Mach, Zurich, 25 June 1913}
 }
 }
 
 ◊p{
-  ◊a[#:href "https://en.wikipedia.org/wiki/Ernst_Mach"]{Ernst Mach} was an Austrian physicist and philosopher.
-  His name pops up every time you hear about supersonic jets flying at ◊a[#:href "https://en.wikipedia.org/wiki/Mach_number#Etymology"]{Mach two}.
-  Mach's ideas also ◊a[#:href "https://en.wikipedia.org/wiki/Mach%27s_principle#Einstein's_use_of_the_principle"]{influenced} Einstein's relativity theory.
+  If you ever tried to move a closet, you know how much sweat you must shed before the damn thing ends up where you want it to be.
+  Physicists call this mysterious property of objects ◊em{inertia}◊sidenote["sn-inertia"]{
+    More formally, inertia is the tendency a body to stay at rest or continue moving in a straight line unless some force acts on the body.
+  }.
 }
 
 ◊p{
-  I first learned about Mach's ideas from a controversial book by Alexander Unzicker.
+  Believe it or not, physicists have no idea where inertia comes from.
+  Sure, there is the ◊a[#:href "https://en.wikipedia.org/wiki/Newton's_laws_of_motion"]{first Newton's law} ◊em{postulating} inertia, but its source remains obscure.
+}
+
+◊p{
+  Newton believed in absolute time and space.
+  In his world view, inertia is the resistance of bodies to forces relative to the cosmic frame of reference.
+}
+
+◊p{
+  ◊a[#:href "https://en.wikipedia.org/wiki/Ernst_Mach"]{Ernst Mach}, an Austrian physicist and philosopher, disagreed with Newton's position.
+  In his mind, all the interactions in nature, including the laws of motion and inertia, ought to be ◊em{relative}.
+}
+
+◊p{
+  The difference between Newton's and Mach's views is subtle.
+  According to Newton, if all objects in the universe simultaneously started spinning around some axis, we would immediately observe inertia in the form of ◊a[#:href "https://en.wikipedia.org/wiki/Centrifugal_force"]{centrifugal force}.
+  In Mach's view, we wouldn't notice the rotation because the relative positions of bodies wouldn't change.
+  In Mach's universe, the space is meaningless without matter.
+}
+
+◊p{
+  I first learned about Mach and his ideas from a controversial book by Alexander Unzicker:
 }
 ◊blockquote{
   ◊p{
@@ -34,14 +58,14 @@
 }
 
 ◊p{
-  Once Mach's idea settled in my mind, I had an epiphany.
+  Once that idea settled in my mind, I had an epiphany.
   It gave a form to my implicit intuitive knowledge about the world.
-  I started seeing this principle in action everywhere I looked.
+  I started seeing the principle's consequences everywhere I looked.
 }
 }
 
 ◊section{
-◊section-title["in-physics"]{In physics}
+◊section-title["machs-disciples"]{Mach's disciples}
 
 ◊epigraph{
   ◊blockquote{
@@ -61,11 +85,32 @@
 }
 
 ◊p{
+  Mach never formulated a theory that would allow us to test his ideas experimentally.
+}
+
+◊p{
+  Albert Einstein deeply admired Mach, incorporating the relativity of motion into the special relativity theory.
+  Mach's ideas were a major inspiration for Albert Einstein's relativity theories.
+  Unfortunately, Einstein didn't find a way to incorporate Mach's vision into the general relativity theory.
+}
+
+◊p{
+  Other physicists tried to turn Mach's into tangible theories.
+  ◊a[#:href "https://en.wikipedia.org/wiki/Dennis_W._Sciama"]{Dennis Sciama}, ◊a[#:href "https://en.wikipedia.org/wiki/Stephen_Hawking"]{Stephen Hawking}'s PhD supervisor, proposed a model of gravity incorporating Mach's principle◊sidenote["sn-sciama"]{
+    D. W. Sciama, ◊a[#:href "https://academic.oup.com/mnras/article/113/1/34/2602000"]{On the Origin of Inertia}.
+  }.
+  ◊a[#:href "https://en.wikipedia.org/wiki/Robert_H._Dicke"]{Robert Dicke} and and ◊a[#:href "https://en.wikipedia.org/wiki/Carl_H._Brans"]{Carl Brans} developed an alternative gravitational theory◊sidenote["sn-brans-dicke"]{C. Brans and R. H. Dicke, ◊a[#:href "https://journals.aps.org/pr/abstract/10.1103/PhysRev.124.925"]{Mach's Principle and Relativistic Theory of Gravitation}.} featuring Mach's view of inertia.
+  There seems to be no strong evidence supporting these theories.
+}
+
+◊p{
+  Overall, inertia seems to be just as puzzling to modern phisicists as it was to Newton.
+  There is no concensus whether Mach's principle is the right piece in this puzzle.
 }
 }
 
 ◊section{
-◊section-title["in-life"]{In life}
+◊section-title["relations-as-inertia"]{Relations as inertia}
 
 ◊p{
   Imagine you're twenty three, you're single and live in a rented apartment.
@@ -82,10 +127,17 @@
 }
 
 ◊p{
-  Imagine now that you got the offer when you're forty, have three kids and a mortgage.
+  But what if you got the offer when you're forty, have three kids and a mortgage?
   The kids will have to abandon their plans, friends, and learn a foreign language.
-  You'll have to leave the house you've built for your family and rent an apartment abroad.
+  The change is unlikely to affect them positively◊sidenote["sn-inside-out"]{
+    In Pixar's ◊a[#:href "https://www.imdb.com/title/tt2096673/"]{Inside Out}, teenage Riley starts losing her integrity after her parents move to San Francisco.
+  }.
+  You'll have to lose contacts with your parents, in-laws, and the few good friends you and your partner still have.
+  Furthermore, you'll have to leave your family house and rent an apartment abroad.
   Is the offer still as attractive?
+}
+
+◊p{
 }
 
 ◊p{
@@ -96,7 +148,7 @@
 }
 
 ◊section{
-◊section-title["in-software"]{In software}
+◊section-title["inertia-in-software"]{Inertia in software}
 
 ◊epigraph{
   ◊blockquote{
@@ -113,13 +165,13 @@
 }
 
 ◊section{
-◊section-title["in-general"]{In general}
+◊section-title["conclusion"]{Conclusion}
 
 ◊p{
   We are ready to formulate Mach's principle in its general form.
 }
 
-◊advice["general-form"]{
- Resistance to change is proportional to the cumulative strength of affected relations.
+◊advice["general-formula"]{
+ Resistance to change is proportional to the strength of affected relations.
 }
 }
