@@ -31,7 +31,7 @@
 
 ◊p{
   Newton believed in absolute time and space.
-  In his world view, inertia is the resistance of bodies to forces relative to the cosmic frame of reference.
+  In his world view, inertia is the resistance of bodies to forces relative to the eternal cosmic frame of reference.
 }
 
 ◊p{
@@ -43,7 +43,11 @@
   The difference between Newton's and Mach's views is subtle.
   According to Newton, if all objects in the universe simultaneously started spinning around some axis, we would immediately observe inertia in the form of ◊a[#:href "https://en.wikipedia.org/wiki/Centrifugal_force"]{centrifugal force}.
   In Mach's view, we wouldn't notice the rotation because the relative positions of bodies wouldn't change.
+}
+
+◊p{
   In Mach's universe, the space is meaningless without matter.
+  If there is only one body flying in an empty universe, inertia disappears because there are no other objects to measure any movement.
 }
 
 ◊p{
@@ -61,51 +65,6 @@
   Once that idea settled in my mind, I had an epiphany.
   It gave a form to my implicit intuitive knowledge about the world.
   I started seeing the principle's consequences everywhere I looked.
-}
-}
-
-◊section{
-◊section-title["machs-disciples"]{Mach's disciples}
-
-◊epigraph{
-  ◊blockquote{
-    ◊p{
-      There is a simple experiment that anyone can perform on a starry night, to clarify issues raised by Mach's principle.
-      First stand still, and let your arms hang loose at your sides.
-      Observe that the stars are more or less unmoving, and your arms hang more or less straight down.
-      Then pirouette.
-      The stars will seem to rotate around the zenith, and at the same time your arms will be drawn upward by centrifugal force.
-      It would surely be a remarkable coincidence if the inertial frame, in which your arms hung freely,
-      just happened to be the reference frame in which typical stars are at rest,
-      unless there was some interaction between the stars and you that determined your inertial frame.
-
-    }
-    ◊footer{Steven Weinberg, ◊quoted{Gravitation and Cosmology}, ◊a[#:href "https://archive.org/details/gravitationcosmo00stev_0/page/16"]{p. 17}}
-  }
-}
-
-◊p{
-  Mach never formulated a theory that would allow us to test his ideas experimentally.
-}
-
-◊p{
-  Albert Einstein deeply admired Mach, incorporating the relativity of motion into the special relativity theory.
-  Mach's ideas were a major inspiration for Albert Einstein's relativity theories.
-  Unfortunately, Einstein didn't find a way to incorporate Mach's vision into the general relativity theory.
-}
-
-◊p{
-  Other physicists tried to turn Mach's into tangible theories.
-  ◊a[#:href "https://en.wikipedia.org/wiki/Dennis_W._Sciama"]{Dennis Sciama}, ◊a[#:href "https://en.wikipedia.org/wiki/Stephen_Hawking"]{Stephen Hawking}'s PhD supervisor, proposed a model of gravity incorporating Mach's principle◊sidenote["sn-sciama"]{
-    D. W. Sciama, ◊a[#:href "https://academic.oup.com/mnras/article/113/1/34/2602000"]{On the Origin of Inertia}.
-  }.
-  ◊a[#:href "https://en.wikipedia.org/wiki/Robert_H._Dicke"]{Robert Dicke} and and ◊a[#:href "https://en.wikipedia.org/wiki/Carl_H._Brans"]{Carl Brans} developed an alternative gravitational theory◊sidenote["sn-brans-dicke"]{C. Brans and R. H. Dicke, ◊a[#:href "https://journals.aps.org/pr/abstract/10.1103/PhysRev.124.925"]{Mach's Principle and Relativistic Theory of Gravitation}.} featuring Mach's view of inertia.
-  There seems to be no strong evidence supporting these theories.
-}
-
-◊p{
-  Overall, inertia seems to be just as puzzling to modern phisicists as it was to Newton.
-  There is no concensus whether Mach's principle is the right piece in this puzzle.
 }
 }
 
@@ -138,6 +97,9 @@
 }
 
 ◊p{
+  Or maybe you find yourself caught up in a dysfunctional relationship.
+  You feel lonely and depressed, yet you can't find strength to quit.
+  You still get ◊em{some} scraps of affection from your partner, shared household is somewhat convenient, and you don't want to decide what to do with Charlie, your ◊a[#:href "https://en.wikipedia.org/wiki/Labrador_Retriever"]{Labrador}.
 }
 
 ◊p{
@@ -161,6 +123,123 @@
 
 ◊p{
   Changing software is hard.
+  Ask a programmer to add an innocently looking feature and watch them throwing up hands and replying that it's would be easier to write a new program than to change the existing one.
+}
+
+◊p{
+  Programmers often call a hard-to-change program ◊quoted{◊a[#:href "https://en.wikipedia.org/wiki/Spaghetti_code"]{spaghetti code}}, ◊quoted{◊a[#:href "http://laputan.org/mud/"]{Big Ball of Mud}}, or simply ◊quoted{tangled mess}.
+  Notice anything unusual about these names?
+  They all indicate intricate and unexpected relations among the program components.
+  That's precisely what Mach's principle predicts us if we apply it to the realm of software engineering: the more connections a piece of software has, the harder we must work to change it.
+}
+
+◊p{
+  Consider a lonely program nobody uses.
+  It doesn't have any ◊quoted{inertia}, no matter how much code it contains.
+  Such a program is a direct analog of a sole body in an empty Machian universe.
+}
+
+◊figure{
+◊marginnote["mn-remove-lonely-fn"]{
+  Unused code has low inertia because removing it doesn't change the program meaning.
+}
+◊source-code["diff"]{
+- void LonelyFunctionNobodyCalls() {
+-   // ◊ellipsis{}
+- }
+
+  int main() {
+    // ◊ellipsis{}
+  }
+}
+}
+
+◊p{
+  Similarly, we can often remove unused functions without affecting the program's meaning◊sidenote["sn-c-undefined"]{
+  Unless you write in C and trigger undefined behavior, of course.
+  See ◊quoted{Debugging Optimized Code May Not Make Any Sense} in ◊a[#:href "http://blog.llvm.org/2011/05/what-every-c-programmer-should-know_14.html"]{What Every C Programmer Should Know About Undefined Behavior #2/3}.
+  }.
+}
+
+◊p{
+  There are two major sources of complex connections in modern software: external packages and obscure assumptions.
+}
+
+◊subsection-title["external-packages"]{Treat external packages as close relationships}
+
+◊p{
+  External packages are necessary evil.
+  Nowadays, it's pretty much impossible to build a useful program without relying on at least a few external components.
+  Yet, some dependencies are more evil than others.
+}
+
+◊p{
+  ◊a[#:href "https://en.wikipedia.org/wiki/Software_framework"]{Frameworks} are among the worst offenders.
+  They provide an application skeleton, allowing developers to fill in the blanks, usually in a form of ◊a[#:href "https://en.wikipedia.org/wiki/Callback_(computer_programming)"]{callbacks}.
+  This design creates many obscure connections between the framework and the application code.
+}
+
+◊p{
+  I treat all external dependencies as close relationships: their bugs, security holes, and performance issues become mine pretty soon.
+}
+
+◊p{
+  I won't trust a stranger to pick up my kids from school.
+  And I wouldn't check my customer's credit card numbers with a random package from ◊a[#:href "https://npmjs.com/"]{npm}.
+  I'll at least read its source code, check its release schedule and activity.
+}
+
+
+}
+
+◊section{
+◊section-title["machs-disciples"]{Mach's legacy}
+
+◊epigraph{
+  ◊blockquote{
+    ◊p{
+      There is a simple experiment that anyone can perform on a starry night, to clarify issues raised by Mach's principle.
+      First stand still, and let your arms hang loose at your sides.
+      Observe that the stars are more or less unmoving, and your arms hang more or less straight down.
+      Then pirouette.
+      The stars will seem to rotate around the zenith, and at the same time your arms will be drawn upward by centrifugal force.
+      It would surely be a remarkable coincidence if the inertial frame, in which your arms hung freely,
+      just happened to be the reference frame in which typical stars are at rest,
+      unless there was some interaction between the stars and you that determined your inertial frame.
+
+    }
+    ◊footer{Steven Weinberg, ◊quoted{Gravitation and Cosmology}, ◊a[#:href "https://archive.org/details/gravitationcosmo00stev_0/page/16"]{p. 17}}
+  }
+}
+
+◊p{
+  Mach never formulated a theory that would allow us to test his ideas experimentally.
+  However, other physicists tried turning Mach's ideas into tangible theories.
+}
+
+◊p{
+  Albert Einstein deeply admired Mach.
+  The relativity of motion became the cornerstone of the ◊a[#:href "https://en.wikipedia.org/wiki/Special_relativity"]{special theory of relativity}.
+  Unfortunately, Einstein didn't find a convincing way to incorporate Mach's version of inertia into the ◊a[#:href "https://en.wikipedia.org/wiki/General_relativity"]{general theory of relativity}.
+}
+
+◊p{
+  ◊a[#:href "https://en.wikipedia.org/wiki/Dennis_W._Sciama"]{Dennis Sciama}, ◊a[#:href "https://en.wikipedia.org/wiki/Stephen_Hawking"]{Stephen Hawking}'s PhD supervisor, proposed a model of gravity incorporating Mach's principle◊sidenote["sn-sciama"]{
+    D. W. Sciama, ◊a[#:href "https://academic.oup.com/mnras/article/113/1/34/2602000"]{On the Origin of Inertia}.
+  }.
+  Sciama's book ◊a[#:href "https://archive.org/details/unityofuniverse00scia/page/98/mode/2up"]{The Unity of Universe} provides the historical background and arguments for and against the principle (see pages 98◊ndash{}105).
+}
+
+◊p{
+  ◊a[#:href "https://en.wikipedia.org/wiki/Robert_H._Dicke"]{Robert Dicke} and and ◊a[#:href "https://en.wikipedia.org/wiki/Carl_H._Brans"]{Carl Brans} developed an alternative gravitational theory◊sidenote["sn-brans-dicke"]{C. Brans and R. H. Dicke, ◊a[#:href "https://systems-eth.webs.com/Mach's%20Principle%20and%20a%20Relativistic%20Theory%20of%20Gravitation%20(PhysRev.124.925).pdf"]{Mach's Principle and Relativistic Theory of Gravitation}.} featuring Mach's view of inertia.
+  In their theory, the global mass distribution in the universe determines the local gravity strength.
+  Currently, there is no evidence that this theory is more accurate than Einstain's general relativity.
+}
+
+◊p{
+  Overall, inertia seems to be just as puzzling to modern phisicists as it was to Newton.
+  There seems to be no strong evidence supporting theories based on Mach's ideas.
+  There is no concensus whether Mach's principle is the right piece in this puzzle.
 }
 }
 
