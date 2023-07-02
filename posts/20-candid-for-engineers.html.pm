@@ -405,7 +405,7 @@ type ◊b{S2} = service {
     Function subtyping rules.
     As the interface evolves, the input types become more general, while output types become more restricted.
   }
-  ◊(embed-svg "images/21-function-variance.svg")
+  ◊(embed-svg "images/20-function-variance.svg")
 }
 
 ◊p{
