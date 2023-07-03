@@ -212,7 +212,7 @@ Resistance to change is proportional to the strength of affected relations.
 ◊p{
   Lastly, we must ◊em{address bad decisions before they get tangled in dependencies}.
   We want to fix our mistakes quickly before others rely on them.
-  The tighter the feedback look, the cheaper our mistakes become.
+  The tighter the feedback loop, the cheaper our mistakes become.
   Tinkering, experimentation, and ◊a[#:href "https://agilemanifesto.org/"]{incremental delivery} almost always trump theorizing and planning.
 }
 
