@@ -132,7 +132,7 @@
 
 ◊p{
   Changing software is hard.
-  Ask a programmer to add an innocently looking feature and watch them throw up their hands.
+  Ask a programmer to add an innocent looking feature and watch them throw up their hands.
   They might even tell you it would be easier to write a new program than to change the existing one.
 }
 
@@ -148,7 +148,7 @@
 }
 
 ◊p{
-  That's what Mach's principle predicts us if we apply it to software engineering: the more connections a piece of software has, the harder we must work to change it.
+  That's what Mach's principle predicts if we apply it to software engineering: the more connections a piece of software has, the harder we must work to change it.
 }
 
 ◊p{
