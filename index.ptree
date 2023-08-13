@@ -3,6 +3,7 @@
 index.html
 
 ◊posts.html{
+  posts/22-flat-in-order-trees.html
   posts/21-machs-principle.html
   posts/20-candid-for-engineers.html
   posts/19-eventlog.html

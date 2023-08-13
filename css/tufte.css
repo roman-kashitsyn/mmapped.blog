@@ -129,6 +129,10 @@ img.portrait {
     margin: 10px 20px 20px 0px;
 }
 
+figure.medium-size svg {
+    width: 50%;
+}
+
 ul.arrows>li:before {
     position: absolute;
     margin-left: -2.5rem;
@@ -246,6 +250,7 @@ pre.apl>code {
 
 .math {
     font-family: "Neo Euler", "Libertinus Serif", et-book, Palatino, serif;
+    white-space: nowrap;
 }
 
 /* Tufte CSS styles */
