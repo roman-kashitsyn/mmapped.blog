@@ -34,6 +34,7 @@
          ndash
          ballot-x
          check
+         end-of-proof
          toc)
 
 (define (root . elements)
@@ -158,3 +159,4 @@
 (define (ndash) (string->symbol "ndash"))
 (define (ballot-x) (string (integer->char #x2718)))
 (define (check) (string (integer->char #x2714)))
+(define (end-of-proof) (string (integer->char #x220E)))
