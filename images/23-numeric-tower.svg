@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 666 666" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(1,0,0,1,-1084.53,-801.066)">
+        <g transform="matrix(2.54545,0,0,2.54545,-2160.34,-2323.55)">
+            <circle cx="1405.51" cy="1358.27" r="129.921" style="fill:none;stroke:black;stroke-width:1.64px;"/>
+        </g>
+        <g transform="matrix(1.81818,0,0,1.81818,-1138.15,-1241.23)">
+            <circle cx="1405.51" cy="1358.27" r="129.921" style="fill:none;stroke:black;stroke-width:2.29px;"/>
+        </g>
+        <g transform="matrix(0.909091,0,0,0.909091,139.585,111.668)">
+            <circle cx="1405.51" cy="1358.27" r="129.921" style="fill:none;stroke:black;stroke-width:4.58px;"/>
+        </g>
+        <g transform="matrix(1.74547,0,0,1.70161,-991.497,-930.939)">
+            <text x="1364.38px" y="1356.6px" style="font-family:'Menlo-Regular', 'Menlo', monospace;font-size:50px;stroke:black;stroke-width:2.42px;stroke-linecap:butt;stroke-miterlimit:2;">ℕ</text>
+        </g>
+        <g transform="matrix(1.73392,0,0,1.70088,-974.067,-1173.56)">
+            <text x="1364.38px" y="1356.6px" style="font-family:'Menlo-Regular', 'Menlo', monospace;font-size:50px;stroke:black;stroke-width:2.43px;stroke-linecap:butt;stroke-miterlimit:2;">ℤ</text>
+        </g>
+        <g transform="matrix(2.03466,0,0,1.66482,-1388.98,-1360.87)">
+            <text x="1364.38px" y="1356.6px" style="font-family:'Menlo-Regular', 'Menlo', monospace;font-size:50px;stroke:black;stroke-width:2.24px;stroke-linecap:butt;stroke-miterlimit:2;">ℚ</text>
+        </g>
+        <g transform="matrix(1,0,0,1,8.01198,10.4583)">
+            <g transform="matrix(41.6667,0,0,41.6667,1473.5,1417.32)">
+            </g>
+            <text x="1346.46px" y="1417.32px" style="font-family:'Neo-Euler', 'Neo Euler';font-weight:500;font-size:41.667px;stroke:black;stroke-width:4.17px;stroke-linecap:butt;stroke-miterlimit:2;">0, 1, ...</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-14.5053,-225.762)">
+            <g transform="matrix(41.6667,0,0,41.6667,1518.83,1417.32)">
+            </g>
+            <text x="1346.46px" y="1417.32px" style="font-family:'Neo-Euler', 'Neo Euler';font-weight:500;font-size:41.667px;stroke:black;stroke-width:4.17px;stroke-linecap:butt;stroke-miterlimit:2;">-1, -2, ...</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-35.9584,-448.819)">
+            <g transform="matrix(41.6667,0,0,41.6667,1556.83,1417.32)">
+            </g>
+            <text x="1346.46px" y="1417.32px" style="font-family:'Neo-Euler', 'Neo Euler';font-weight:500;font-size:41.667px;stroke:black;stroke-width:4.17px;stroke-linecap:butt;stroke-miterlimit:2;">1/2, 1/3, ...</text>
+        </g>
+    </g>
+</svg>
