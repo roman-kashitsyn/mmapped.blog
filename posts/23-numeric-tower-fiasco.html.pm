@@ -3,15 +3,15 @@
 ◊(define-meta title "The numeric tower fiasco")
 ◊(define-meta keywords "oop")
 ◊(define-meta summary "Inheritance is scam.")
-◊(define-meta doc-publish-date "2023-11-20")
-◊(define-meta doc-updated-date "2023-11-20")
+◊(define-meta doc-publish-date "2023-11-22")
+◊(define-meta doc-updated-date "2023-11-22")
 
 ◊epigraph{
   ◊blockquote{
     ◊p{
-      I find OOP technically unsound◊ellipsis{} I find OOP philosophically unsound◊ellipsis{} I find OOP methodologically wrong.
+      Object-oriented programming is an exceptionally bad idea which could only have originated in California.
     }
-    ◊footer{From ◊a[#:href "http://stlport.org/resources/StepanovUSA.html"]{An Interview with A. Stepanov}}
+    ◊footer{Edsger Dijkstra}
   }
 }
 
@@ -34,6 +34,7 @@
 
 ◊p{
   The practice showed that real engineering problems rarely fit into rigid class hierarchies.
+  I grew more frustrated with object-oriented programming and eventually entirely gave up on it.
   This article describes one example that stuck with me from the start of my programming career: modeling the hierarchy of number types.
 }
 }
@@ -41,21 +42,27 @@
 ◊section{
 ◊section-title["the-numeric-tower"]{The numeric tower}
 
-◊p{
-  I like math, so one of the first structure I tried to model with classes was the most precisely specified and well-studied hierarchy in human history: the ◊a[#:href "https://en.wikipedia.org/wiki/Numerical_tower"]{numerical tower}.
+◊epigraph{
+  ◊blockquote{
+    ◊p{God made the integers, all the rest is the work of man.}
+    ◊footer{Leopold Kronecker}
+  }
 }
 
 ◊p{
-  Mathematicians invented◊sidenote["sn-motivation"]{
-    The main motivation for introducing integers was to create a numeric space where equations of the form ◊math{a + x = c}, where ◊math{a} and ◊math{c} are naturals, always have a solution.
+  I like math, so one of the first structures I tried to model with classes was the most precisely specified and well-studied hierarchy in human history: the ◊a[#:href "https://en.wikipedia.org/wiki/Numerical_tower"]{numerical tower}.
+}
+
+◊p{
+  Mathematicians discovered◊sidenote["sn-motivation"]{
+    The primary motivation for introducing integers was to create a numeric space where equations of the form ◊math{a + x = c}, where ◊math{a} and ◊math{c} are naturals, always have a solution.
     Rationals play the same role for equations  of the form ◊math{a × x = c}.
-  } quite a few types of numbers; usually each new type is the most natural extention of the previous one:
+  } quite a few types of numbers; usually, each new type is the most natural extension of the previous one:
 }
 ◊ul[#:class "arrows"]{
 ◊li{
   Naturals (◊math{ℕ}) are the numbers we use for counting: ◊math{0, 1, 2, ◊ellipsis{}}.
 }
-  ◊; TODO: Dedekind's remark on whole numbers
 ◊li{
   Integers (◊math{ℤ}) extend naturals to include negative whole numbers: ◊math{0, 1, -1, 2, -2, ◊ellipsis{}}.
 }
@@ -74,10 +81,16 @@
 ◊p{
   The tower goes up and includes real numbers, complex numbers, quaternions, etc.
 }
+}
 
-◊subsection-title["oop-design"]{The OOP design}
+◊section{
+◊section-title["oop-design"]{The OOP design}
 ◊p{
-  Let's limit the tower to only two number types to keep the example simple: ◊code{Naturals} and ◊code{Integers}.
+  In this section, we'll design a class hierarchy modeling the numbers using an imaginary object-oriented programming language.
+  We'll limit the tower to only two number types to keep the example simple: ◊code{Naturals} and ◊code{Integers}.
+}
+
+◊p{
   Most people (me included) will instinctively reach for the class structure where ◊code{Natural} is the base class, and ◊code{Integer} extends that base.
 }
 
@@ -104,7 +117,7 @@ end
 }
 
 ◊p{
-  I'm sure you immediately spotted a problem with this design: we inversed the hierarchy, breaking the ◊quoted{is a} relationship!
+  I'm sure you immediately spotted a problem with this design: we inverted the hierarchy, breaking the ◊quoted{is a} relationship!
   We claim that all integers are also naturals, but that's false.
   The design violates the ◊a[#:href "https://en.wikipedia.org/wiki/Liskov_substitution_principle"]{Liskov substitution principle}: passing an ◊code{Integer} to a function that expects a ◊code{Natural} can produce incorrect results:
 }
@@ -149,7 +162,7 @@ end
 }
 
 ◊p{
-  Another design option is to give up on concrete type hierarchies and clamp all number types under a single interface.
+  Another design option is to give up concrete type hierarchies and clamp all number types under a single interface.
 }
 
 ◊figure{
@@ -185,7 +198,7 @@ end
 }
 ◊li{
   All types in the hierarchy need to know about one another.
-  Adding a new type requires modifying all other types.
+  Adding a new type requires changing all other types.
 }
 ◊li{
   Adding a new operation on numbers requires modifying all the classes.
@@ -195,15 +208,23 @@ end
 ◊p{
   It's time to abandon our blunt OOP tools and start from the first principles.
 }
-
-◊subsection-title["the-functional-approach"]{The functional approach}
-
-◊p{
-  The object-oriented approach obsesses around encoding ◊quoted{is a} relations among types as a rigid hierarchy and trying to make it behave coherently.
 }
+
+◊section{
+◊section-title["the-functional-design"]{The functional design}
+
 ◊p{
-  We'll use the approach mathematicians employ: we start with the simplest structure and gradually build more complex structures out of basic ones.
-  This approach is equivalent to using composition instead of inheritance in the OOP world.
+  The object-oriented tradition obsesses with encoding ◊quoted{is a} relations among types as a class hierarchy.
+  In this section, we'll use the approach mathematicians employ: we start with simple structures and combine them to form more complex objects.
+  This approach is similar to using composition instead of inheritance in the OOP world.
+}
+
+◊p{
+  Our tool of choice will be the ◊a[#:href "https://haskell.org/"]{Haskell} programming language, but the same principles will work in all languages supporting ◊a[#:href "https://en.wikipedia.org/wiki/Algebraic_data_type"]{algebraic data types} and functions (even ◊a[#:href "https://www.rust-lang.org/"]{Rust} would do, though it would be less pretty).
+}
+
+◊p{
+  In our first attempt, we will model each numeric type with a separate Haskell type.
 }
 
 ◊figure{
@@ -244,7 +265,7 @@ minus_int = ◊ellipsis{}
 ◊ol-circled{
   ◊li{
     According to ◊a[#:href "https://en.wikipedia.org/wiki/Peano_axioms"]{Peano}, a natural number is either a zero or a successor of a smaller natural number.
-    This definition is equivalent to the ◊a[#:href "https://en.wikipedia.org/wiki/Unary_numeral_system"]{unary numeral system}, which is inefficient for computation, but convenient for demonstration.
+    This definition is equivalent to the ◊a[#:href "https://en.wikipedia.org/wiki/Unary_numeral_system"]{unary numeral system}, which is inefficient for computation but convenient for demonstration.
   }
   ◊li{
     An integer number is either a non-negative natural number ◊math{n} or a negative number ◊math{-1 - n}, where ◊math{n} is a natural number.
@@ -252,18 +273,18 @@ minus_int = ◊ellipsis{}
   }
   ◊li{
     We encode the ◊quoted{is a} relation between numeric types as a pure total function.
-    OOP languages usually generate these conversion functions automatically and apply them implicitly.
+    OOP languages usually generate these type-casting functions automatically and apply them implicitly.
   }
 }
 
 ◊p{
   Note how modular this implementation is.
   Naturals can live in a separate module and don't need to know about the existence of integers.
-  We can easily change the implementation of naturals (e.g., use the more efficient ◊a[#:href "https://en.wikipedia.org/wiki/Binary_number"]{binary representation}) or add more numerit types (e.g., ◊code{Rational}s) without breaking other code.
+  We can easily change the implementation of naturals (e.g., use the more efficient ◊a[#:href "https://en.wikipedia.org/wiki/Binary_number"]{binary representation}) or add more numeric types (e.g., ◊code{Rational}s) without breaking other code.
 }
 
 ◊p{
-  However, the design has a flaw: we lost the ability to operate on numbers of different types.
+  However, the design is not yet satisfactory: we lost the ability to operate uniformly on numbers of different types.
   We can add a universal ◊code{Number} type to reclaim this property.
 }
 
@@ -288,30 +309,25 @@ minus = ◊ellipsis{}
 ◊p{
   This design might seem like a re-iteration of the ◊code{Number} interface story from the OO world, but it's not:
 }
+
 ◊ul[#:class "arrows"]{
 ◊li{
   We have many opportunities to reduce the boilerplate code to the bare minimum.
   We will discuss these opportunities shortly.
 }
 ◊li{
-  The module implementing ◊code{Naturals} don't need to know about ◊code{Integers} or ◊code{Numbers}.
+  The module implementing ◊code{Naturals} doesn't need to know about ◊code{Integers} or ◊code{Numbers}.
 }
 ◊li{
-  We don't need to modify existing code when we add new functions operating on numbers.
+  We don't need to modify existing types when we add new functions operating on numbers.
 }
 }
 
 ◊p{
   To address the boilerplate issue, we'll introduce the numeric type ◊em{promotion} operation.
-  When we add two numbers of different type, we convert the simpler type to the more complex one using the previously discussed type converion functions.
+  When we add two numbers of different types, we convert the simpler type to the more complex one using the previously discussed type conversion functions.
   We then apply the binary operator dealing with numbers of the same promoted type.
-  Finally, we simplify (◊quoted{demote}) the result to the simplest type that can hold the value.
-}
-
-◊p{
-  I find this concept intuitive because it's how I deal with numbers myself.
-  When I add ◊math{1} to ◊math{½}, I ◊quoted{promote} the unit to the rational number ◊math{2/2} and then execute the addition on rationals to get ◊math{3/2}.
-  And when I add ◊math{5} to ◊math{-3}, I temporarily treat ◊math{5} as an integer, execute the integer addition to get ◊math{2}, and then treat the result as a natural number.
+  Finally, we demote the result to the simplest type that can hold the value.
 }
 
 ◊figure{
@@ -342,32 +358,78 @@ impl_binary_op kernel x y = let (x', y') = promote (x, y)
 
 -- Adds arbitrary numbers.
 plus :: Number -> Number -> Number
-plus x y = impl_binary_op helper x y
-  where helper (Nat n) (Nat m) = Nat (plus_nat n m)
-        helper (Int n) (Int m) = Int (plus_int n m)
-        helper _ _ = undefined
+plus x y = impl_binary_op plus_simple x y
+  where plus_simple (Nat n) (Nat m) = Nat (plus_nat n m)
+        plus_simple (Int n) (Int m) = Int (plus_int n m)
+        plus_simple _ _ = undefined
 
 -- Subtracts arbitrary numbers.
 minus :: Number -> Number -> Number
-minus x y = impl_binary_op helper x y
-  where helper (Nat n) (Nat m) = Int (minus_int (int_of_nat n) (int_of_nat m))
-        helper (Int n) (Int m) = Int (minus_int n m)
-        helper _ _ = undefined
+minus x y = impl_binary_op minus_simple x y
+  where minus_simple (Nat n) (Nat m) = Int (minus_int (int_of_nat n) (int_of_nat m))
+        minus_simple (Int n) (Int m) = Int (minus_int n m)
+        minus_simple _ _ = undefined
 }
 }
 
 ◊p{
   The ◊code{impl_binary_op} function captures the promote/execute/simplify pattern.
-  Concrete binary operators (◊code{plus}, ◊code{minus}, etc.) need to deal only with numbers of the same type.
+  Concrete binary operators (◊code{plus}, ◊code{minus}, etc.) must deal only with numbers of the same type.
 }
 
+◊p{
+  With this, we get a clean and concise model of numbers on a computer.
+  The code is easy to extend to support more numeric types, which is left as an exercise for the reader◊sidenote["sn-complex"]{
+    I find adding the ◊code{Complex} type particularly interesting.
+    Hint: you might need two different generic ◊code{Number} types.
+  }.
+}
 }
 
 ◊section{
 ◊section-title["conclusion"]{Conclusion}
+
+◊epigraph{
+  ◊blockquote{
+    ◊p{
+      I find OOP technically unsound◊ellipsis{} I find OOP philosophically unsound◊ellipsis{} I find OOP methodologically wrong.
+    }
+    ◊footer{From ◊a[#:href "http://stlport.org/resources/StepanovUSA.html"]{An Interview with A. Stepanov}}
+  }
+}
+
 ◊p{
-  We started with a ◊a[#:href "#the-numeric-tower"]{precisely defined hierarchy} of mathematical objects and couldn't find an acceptable way to model them as a class hierarchy.
-  We then pivoted and went with the constructive math path, organizing our code around ◊quoted{value spaces} instead of concept hierarchies.
+  When I use a tool and get unsatisfactory results, I blame myself for not using the tool correctly.
+  At first, I felt the same about the numeric tower case, but now I'm sure the problem is not me; it's the class hierarchies.
+}
+
+◊p{
+  The approach of piling classes on top of one another and trying to make this stack coherent is fundamentally flawed.
+  It fails spectacularly even on tiny examples where the problem domain is ◊em{mathematically} specified.
+  The numeric tower is one example, but there are more.
+  The ◊a[#:href "https://en.wikipedia.org/wiki/Circle%E2%80%93ellipse_problem"]{circle-ellipse problem} is a good one,
+  but my favorite is how inheriting ◊code{ColorPoint} from ◊code{Point} breaks the transitivity property of the ◊code{equals} method:
+}
+
+◊blockquote{
+  ◊p{
+    There is no way to extend an instantiable class and add a value component while preserving the ◊code{equals} contract,
+    unless you’re willing to forgo the benefits of object-oriented abstraction.
+  }
+  ◊footer{
+    Joshua Bloch, ◊quoted{Effective Java}, 3rd edition, item 10, p. 42
+  }
+}
+
+◊p{
+  If something doesn't work on small examples, why do we expect it to work in large codebases?
+  When was the last time you looked in a complex class hierarchy and admired how easy to understand the code was?
+}
+◊p{
+  Experts often recommend ◊quoted{favor composition over inheritance}◊sidenote["sn-composition-over-inheritance"]{
+    E.g., Joshua Bloch, ◊quoted{Effective Java}, third edition, item 18, p. 87.
+  }.
+  I agree with them and favor algebraic data types and simple functions as the ultimate form of composition.
 }
 }
 
