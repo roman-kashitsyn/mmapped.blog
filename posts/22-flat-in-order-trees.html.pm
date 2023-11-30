@@ -4,7 +4,7 @@
 ◊(define-meta keywords "data-structures")
 ◊(define-meta summary "You'll never see binary numbers the same way.")
 ◊(define-meta doc-publish-date "2023-08-13")
-◊(define-meta doc-updated-date "2023-08-13")
+◊(define-meta doc-updated-date "2023-11-26")
 
 ◊section{
 ◊section-title["sec-abstract"]{Abstract}
@@ -318,11 +318,35 @@ uint64_t LPBT_Root(const uint64_t size) {
 
 ◊source-code["c"]{
 ◊em{// Computes the parent of node I in a left-perfect binary tree of the given SIZE.}
-uint64_t LPBT_Parent(uint64_t i, const uint64_t size) {
+uint64_t LPBT_Parent_Iterative(uint64_t i, const uint64_t size) {
     do { i = PBT_Parent(i); } while (i >= size);
     reutrn i;
 }
 }
+
+◊p{
+  There is also a non-iterative way to find the parent in a left-perfect tree.
+  Notice that the ◊code{PBT_Parent} function can return a value outside the array only if the input node is either the root node or a right child◊sidenote["sn-parent-right-proof"]{
+    Proof: if the node is a left child, then it's a root of a perfect binary tree (by definition of left-perfect trees), and its parent resides to its right within the array bounds (by construction of in-order trees).
+  }.
+  Furthermore, if node ◊code{i} is a right child, its parent is always the node preceding ◊code{i}-th most-left leaf. 
+  Thus, we can attempt to compute the parent using ◊code{PBT_Parent} first and adjust the result if it falls out of bounds.
+}
+
+◊source-code["c"]{
+◊em{// Computes the leftmost leaf of node I in a perfect binary tree.}
+uint64_t PBT_LeftmostLeaf(const uint64_t i) {
+    return i & (i + 1);
+}
+
+◊em{// Computes the parent of node I in a left-perfect binary tree of the given SIZE.}
+uint64_t LPBT_Parent(const uint64_t i, const uint64_t size) {
+    assert(i != LPBT_Root(size));
+    const uint64_t p = PBT_Parent(i);
+    return (p < size) ? p : PBT_LeftmostLeaf(i) - 1;
+}
+}
+
 
 ◊p{
   Our observations give us two algorithms for computing the right child.
@@ -345,7 +369,7 @@ uint64_t LPBT_RightChild(const uint64_t i, const uint64_t size) {
 
 ◊source-code["c"]{
 ◊em{// Computes the right child of node I in a left-perfect binary tree of the given SIZE.}
-uint64_t LPBT_RightChild_2(const uint64_t i, const uint64_t size) {
+uint64_t LPBT_RightChild_Iterative(const uint64_t i, const uint64_t size) {
     assert(n & 1);
     uint64_t r;
     for (r = PBT_RightChild(n); r < size; r = PBT_LeftChild(r));
@@ -381,9 +405,14 @@ uint64_t LPBT_RightChild_2(const uint64_t i, const uint64_t size) {
 ◊source-code["c"]{
 ◊em{// Extracts the most significant bit from number N.}
 uint64_t MostSignificantBit(uint64_t n) {
-    int i = 0;
-    while (n >>= 1) i++;
-    return 1 << i;
+    uint64_t x = n;
+    x |= (x >> 1);
+    x |= (x >> 2);
+    x |= (x >> 4);
+    x |= (x >> 8);
+    x |= (x >> 16);
+    x |= (x >> 32);
+    return x - (x >> 1);
 }
 
 ◊em{// Computes the lowest common ancestor of leaves X and Y in a left-perfect}
