@@ -3,6 +3,7 @@
 index.html
 
 ◊posts.html{
+  posts/XX-functor-the-ultimate-analogy.html
   posts/23-numeric-tower-fiasco.html
   posts/22-flat-in-order-trees.html
   posts/21-machs-principle.html
