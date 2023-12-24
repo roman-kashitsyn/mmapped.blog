@@ -133,6 +133,10 @@ figure.medium-size svg {
     width: 50%;
 }
 
+figure.medium-size img {
+    width: 50%;
+}
+
 ul.arrows>li:before {
     position: absolute;
     margin-left: -2.5rem;
