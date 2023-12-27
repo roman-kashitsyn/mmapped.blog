@@ -348,11 +348,10 @@ func copyFile(src, dst string) error {
 		return fmt.Errorf("failed to create %s: %w", dst, err)
 	}
 	defer out.Close()
-	n, err := io.Copy(out, in)
+	_, err = io.Copy(out, in)
 	if err != nil {
 		return fmt.Errorf("failed to copy %s to %s: %w", src, dst, err)
 	}
-	log.Printf("Copied %d bytes from %s to %s", n, src, dst)
 	return nil
 }
 
@@ -462,6 +461,7 @@ func RenderSite() error {
 			stat, err := os.Stat(srcDir)
 			if os.IsNotExist(err) {
 				log.Printf("Skipping non-existent precompiled directory %s", srcDir)
+                                break
 			} else if err != nil {
 				return fmt.Errorf("failed to stat %s: %w", srcDir, err)
 			}

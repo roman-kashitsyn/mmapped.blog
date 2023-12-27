@@ -11,28 +11,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        path: sources
 
-    - uses: Bogdanp/setup-racket@v1.7
+    - name: Setup Go ${{ matrix.go-version }}
+      uses: actions/setup-go@v4
       with:
-        architecture: 'x64'
-        distribution: 'full'
-        variant: 'CS'
-        version: '8.3'
+        go-version: 1.21.x
 
-    - name: Cache Racket dependencies
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cache/racket
-          ~/.local/share/racket
-        key: ${{ runner.os }}-racket-8.3
-
-    - run: raco pkg install --auto --skip-installed "git+https://git.sr.ht/~mbutterick/pollen"
-    - run: raco pollen render sources
-    - run: raco pollen publish sources site 
-    - run: rm site/template.html site/README.md site/Dockerfile
+    - run: cd sources/blogware && go build
+    - run: blogware/blogware -output site
 
     - name: Publish
       uses: netlify/actions/cli@master
