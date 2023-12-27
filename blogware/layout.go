@@ -25,6 +25,7 @@ const (
 	StandalonePage
 	PostList
 	AtomXmlFeed
+	PrecompiledHtml
 )
 
 const (
@@ -48,6 +49,7 @@ var SiteLayout = []LayoutEntry{
 	{Path: "/about.html", Type: StandalonePage},
 	{Path: "/feed.xml", Type: AtomXmlFeed},
 	{Path: "/index.html", Type: IndexPage},
+	{Path: "/precompiled", Type: PrecompiledHtml},
 }
 
 func handleAtomRender(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +151,42 @@ func renderPostAt(i int, articles []Article) (contents []byte, err error) {
 	return
 }
 
+func servePrecompiledHtml(w http.ResponseWriter, r *http.Request) bool {
+	if strings.HasSuffix(r.URL.Path, "/") {
+		return false
+	}
+	for _, e := range SiteLayout {
+		if e.Type == PrecompiledHtml {
+			srcPath := path.Join(inputDir, e.Path, r.URL.Path)
+			contents, err := os.ReadFile(srcPath)
+			if os.IsNotExist(err) {
+				return false
+			}
+			log.Printf("Serving request to %s with a precompiled file %s", r.URL.Path, srcPath)
+			w.Write(contents)
+			return true
+		}
+	}
+	return false
+}
+
+func postsPrefix() string {
+	for _, e := range SiteLayout {
+		if e.Type == TeXArticles {
+			return e.Path
+		}
+	}
+	return ""
+}
+
 func handlePostRender(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == postsPrefix() {
+		handlePostListRender(w, r)
+		return
+	}
+	if servePrecompiledHtml(w, r) {
+		return
+	}
 	path := r.URL.Path
 	posts, err := AllArticles()
 	if err != nil {
@@ -283,6 +320,9 @@ func AllArticles() (articles []Article, err error) {
 		slices.Reverse(names)
 		articles = make([]Article, 0, len(names))
 		for _, name := range names {
+			if path.Ext(name) != ".tex" {
+				continue
+			}
 			article, parseErr := parseArticle(path.Join(articlesPath, name))
 			if parseErr != nil {
 				err = parseErr
@@ -297,23 +337,23 @@ func AllArticles() (articles []Article, err error) {
 	return
 }
 
-func RenderTeXArticle(name string) (string, error) {
-	// TODO
-	return "", nil
-}
-
 func copyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open %s: %w", src, err)
 	}
 	defer in.Close()
 	out, err := os.Create(dst)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create %s: %w", dst, err)
 	}
-	_, err = io.Copy(in, out)
-	return err
+	defer out.Close()
+	n, err := io.Copy(out, in)
+	if err != nil {
+		return fmt.Errorf("failed to copy %s to %s: %w", src, dst, err)
+	}
+	log.Printf("Copied %d bytes from %s to %s", n, src, dst)
+	return nil
 }
 
 func copyRecursively(src, dst string) error {
@@ -326,7 +366,11 @@ func copyRecursively(src, dst string) error {
 		dstPath := path.Join(dst, relPath)
 		if info.IsDir() {
 			log.Printf("Creating %s", dstPath)
-			return os.Mkdir(dstPath, 0755)
+			err := os.Mkdir(dstPath, 0755)
+			if os.IsExist(err) {
+				return nil
+			}
+			return err
 		} else {
 			log.Printf("Copying %s => %s", p, dstPath)
 			return copyFile(p, dstPath)
@@ -410,8 +454,24 @@ func RenderSite() error {
 			if err := os.WriteFile(dst, feed, FilePerm); err != nil {
 				return fmt.Errorf("failed to write the atom feed to %s: %w", dst, err)
 			}
-		default:
-			// TODO
+		}
+	}
+	for _, e := range SiteLayout {
+		if e.Type == PrecompiledHtml {
+			srcDir := path.Join(inputDir, e.Path)
+			stat, err := os.Stat(srcDir)
+			if os.IsNotExist(err) {
+				log.Printf("Skipping non-existent precompiled directory %s", srcDir)
+			} else if err != nil {
+				return fmt.Errorf("failed to stat %s: %w", srcDir, err)
+			}
+			if !stat.IsDir() {
+				return fmt.Errorf("precompiled html path %s is not a directory", srcDir)
+			}
+			if err := copyRecursively(srcDir, outputDir); err != nil {
+				return fmt.Errorf("failed to copy precompiled HTML files: %w", err)
+			}
+			break
 		}
 	}
 	return nil
