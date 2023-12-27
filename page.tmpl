@@ -1,0 +1,24 @@
+{{- define "page" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <meta name="author" content="Roman Kashitsyn">
+  <title>{{ .Title }}</title>
+  <link rel="stylesheet" href="/css/tufte.css">
+  <link rel="icon" href="/images/favicon.svg">
+  <link rel="mask-icon" href="/images/mask-icon.svg" color="#000000">
+</head>
+<body>
+<article>
+{{- template "header" -}}
+<h1><a href="{{ .URL }}">{{ .Title }}</a></h1>
+<hr>
+{{ .Body }}
+<hr>
+{{- template "footer" -}}
+</article>
+</body>
+</html>
+{{- end }}

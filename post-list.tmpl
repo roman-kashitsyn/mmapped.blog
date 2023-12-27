@@ -1,0 +1,37 @@
+{{- define "post-list" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <meta name="author" content="Roman Kashitsyn">
+  <title>{{ .Title }}</title>
+  <link rel="stylesheet" href="/css/tufte.css">
+  <link rel="icon" href="/images/favicon.svg">
+  <link rel="mask-icon" href="/images/mask-icon.svg" color="#000000">
+  <link rel="alternate" type="application/atom+xml" href="/feed.xml">
+</head>
+<body>
+<article>
+{{- template "header" -}}
+<h1>{{ .Title }}</h1>
+{{ if .Articles }}
+<hr>
+<ul class="posts">
+{{ range .Articles }}
+<li itemscope="" itemtype="https://schema.org/CreativeWork">
+  <meta keywords="{{ StringsJoin .Keywords "," }}">
+  <h2><a href="{{ .URL }}"><span itemprop="headline">{{ .Title }}</span></a></h2>
+  <em class="publish-date">Published: <span itemprop="datePublished">{{ FormatDate .CreatedAt }}</span></em>
+  <div itemprop="abstract">{{ .Subtitle }}</div>
+</li>
+{{ end }}
+</ul>
+{{ end }}
+
+<hr>
+{{- template "footer" -}}
+</article>
+</body>
+</html>
+{{- end }}
