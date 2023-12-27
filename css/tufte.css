@@ -157,6 +157,11 @@ ol.circled>li:before {
     content: attr(data-num-glyph);
 }
 
+.circled-ref {
+    font-family: "Libertinus Serif", et-book, Palatino, serif;
+    font-size: 1.4rem;
+}
+
 li.toc {
     list-style: none;
     line-height: 1.2rem;
