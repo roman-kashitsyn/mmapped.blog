@@ -256,6 +256,10 @@ func renderCodeText(rc *RenderingCtx, buf *strings.Builder, text string) {
 		switch c {
 		case '&':
 			buf.WriteString("&amp;")
+		case '<':
+			buf.WriteString("&lt;")
+		case '>':
+			buf.WriteString("&gt;")
 		default:
 			buf.WriteRune(c)
 		}
@@ -316,6 +320,10 @@ func renderText(rc *RenderingCtx, buf *strings.Builder, text string) {
 			buf.WriteRune(c)
 		case '&':
 			buf.WriteString("&amp;")
+		case '<':
+			buf.WriteString("&lt;")
+		case '>':
+			buf.WriteString("&gt;")
 		default:
 			buf.WriteRune(c)
 		}
@@ -369,12 +377,26 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			return err
 		}
 		buf.WriteString("</b>")
+	case SymQED:
+		buf.WriteRune('∎')
 	case SymEmphasis:
 		buf.WriteString("<em>")
 		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
 			return err
 		}
 		buf.WriteString("</em>")
+	case SymSub:
+		buf.WriteString("<sub>")
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</sub>")
+	case SymSup:
+		buf.WriteString("<sup>")
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</sup>")
 	case SymItem:
 		switch rc.parent {
 		case GenericCtx:

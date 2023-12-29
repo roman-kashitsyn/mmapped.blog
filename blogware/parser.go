@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
 )
@@ -73,7 +74,7 @@ func parseOptions(s *stream) (opts []sym, err error) {
 		}
 		err = s.Expect(TokRBracket)
 	default:
-		err = s.Errorf("unexpected token type: %s", &t)
+		err = s.Errorf("unexpected token %s while parsing options", &t)
 	}
 	return
 }
@@ -109,7 +110,7 @@ func parseArg(s *stream, typ ArgType) (body []Node, err error) {
 				}
 				Push(&body, node)
 			default:
-				err = s.Errorf("unexpected token %v", t)
+				err = s.Errorf("unexpected token %v while parsing arguments", t)
 				break loop
 			}
 		}
@@ -158,7 +159,7 @@ func ParseCmd(s *stream, name sym, pos int) (cmd Cmd, err error) {
 	for i := 0; i < arity; i++ {
 		arg, argErr := parseArg(s, CmdArgType(name, i))
 		if argErr != nil {
-			err = argErr
+			err = fmt.Errorf("%s:%d: failed to parse arg %d of command %s: %v", s.source, pos, i, SymbolName(name), argErr)
 			return
 		}
 		Push(&args, arg)
@@ -251,11 +252,11 @@ loop:
 			if name == SymCode {
 				Push(&body, Node(Text{pos: s.pos - 1, body: t.body}))
 			} else {
-				err = s.Errorf("unexpected token %s", &t)
+				err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
 				break loop
 			}
 		default:
-			err = s.Errorf("unexpected token %s", &t)
+			err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
 			break loop
 		}
 	}
@@ -324,7 +325,7 @@ func ParseSequence(s *stream) (body []Node, err error) {
 			}
 			Push(&body, node)
 		} else {
-			err = s.Errorf("unexpected token: %s", &t)
+			err = s.Errorf("unexpected token: %s while parsing top-level document", &t)
 			return
 		}
 	}
