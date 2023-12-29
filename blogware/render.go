@@ -159,10 +159,12 @@ func ArticleMetadata(ast []Node) (article Article, err error) {
 				if err = extractTextArgument(v, 0, &article.Title); err != nil {
 					return
 				}
+				article.Title = renderTitle(article.Title)
 			case SymSubtitle:
 				if err = extractTextArgument(v, 0, &article.Subtitle); err != nil {
 					return
 				}
+				article.Subtitle = renderTitle(article.Subtitle)
 			case SymDate:
 				if err = extractDateArgument(v, 0, &article.CreatedAt); err != nil {
 					return
