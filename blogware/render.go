@@ -470,6 +470,14 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		default:
 			return fmt.Errorf("unsupported image type: %s", dst)
 		}
+	case SymAdvice:
+		var anchor string
+		if err := extractTextArgument(cmd, 0, &anchor); err != nil {
+			return fmt.Errorf("failed to extract %s anchor: %w", SymbolName(cmd.name), err)
+		}
+		fmt.Fprintf(buf, `<div class="advice" id="%[1]s"><p><a class="anchor" href="#%[1]s">☛</a>`, template.HTMLEscapeString(anchor))
+		renderGenericSeq(&newRc, buf, cmd.args[1])
+		buf.WriteString("</p></div>")
 	case SymMarginNote:
 		var anchor string
 		if err := extractTextArgument(cmd, 0, &anchor); err != nil {

@@ -41,6 +41,7 @@ var (
 	SymSub             = BuiltinCmd("sub", ArgTypeSeq)
 	SymSup             = BuiltinCmd("sup", ArgTypeSeq)
 	SymQED             = BuiltinCmd("qed")
+	SymAdvice          = BuiltinCmd("advice", ArgTypeSym, ArgTypeSeq)
 	SymMarginNote      = BuiltinCmd("marginnote", ArgTypeSym, ArgTypeSeq)
 	SymSideNote        = BuiltinCmd("sidenote", ArgTypeSym, ArgTypeSeq)
 	SymLdots           = BuiltinCmd("ldots")
