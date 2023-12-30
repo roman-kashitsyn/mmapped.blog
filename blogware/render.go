@@ -417,6 +417,10 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		buf.WriteString("</span>")
 	case SymLdots:
 		buf.WriteRune('…')
+	case SymNewline:
+		buf.WriteString("<br>")
+	case SymHRule:
+		buf.WriteString("<hr>")
 	case SymCircled:
 		var n int
 		if err := extractIntArgument(cmd, 0, &n); err != nil {
@@ -509,7 +513,7 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			return err
 		}
 	default:
-		return fmt.Errorf("unsupported command: %s", cmd.Name())
+		return fmt.Errorf("unsupported command at %d: %s", cmd.pos, cmd.Name())
 	}
 	return nil
 }
@@ -566,11 +570,11 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 	case SymCode:
 		// TODO: extra newlines at the beginning/end
 		newRc.parent = CodeCtx
-		fmt.Fprintf(buf, `<pre><code class="%s">`, optsToCssClasses(env.opts))
+		fmt.Fprintf(buf, `<div class="source-container"><pre class="source %s"><code>`, optsToCssClasses(env.opts))
 		if err := renderGenericSeq(&newRc, buf, env.body); err != nil {
 			return err
 		}
-		buf.WriteString("</pre></code>")
+		buf.WriteString("</div></pre></code>")
 	case SymFigure:
 		fmt.Fprintf(buf, `<figure class="%s">`, optsToCssClasses(env.opts))
 		if err := renderGenericSeq(&newRc, buf, env.body); err != nil {

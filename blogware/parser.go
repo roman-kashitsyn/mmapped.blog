@@ -16,7 +16,7 @@ func IsValidSymbol(s string) bool {
 
 func IsSymbolic(c rune) bool {
 	switch c {
-	case '*', '-':
+	case '*', '-', '.', '_':
 		return true
 	default:
 		return unicode.IsLetter(c) || unicode.IsDigit(c)

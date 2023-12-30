@@ -45,6 +45,8 @@ var (
 	SymMarginNote      = BuiltinCmd("marginnote", ArgTypeSym, ArgTypeSeq)
 	SymSideNote        = BuiltinCmd("sidenote", ArgTypeSym, ArgTypeSeq)
 	SymLdots           = BuiltinCmd("ldots")
+	SymNewline         = BuiltinCmd("newline")
+	SymHRule           = BuiltinCmd("hrule")
 	SymEpigraph        = BuiltinCmd("epigraph", ArgTypeSeq, ArgTypeSeq)
 	SymBlockquote      = BuiltinCmd("blockquote", ArgTypeSeq, ArgTypeSeq)
 
