@@ -180,10 +180,6 @@ ul.toc-level-1 {
     padding-left: 0px;
 }
 
-.circled-ref {
-    font-family: "Libertinus Serif", serif;
-}
-
 a:link, .tufte-underline, .hover-tufte-underline:hover {
     text-decoration: none;
     background: -webkit-linear-gradient(#fffff8, #fffff8), -webkit-linear-gradient(#fffff8, #fffff8), -webkit-linear-gradient(currentColor, currentColor);
@@ -577,9 +573,10 @@ th, td {
 }
 
 table > thead > tr:last-child > td,
+table > thead > tr:last-child > th,
 table > tbody > tr:last-child > th {
     padding-bottom: 0.5rem;
-    font-variant: small-caps;
+    font-variant: all-small-caps;
 }
 
 .table-3 td, .table-3 th {
@@ -596,10 +593,28 @@ table > tbody > tr:last-child > th {
     padding-right: 4em;
 }
 
+.align-r {
+    text-align: right;
+    padding-right: 4em;
+}
+.align-l {
+    text-align: left;
+}
+.align-c {
+    text-align: center;
+}
+
 table > tbody > tr:first-child > td,
 table > tbody > tr:first-child > th {
     padding-top: 0.5rem;
+}
+
+tr.border-top {
     border-top: 1px solid;
+}
+
+tr.border-bot {
+    border-bottom: 1px solid;
 }
 
 .sans {

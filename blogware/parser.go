@@ -141,6 +141,15 @@ func parseArg(s *stream, typ ArgType) (body []Node, err error) {
 		body = []Node{text}
 		err = s.Expect(TokRBrace)
 		return
+	case ArgTypeAlignSpec:
+		text, scanErr := s.ScanAlignSpec()
+		if scanErr != nil {
+			err = scanErr
+			return
+		}
+		body = []Node{text}
+		err = s.Expect(TokRBrace)
+		return
 	default:
 		err = s.Errorf("unexpected arg type: %v", typ)
 		return
@@ -248,13 +257,165 @@ loop:
 				return
 			}
 			Push(&body, node)
-		case TokLBrace, TokRBrace, TokLBracket, TokRBracket:
+		case TokLBrace, TokRBrace, TokLBracket, TokRBracket, TokAmp:
 			if name == SymCode {
 				Push(&body, Node(Text{pos: s.pos - 1, body: t.body}))
 			} else {
 				err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
 				break loop
 			}
+		default:
+			err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
+			break loop
+		}
+	}
+	return
+}
+
+func parseAlignSpec(s *stream) (spec []ColSpec, err error) {
+	if err = s.Expect(TokLBrace); err != nil {
+		return
+	}
+	var t token
+	pos := s.pos
+	if err = s.NextToken(&t); err != nil {
+		return
+	}
+	if t.kind != TokText {
+		err = s.ErrorfAt(pos, "expected a text token, got %v", &t)
+		return
+	}
+	spec, err = parseColSpecs(t.body)
+	if err != nil {
+		err = s.ErrorfAt(pos, "failed to parse column alignment spec: %v", err)
+		return
+	}
+	if err = s.Expect(TokRBrace); err != nil {
+		return
+	}
+	return
+}
+
+func ParseTable(s *stream, name sym, pos int) (tab Table, err error) {
+	var rows []Row
+	var row Row
+	var cell Cell
+	cellCount := 1
+
+	var t token
+	opts, err := parseOptions(s)
+	if err != nil {
+		return
+	}
+
+	spec, err := parseAlignSpec(s)
+	if err != nil {
+		return
+	}
+
+	if len(spec) == 0 {
+		err = s.ErrorfAt(pos, "empty cell alignment spec")
+	}
+
+	cell.alignSpec = spec[0]
+	cell.colspan = 1
+
+loop:
+	for !s.IsEmpty() {
+		tokPos := s.pos
+		if err = s.NextToken(&t); err != nil {
+			return
+		}
+		switch t.kind {
+		case TokText:
+			if t.body == "\\" {
+				if cellCount != len(spec) {
+					err = s.Errorf("row %d has %d cells (expected %d)", len(rows)+1, cellCount, len(spec))
+					return
+				}
+				if len(cell.body) > 0 {
+					Push(&row.cells, cell)
+				}
+				Push(&rows, row)
+				cellCount = 1
+				cell = Cell{pos: s.pos, alignSpec: spec[0], colspan: 1}
+				row = Row{}
+			} else {
+				Push(&cell.body, Node(Text{pos: tokPos, body: t.body}))
+			}
+		case TokControl:
+			switch t.name {
+			case SymEnd:
+				// Found the closing marker, let's validate it.
+				endPos := s.pos
+				if endErr := parseEnvEnd(s, name, pos); endErr != nil {
+					err = endErr
+				}
+				// Check whether there is a pending \hrule that needs to become the bottom border.
+				if row.borders != BorderNone && len(row.cells) == 0 && len(rows) > 0 {
+					rows[len(rows)-1].borders |= BorderBottom
+				}
+				// Check whether the last row was properly closed.
+				if len(row.cells) != 0 {
+					err = s.ErrorfAt(endPos, "incomplete table row %d", len(rows)+1)
+				}
+				tab = Table{
+					name:     name,
+					spec:     spec,
+					beginPos: pos,
+					endPos:   endPos,
+					opts:     opts,
+					rows:     rows,
+				}
+				break loop
+			case SymHRule:
+				_, parseErr := parseEnvOrCommand(s, t.name)
+				if parseErr != nil {
+					err = parseErr
+					return
+				}
+				row.borders = BorderTop
+			case SymMulticolumn:
+				c, parseErr := parseEnvOrCommand(s, t.name)
+				if parseErr != nil {
+					err = parseErr
+					return
+				}
+				var numColumns int
+				var alignSpec []ColSpec
+				var body []Node
+				cmd := c.(Cmd)
+				if err = cmd.ArgNum(0, &numColumns); err != nil {
+					return
+				}
+				if err = cmd.ArgAlignSpec(1, &alignSpec); err != nil {
+					return
+				}
+				if len(alignSpec) != 1 {
+					err = s.ErrorfAt(cmd.pos, "command %s align spec at position %d should have length 1", SymbolName(t.name), 1)
+					return
+				}
+				if err = cmd.ArgSeq(2, &body); err != nil {
+					return
+				}
+
+				cellCount += numColumns - 1
+				Push(&row.cells, Cell{colspan: numColumns, pos: cmd.pos, alignSpec: alignSpec[0], body: body})
+			default:
+				node, parseErr := parseEnvOrCommand(s, t.name)
+				if parseErr != nil {
+					err = parseErr
+					return
+				}
+				Push(&cell.body, node)
+			}
+		case TokLBrace, TokRBrace, TokLBracket, TokRBracket:
+			err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
+			break loop
+		case TokAmp:
+			Push(&row.cells, cell)
+			cell = Cell{pos: s.pos, colspan: 1, alignSpec: spec[cellCount]}
+			cellCount += 1
 		default:
 			err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
 			break loop
@@ -286,6 +447,15 @@ func parseEnvOrCommand(s *stream, cmd sym) (node Node, err error) {
 		beginSym, envNameErr := parseEnvName(s)
 		if envNameErr != nil {
 			err = envNameErr
+			return
+		}
+		if beginSym == SymTabular {
+			tab, tabErr := ParseTable(s, beginSym, p)
+			if tabErr != nil {
+				err = tabErr
+				return
+			}
+			node = tab
 			return
 		}
 		env, envErr := ParseEnv(s, beginSym, p)
