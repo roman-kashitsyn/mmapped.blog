@@ -37,6 +37,7 @@ var (
 	SymSmallCaps       = BuiltinCmd("sc", ArgTypeSeq)
 	SymCircled         = BuiltinCmd("circled", ArgTypeNum)
 	SymCode            = BuiltinCmd("code", ArgTypeSeq)
+	SymCenter          = BuiltinCmd("center", ArgTypeSeq)
 	SymItem            = BuiltinCmd("item")
 	SymMath            = BuiltinCmd("math", ArgTypeSeq)
 	SymSub             = BuiltinCmd("sub", ArgTypeSeq)

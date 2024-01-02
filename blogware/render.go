@@ -330,6 +330,12 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			return err
 		}
 		buf.WriteString("</b>")
+	case SymCenter:
+		buf.WriteString("<center>")
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</center>")
 	case SymQED:
 		buf.WriteRune('∎')
 	case SymEmphasis:
