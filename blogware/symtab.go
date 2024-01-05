@@ -21,6 +21,7 @@ var (
 	// Builtin commands
 	SymBegin           = BuiltinCmd("begin", ArgTypeSym)
 	SymEnd             = BuiltinCmd("end", ArgTypeSym)
+	SymLabel           = BuiltinCmd("label", ArgTypeSym)
 	SymVerbatim        = BuiltinEnv("verbatim")
 	SymSection         = BuiltinCmd("section", ArgTypeSym, ArgTypeSeq)
 	SymSubSection      = BuiltinCmd("subsection", ArgTypeSym, ArgTypeSeq)

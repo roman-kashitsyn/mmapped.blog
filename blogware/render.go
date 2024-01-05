@@ -324,6 +324,12 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		fmt.Fprintf(buf, `<h3 id="%[1]s"><a href="#%[1]s">`, template.HTMLEscapeString(anchor))
 		renderText(&newRc, buf, title)
 		buf.WriteString("</a></h3><p>")
+	case SymLabel:
+		var anchor string
+		if err := cmd.ArgText(0, &anchor); err != nil {
+			return fmt.Errorf("failed to extract label anchor: %w", err)
+		}
+		fmt.Fprintf(buf, `<span id="%s"></span>`, template.HTMLEscapeString(anchor))
 	case SymBold:
 		buf.WriteString("<b>")
 		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
