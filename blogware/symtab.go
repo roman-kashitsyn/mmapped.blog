@@ -22,6 +22,7 @@ var (
 	SymBegin           = BuiltinCmd("begin", ArgTypeSym)
 	SymEnd             = BuiltinCmd("end", ArgTypeSym)
 	SymLabel           = BuiltinCmd("label", ArgTypeSym)
+	SymDingbat         = BuiltinCmd("dingbat", ArgTypeSym)
 	SymVerbatim        = BuiltinEnv("verbatim")
 	SymSection         = BuiltinCmd("section", ArgTypeSym, ArgTypeSeq)
 	SymSubSection      = BuiltinCmd("subsection", ArgTypeSym, ArgTypeSeq)
@@ -34,6 +35,7 @@ var (
 	SymTitle           = BuiltinCmd("title", ArgTypeSeq)
 	SymSubtitle        = BuiltinCmd("subtitle", ArgTypeSeq)
 	SymBold            = BuiltinCmd("b", ArgTypeSeq)
+	SymNormal          = BuiltinCmd("normal", ArgTypeSeq)
 	SymEmphasis        = BuiltinCmd("em", ArgTypeSeq)
 	SymSmallCaps       = BuiltinCmd("sc", ArgTypeSeq)
 	SymCircled         = BuiltinCmd("circled", ArgTypeNum)
@@ -65,6 +67,7 @@ var (
 	SymItemize   = BuiltinEnv("itemize")
 	SymFigure    = BuiltinEnv("figure")
 	SymTabular   = BuiltinEnv("tabular")
+	SymTabularS  = BuiltinEnv("tabular*")
 )
 
 func BuiltinEnv(name string) sym {

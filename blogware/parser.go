@@ -414,6 +414,10 @@ loop:
 			break loop
 		case TokAmp:
 			Push(&row.cells, cell)
+			if cellCount >= len(spec) {
+				err = s.Errorf("too many cells in row %d: expected %d, got %d", len(rows)+1, len(spec), cellCount+1)
+				return
+			}
 			cell = Cell{pos: s.pos, colspan: 1, alignSpec: spec[cellCount]}
 			cellCount += 1
 		default:
@@ -449,7 +453,7 @@ func parseEnvOrCommand(s *stream, cmd sym) (node Node, err error) {
 			err = envNameErr
 			return
 		}
-		if beginSym == SymTabular {
+		if beginSym == SymTabular || beginSym == SymTabularS {
 			tab, tabErr := ParseTable(s, beginSym, p)
 			if tabErr != nil {
 				err = tabErr

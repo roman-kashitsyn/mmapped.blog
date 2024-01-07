@@ -330,12 +330,26 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			return fmt.Errorf("failed to extract label anchor: %w", err)
 		}
 		fmt.Fprintf(buf, `<span id="%s"></span>`, template.HTMLEscapeString(anchor))
+	case SymDingbat:
+		var name string
+		if err := cmd.ArgText(0, &name); err != nil {
+			return fmt.Errorf("failed to extract dingbat name: %w", err)
+		}
+		if err := renderDingbat(buf, name); err != nil {
+			return err
+		}
 	case SymBold:
 		buf.WriteString("<b>")
 		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
 			return err
 		}
 		buf.WriteString("</b>")
+	case SymNormal:
+		buf.WriteString(`<span class="normal">`)
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</span>")
 	case SymCenter:
 		buf.WriteString("<center>")
 		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
@@ -567,19 +581,31 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 func renderTable(rc *RenderingCtx, buf *strings.Builder, tab Table) error {
 	fmt.Fprintf(buf, `<table class="table-%d %s">`, len(tab.spec), optsToCssClasses(tab.opts))
 	var newRc RenderingCtx
-	if len(tab.rows) > 0 {
-		fmt.Fprintf(buf, `<thead><tr class="%s">`, borderClass(tab.rows[0]))
-		for _, cell := range tab.rows[0].cells {
-			fmt.Fprintf(buf, `<th colspan="%d" class="%s">`, cell.colspan, alignmentToClass(cell.alignSpec))
-			if err := renderGenericSeq(&newRc, buf, cell.body); err != nil {
-				return err
+	var header []Row
+	var body []Row
+	if tab.name == SymTabular && len(tab.rows) > 0 {
+		header = tab.rows[0:1]
+		body = tab.rows[1:]
+	} else {
+		body = tab.rows
+	}
+	if len(header) > 0 {
+		buf.WriteString("<thead>")
+		for _, headerRow := range header {
+			fmt.Fprintf(buf, `<thead><tr class="%s">`, borderClass(headerRow))
+			for _, cell := range headerRow.cells {
+				fmt.Fprintf(buf, `<th colspan="%d" class="%s">`, cell.colspan, alignmentToClass(cell.alignSpec))
+				if err := renderGenericSeq(&newRc, buf, cell.body); err != nil {
+					return err
+				}
+				buf.WriteString("</th>")
 			}
-			buf.WriteString("</th>")
+			buf.WriteString("</tr>")
 		}
-		buf.WriteString("</tr></thead>")
+		buf.WriteString("</thead>")
 	}
 	buf.WriteString("<tbody>")
-	for _, row := range tab.rows[1:] {
+	for _, row := range body {
 		fmt.Fprintf(buf, `<tr class="%s">`, borderClass(row))
 		for _, cell := range row.cells {
 			fmt.Fprintf(buf, `<td colspan="%d" class="%s">`, cell.colspan, alignmentToClass(cell.alignSpec))
@@ -623,4 +649,18 @@ func borderClass(r Row) string {
 
 func roundNumGlyph(n int) string {
 	return string(rune(0x245f + n))
+}
+
+func renderDingbat(buf *strings.Builder, name string) error {
+	switch name {
+	case "heavy-ballot-x":
+		buf.WriteRune('✗')
+	case "heavy-check":
+		buf.WriteRune('✔')
+	case "lower-right-pencil":
+		buf.WriteRune('✎')
+	default:
+		return fmt.Errorf("unsupported dingbat: %s", name)
+	}
+	return nil
 }
