@@ -194,7 +194,8 @@ func parseEnvEnd(s *stream, beginSym sym, beginPos int) error {
 	return nil
 }
 
-func ParseVerbatim(s *stream, pos int) (env Env, err error) {
+func ParseVerbatim(s *stream, name sym, opts []sym, pos int) (env Env, err error) {
+	s.SkipNewline()
 	textPos := s.pos
 	body, verbErr := s.FindVerbatimEnd()
 	if verbErr != nil {
@@ -202,8 +203,10 @@ func ParseVerbatim(s *stream, pos int) (env Env, err error) {
 		return
 	}
 	env = Env{
+		name:     name,
 		beginPos: pos,
 		endPos:   s.pos,
+		opts:     opts,
 		body:     []Node{Text{pos: textPos, body: body}},
 	}
 	return
@@ -218,7 +221,7 @@ func ParseEnv(s *stream, name sym, pos int) (env Env, err error) {
 	}
 	if name == SymVerbatim {
 		// The verbatim env is special
-		return ParseVerbatim(s, pos)
+		return ParseVerbatim(s, name, opts, pos)
 	}
 	if name == SymCode {
 		// We don't want unnecessary empty newlines creaping into the rendered code.

@@ -313,6 +313,12 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		renderText(&newRc, buf, title)
 		buf.WriteString("</a></h2><p>")
 		rc.sectionCounter++
+	case SymSectionS:
+		if rc.sectionCounter > 0 {
+			buf.WriteString("</section>")
+		}
+		buf.WriteString("<section><p>")
+		rc.sectionCounter++
 	case SymSubSection:
 		var anchor, title string
 		if err := cmd.ArgText(0, &anchor); err != nil {
@@ -344,6 +350,12 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			return err
 		}
 		buf.WriteString("</b>")
+	case SymUnderline:
+		buf.WriteString("<u>")
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</u>")
 	case SymNormal:
 		buf.WriteString(`<span class="normal">`)
 		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
@@ -550,7 +562,7 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 		}
 		buf.WriteString(`</ul>`)
 	case SymVerbatim:
-		buf.WriteString(`<pre><code class="verbatim">`)
+		fmt.Fprintf(buf, `<div class="source-container"><pre class="source %s"><code>`, optsToCssClasses(env.opts))
 		for _, n := range env.body {
 			switch v := n.(type) {
 			case Text:
@@ -559,7 +571,7 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 				return fmt.Errorf("unexpected node type in verbatim environment: %s", v)
 			}
 		}
-		buf.WriteString("</code></pre>")
+		buf.WriteString("</code></pre></div>")
 	case SymCode:
 		// TODO: extra newlines at the beginning/end
 		newRc.parent = CodeCtx
@@ -567,7 +579,7 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 		if err := renderGenericSeq(&newRc, buf, env.body); err != nil {
 			return err
 		}
-		buf.WriteString("</div></pre></code>")
+		buf.WriteString("</pre></code></div>")
 	case SymFigure:
 		fmt.Fprintf(buf, `<figure class="%s">`, optsToCssClasses(env.opts))
 		if err := renderGenericSeq(&newRc, buf, env.body); err != nil {
