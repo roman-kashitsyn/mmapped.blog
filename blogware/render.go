@@ -169,6 +169,7 @@ const (
 	CodeCtx
 	OrderedListCtx
 	UnorderedListCtx
+	DescriptionListCtx
 )
 
 type RenderingCtx struct {
@@ -517,6 +518,21 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		if err := renderBlockquote(&newRc, buf, cmd); err != nil {
 			return err
 		}
+	case SymTerm:
+		if rc.parent != DescriptionListCtx {
+			return fmt.Errorf("error at %d: term command can appear only in the description environment", cmd.pos)
+		}
+		fmt.Fprintf(buf, `<dt class="%s">`, optsToCssClasses(cmd.opts))
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</dt>")
+		fmt.Fprintf(buf, `<dd class="%s">`, optsToCssClasses(cmd.opts))
+		if err := renderGenericSeq(&newRc, buf, cmd.args[1]); err != nil {
+			return err
+		}
+		buf.WriteString("</dd>")
+
 	default:
 		return fmt.Errorf("unsupported command at %d: %s", cmd.pos, cmd.Name())
 	}
@@ -586,6 +602,13 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 			return err
 		}
 		buf.WriteString("</figure>")
+	case SymDescription:
+		newRc.parent = DescriptionListCtx
+		fmt.Fprintf(buf, `<dl class="%s">`, optsToCssClasses(env.opts))
+		if err := renderGenericSeq(&newRc, buf, env.body); err != nil {
+			return err
+		}
+		buf.WriteString("</dl>")
 	}
 	return nil
 }

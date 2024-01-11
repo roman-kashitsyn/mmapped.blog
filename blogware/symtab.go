@@ -61,15 +61,17 @@ var (
 	SymEpigraph        = BuiltinCmd("epigraph", ArgTypeSeq, ArgTypeSeq)
 	SymBlockquote      = BuiltinCmd("blockquote", ArgTypeSeq, ArgTypeSeq)
 	SymMulticolumn     = BuiltinCmd("multicolumn", ArgTypeNum, ArgTypeAlignSpec, ArgTypeSeq)
+	SymTerm            = BuiltinCmd("term", ArgTypeSeq, ArgTypeSeq)
 
 	// Builtin environments
-	SymDocument  = BuiltinEnv("document")
-	SymAbstract  = BuiltinEnv("abstract")
-	SymEnumerate = BuiltinEnv("enumerate")
-	SymItemize   = BuiltinEnv("itemize")
-	SymFigure    = BuiltinEnv("figure")
-	SymTabular   = BuiltinEnv("tabular")
-	SymTabularS  = BuiltinEnv("tabular*")
+	SymDocument    = BuiltinEnv("document")
+	SymAbstract    = BuiltinEnv("abstract")
+	SymEnumerate   = BuiltinEnv("enumerate")
+	SymItemize     = BuiltinEnv("itemize")
+	SymFigure      = BuiltinEnv("figure")
+	SymTabular     = BuiltinEnv("tabular")
+	SymTabularS    = BuiltinEnv("tabular*")
+	SymDescription = BuiltinEnv("description")
 )
 
 func BuiltinEnv(name string) sym {
