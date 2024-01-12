@@ -253,14 +253,14 @@ func renderText(rc *RenderingCtx, buf *strings.Builder, text string) {
 			buf.WriteRune(c)
 		case '\'':
 			if strings.HasPrefix(text[i:], "''") {
-				buf.WriteRune('”')
+				buf.WriteString("</q>")
 				i += 2
 				continue
 			}
 			buf.WriteRune('’')
 		case '`':
 			if strings.HasPrefix(text[i:], "``") {
-				buf.WriteRune('“')
+				buf.WriteString("<q>")
 				i += 2
 				continue
 			}
