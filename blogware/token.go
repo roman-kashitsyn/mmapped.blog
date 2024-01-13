@@ -18,6 +18,7 @@ const (
 	TokRBrace
 	TokLBracket
 	TokRBracket
+	TokAmp
 	TokControl
 )
 
@@ -39,6 +40,8 @@ func (t *token) String() string {
 		return "["
 	case TokRBracket:
 		return "]"
+	case TokAmp:
+		return "&"
 	case TokText:
 		return fmt.Sprintf("Text(%s)", t.body)
 	case TokControl:
@@ -72,7 +75,11 @@ func (s *stream) Error(msg string) error {
 }
 
 func (s *stream) Errorf(msg string, a ...any) error {
-	return fmt.Errorf("%s:%d %s", s.source, s.pos, fmt.Sprintf(msg, a...))
+	return s.ErrorfAt(s.pos, msg, a...)
+}
+
+func (s *stream) ErrorfAt(pos int, msg string, a ...any) error {
+	return fmt.Errorf("%s:%d %s", s.source, pos, fmt.Sprintf(msg, a...))
 }
 
 // Rest returns the rest of the input as a string.
@@ -146,7 +153,7 @@ func (s *stream) LookAhead() TokenKind {
 
 func isSpecial(c rune) bool {
 	switch c {
-	case '%', '{', '}', '\\', '[', ']':
+	case '%', '{', '}', '\\', '[', ']', '&':
 		return true
 	default:
 		return false
@@ -178,7 +185,7 @@ func (s *stream) ScanSymbol() (text Text, err error) {
 
 func isURLChar(c rune) bool {
 	switch c {
-	case '-', '.', '_', '~', ':', '/', '?', '#', '[', ']', '@', '!', '$', '&', '(', ')', '*', '+', ',', ';', '%', '=':
+	case '-', '.', '_', '~', ':', '/', '?', '#', '[', ']', '@', '!', '$', '&', '(', ')', '*', '+', ',', ';', '%', '=', '\'':
 		return true
 	default:
 		return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9'
@@ -195,6 +202,20 @@ func (s *stream) ScanURL() (text Text, err error) {
 func (s *stream) ScanNumber() (text Text, err error) {
 	return s.scanFunc("number", func(c rune) bool { return c == '-' || c >= '0' && c <= '9' }, func(numText string) error {
 		_, err := strconv.Atoi(numText)
+		return err
+	})
+}
+
+func (s *stream) ScanAlignSpec() (text Text, err error) {
+	return s.scanFunc("number", func(c rune) bool {
+		switch c {
+		case 'c', 'r', 'l', '|', ' ':
+			return true
+		default:
+			return false
+		}
+	}, func(text string) error {
+		_, err := parseColSpecs(text)
 		return err
 	})
 }
@@ -246,6 +267,10 @@ func (s *stream) NextToken(tok *token) error {
 		case ']':
 			tok.kind = TokRBracket
 			tok.body = "]"
+			return nil
+		case '&':
+			tok.kind = TokAmp
+			tok.body = "&"
 			return nil
 		case '\\':
 			str = str[size1:]

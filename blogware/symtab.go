@@ -9,6 +9,7 @@ const (
 	ArgTypeSym
 	ArgTypeNum
 	ArgTypeURL
+	ArgTypeAlignSpec
 )
 
 var (
@@ -20,8 +21,11 @@ var (
 	// Builtin commands
 	SymBegin           = BuiltinCmd("begin", ArgTypeSym)
 	SymEnd             = BuiltinCmd("end", ArgTypeSym)
+	SymLabel           = BuiltinCmd("label", ArgTypeSym)
+	SymDingbat         = BuiltinCmd("dingbat", ArgTypeSym)
 	SymVerbatim        = BuiltinEnv("verbatim")
 	SymSection         = BuiltinCmd("section", ArgTypeSym, ArgTypeSeq)
+	SymSectionS        = BuiltinCmd("section*")
 	SymSubSection      = BuiltinCmd("subsection", ArgTypeSym, ArgTypeSeq)
 	SymHref            = BuiltinCmd("href", ArgTypeURL, ArgTypeSeq)
 	SymDocumentClass   = BuiltinCmd("documentclass", ArgTypeSym)
@@ -32,24 +36,42 @@ var (
 	SymTitle           = BuiltinCmd("title", ArgTypeSeq)
 	SymSubtitle        = BuiltinCmd("subtitle", ArgTypeSeq)
 	SymBold            = BuiltinCmd("b", ArgTypeSeq)
+	SymUnderline       = BuiltinCmd("u", ArgTypeSeq)
+	SymNormal          = BuiltinCmd("normal", ArgTypeSeq)
 	SymEmphasis        = BuiltinCmd("em", ArgTypeSeq)
 	SymSmallCaps       = BuiltinCmd("sc", ArgTypeSeq)
 	SymCircled         = BuiltinCmd("circled", ArgTypeNum)
 	SymCode            = BuiltinCmd("code", ArgTypeSeq)
+	SymCenter          = BuiltinCmd("center", ArgTypeSeq)
 	SymItem            = BuiltinCmd("item")
 	SymMath            = BuiltinCmd("math", ArgTypeSeq)
+	SymSub             = BuiltinCmd("sub", ArgTypeSeq)
+	SymSup             = BuiltinCmd("sup", ArgTypeSeq)
+	SymFun             = BuiltinCmd("fun", ArgTypeSeq)
+	SymStrikethrough   = BuiltinCmd("strikethrough", ArgTypeSeq)
+	SymQED             = BuiltinCmd("qed")
+	SymAdvice          = BuiltinCmd("advice", ArgTypeSym, ArgTypeSeq)
 	SymMarginNote      = BuiltinCmd("marginnote", ArgTypeSym, ArgTypeSeq)
 	SymSideNote        = BuiltinCmd("sidenote", ArgTypeSym, ArgTypeSeq)
 	SymLdots           = BuiltinCmd("ldots")
+	SymCdots           = BuiltinCmd("cdots")
+	SymNewline         = BuiltinCmd("newline")
+	SymNumspace        = BuiltinCmd("numspace")
+	SymHRule           = BuiltinCmd("hrule")
 	SymEpigraph        = BuiltinCmd("epigraph", ArgTypeSeq, ArgTypeSeq)
 	SymBlockquote      = BuiltinCmd("blockquote", ArgTypeSeq, ArgTypeSeq)
+	SymMulticolumn     = BuiltinCmd("multicolumn", ArgTypeNum, ArgTypeAlignSpec, ArgTypeSeq)
+	SymTerm            = BuiltinCmd("term", ArgTypeSeq, ArgTypeSeq)
 
 	// Builtin environments
-	SymDocument  = BuiltinEnv("document")
-	SymAbstract  = BuiltinEnv("abstract")
-	SymEnumerate = BuiltinEnv("enumerate")
-	SymItemize   = BuiltinEnv("itemize")
-	SymFigure    = BuiltinEnv("figure")
+	SymDocument    = BuiltinEnv("document")
+	SymAbstract    = BuiltinEnv("abstract")
+	SymEnumerate   = BuiltinEnv("enumerate")
+	SymItemize     = BuiltinEnv("itemize")
+	SymFigure      = BuiltinEnv("figure")
+	SymTabular     = BuiltinEnv("tabular")
+	SymTabularS    = BuiltinEnv("tabular*")
+	SymDescription = BuiltinEnv("description")
 )
 
 func BuiltinEnv(name string) sym {

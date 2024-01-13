@@ -8,4 +8,162 @@
 \keyword{ic}
 
 \begin{document}
+\section{introduction}{Introduction}
+
+The Internet Identity canister innovated a passwordless approach to authentication on the \href{https://internetcomputer.org}{Internet Computer} (IC).
+I was lucky to be among the first members of the team that launched this service.
+Despite the time shortage, the team pioneered a few engineering solutions, some of which later caught up in other services:
+\begin{itemize}
+  \item Stable memory as the primary storage.
+  \item The \href{https://wiki.internetcomputer.org/wiki/HTTP_asset_certification}{HTTP asset certification} protocol.
+  \item The use of \href{https://internetcomputer.org/how-it-works/response-certification/}{certified variables} for authentication.
+  \item An observability system based on \href{https://prometheus.io/docs/introduction/overview/}{Prometheus}.
+  \item Canister integration testing in a simulated replica environment.
+  \item End-to-end CI tests powered by \href{https://www.selenium.dev/}{Selenium}.
+\end{itemize}
+
+This article will explain how the Internet Identity canister uses its stable memory.
+
+\section{ii-data-model}{Internet Identity data model}
+
+The Internet Identity service acts as a proxy between the browser's \href{https://webauthn.io/}{authentication mechanism} and the Internet Computer authentication system.
+A user registers in the service by creating an \em{anchor} (a short number) and associating authentication devices, such as \href{https://en.wikipedia.org/wiki/YubiKey}{Yubikey} or \href{https://en.wikipedia.org/wiki/Touch_ID}{Apple Touch ID}, with that anchor.
+The Internet Identity canister stores these associations and presents a consistent identity to each DApp integrated with the authentication protocol.
+
+\begin{figure}[grayscale-diagram]
+  \marginnote{mn-ii-model}{
+    The data model of the Internet Identity system.
+    The system allocates a unique \em{anchor} (a short number) for each user.
+    The user can attach one or more authentication devices to the anchor.
+    The Internet Identity system allows users to log into DApps that support the authentication protocol.
+    The DApps will see the same user identity (also known as the \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#principal}{principal}) consistently, regardless of which device the user used for authentication.
+  }
+  \includegraphics{/images/11-ii-model.svg}
+\end{figure}
+
+The Internet Identity service maintains three core data structures:
+\begin{enumerate}
+  \item A mapping from anchors to authentication devices and their attributes.
+  \item A collection of frontend assets, such as the index page, JavaScript code, and images.
+  \item A set of temporary certified delegations. Most delegations expire within a minute after the service issues them.
+\end{enumerate}
+
+\section{conventional-memory-management}{Conventional canister state management}
+
+The \href{/posts/06-ic-orthogonal-persistence.html}{orthogonal persistence} feature of the IC greatly simplifies program state management.
+Yet it does not solve the problem of code upgrades\sidenote{sn-upgrades}{You can find more detail in the \href{/posts/06-ic-orthogonal-persistence.html#upgrades}{Surviving upgrades} section of the post on orthogonal persistence.}.
+Most canister work around this issue by using \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#system-api-stable-memory}{stable memory} as a temporary buffer during the code upgrade.
+
+\begin{figure}[grayscale-diagram]
+  \marginnote{mn-conventional-upgrade}{
+    The conventional model of canister \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#system-api-upgrades}{code upgrades}.
+    In the pre-upgrade hook, the canister marshals its data into stable memory storage.
+    In the post-upgrade hook, the canister unmarshals the contents of stable memory to reconstruct the convenient data representation.
+  }
+  \includegraphics{/images/11-conventional-upgrade.svg}
+\end{figure}
+
+This upgrade model works well for canisters that hold little data, usually up to a few hundred megabytes (the exact limit depends on the encoding scheme).
+However, if the state grows too large for the persistence roundtrip to fit into the upgrade \href{/posts/01-effective-rust-canisters.html#instruction-counter}{instruction limit}, upgrading the canister might become complicated or impossible.
+
+From the beginning, the Internet Identity team knew that the service must support millions of users and retain gigabytes of data.
+One way to achieve scalability is to spread the data across multiple canisters and ensure that each canister holds a reasonably-sized share of the state.
+However, the time constraint forced the team to keep the architecture simple and build the service as a monolithic backend canister\sidenote{sn-sharding}{Luckily, there is an easy way to extend the chosen monolithic design to support data sharding.}.
+That design has other advantages besides short time-to-market: atomic upgrades and the ease of deployment, testing, and monitoring.
+
+\section{ii-stable-memory}{Stable memory as primary storage}
+
+To reconcile the monolithic design with fearless upgrades, the team arranged the \href{#ii-data-model}{core data structures} in the following way:
+\begin{enumerate}
+  \item
+    The mapping from anchor to devices lives directly in stable memory.
+    Each anchor gets a fixed chunk of memory that is large enough to hold ten authentication devices (on average).
+  \item
+    The build process embeds the frontend assets directly into Internet Identity's WebAssembly binary, eliminating the need to carry those assets across upgrades.
+  \item
+    The canister discards all delegations on upgrades.
+    This decision simplifies data management without affecting the user experience much.
+\end{enumerate}
+
+The canister arranges the anchor mapping directly in stable memory, updating the relevant sections incrementally with each user interaction.
+A good analogy with traditional computing would be updating data in files incrementally instead of loading them fully into memory and writing them back.
+The main difference is that stable memory is a much safer mechanism than file manipulations: you do not need to worry about data loss, partial writes, power outages, and disk corruption.
+
+This design eliminates the need for a pre-upgrade hook: stable memory is already up-to-date when the upgrade starts.
+The post-upgrade hook does little work besides reading and validating a few bytes of the storage metadata.
+
+\begin{figure}[grayscale-diagram]
+  \marginnote{mn-ii-storage-model}{
+    The Internet Identity storage model.
+    The anchor data lives directly in stable memory.
+    The pre-upgrade is unnecessary; the post-upgrade hook does little work.
+  }
+  \includegraphics{/images/11-ii-upgrade-model.svg}
+\end{figure}
+
+\subsection{ii-memory-layout}{The memory layout}
+
+The Internet Identity canister divides the stable memory space into non-overlapping sections.
+The first section is the \em{header} holding the canister configuration, such as the random salt for hashing and the assigned anchor range.
+The rest of the memory is an array of \em{entries}; each entry corresponds to the data of a single anchor.
+
+\begin{figure}[grayscale-diagram]
+  \marginnote{mn-ii-memory-layout}{
+    The Internet Identity stable memory layout.
+    The system reserves the first 512 bytes for static configuration and divides the rest into 2KiB blocks.
+    Each such block holds data associated with a single anchor.
+   }
+  \includegraphics{/images/11-ii-layout.svg}
+\end{figure}
+
+The size of the header section is 512 bytes; the layout reserves most of this space for future extensions.
+The following is the list of all header fields as of October 2022:
+\begin{enumerate}
+  \item 
+    \em{Magic} (3 bytes): a fixed string \code{"IIC"} \href{https://en.wikipedia.org/wiki/Magic_number_(programming)#Format_indicators}{indicating} the Internet Identity stable memory layout.
+  \item 
+    \em{Version} (1 byte): the version of the memory layout.
+    If we need to change the layout significantly, the version will tell the canister how to interpret the data after the code upgrade.
+  \item 
+    \em{Entry count} (4 bytes): the total number of anchors allocated so far.
+  \item 
+    \em{Min anchor} (8 bytes): the value of the first anchor assigned to the canister.
+    The canister allocates anchors sequentially, starting from this number.
+  \item 
+    \em{Max anchor} (8 bytes): the value of the largest anchor assigned to the canister.
+    The canister becomes full and stops allocating anchors when \code{MinAnchor + EntryCount = MaxAnchor}.
+  \item 
+    \em{Salt} (32 bytes): salt for hashing.
+    The canister initializes the salt upon the first request by issuing a \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#ic-raw_rand}{\code{raw_rand}} call.
+\end{enumerate}
+
+Further sections are all 2 KiB in size and contain anchor data encoded as \href{https://github.com/dfinity/candid}{Candid}.
+Entry at index \code{N} holds information associated with anchor \code{MinAnchor + N}, where \code{MinAnchor} comes from the header.
+The first two bytes of each entry determine the size of the encoded blob.
+
+\subsection{ii-anchor-read-example}{Example: lookup anchor devices}
+
+To get a feeling for how this layout works in practice, let us assume that the canister holds the range of anchors between \code{MinAnchor = 10_000} and \code{MaxAnchor = 1_000_000} and already allocated \code{NumEntries = 20_000} anchors.
+Below are the steps the canister must perform to fetch the list of devices for anchor \code{12345}:
+\begin{enumerate}
+  \item 
+    Look up the range of metadata from the header.
+    The requested anchor \code{12345} is in the range of ``live'' anchors between \code{10_000} and \code{30_000} (\code{MinAnchor} and \code{MinAnchor + NumEntries}, correspondingly).
+    Entry \code{2345} (\code{12345 - MinAnchor}) holds the data for anchor \code{12345}.
+  \item 
+    Read the first two bytes at offset \code{EntryStart = 512 bytes + 2345 * 2KiB} as a 16-bit integer (\href{https://en.wikipedia.org/wiki/Endianness}{little-endian}).
+    The decoded value \code{N} determines the size of the blob we have to read next.
+  \item 
+    Read \code{N} bytes starting at offset \code{EntryStart + 2}.
+    Decode the bytes as a Candid structure containing the list of authentication devices.
+\end{enumerate}
+
+\section{code-pointers}{Code pointers}
+\begin{itemize}
+  \item
+    The data type describing the \href{https://github.com/dfinity/internet-identity/blob/62afdcbd74b1de1d9ab41c9f856e2319661a32cf/src/internet_identity/src/state.rs#L20-L31}{authentication device attributes}.
+  \item 
+    \href{https://github.com/dfinity/internet-identity/blob/62afdcbd74b1de1d9ab41c9f856e2319661a32cf/src/internet_identity/src/storage.rs}{The stable data storage} implementation.
+    I am sure you will find this code easy to read now that you know its story.
+\end{itemize}
 \end{document}
