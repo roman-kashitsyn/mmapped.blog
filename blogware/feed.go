@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"net/url"
 	"time"
 )
 
@@ -53,8 +54,13 @@ func RenderAtomFeed(rootURL string, articles []Article) ([]byte, error) {
 		for _, kw := range article.Keywords {
 			categories = append(categories, AtomFeedCategory{Term: kw})
 		}
+		entryURL, err := url.Parse(rootURL + article.URL)
+		if err != nil {
+			return nil, err
+		}
 		entries = append(entries, AtomFeedEntry{
-			ID:         rootURL + article.URL,
+			ID:         entryURL.String(),
+			Link:       AtomFeedLink{Href: entryURL.String()},
 			Author:     author,
 			Title:      article.Title,
 			Summary:    article.Subtitle,
