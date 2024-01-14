@@ -19,11 +19,11 @@
 <body>
 <article>
 {{- template "header" -}}
-<h1><a href="{{ .URL }}">{{ .Title }}</a></h1>
+<h1 class="article-title"><a href="{{ .URL }}">{{ .Title }}</a></h1>
 <p class="publish-date">
-  Published: <span itemprop="datePublished">{{ FormatDate .CreatedAt }}</span>
+  <span title="First published">✏ <span itemprop="datePublished">{{ FormatDate .CreatedAt }}</span></span>
   &nbsp;
-  Last updated: <span itemprop="dateModified">{{ FormatDate .ModifiedAt }}</span>
+  <span title="Last modified">✂ <span itemprop="dateModified">{{ FormatDate .ModifiedAt }}</span></span>
 </p>
 
 {{- if .Toc -}}

@@ -14,16 +14,19 @@
 <body>
 <article>
 {{- template "header" -}}
-<h1>{{ .Title }}</h1>
-{{ if .Articles }}
 <hr>
+{{ if .Articles }}
 <ul class="posts">
 {{ range .Articles }}
 <li itemscope="" itemtype="https://schema.org/CreativeWork">
   <meta keywords="{{ StringsJoin .Keywords "," }}">
-  <h2><a href="{{ .URL }}"><span itemprop="headline">{{ .Title }}</span></a></h2>
-  <em class="publish-date">Published: <span itemprop="datePublished">{{ FormatDate .CreatedAt }}</span></em>
-  <div itemprop="abstract">{{ .Subtitle }}</div>
+  <h2 class="article-title"><a href="{{ .URL }}"><span itemprop="headline">{{ .Title }}</span></a></h2>
+  <div class="article-abstract" itemprop="abstract">{{ .Subtitle }}</div>
+  <span class="publish-date">
+    <span title="Publish date">✏ <span itemprop="datePublished">{{ FormatDate .CreatedAt }}</span></span>
+    &nbsp;
+    <span title="Last modified">✂ <span itemprop="dateModified">{{ FormatDate .ModifiedAt }}</span></span>
+  </spane>
 </li>
 {{ end }}
 </ul>

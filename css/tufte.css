@@ -3,6 +3,14 @@
 /* Font faces */
 
 @font-face {
+  font-family: "League Gothic";
+  font-style:  normal;
+  font-weight: 400;
+  src: local(League Gothic),
+       url("/fonts/LeagueGothic-Regular.woff2") format("woff2");
+}
+
+@font-face {
   font-family: "Libertinus Serif";
   font-style:  normal;
   font-weight: 400;
@@ -35,8 +43,37 @@
 @font-face {
   font-family: "Neo Euler";
   font-style:  normal;
-  font-weight: 400;
+  font-weight: normal;
   src: url("/fonts/NeoEuler.otf") format("opentype"); 
+}
+
+@font-face {
+  font-family: "Source Code Pro";
+  font-style:  normal;
+  font-weight: normal;
+  src: local(Source Code Pro),
+       url("/fonts/SourceCodePro-Regular.otf.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Source Code Pro";
+  font-style:  italic;
+  font-weight: normal;
+  src: local(Source Code Pro),
+       url("/fonts/SourceCodePro-It.otf.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Source Code Pro";
+  font-style:  normal;
+  font-weight: bold;
+  src: local(Source Code Pro),
+       url("/fonts/SourceCodePro-Bold.otf.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Source Code Pro";
+  font-style:  italic;
+  font-weight: bold;
+  src: local(Source Code Pro),
+       url("/fonts/SourceCodePro-BoldIt.otf.woff2") format("woff2");
 }
 
 @font-face {
@@ -64,7 +101,8 @@ h3 {
 }
 
 .publish-date {
-    font-style: italic;
+    font-size: 0.8rem;
+    font-variant-numeric: normal;
 }
 
 .github-link::before {
@@ -81,16 +119,25 @@ h3 {
     background-image: url(/images/GitHub-Mark-32px.png);
 }
 
-.blog-title {
-    font-weight: bold;
+.article-title {
+    font-family: "League Gothic", sans-serif;
+}
+
+.article-abstract {
+    font-style: italic;
 }
 
 figure>div.source-container {
     width: 100%;
 }
 
-div.source-container>pre>code {
+div.source-container>pre.good>code,
+div.source-container>pre.bad>code {
     padding: 1rem;
+}
+
+div.source-container>pre>code {
+    padding: 1rem 0;
 }
 
 ul.posts {
@@ -162,6 +209,10 @@ ol.circled>li:before {
     font-size: 1.4rem;
 }
 
+code .circled-ref {
+    font-size: 0.9rem;
+}
+
 li.toc {
     list-style: none;
     line-height: 1.2rem;
@@ -214,7 +265,6 @@ div.advice {
 
 div.advice>p {
     width: 100%;
-    font-size: 1.2rem;
     font-style: italic;
     text-align: center;
 }
@@ -256,6 +306,14 @@ pre.apl>code {
 .math {
     font-family: "Neo Euler", "Libertinus Serif", et-book, Palatino, serif;
     white-space: nowrap;
+    font-variant-numeric: normal;
+    /* To match the x-height of Neo Euler and Libertinus. */
+    font-size: 1.3rem;
+}
+
+.marginnote .math {
+    /* To match the x-height of Neo Euler and Libertinus. */
+    font-size: 1.03rem;
 }
 
 /* Tufte CSS styles */
@@ -374,6 +432,7 @@ ol,
 ul {
     font-size: 1.4rem;
     line-height: 2rem;
+    font-variant-numeric: oldstyle-nums;
 }
 
 p {
@@ -421,6 +480,7 @@ blockquote footer {
     width: 55%;
     font-size: 1.1rem;
     text-align: right;
+    font-variant-numeric: oldstyle-nums;
 }
 
 div.container>p,
@@ -567,6 +627,9 @@ div.table-wrapper {
 table {
     border-collapse: collapse;
 }
+table .math, table .code {
+    font-size: 1rem;
+}
 
 th, td {
     text-align: left;
@@ -628,9 +691,10 @@ tr.border-bot {
 
 code,
 pre>code {
-    font-family: monospace;
-    font-size: 1.0rem;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 1.2rem;
     line-height: 1.42;
+    font-variant-numeric: normal;
     -webkit-text-size-adjust: 100%;
     /* Prevent adjustments of font size after orientation changes in iOS. See https://github.com/edwardtufte/tufte-css/issues/81#issuecomment-261953409 */
 }
@@ -639,19 +703,16 @@ pre>code {
     font-size: 1.2rem;
 }
 
-h1>code,
-h2>code,
-h3>code,
-a>code {
-    font-size: 1rem;
-}
-
 .marginnote>code,
 .marginnote>a>code,
 .sidenote>code,
 .sidenote>a>code
 {
-    font-size: 0.8rem;
+    font-size: 0.95rem;
+}
+
+pre>code a>code {
+    font-size: 0.9rem;
 }
 
 pre>code {
