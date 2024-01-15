@@ -73,7 +73,7 @@ func RenderAtomFeed(rootURL string, articles []Article) ([]byte, error) {
 		Xmlns:   "http://www.w3.org/2005/Atom",
 		Lang:    "en-us",
 		Title:   "MMapped blog",
-		ID:      rootURL,
+		ID:      rootURL + "/",
 		Link:    AtomFeedLink{Href: rootURL + "/feed.xml", Rel: "self"},
 		Author:  author,
 		Updated: lastUpdated.UTC().Format(time.RFC3339),

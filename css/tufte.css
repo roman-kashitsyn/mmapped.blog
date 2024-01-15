@@ -89,7 +89,6 @@
   font-style: normal;
   font-weight: 400;
   src: url("/fonts/ComicMono.ttf") format("truetype")
-  font-display: swap;
 }
 
 @font-face {
@@ -450,6 +449,10 @@ p {
     margin-bottom: 1.4rem;
     padding-right: 0;
     vertical-align: baseline;
+}
+
+p.hanging-quote {
+    text-indent: -0.375em;
 }
 
 /* Chapter Epigraphs */

@@ -177,6 +177,7 @@ type RenderingCtx struct {
 	// How many items we have rendered in the list context.
 	listCounter    int
 	sectionCounter int
+	pendingPara    bool
 }
 
 func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error {
@@ -185,6 +186,7 @@ func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error 
 		case Text:
 			renderText(rc, buf, v.body)
 		case Cmd:
+			handlePendingPara(rc, buf)
 			if err := renderGenericCmd(rc, buf, v); err != nil {
 				return err
 			}
@@ -230,6 +232,13 @@ func renderCodeText(rc *RenderingCtx, buf *strings.Builder, text string) {
 	}
 }
 
+func handlePendingPara(rc *RenderingCtx, buf *strings.Builder) {
+	if rc.pendingPara {
+		buf.WriteString("<p>")
+		rc.pendingPara = false
+	}
+}
+
 func renderText(rc *RenderingCtx, buf *strings.Builder, text string) {
 	if rc.parent == CodeCtx {
 		renderCodeText(rc, buf, text)
@@ -240,6 +249,7 @@ func renderText(rc *RenderingCtx, buf *strings.Builder, text string) {
 		c, size := utf8.DecodeRuneInString(text[i:])
 		switch c {
 		case '-':
+			handlePendingPara(rc, buf)
 			if strings.HasPrefix(text[i:], "---") {
 				buf.WriteRune('—')
 				i += 3
@@ -252,6 +262,7 @@ func renderText(rc *RenderingCtx, buf *strings.Builder, text string) {
 			}
 			buf.WriteRune(c)
 		case '\'':
+			handlePendingPara(rc, buf)
 			if strings.HasPrefix(text[i:], "''") {
 				buf.WriteString("</q>")
 				i += 2
@@ -260,6 +271,10 @@ func renderText(rc *RenderingCtx, buf *strings.Builder, text string) {
 			buf.WriteRune('’')
 		case '`':
 			if strings.HasPrefix(text[i:], "``") {
+				if rc.pendingPara {
+					buf.WriteString(`<p class="hanging-quote">`)
+					rc.pendingPara = false
+				}
 				buf.WriteString("<q>")
 				i += 2
 				continue
@@ -267,25 +282,29 @@ func renderText(rc *RenderingCtx, buf *strings.Builder, text string) {
 			buf.WriteRune(c)
 		case '\n':
 			if strings.HasPrefix(text[i:], "\n\n") {
-				buf.WriteString("<p>")
+				rc.pendingPara = true
 				i += 2
 				continue
 			}
 			buf.WriteRune(c)
 		case '&':
+			handlePendingPara(rc, buf)
 			buf.WriteString("&amp;")
 		case '<':
+			handlePendingPara(rc, buf)
 			buf.WriteString("&lt;")
 		case '>':
+			handlePendingPara(rc, buf)
 			buf.WriteString("&gt;")
 		default:
+			handlePendingPara(rc, buf)
 			buf.WriteRune(c)
 		}
 		i += size
 	}
 }
 
-func optsToCssClasses(opts []sym) string {
+func optsToCSSClasses(opts []sym) string {
 	if len(opts) == 0 {
 		return ""
 	}
@@ -312,13 +331,15 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		}
 		fmt.Fprintf(buf, `<section><h2 id="%[1]s"><a href="#%[1]s">`, template.HTMLEscapeString(anchor))
 		renderText(&newRc, buf, title)
-		buf.WriteString("</a></h2><p>")
+		buf.WriteString("</a></h2>")
+		rc.pendingPara = true
 		rc.sectionCounter++
 	case SymSectionS:
 		if rc.sectionCounter > 0 {
 			buf.WriteString("</section>")
 		}
-		buf.WriteString("<section><p>")
+		buf.WriteString("<section>")
+		rc.pendingPara = true
 		rc.sectionCounter++
 	case SymSubSection:
 		var anchor, title string
@@ -330,7 +351,8 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		}
 		fmt.Fprintf(buf, `<h3 id="%[1]s"><a href="#%[1]s">`, template.HTMLEscapeString(anchor))
 		renderText(&newRc, buf, title)
-		buf.WriteString("</a></h3><p>")
+		buf.WriteString("</a></h3>")
+		rc.pendingPara = true
 	case SymLabel:
 		var anchor string
 		if err := cmd.ArgText(0, &anchor); err != nil {
@@ -437,7 +459,7 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		buf.WriteString(`</span>`)
 	case SymCode:
 		newRc.parent = CodeCtx
-		fmt.Fprintf(buf, `<code class="%s">`, optsToCssClasses(cmd.opts))
+		fmt.Fprintf(buf, `<code class="%s">`, optsToCSSClasses(cmd.opts))
 		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
 			return err
 		}
@@ -472,13 +494,13 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		switch path.Ext(dst) {
 		case ".svg":
 			buf.WriteString(`<p class="svg">`)
-			fmt.Fprintf(buf, `<img class="%s" src="data:image/svg+xml;base64,%s">`, optsToCssClasses(cmd.opts), encoded)
+			fmt.Fprintf(buf, `<img class="%s" src="data:image/svg+xml;base64,%s">`, optsToCSSClasses(cmd.opts), encoded)
 			buf.WriteString("</p>")
 		case ".png":
-			fmt.Fprintf(buf, `<img class="%s" src="data:image/png;base64,%s">`, optsToCssClasses(cmd.opts), encoded)
+			fmt.Fprintf(buf, `<img class="%s" src="data:image/png;base64,%s">`, optsToCSSClasses(cmd.opts), encoded)
 		case ".jpg", ".jpeg":
 			encoded := base64.StdEncoding.EncodeToString(contents)
-			fmt.Fprintf(buf, `<img class="%s" src="data:image/jpeg;base64,%s">`, optsToCssClasses(cmd.opts), encoded)
+			fmt.Fprintf(buf, `<img class="%s" src="data:image/jpeg;base64,%s">`, optsToCSSClasses(cmd.opts), encoded)
 		default:
 			return fmt.Errorf("unsupported image type: %s", dst)
 		}
@@ -522,12 +544,12 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		if rc.parent != DescriptionListCtx {
 			return fmt.Errorf("error at %d: term command can appear only in the description environment", cmd.pos)
 		}
-		fmt.Fprintf(buf, `<dt class="%s">`, optsToCssClasses(cmd.opts))
+		fmt.Fprintf(buf, `<dt class="%s">`, optsToCSSClasses(cmd.opts))
 		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
 			return err
 		}
 		buf.WriteString("</dt>")
-		fmt.Fprintf(buf, `<dd class="%s">`, optsToCssClasses(cmd.opts))
+		fmt.Fprintf(buf, `<dd class="%s">`, optsToCSSClasses(cmd.opts))
 		if err := renderGenericSeq(&newRc, buf, cmd.args[1]); err != nil {
 			return err
 		}
@@ -578,7 +600,7 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 		}
 		buf.WriteString(`</ul>`)
 	case SymVerbatim:
-		fmt.Fprintf(buf, `<div class="source-container"><pre class="source %s"><code>`, optsToCssClasses(env.opts))
+		fmt.Fprintf(buf, `<div class="source-container"><pre class="source %s"><code>`, optsToCSSClasses(env.opts))
 		for _, n := range env.body {
 			switch v := n.(type) {
 			case Text:
@@ -591,20 +613,20 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 	case SymCode:
 		// TODO: extra newlines at the beginning/end
 		newRc.parent = CodeCtx
-		fmt.Fprintf(buf, `<div class="source-container"><pre class="source %s"><code>`, optsToCssClasses(env.opts))
+		fmt.Fprintf(buf, `<div class="source-container"><pre class="source %s"><code>`, optsToCSSClasses(env.opts))
 		if err := renderGenericSeq(&newRc, buf, env.body); err != nil {
 			return err
 		}
 		buf.WriteString("</pre></code></div>")
 	case SymFigure:
-		fmt.Fprintf(buf, `<figure class="%s">`, optsToCssClasses(env.opts))
+		fmt.Fprintf(buf, `<figure class="%s">`, optsToCSSClasses(env.opts))
 		if err := renderGenericSeq(&newRc, buf, env.body); err != nil {
 			return err
 		}
 		buf.WriteString("</figure>")
 	case SymDescription:
 		newRc.parent = DescriptionListCtx
-		fmt.Fprintf(buf, `<dl class="%s">`, optsToCssClasses(env.opts))
+		fmt.Fprintf(buf, `<dl class="%s">`, optsToCSSClasses(env.opts))
 		if err := renderGenericSeq(&newRc, buf, env.body); err != nil {
 			return err
 		}
@@ -614,7 +636,7 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 }
 
 func renderTable(rc *RenderingCtx, buf *strings.Builder, tab Table) error {
-	fmt.Fprintf(buf, `<table class="table-%d %s">`, len(tab.spec), optsToCssClasses(tab.opts))
+	fmt.Fprintf(buf, `<table class="table-%d %s">`, len(tab.spec), optsToCSSClasses(tab.opts))
 	var newRc RenderingCtx
 	var header []Row
 	var body []Row
