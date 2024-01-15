@@ -8,6 +8,7 @@
   font-weight: 400;
   src: local(League Gothic),
        url("/fonts/LeagueGothic-Regular.woff2") format("woff2");
+  font-display: swap;
 }
 
 @font-face {
@@ -18,16 +19,17 @@
        local(Linux Libertine O),
        url("/fonts/LibertinusSerif-Regular.otf") format("opentype"), 
        url("/fonts/LibertinusSerif-Regular.woff2") format("woff2");
+  font-display: swap;
 }
 
-@font-face
-{
+@font-face {
   font-family: "Libertinus Serif";
   font-style:  italic;
   font-weight: 400;
   src: local(Libertinus Serif Italic), 
        url("/fonts/LibertinusSerif-Italic.otf") format("opentype"), 
        url("/fonts/LibertinusSerif-Italic.woff2") format("woff2");
+  font-display: swap;
 }
 
 @font-face {
@@ -38,6 +40,7 @@
        local("Linux Biolinum O"),
        url("/fonts/LibertinusSans-Regular.otf") format("opentype"),
        url("/fonts/LibertinusSans-Regular.woff2") format("woff2");
+  font-display: swap;
 }
 
 @font-face {
@@ -45,6 +48,7 @@
   font-style:  normal;
   font-weight: normal;
   src: url("/fonts/NeoEuler.otf") format("opentype"); 
+  font-display: swap;
 }
 
 @font-face {
@@ -53,6 +57,7 @@
   font-weight: normal;
   src: local(Source Code Pro),
        url("/fonts/SourceCodePro-Regular.otf.woff2") format("woff2");
+  font-display: swap;
 }
 @font-face {
   font-family: "Source Code Pro";
@@ -60,6 +65,7 @@
   font-weight: normal;
   src: local(Source Code Pro),
        url("/fonts/SourceCodePro-It.otf.woff2") format("woff2");
+  font-display: swap;
 }
 @font-face {
   font-family: "Source Code Pro";
@@ -67,6 +73,7 @@
   font-weight: bold;
   src: local(Source Code Pro),
        url("/fonts/SourceCodePro-Bold.otf.woff2") format("woff2");
+  font-display: swap;
 }
 @font-face {
   font-family: "Source Code Pro";
@@ -74,6 +81,7 @@
   font-weight: bold;
   src: local(Source Code Pro),
        url("/fonts/SourceCodePro-BoldIt.otf.woff2") format("woff2");
+  font-display: swap;
 }
 
 @font-face {
@@ -81,6 +89,7 @@
   font-style: normal;
   font-weight: 400;
   src: url("/fonts/ComicMono.ttf") format("truetype")
+  font-display: swap;
 }
 
 @font-face {
@@ -89,6 +98,7 @@
   font-weight: 400;
   src: local(APL385 Unicode),
        url("/fonts/Apl385.ttf") format("truetype");
+  font-display: swap;
 }
 
 /* Customized styles */
