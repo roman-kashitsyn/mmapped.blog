@@ -74,7 +74,7 @@ func RenderAtomFeed(rootURL string, articles []Article) ([]byte, error) {
 		Lang:    "en-us",
 		Title:   "MMapped blog",
 		ID:      rootURL,
-		Link:    AtomFeedLink{Href: rootURL + "feed.xml", Rel: "self"},
+		Link:    AtomFeedLink{Href: rootURL + "/feed.xml", Rel: "self"},
 		Author:  author,
 		Updated: lastUpdated.UTC().Format(time.RFC3339),
 		Entries: entries,
