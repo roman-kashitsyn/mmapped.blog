@@ -35,11 +35,22 @@
 @font-face {
   font-family: "Libertinus Sans";
   font-style: normal;
-  font-weight: 400;
+  font-weight: normal;
   src: local("Libertinus Sans"),
        local("Linux Biolinum O"),
        url("/fonts/LibertinusSans-Regular.otf") format("opentype"),
        url("/fonts/LibertinusSans-Regular.woff2") format("woff2");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Libertinus Sans";
+  font-style: italic;
+  font-weight: normal;
+  src: local("Libertinus Sans"),
+       local("Linux Biolinum O"),
+       url("/fonts/LibertinusSans-Italic.otf") format("opentype"),
+       url("/fonts/LibertinusSans-Italic.woff2") format("woff2");
   font-display: swap;
 }
 
@@ -102,13 +113,6 @@
 
 /* Customized styles */
 
-h1,
-h2,
-h3 {
-    font-family: "Libertinus Sans", sans-serif;
-    hyphens: none;
-}
-
 .publish-date {
     font-size: 0.8rem;
     font-variant-numeric: normal;
@@ -133,7 +137,7 @@ h3 {
 }
 
 .article-abstract {
-    font-style: italic;
+    font-family: "Libertinus Sans", sans;
 }
 
 figure>div.source-container {
@@ -238,6 +242,14 @@ ul.toc a:link {
 
 ul.toc-level-1 {
     padding-left: 0px;
+}
+
+ul.toc-level-2 {
+    padding-left: 1em;
+}
+
+li.toc-level-2 > a {
+    font-style: italic;
 }
 
 a:link, .tufte-underline, .hover-tufte-underline:hover {
@@ -372,15 +384,18 @@ h1 {
     margin-bottom: 1.5rem;
     font-size: 3.2rem;
     line-height: 1;
+    font-family: 'League Gothic', sans-serif;
+    hyphens: none;
 }
 
 h2 {
-    font-style: italic;
     font-weight: 400;
     margin-top: 2.1rem;
     margin-bottom: 1.4rem;
     font-size: 2.2rem;
     line-height: 1;
+    font-family: "Libertinus Sans", sans-serif;
+    hyphens: none;
 }
 
 h1 a:link, h2 a:link, h3 a:link {
@@ -390,6 +405,10 @@ h1 a:link, h2 a:link, h3 a:link {
     text-transform: initial;
 }
 
+h3 > a {
+    font-style: italic;
+}
+
 h3 {
     font-style: italic;
     font-weight: 400;
@@ -397,6 +416,7 @@ h3 {
     margin-top: 2rem;
     margin-bottom: 1.4rem;
     line-height: 1;
+    font-family: "Libertinus Sans", sans-serif;
 }
 
 hr {
