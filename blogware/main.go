@@ -17,6 +17,7 @@ var (
 	inputDir   string
 	outputDir  string
 	renderFile string
+	rootURL    string
 )
 
 func getTemplate(name string) (tmpl *template.Template, err error) {
@@ -36,7 +37,6 @@ func getTemplate(name string) (tmpl *template.Template, err error) {
 
 func parseArticle(path string) (article Article, err error) {
 	stream, err := StreamFromFile(path)
-
 	if err != nil {
 		err = fmt.Errorf("failed to read input file %s: %w", path, err)
 		return
@@ -96,6 +96,7 @@ func main() {
 	flag.StringVar(&inputDir, "input", ".", "the path to the source root")
 	flag.StringVar(&outputDir, "output", "", "the destination directory for static pages")
 	flag.StringVar(&renderFile, "f", "", "render the specified file to stdout and exit")
+	flag.StringVar(&rootURL, "root", "https://mmapped.blog", "the root URL of the blog")
 
 	flag.Parse()
 

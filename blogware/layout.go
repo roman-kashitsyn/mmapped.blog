@@ -50,14 +50,14 @@ var SiteLayout = []LayoutEntry{
 	{Path: "/index.html", Type: IndexPage},
 }
 
-func handleAtomRender(w http.ResponseWriter, r *http.Request) {
+func handleAtomRender(w http.ResponseWriter, _ *http.Request) {
 	articles, err := AllArticles()
 	if err != nil {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "Failed to list posts: %v", err)
 		return
 	}
-	feed, err := RenderAtomFeed("https://mmapped.blog", articles)
+	feed, err := RenderAtomFeed(rootURL, articles)
 	if err != nil {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "Failed to render atom feed: %v", err)
@@ -125,15 +125,16 @@ func renderPostAt(i int, articles []Article) (contents []byte, err error) {
 		nextPost = &articles[i+1]
 	}
 	ctx := PostRenderContext{
-		Title:      article.Title,
-		CreatedAt:  article.CreatedAt,
-		ModifiedAt: article.ModifiedAt,
-		Keywords:   article.Keywords,
-		URL:        article.URL,
-		Toc:        toc,
-		Body:       body,
-		PrevPost:   prevPost,
-		NextPost:   nextPost,
+		AbsoluteURL: rootURL + article.URL,
+		Title:       article.Title,
+		CreatedAt:   article.CreatedAt,
+		ModifiedAt:  article.ModifiedAt,
+		Keywords:    article.Keywords,
+		URL:         article.URL,
+		Toc:         toc,
+		Body:        body,
+		PrevPost:    prevPost,
+		NextPost:    nextPost,
 	}
 	tmpl, err := getTemplate("post")
 	if err != nil {
@@ -333,6 +334,9 @@ func copyFile(src, dst string) error {
 
 func copyRecursively(src, dst string) error {
 	return filepath.Walk(src, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if p == src {
 			return nil
 		}
@@ -422,7 +426,7 @@ func RenderSite() error {
 			}
 		case AtomXMLFeed:
 			log.Printf("Rendering %s", e.Path)
-			feed, err := RenderAtomFeed("https://mmapped.blog", articles)
+			feed, err := RenderAtomFeed(rootURL, articles)
 			if err != nil {
 				return fmt.Errorf("failed to render the atom feed: %w", err)
 			}

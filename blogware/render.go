@@ -45,16 +45,17 @@ type PageRenderContext struct {
 }
 
 type PostRenderContext struct {
-	Title      string
-	Subtitle   string
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	Keywords   []string
-	URL        string
-	Toc        []TocSection
-	Body       template.HTML
-	PrevPost   *Article
-	NextPost   *Article
+	AbsoluteURL string
+	Title       string
+	Subtitle    string
+	CreatedAt   time.Time
+	ModifiedAt  time.Time
+	Keywords    []string
+	URL         string
+	Toc         []TocSection
+	Body        template.HTML
+	PrevPost    *Article
+	NextPost    *Article
 }
 
 func (a *Article) Toc() (sections []TocSection, err error) {
