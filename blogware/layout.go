@@ -127,6 +127,7 @@ func renderPostAt(i int, articles []Article) (contents []byte, err error) {
 	ctx := PostRenderContext{
 		AbsoluteURL: rootURL + article.URL,
 		Title:       article.Title,
+		Subtitle:    article.Subtitle,
 		CreatedAt:   article.CreatedAt,
 		ModifiedAt:  article.ModifiedAt,
 		Keywords:    article.Keywords,

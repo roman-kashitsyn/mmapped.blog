@@ -6,9 +6,9 @@
   <meta content="width=device-width, initial-scale=1" name="viewport">
   <meta name="author" content="Roman Kashitsyn">
   <meta name="keywords" content="{{ StringsJoin .Keywords "," }}"/>
-  {{ if .Subtitle }}
+  {{ if .Subtitle -}}
   <meta name="description" content="{{ .Subtitle }}"/>
-  {{ end }}
+  {{- end }}
   <title>{{ .Title }}</title>
   <link rel="stylesheet" href="/css/tufte.css">
   <link rel="icon" href="/images/favicon.svg">

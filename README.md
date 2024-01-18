@@ -6,12 +6,11 @@ This repository contains the full source of my personal blog hosted at https://m
 
 # Build instructions
 
-You’ll need [Go](https://go.dev/) installed to build the website.
+You’ll need [Go](https://go.dev/) and [Make](https://www.gnu.org/software/make/) installed to build the website.
 Execute the following commands in the root repository:
 
 ```bash
-pushd blogware; go build; popd
-./blogware/blogware -output site
+make render DEST=site
 ```
 
 The `site` directory will contain the full website contents that you can host statically.
