@@ -63,35 +63,35 @@
 }
 
 @font-face {
-  font-family: "Source Code Pro";
+  font-family: "Iosevka";
   font-style:  normal;
   font-weight: normal;
-  src: local(Source Code Pro),
-       url("/fonts/SourceCodePro-Regular.otf.woff2") format("woff2");
+  src: local(Iosevka),
+       url("/fonts/Iosevka-Regular.woff2") format("woff2");
   font-display: swap;
 }
 @font-face {
-  font-family: "Source Code Pro";
+  font-family: "Iosevka";
   font-style:  italic;
   font-weight: normal;
-  src: local(Source Code Pro),
-       url("/fonts/SourceCodePro-It.otf.woff2") format("woff2");
+  src: local(Iosevka),
+       url("/fonts/Iosevka-Italic.woff2") format("woff2");
   font-display: swap;
 }
 @font-face {
-  font-family: "Source Code Pro";
+  font-family: "Iosevka";
   font-style:  normal;
   font-weight: bold;
-  src: local(Source Code Pro),
-       url("/fonts/SourceCodePro-Bold.otf.woff2") format("woff2");
+  src: local(Iosevka),
+       url("/fonts/Iosevka-Bold.woff2") format("woff2");
   font-display: swap;
 }
 @font-face {
-  font-family: "Source Code Pro";
+  font-family: "Iosevka";
   font-style:  italic;
   font-weight: bold;
-  src: local(Source Code Pro),
-       url("/fonts/SourceCodePro-BoldIt.otf.woff2") format("woff2");
+  src: local(Iosevka),
+       url("/fonts/Iosevka-BoldItalic.woff2") format("woff2");
   font-display: swap;
 }
 
@@ -724,8 +724,8 @@ tr.border-bot {
 
 code,
 pre>code {
-    font-family: 'Source Code Pro', monospace;
-    font-size: 1.2rem;
+    font-family: 'Iosevka', monospace;
+    font-size: 0.83em;
     line-height: 1.42;
     font-variant-numeric: normal;
     -webkit-text-size-adjust: 100%;
@@ -733,7 +733,7 @@ pre>code {
 }
 
 .sans>code {
-    font-size: 1.2rem;
+    font-size: 0.83em;
 }
 
 .marginnote>code,
