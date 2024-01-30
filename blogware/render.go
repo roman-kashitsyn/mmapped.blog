@@ -428,10 +428,6 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			return err
 		}
 		buf.WriteString("</span>")
-	case SymLdots:
-		buf.WriteRune('…')
-	case SymCdots:
-		buf.WriteRune('⋯')
 	case SymNumspace:
 		buf.WriteString("&numsp;")
 	case SymNewline:
@@ -557,7 +553,11 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		buf.WriteString("</dd>")
 
 	default:
-		return fmt.Errorf("unsupported command at %d: %s", cmd.pos, cmd.Name())
+		if value, found := FindReplacment(cmd.name); found {
+			buf.WriteString(value)
+		} else {
+			return fmt.Errorf("unsupported command at %d: %s", cmd.pos, cmd.Name())
+		}
 	}
 	return nil
 }

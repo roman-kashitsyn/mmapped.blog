@@ -13,10 +13,11 @@ const (
 )
 
 var (
-	symTab          = make(map[string]sym, 1000)
-	syms            = make([]string, 0, 1000)
-	cmdArgTypes     = make(map[sym][]ArgType, 1000)
-	nextSym     sym = 0
+	symTab           = make(map[string]sym, 1000)
+	syms             = make([]string, 0, 1000)
+	cmdArgTypes      = make(map[sym][]ArgType, 1000)
+	replacements     = make(map[sym]string, 1000)
+	nextSym      sym = 0
 
 	// Builtin commands
 	SymBegin           = BuiltinCmd("begin", ArgTypeSym)
@@ -53,8 +54,6 @@ var (
 	SymAdvice          = BuiltinCmd("advice", ArgTypeSym, ArgTypeSeq)
 	SymMarginNote      = BuiltinCmd("marginnote", ArgTypeSym, ArgTypeSeq)
 	SymSideNote        = BuiltinCmd("sidenote", ArgTypeSym, ArgTypeSeq)
-	SymLdots           = BuiltinCmd("ldots")
-	SymCdots           = BuiltinCmd("cdots")
 	SymNewline         = BuiltinCmd("newline")
 	SymNumspace        = BuiltinCmd("numspace")
 	SymHRule           = BuiltinCmd("hrule")
@@ -62,6 +61,12 @@ var (
 	SymBlockquote      = BuiltinCmd("blockquote", ArgTypeSeq, ArgTypeSeq)
 	SymMulticolumn     = BuiltinCmd("multicolumn", ArgTypeNum, ArgTypeAlignSpec, ArgTypeSeq)
 	SymTerm            = BuiltinCmd("term", ArgTypeSeq, ArgTypeSeq)
+
+	// Builtin replacement commands
+	SymLdots        = BuiltinReplacement("ldots", "…")
+	SymCdots        = BuiltinReplacement("cdots", "⋯")
+	SymDelta        = BuiltinReplacement("Delta", "δ")
+	SymCapitalDelta = BuiltinReplacement("Delta", "Δ")
 
 	// Builtin environments
 	SymDocument    = BuiltinEnv("document")
@@ -81,6 +86,12 @@ func BuiltinEnv(name string) sym {
 func BuiltinCmd(name string, argTypes ...ArgType) sym {
 	s := Symbol(name)
 	cmdArgTypes[s] = argTypes
+	return s
+}
+
+func BuiltinReplacement(name, replacement string) sym {
+	s := Symbol(name)
+	replacements[s] = replacement
 	return s
 }
 
@@ -105,4 +116,9 @@ func CmdArity(name sym) int {
 
 func CmdArgType(name sym, pos int) ArgType {
 	return cmdArgTypes[name][pos]
+}
+
+func FindReplacment(name sym) (replacement string, found bool) {
+	replacement, found = replacements[name]
+	return
 }
