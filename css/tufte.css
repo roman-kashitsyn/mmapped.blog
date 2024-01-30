@@ -769,6 +769,7 @@ pre.fullwidth>code {
 
 .smallcaps {
     font-variant: small-caps;
+    font-variant-numeric: oldstyle-nums;
 }
 
 .normal {

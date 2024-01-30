@@ -1,6 +1,5 @@
-compiled/
 blogware/blogware
-posts/compiled/
+.vscode/
 index.html
 about.html
 posts.html
