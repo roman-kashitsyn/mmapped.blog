@@ -1,0 +1,343 @@
+\documentclass{article}
+\title{Universal domain types}
+\subtitle{A guide to domain-specific types that make sense.}
+\date{2024-02-14}
+\modified{2024-02-14}
+
+\keyword{programming}
+
+\begin{document}
+\epigraph{
+  \sc{in strong typing we trust}
+}{Inscription on the \href{https://people.cs.kuleuven.be/~dirk.craeynest/ada-belgium/pictures/ada-strong.html}{Ada coin}}
+
+\section{intro}{Introduction}
+
+Skillful use of a strong static type system can eliminate certain classes of bugs.
+Using custom application-specific types instead of raw integers or strings is a powerful technique that will save you hours of debugging.
+The following quote from one of my favorite books on software design illustrates this point:
+
+\blockquote{
+  It took six months, but I eventually found and fixed the bug. \[\ldots\]
+  At one point in the code there was a \code{block} variable containing a logical block number, but it was accidentally used in a context where a physical block number was needed.
+}{John Ousterhout, ``A Philosophy of Software Design'', Chapter 14, ``Choosing names''}
+
+The author attributes the bug to poor variable naming, but this blame is misplaced.
+If the programmer had defined \em{distinct types} for logical and physical block numbers, the compiler would have caught this mistake immediately.
+In this article, I call such definitions \em{domain types}.
+They serve as documentation, help catch bugs at compile time, and make the code more secure\sidenote{sn-secure-by-design}{
+  The book \href{https://www.manning.com/books/secure-by-design}{Secure by Design} by Dan Bergh Johnsson et al. provides many examples of using domain types for building a secure system from the ground up.
+}.
+
+This article shows a systematic approach to domain types, provides examples of domain types applicable to most applications, and contains hints on how to implement them effectively.
+
+\section{language-features}{Language features}
+
+Many languages provide syntax for simplifying domain type definitions.
+Such definitions create a new distinct type sharing representation with a chosen underlying type (e.g., a 64-bit integer).
+The semantics of such definitions vary across languages, but they usually fall into one of two categories: \em{newtypes} and \em{typedefs}.
+
+\subsection{newtypes}{Newtypes}
+
+Newtypes wrap an existing type, allow the programmer to inherit some of the operations from the underlying type, and add new operations.
+Newtypes are flexible but may need boilerplate code to implement all features required in a real-world application.
+
+\begin{figure}
+\marginnote{mn-newtypes}{
+  An example of using the newtype idiom in Rust.
+  Inheriting basic operations, such as comparison and hashing, is easy, but arithmetic operations require a lot of boilerplate code.
+  Some third-party packages, such as \href{https://crates.io/crates/derive_more}{\code{derive\_more}}, make this task easier.
+}
+\begin{code}
+\em{/// The number of standard SI apples.}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct MetricApples(i64);
+
+impl std::ops::Add for MetricApples {
+  type Output = Self;
+  fn add(self, other: Self) -> Self {
+    MetricApples(self.0 + other.0)
+  }
+}
+\end{code}
+\end{figure}
+
+\href{https://wiki.haskell.org/Newtype}{Haskell} and \href{https://doc.rust-lang.org/book/ch19-04-advanced-types.html#using-the-newtype-pattern-for-type-safety-and-abstraction}{Rust} are examples of languages supporting newtypes.
+
+\subsection{typedefs}{Typedefs}
+
+Typedefs introduce a new name for an existing type, inheriting all underlying type operations.
+
+\begin{figure}
+\marginnote{mn-typedefs}{
+  An example of using typedefs in Go.
+  Typedefs inherit all operations from the underlying type, even those meaningless for the new type.
+}
+\begin{code}
+\em{/// MetricApples hold the number of standard SI apples.}
+type MetricApples int64
+
+func main() {
+  a, b := MetricApples(2), MetricApples(3)
+  // Go allows us to add, multiply, and divide MetricApples.
+  // Note that all these operations give us MetricApples back, which doesn’t always make sense.
+  // Apples times apples should give apples squared.
+  // Dividing apples should give a dimensionless number.
+  fmt.Printf("\%[1]T \%[1]d, \%[2]T \%[2]d, \%[3]T \%[3]d\\n", a+b, a*b, b/a)
+}
+\end{code}
+\end{figure}
+
+\href{https://go.dev/ref/spec#Type_definitions}{Go}, \href{https://dlang.org/library/std/typecons/typedef.html}{D} and \href{https://en.wikibooks.org/wiki/Ada_Programming/Type_System#Derived_types}{Ada} provide typedefs (Ada calls typedefs \em{derived types}).
+The \href{https://www.boost.org/}{Boost} project for C++ implements \href{https://www.boost.org/doc/libs/1_61_0/libs/serialization/doc/strong_typedef.html}{typedefs} as a library
+(C's \href{https://en.cppreference.com/w/c/language/typedef}{typedef declarations} are ``weak typedefs'': they introduce an alias for an existing type, not a new type).
+
+Newtypes and typedefs are versatile and practical, but they approach the problem in a way that's too simplistic and mechanical.
+There is a more systematic way to think about domain types.
+
+\section{domain-type-classes}{Domain type classes}
+
+\epigraph{A constraint on component design leads to freedom and power when putting those components together into systems.}{
+  Rúnar Bjarnason, \href{https://www.youtube.com/watch?v=GqmsQeSzMdw}{Constraints Liberate, Liberties Constrain}.
+}
+
+Over the years, I found that specific classes of domain types appear repeatedly in most applications I work on.
+This section is an overview of these categories.
+
+I use pseudo-Rust syntax to illustrate the concepts, but the ideas should easily translate to any statically typed language.
+
+\begin{figure}
+\marginnote{mn-fig-domain-type}{
+  The interface shared by all universal domain types in this article.
+}
+\begin{code}
+trait DomainType {
+  \em{/// The primitive type representing the domain value.}
+  type Representation; \label{representation-type}
+
+  \em{/// Creates a domain value from its representation value.}
+  fn from_repr(repr: Representation) -> Self;
+
+  \em{/// Extracts the representation value from the domain value.}
+  fn to_repr(self) -> Representation;
+}
+\end{code}
+\end{figure}
+
+The code snippets present \em{minimal} interfaces for each type class.
+Practical concerns often require adding more operations.
+For example, using identity types as keys in a dictionary requires exposing a hash function (for hash maps) or imposing an ordering (for search trees), and serializing values requires accessing their internal representation.
+
+\subsection{identity-types}{Identity types}
+
+One of the most common uses of domain types is a transparent handle for an entity or an asset in the real world, such as a customer identifier in an online store or an employee number in a payroll application.
+I call these types \em{identity types}.
+
+Identity types have no structure, i.e., we don't care about their internal representation.
+The only fundamental requirement is the ability to compare values of those types for equality.
+This lack of structure suggests an appropriate mathematical model for such types: a \em{set}, a collection of distinct objects.
+
+\begin{figure}
+\marginnote{mn-identity-types}{
+  The minimal interface for identity types.
+}
+\begin{code}
+trait Eq {
+  \em{/// Returns true if two values are equal.}
+  fn eq(&self, other: &Self) -> bool;
+}
+
+trait IdentityLike: DomainType + Eq {}
+\end{code}
+\end{figure}
+
+\href{#newtypes}{Newtypes} are a perfect fit for identity types thanks to their ability to hide structure.
+\href{#typdefs}{Typedefs}, on the other hand, impose too much structure, allowing the programmer to add and subtract numeric identities accidentally.
+But given the choice, typedefs are safer than raw integers or strings.
+
+\subsection{amount-types}{Amount types}
+
+Another typical use of domain types is representing quantities, such as the amount of money in \sc{usd} on a bank account or the file size in bytes.
+Being able to compare, add, and subtract amounts is essential.
+
+Generally, we cannot multiply or divide two compatible amounts and expect to get the amount of the same type back\sidenote{sn-amount-probability}{
+  Unless we're modeling mathematical entities, such as probabilities or points on an elliptic curve.
+}.
+Multiplying two dollars by two dollars gives four squared dollars.
+I don't know about you, but I'm yet to find a practical use for squared dollars.
+
+Multiplying amounts by a dimensionless number, however, is meaningful.
+There is nothing wrong with a banking app increasing a dollar amount by ten percent or a disk utility dividing the total number of allocated bytes by the file count.
+
+The appropriate mathematical abstraction for amount types is \href{https://en.wikipedia.org/wiki/Vector_space}{vector spaces}.
+Vector space is a set with additional operations defined on the elements of this set: addition, subtraction, and scalar multiplication, such that behaviors of these operations satisfy a few natural \href{https://en.wikipedia.org/wiki/Vector_space#Definition_and_basic_properties}{axioms}.
+
+\begin{figure}
+\marginnote{mn-amount-types}{
+  The minimal interface for amount types.
+}
+\begin{code}
+trait Ord: Eq {
+  \em{/// Compares two values.}
+  fn cmp(&self, other: &Self) -> Ordering;
+}
+
+trait VectorSpace {
+  \em{/// The scalar type is usually the same as the \href{#representation-type}{Representation} type.}
+  type Scalar;
+
+  \em{/// Returns the additive inverse of the value.}
+  fn neg(self) -> Self;
+  
+  \em{/// Adds two vectors.}
+  fn add(self, other: Self) -> Self;
+
+  \em{/// Subtracts the other vector from self.}
+  fn sub(self, other: Self) -> Self;
+
+  \em{/// Multiplies the vector by a scalar.}
+  fn mul(self, factor: Scalar) -> Self;
+
+  \em{/// Divides the vector by a scalar.}
+  fn div(self, factor: Scalar) -> Self;
+}
+
+trait AmountLike: IdentityLike + VectorSpace + Ord {}
+\end{code}
+\end{figure}
+
+\href{#newtypes}{Newtypes} allow us to implement amount types, but they might need some tedious code to get the multiplication and division right.
+\href{#typdefs}{Typedefs} are handy, but get multiplication and division wrong, confusing dollars and dollars squared.
+
+\subsection{locus-types}{Locus types}
+
+Working with space-like structures, such as time and space, poses an interesting challenge.
+Spaces have two types of values: absolute positions and relative distances.
+
+Positions refer to points in space, such as timestamps or geographical coordinates.
+Distances represent a difference between two such points.
+
+Some natural languages acknowledge the distinction and offer different words for these concepts, such as ``o'clock'' vs. ``hours'' in English or ``Uhr'' vs. ``Stunden'' in German.
+
+While distances behave the same way as \href{#amount-types}{amount types}, positions are trickier.
+We can compare, order, and subtract them to compute the distance between two points.
+For example, subtracting 5 am on Friday from 3 am on Saturday gives us twenty-two hours.
+Adding or multiplying these dates makes no sense, however.
+This semantic demands a new class of types, \em{locus types}.
+
+One example of the locus/distance dichotomy coming from system programming is the memory address arithmetic.
+Low-level programming languages differentiate \em{pointers} (memory addresses) and \em{offsets} (distances between addresses).
+In the C programming language, the \code{void*} type represents a memory address, and the \code{ptrdiff\_t} type represents an offset.
+Subtracting two pointers gives an offset, but adding or multiplying pointers is meaningless.
+
+We can view each position as a distance from a fixed origin point.
+Changing the origin or the distance type calls for a new locus type.
+
+\begin{figure}
+\marginnote{mn-locus-types}{
+  The minimal interface for locus types.
+}
+\begin{code}
+trait LocusLike: IdentityLike + Ord {
+  \em{/// The type representing the distance between two positions.}
+  type Distance: AmountLike;
+
+  \em{/// The origin for the absolute coordinate system.}
+  const ORIGIN: Self;
+
+  \em{/// Moves the point away from the origin by the specified distance.}
+  fn add(self, other: Distance) -> Self;
+
+  \em{/// Returns the distance between two points.}
+  fn sub(self, other: Self) -> Distance;
+}
+\end{code}
+\end{figure}
+
+Timestamps offer an excellent demonstration of the ``distance type + the origin'' concept.
+Go and Rust represent timestamps as a number of \em{nanoseconds} passed from the \sc{unix} epoch (midnight of January 1st, 1970),
+The C programming language defines the \href{https://en.cppreference.com/w/c/chrono/time_t}{\code{time\_t}} type, which is almost always the number of \em{seconds} from the \sc{unix} epoch.
+The \href{https://en.wikipedia.org/wiki/Q_(programming_language_from_Kx_Systems)}{q programming language} also uses nanoseconds, but \href{https://code.kx.com/q4m3/2_Basic_Data_Types_Atoms/#253-date-time-types}{chose the \em{millennium}} (midnight of January 1st, 2000) as its origin point.
+Changing the distance type (e.g., seconds to nanoseconds) or the origin (e.g., \sc{unix} epoch to the millennium) calls for a different timestamp type.
+
+The Go standard library employs the locus type design for its \href{https://pkg.go.dev/time}{\code{time}} package, differentiating the time instant (\href{https://pkg.go.dev/time#Time}{\code{time.Time}}) and time duration (\href{https://pkg.go.dev/time#Duration}{\code{time.Duration}}).
+
+The Rust standard module \href{https://doc.rust-lang.org/std/time/index.html}{\code{std::time}} is a more evolved example.
+It defines the \href{https://doc.rust-lang.org/std/time/struct.SystemTime.html}{\code{SystemTime}} type for wall clock time (the origin is the \href{https://doc.rust-lang.org/std/time/struct.SystemTime.html#associatedconstant.UNIX_EPOCH}{\sc{unix} epoch}), \href{https://doc.rust-lang.org/std/time/struct.Instant.html}{\code{Instant}} for monotonic clocks (the origin is ``some unspecified point in the past'', usually the system boot time), and the \href{https://doc.rust-lang.org/std/time/struct.Duration.html}{\code{Duration}} type for distances between two clock measurements.
+
+\subsection{quantities}{Quantities}
+
+So far, we considered applications where domain types barely interact with one another.
+Many applications require combining values of different domain types in a single expression.
+A physics simulation might need to multiply a time interval by a velocity to compute the distance travelled.
+A financial application might need to multiply the dollar amount by the conversion rate to get an amount in euros.
+
+We can model complex type interactions using methods of \href{https://en.wikipedia.org/wiki/Dimensional_analysis}{dimensional analysis}.
+If we view \href{#amount-types}{amounts} as a value with an attached label identifying their unit, then our new types are a natural extension demanding a more structured label equivalent to a vector of base units raised to rational powers.
+For example, acceleration would have label \math{(distance \times  time\sup{-2})}, and the \sc{usd}/\sc{eur} \href{https://en.wikipedia.org/wiki/Currency_pair}{pair} exchange rate would have label \math{(eur \times  usd\sup{-1})}.
+I call types with such rich label structure \em{quantities}.
+
+Quantities are a proper extension of amount types: addition, subtraction, and scalar multiplication work the same way, leaving the label structure untouched.
+The additional label structure gives meaning to multiplication and division.
+
+The result of multiplication will have a base unit vector with the component-wise \em{sum} of the power vectors of the unit factors.
+For example, car fuel consumption computation could use an expression like \math{2 (km) \times  0.05 (liter \times  km\sup{-1}) = 0.1 (liter)}.
+
+Dividing values produces a label that's a component-wise \em{difference} between the dividend and divisor power vectors.
+For example, running pace computation could use an expression like \math{10 (min) / 2 (km) = 5 (min \times  km\sup{-1})}.
+
+\begin{figure}
+\marginnote{mn-quantities}{
+  The minimal interface for quantities.
+}
+\begin{code}
+trait QuantityLike<DimA>: AmountLike {
+  \em{/// Multiplies two quantities.}
+  fn mul<O: QuantityLike<DimB>>(self, other: O)
+    -> impl QuantityLike<AddUnitPowers<DimA, DimB>>;
+
+  \em{/// Divides self by the specified quantity.}
+  fn div<O: QuantityLike<DimB>>(self, other: O)
+    -> impl QuantityLike<SubUnitPowers<DimA, DimB>>;
+}
+\end{code}
+\end{figure}
+
+Quantity types require complex type-level machinery, which makes them hard to implement in most languages.
+\href{https://www.boost.org/doc/libs/1_65_0/doc/html/boost_units.html}{Boost.Units} is one of the first libraries to provide comprehensive implementations of quantity types in C++.
+Rust ecosystem offers the \href{https://crates.io/crates/dimensioned}{dimensioned} package.
+The \href{https://hackage.haskell.org/package/units}{units} package is a popular choice in the Haskell ecosystem.
+
+If your language doesn't support advanced type-level programming or using rigid types is impractical in your application, you can do unit checks at runtime.
+Python's \href{https://github.com/python-quantities/python-quantities}{quantities} package is an example of this approach.
+
+\section{conclusion}{Conclusion}
+
+This article shows a systematic approach to designing domain types: we identify the minimal interface the type must satisfy to address practical needs and find suitable mathematical machinery.
+
+We discussed four classes of domain types that fit naturally in almost any application: \href{#identity-types}{identity types}, \href{#amount-types}{amount types}, \href{#locus-types}{locus types}, and \href{#quantities}{quantities}.
+Each type class is a little gem, a universal structure akin to a \href{https://en.wikipedia.org/wiki/Software_design_pattern}{design pattern}.
+Unlike design patterns, the universal domain types are based on mathematical abstractions and can be specified precisely.
+
+I'm sure you will identify a few places in your application where one of these type classes fits perfectly.
+If you use Rust, you might find my \href{https://crates.io/crates/phantom_newtype}{phantom\_newtype} package helpful.
+Maybe you'll discover some gems of your own.
+Have fun!
+
+\section{exercises}{Exercises}
+
+The following questions and exercises will help you understand and apply the material in this article.
+
+\begin{enumerate}
+  \item Think of bugs you found in your career that were embarrassingly hard to find but trivial to fix.
+  Could using more precise types prevent those bugs?
+  \item Are there any areas in the application you're working on where one of the universal domain types could improve type safety?
+  \item How do universal domain types relate to one another? Draw a \href{https://en.wikipedia.org/wiki/Formal_concept_analysis#Example}{line diagram}.
+  \item Non-spacial quantities, such as mass and electrical charge, don't seem to require corresponding locus types. Why is that?
+  \item
+    Did you find any other domain types in your work that might be universal?
+   If so, comment on GitHub issue \href{https://github.com/roman-kashitsyn/mmapped.blog/issues/50}{roman-kashitsyn/mmapped.blog#50}.
+   I'll gladly add your gem to this article with a proper attribution.
+\end{enumerate}
+
+\end{document}

@@ -65,8 +65,10 @@ var (
 	// Builtin replacement commands
 	SymLdots        = BuiltinReplacement("ldots", "…")
 	SymCdots        = BuiltinReplacement("cdots", "⋯")
-	SymDelta        = BuiltinReplacement("Delta", "δ")
+	SymDelta        = BuiltinReplacement("delta", "δ")
 	SymCapitalDelta = BuiltinReplacement("Delta", "Δ")
+	SymFracSlash    = BuiltinReplacement("fracslash", "∕")
+	SymTimes        = BuiltinReplacement("times", "×")
 
 	// Builtin environments
 	SymDocument    = BuiltinEnv("document")
