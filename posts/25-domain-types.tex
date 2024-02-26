@@ -39,7 +39,7 @@ The semantics of such definitions vary across languages, but they usually fall i
 
 \subsection{newtypes}{Newtypes}
 
-Newtypes wrap an existing type and allow the programmer to inherit some of the operations from the underlying type.
+Newtypes wrap an existing type, allow the programmer to inherit some of the operations from the underlying type, and add new operations.
 Newtypes are flexible but may need boilerplate code to implement all features required in a real-world application.
 
 \begin{figure}
@@ -81,17 +81,18 @@ func main() {
   a, b := MetricApples(2), MetricApples(3)
   // Go allows us to add, multiply, and divide MetricApples.
   // Note that all these operations give us MetricApples back, which doesn’t always make sense.
-  // Apples times apples gives apples squared.
-  // Dividing apples gives a dimensionless number.
+  // Apples times apples should give apples squared.
+  // Dividing apples should give a dimensionless number.
   fmt.Printf("\%[1]T \%[1]d, \%[2]T \%[2]d, \%[3]T \%[3]d\\n", a+b, a*b, b/a)
 }
 \end{code}
 \end{figure}
 
 \href{https://go.dev/ref/spec#Type_definitions}{Go}, \href{https://dlang.org/library/std/typecons/typedef.html}{D} and \href{https://en.wikibooks.org/wiki/Ada_Programming/Type_System#Derived_types}{Ada} provide typedefs (Ada calls typedefs \em{derived types}).
-The \href{https://www.boost.org/}{Boost} project for C++ implements \href{https://www.boost.org/doc/libs/1_61_0/libs/serialization/doc/strong_typedef.html}{typedefs} as a library.
+The \href{https://www.boost.org/}{Boost} project for C++ implements \href{https://www.boost.org/doc/libs/1_61_0/libs/serialization/doc/strong_typedef.html}{typedefs} as a library
+(C's \href{https://en.cppreference.com/w/c/language/typedef}{typedef declarations} are ``weak typedefs'': they introduce an alias for an existing type, not a new type).
 
-Newtypes and typedefs are versatile and very useful in practice, but they approach the problem in a way that's too simplistic and mechanical.
+Newtypes and typedefs are versatile and practical, but they approach the problem in a way that's too simplistic and mechanical.
 There is a more systematic way to think about domain types.
 
 \section{domain-type-classes}{Domain type classes}
@@ -166,7 +167,7 @@ Multiplying two dollars by two dollars gives four squared dollars.
 I don't know about you, but I'm yet to find a practical use for squared dollars.
 
 Multiplying amounts by a dimensionless number, however, is meaningful.
-There is nothing wrong with a banking app increasing a dollar amount by ten percent or a disk utility dividing the total number of bytes occupied by the file count.
+There is nothing wrong with a banking app increasing a dollar amount by ten percent or a disk utility dividing the total number of allocated bytes by the file count.
 
 The appropriate mathematical abstraction for amount types is \href{https://en.wikipedia.org/wiki/Vector_space}{vector spaces}.
 Vector space is a set with additional operations defined on the elements of this set: addition, subtraction, and scalar multiplication, such that behaviors of these operations satisfy a few natural \href{https://en.wikipedia.org/wiki/Vector_space#Definition_and_basic_properties}{axioms}.
@@ -213,7 +214,7 @@ trait AmountLike: IdentityLike + VectorSpace + Ord {}
 Working with space-like structures, such as time and space, poses an interesting challenge.
 Spaces have two types of values: absolute positions and relative distances.
 
-Positions refer to a point in space, such as a timestamp or a geographical coordinate.
+Positions refer to points in space, such as timestamps or geographical coordinates.
 Distances represent a difference between two such points.
 
 Some natural languages acknowledge the distinction and offer different words for these concepts, such as ``o'clock'' vs. ``hours'' in English or ``Uhr'' vs. ``Stunden'' in German.
@@ -268,7 +269,7 @@ It defines the \href{https://doc.rust-lang.org/std/time/struct.SystemTime.html}{
 
 So far, we considered applications where domain types barely interact with one another.
 Many applications require combining values of different domain types in a single expression.
-A physics simulation might need to multiply a time interval by a velocity to get a distance.
+A physics simulation might need to multiply a time interval by a velocity to compute the distance travelled.
 A financial application might need to multiply the dollar amount by the conversion rate to get an amount in euros.
 
 We can model complex type interactions using methods of \href{https://en.wikipedia.org/wiki/Dimensional_analysis}{dimensional analysis}.
@@ -319,6 +320,7 @@ Each type classes is a little gem, a universal structure akin to a \href{https:/
 Unlike design patterns, the universal domain types are based on mathematical abstractions and can be specified precisely.
 
 I'm sure you will identify a few places in your application where one of these type classes fits perfectly.
+If you use Rust, you might find my \href{https://crates.io/crates/phantom_newtype}{phantom\_newtype} package helpful.
 Maybe you'll discover some gems of your own.
 Have fun!
 
@@ -331,6 +333,7 @@ The following questions and exercises will help you understand and apply the mat
   Could using more precise types prevent those bugs?
   \item Are there any areas in the application you're working on where one of the universal domain types could improve type safety?
   \item How do universal domain types relate to one another? Draw a \href{https://en.wikipedia.org/wiki/Formal_concept_analysis#Example}{line diagram}.
+  \item Non-spacial quantities, such as mass and electrical charge, don't seem to require corresponding locus types. Why is that?
   \item
     Did you find any other domain types in your work that might be universal?
    If so, comment on GitHub issue \href{https://github.com/roman-kashitsyn/mmapped.blog/issues/50}{roman-kashitsyn/mmapped.blog#50}.
