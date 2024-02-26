@@ -66,7 +66,7 @@ impl std::ops::Add for MetricApples {
 
 \subsection{typedefs}{Typedefs}
 
-Typedefs introduce a new name for an existing type, inheriting all of the underlying type operations.
+Typedefs introduce a new name for an existing type, inheriting all underlying type operations.
 
 \begin{figure}
 \marginnote{mn-typedefs}{
@@ -152,8 +152,8 @@ trait IdentityLike: DomainType + Eq {}
 \end{figure}
 
 \href{#newtypes}{Newtypes} are a perfect fit for identity types thanks to their ability to hide structure.
-\href{#typdefs}{Typedefs}, on the other hand, impose too much structure, allowing the programmer to accidentally add and subtract numeric identities.
-But given the choice, typedefs are still a safer option than using raw integers or strings.
+\href{#typdefs}{Typedefs}, on the other hand, impose too much structure, allowing the programmer to add and subtract numeric identities accidentally.
+But given the choice, typedefs are safer than raw integers or strings.
 
 \subsection{amount-types}{Amount types}
 
@@ -315,8 +315,8 @@ Python's \href{https://github.com/python-quantities/python-quantities}{quantitie
 
 This article shows a systematic approach to designing domain types: we identify the minimal interface the type must satisfy to address practical needs and find suitable mathematical machinery.
 
-We discussed four common classes of domain types that fit naturally in almost any application: \href{#identity-types}{identity types}, \href{#amount-types}{amount types}, \href{#locus-types}{locus types}, and \href{#quantities}{quantities}.
-Each type classes is a little gem, a universal structure akin to a \href{https://en.wikipedia.org/wiki/Software_design_pattern}{design pattern}.
+We discussed four classes of domain types that fit naturally in almost any application: \href{#identity-types}{identity types}, \href{#amount-types}{amount types}, \href{#locus-types}{locus types}, and \href{#quantities}{quantities}.
+Each type class is a little gem, a universal structure akin to a \href{https://en.wikipedia.org/wiki/Software_design_pattern}{design pattern}.
 Unlike design patterns, the universal domain types are based on mathematical abstractions and can be specified precisely.
 
 I'm sure you will identify a few places in your application where one of these type classes fits perfectly.
