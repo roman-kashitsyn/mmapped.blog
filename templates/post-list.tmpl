@@ -22,11 +22,7 @@
   <meta keywords="{{ StringsJoin .Keywords "," }}">
   <h2 class="article-title"><a href="{{ .URL }}"><span itemprop="headline">{{ .Title }}</span></a></h2>
   <div class="article-abstract" itemprop="abstract">{{ .Subtitle }}</div>
-  <span class="publish-date">
-    <span title="Publish date">✏ <span itemprop="datePublished">{{ FormatDate .CreatedAt }}</span></span>
-    &nbsp;
-    <span title="Last modified">✂ <span itemprop="dateModified">{{ FormatDate .ModifiedAt }}</span></span>
-  </spane>
+  {{- template "post-attributes" . -}}
 </li>
 {{ end }}
 </ul>

@@ -31,6 +31,7 @@ type Article struct {
 	Keywords   []string
 	Document   Env
 	URL        string
+	RedditLink string
 }
 
 type PostListRenderContext struct {
@@ -52,6 +53,7 @@ type PostRenderContext struct {
 	ModifiedAt  time.Time
 	Keywords    []string
 	URL         string
+	RedditLink  string
 	Toc         []TocSection
 	Body        template.HTML
 	PrevPost    *Article
@@ -136,6 +138,12 @@ func ArticleMetadata(ast []Node) (article Article, err error) {
 					return
 				}
 				article.Keywords = append(article.Keywords, kw)
+			case SymReddit:
+				var url string
+				if err = v.ArgText(0, &url); err != nil {
+					return
+				}
+				article.RedditLink = url
 			}
 		case Env:
 			switch v.name {

@@ -112,9 +112,22 @@
 }
 
 /* Customized styles */
+.post-icons {
+    margin-left: 1em;
+}
+a.icon-link:link,
+a.icon-link:visited {
+    text-decoration: none;
+    background: none;
+    vertical-align: middle;
+}
+.reddit-icon {
+    height: 16px;
+    width: 16px;
+}
 
-.publish-date {
-    font-size: 0.8rem;
+.post-attrs {
+    font-size: 1rem;
     font-variant-numeric: normal;
 }
 

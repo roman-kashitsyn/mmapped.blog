@@ -132,6 +132,7 @@ func renderPostAt(i int, articles []Article) (contents []byte, err error) {
 		ModifiedAt:  article.ModifiedAt,
 		Keywords:    article.Keywords,
 		URL:         article.URL,
+		RedditLink:  article.RedditLink,
 		Toc:         toc,
 		Body:        body,
 		PrevPost:    prevPost,

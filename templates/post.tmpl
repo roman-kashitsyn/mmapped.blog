@@ -20,11 +20,7 @@
 <article>
 {{- template "header" -}}
 <h1 class="article-title"><a href="{{ .URL }}">{{ .Title }}</a></h1>
-<p class="publish-date">
-  <span title="First published">✏ <span itemprop="datePublished">{{ FormatDate .CreatedAt }}</span></span>
-  &nbsp;
-  <span title="Last modified">✂ <span itemprop="dateModified">{{ FormatDate .ModifiedAt }}</span></span>
-</p>
+{{- template "post-attributes" . -}}
 
 {{- if .Toc -}}
 <hr>

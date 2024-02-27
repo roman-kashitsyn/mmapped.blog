@@ -28,7 +28,7 @@ func getTemplate(name string) (tmpl *template.Template, err error) {
 			return t.UTC().Format("2006-01-02")
 		},
 	})
-	tmpl, err = tmpl.ParseGlob(path.Join(inputDir, "*.tmpl"))
+	tmpl, err = tmpl.ParseGlob(path.Join(inputDir, "templates/*.tmpl"))
 	if err != nil {
 		log.Fatalf("Failed to parse the post template: %v", err)
 	}
@@ -75,6 +75,7 @@ func renderOne(inputPath string) {
 		ModifiedAt: article.ModifiedAt,
 		Keywords:   article.Keywords,
 		URL:        article.URL,
+		RedditLink: article.RedditLink,
 		Toc:        toc,
 		Body:       body,
 		PrevPost:   nil,
