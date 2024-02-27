@@ -127,20 +127,20 @@ trait DomainType {
 
 The code snippets present \em{minimal} interfaces for each type class.
 Practical concerns often require adding more operations.
-For example, using identity types as keys in a dictionary requires exposing a hash function (for hash maps) or imposing an ordering (for search trees), and serializing values requires accessing their internal representation.
+For example, using identifiers as keys in a dictionary requires exposing a hash function (for hash maps) or imposing an ordering (for search trees), and serializing values requires accessing their internal representation.
 
-\subsection{identity-types}{Identity types}
+\subsection{identifiers}{Identifiers}
 
 One of the most common uses of domain types is a transparent handle for an entity or an asset in the real world, such as a customer identifier in an online store or an employee number in a payroll application.
-I call these types \em{identity types}.
+I call these types \em{identifiers}.
 
-Identity types have no structure, i.e., we don't care about their internal representation.
+Identifiers have no structure, i.e., we don't care about their internal representation.
 The only fundamental requirement is the ability to compare values of those types for equality.
 This lack of structure suggests an appropriate mathematical model for such types: a \em{set}, a collection of distinct objects.
 
 \begin{figure}
-\marginnote{mn-identity-types}{
-  The minimal interface for identity types.
+\marginnote{mn-identifiers-interface}{
+  The minimal interface for identifiers.
 }
 \begin{code}
 trait Eq {
@@ -148,15 +148,15 @@ trait Eq {
   fn eq(&self, other: &Self) -> bool;
 }
 
-trait IdentityLike: DomainType + Eq {}
+trait IdentifierLike: DomainType + Eq {}
 \end{code}
 \end{figure}
 
-\href{#newtypes}{Newtypes} are a perfect fit for identity types thanks to their ability to hide structure.
-\href{#typdefs}{Typedefs}, on the other hand, impose too much structure, allowing the programmer to add and subtract numeric identities accidentally.
+\href{#newtypes}{Newtypes} are a perfect fit for identifiers thanks to their ability to hide structure.
+\href{#typdefs}{Typedefs}, on the other hand, impose too much structure, allowing the programmer to add and subtract numeric identifiers accidentally.
 But given the choice, typedefs are safer than raw integers or strings.
 
-\subsection{amount-types}{Amount types}
+\subsection{amounts}{Amounts}
 
 Another typical use of domain types is representing quantities, such as the amount of money in \sc{usd} on a bank account or the file size in bytes.
 Being able to compare, add, and subtract amounts is essential.
@@ -170,12 +170,12 @@ I don't know about you, but I'm yet to find a practical use for squared dollars.
 Multiplying amounts by a dimensionless number, however, is meaningful.
 There is nothing wrong with a banking app increasing a dollar amount by ten percent or a disk utility dividing the total number of allocated bytes by the file count.
 
-The appropriate mathematical abstraction for amount types is \href{https://en.wikipedia.org/wiki/Vector_space}{vector spaces}.
+The appropriate mathematical abstraction for amounts is \href{https://en.wikipedia.org/wiki/Vector_space}{vector spaces}.
 Vector space is a set with additional operations defined on the elements of this set: addition, subtraction, and scalar multiplication, such that behaviors of these operations satisfy a few natural \href{https://en.wikipedia.org/wiki/Vector_space#Definition_and_basic_properties}{axioms}.
 
 \begin{figure}
-\marginnote{mn-amount-types}{
-  The minimal interface for amount types.
+\marginnote{mn-amounts-interface}{
+  The minimal interface for amounts.
 }
 \begin{code}
 trait Ord: Eq {
@@ -203,14 +203,14 @@ trait VectorSpace {
   fn div(self, factor: Scalar) -> Self;
 }
 
-trait AmountLike: IdentityLike + VectorSpace + Ord {}
+trait AmountLike: IdentifierLike + VectorSpace + Ord {}
 \end{code}
 \end{figure}
 
-\href{#newtypes}{Newtypes} allow us to implement amount types, but they might need some tedious code to get the multiplication and division right.
+\href{#newtypes}{Newtypes} allow us to implement amounts, but they might need some tedious code to get the multiplication and division right.
 \href{#typdefs}{Typedefs} are handy, but get multiplication and division wrong, confusing dollars and dollars squared.
 
-\subsection{locus-types}{Locus types}
+\subsection{Loci}{Loci}
 
 Working with space-like structures, such as time and space, poses an interesting challenge.
 Spaces have two types of values: absolute positions and relative distances.
@@ -220,11 +220,11 @@ Distances represent a difference between two such points.
 
 Some natural languages acknowledge the distinction and offer different words for these concepts, such as ``o'clock'' vs. ``hours'' in English or ``Uhr'' vs. ``Stunden'' in German.
 
-While distances behave the same way as \href{#amount-types}{amount types}, positions are trickier.
+While distances behave the same way as \href{#amounts}{amounts}, positions are trickier.
 We can compare, order, and subtract them to compute the distance between two points.
 For example, subtracting 5 am on Friday from 3 am on Saturday gives us twenty-two hours.
 Adding or multiplying these dates makes no sense, however.
-This semantic demands a new class of types, \em{locus types}.
+This semantic demands a new class of types, \em{loci} (plural of \em{locus}).
 
 One example of the locus/distance dichotomy coming from system programming is the memory address arithmetic.
 Low-level programming languages differentiate \em{pointers} (memory addresses) and \em{offsets} (distances between addresses).
@@ -235,11 +235,11 @@ We can view each position as a distance from a fixed origin point.
 Changing the origin or the distance type calls for a new locus type.
 
 \begin{figure}
-\marginnote{mn-locus-types}{
-  The minimal interface for locus types.
+\marginnote{mn-loci-interface}{
+  The minimal interface for loci.
 }
 \begin{code}
-trait LocusLike: IdentityLike + Ord {
+trait LocusLike: IdentifierLike + Ord {
   \em{/// The type representing the distance between two positions.}
   type Distance: AmountLike;
 
@@ -274,11 +274,11 @@ A physics simulation might need to multiply a time interval by a velocity to com
 A financial application might need to multiply the dollar amount by the conversion rate to get an amount in euros.
 
 We can model complex type interactions using methods of \href{https://en.wikipedia.org/wiki/Dimensional_analysis}{dimensional analysis}.
-If we view \href{#amount-types}{amounts} as a value with an attached label identifying their unit, then our new types are a natural extension demanding a more structured label equivalent to a vector of base units raised to rational powers.
+If we view \href{#amounts}{amounts} as values with an attached label identifying their unit, then our new types are a natural extension demanding a more structured label equivalent to a vector of base units raised to rational powers.
 For example, acceleration would have label \math{(distance \times  time\sup{-2})}, and the \sc{usd}/\sc{eur} \href{https://en.wikipedia.org/wiki/Currency_pair}{pair} exchange rate would have label \math{(eur \times  usd\sup{-1})}.
 I call types with such rich label structure \em{quantities}.
 
-Quantities are a proper extension of amount types: addition, subtraction, and scalar multiplication work the same way, leaving the label structure untouched.
+Quantities are a proper extension of amounts: addition, subtraction, and scalar multiplication work the same way, leaving the label structure untouched.
 The additional label structure gives meaning to multiplication and division.
 
 The result of multiplication will have a base unit vector with the component-wise \em{sum} of the power vectors of the unit factors.
@@ -304,7 +304,7 @@ trait QuantityLike<DimA>: AmountLike {
 \end{code}
 \end{figure}
 
-Quantity types require complex type-level machinery, which makes them hard to implement in most languages.
+Quantities require complex type-level machinery, which makes them hard to implement in most languages.
 \href{https://www.boost.org/doc/libs/1_65_0/doc/html/boost_units.html}{Boost.Units} is one of the first libraries to provide comprehensive implementations of quantity types in C++.
 Rust ecosystem offers the \href{https://crates.io/crates/dimensioned}{dimensioned} package.
 The \href{https://hackage.haskell.org/package/units}{units} package is a popular choice in the Haskell ecosystem.
@@ -316,7 +316,7 @@ Python's \href{https://github.com/python-quantities/python-quantities}{quantitie
 
 This article shows a systematic approach to designing domain types: we identify the minimal interface the type must satisfy to address practical needs and find suitable mathematical machinery.
 
-We discussed four classes of domain types that fit naturally in almost any application: \href{#identity-types}{identity types}, \href{#amount-types}{amount types}, \href{#locus-types}{locus types}, and \href{#quantities}{quantities}.
+We discussed four classes of domain types that fit naturally in almost any application: \href{#identifiers}{identifiers}, \href{#amounts}{amounts}, \href{#loci}{loci}, and \href{#quantities}{quantities}.
 Each type class is a little gem, a universal structure akin to a \href{https://en.wikipedia.org/wiki/Software_design_pattern}{design pattern}.
 Unlike design patterns, the universal domain types are based on mathematical abstractions and can be specified precisely.
 
