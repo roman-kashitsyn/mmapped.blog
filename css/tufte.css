@@ -145,6 +145,10 @@ a.icon-link:visited {
     background-image: url(/images/GitHub-Mark-32px.png);
 }
 
+.posts .article-title {
+    font-size: 3.2rem;
+}
+
 .article-title {
     font-family: "League Gothic", sans-serif;
 }
