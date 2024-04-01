@@ -70,6 +70,16 @@ var (
 	SymCapitalDelta = BuiltinReplacement("Delta", "Δ")
 	SymFracSlash    = BuiltinReplacement("fracslash", "∕")
 	SymTimes        = BuiltinReplacement("times", "×")
+	SymInSet        = BuiltinReplacement("in", "∈")
+	SymNiSet        = BuiltinReplacement("ni", "∋")
+	SymNotInSet     = BuiltinReplacement("notin", "∉")
+	SymNotNiSet     = BuiltinReplacement("notni", "∌")
+	SymRightArrow   = BuiltinReplacement("rightarrow", "→")
+	SymDRighAarrow  = BuiltinReplacement("Rightarrow", "⇒")
+	SymLeftArrow    = BuiltinReplacement("leftarrow", "←")
+	SymDLeftArrow   = BuiltinReplacement("Leftarrow", "⇐")
+	SymLeq          = BuiltinReplacement("leq", "≤")
+	SymIff          = BuiltinReplacement("iff", "⇔")
 
 	// Builtin environments
 	SymDocument    = BuiltinEnv("document")
