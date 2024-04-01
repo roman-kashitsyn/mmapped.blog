@@ -2,7 +2,7 @@
 \documentclass{article}
 
 \title{Good names form Galois connections}
-\subtitle{todo}
+\subtitle{A quest for defining what it means to name things well.}
 \date{2024-04-01}
 \modified{2024-04-01}
 \keyword{glasperlenspiel}
@@ -18,7 +18,6 @@
 }{Richard Feynman, ``What Do You Care What Other People Think?''}
 
 I recently read a chapter on naming things in ``\href{https://www.goodreads.com/book/show/57196550-the-programmer-s-brain}{The Programmer's Brain}'' by Felienne Hermans.
-
 There is a lot of research on the topic of names in programming.
 Researchers found that good names improve code comprehension and that \href{https://oro.open.ac.uk/17007/1/butler09wcreshort_latest.pdf}{poor names correlate with buggy code}
 and proposed a few heuristics for choosing good names\sidenote{mn-naming-heuristics}{
@@ -141,7 +140,7 @@ The channel interpretation of names is quantitative but not particularly satisfy
 Furthermore, the only way to know you've found a good expression for your concept is to compare it with all other expressions.
 Could we find a more elegant way to capture the essence of a good name?
 
-\section{galois-connections}{Galois connections}
+\section{names-as-galois-connections}{Names as Galois connections}
 \epigraph{
   Galois connections do something really cool: they tell you the best possible way to recover data that can't be recovered.
   More precisely, they tell you the best approximation to reversing a computation that can't be reversed.
@@ -188,9 +187,9 @@ Even the specialized equivalence looks unintuitive, so let's see how it holds wi
 Imagine we want to name a variable holding the amount of \sc{usd} in a bank account (that's our concept \math{c}).
 Would \math{value} be an appropriate variable name?
 
-Let's see what our connection tells us: \math{decode(value)} is a vague concept less specific than the bank account balance.
+Let's see what our connection tells us: \math{decode(value)} is a vague concept, less specific than the bank account balance.
 Hence, \math{decode(value) > c}, so \math{value} is not a good name.
-I would prefer \math{usd\_amount}, which decodes to a more specific concept.
+I would prefer \math{usd\_balance}, which decodes to a more specific concept.
 
 But wait, wouldn't \math{bank_account_usd_balance} be an even better name?
 It depends on the context!
@@ -201,8 +200,8 @@ At least, that's how I defined the expression ordering; your mileage may vary.
 
 In this article, we explored the difference between concepts and their expressions,
 determined the crucial role of the reader's context in the interpretation,
-and finished with a heavy mathematical machinery that defines good names using a variant of \href{https://en.wikipedia.org/wiki/Occam's_razor}{Occam's razor}:
-A good name is as succinct as possible but still specific enough to convey the right concept.
+and finished with heavy mathematical machinery that pinpoints good names using a variant of \href{https://en.wikipedia.org/wiki/Occam's_razor}{Occam's razor}:
+A good name is as succinct as possible but still specific enough to convey the intended concept.
 
 How do we apply this knowledge?
 For me, the main lesson is that managing the reader's context is crucial for effective communication:
@@ -212,13 +211,15 @@ For me, the main lesson is that managing the reader's context is crucial for eff
   Many resources recommend that the variable name length should be proportional to the size of the scope containing it\sidenote{mn-variable-length-scope}{
   See, for example, \href{https://google.github.io/styleguide/go/decisions.html#variable-names}{Google's Go styleguide}.
   Bob Martin mentions this rule of thumb in his book ``Clean Code''.}.
-  That's also what our Galois connection predicts: if the variable definition is in the view of sight, the reader won't have any trouble decoding it, no matter how short it is.
+  This recommendation makes a lot of sense if we view it though the prism of context management: if the variable definition is in the view of sight, the reader won't have any trouble decoding it, no matter how short it is.
   The same idea applies to names that are part of the programming lore, such as \code{i} and \code{j} for loop counters.
 \item
-  Create a project glossary and use consistent names for your concepts; the readers will thank you.
+  Create a project glossary and make it obligatory for all contributors to read.
+  Consistently use names from the glossary.
 \item
   Pause and review your variable identifiers once you finished writing your code.
   What would be the decoding of each identifier if you saw it for the first time?
+  Would a newhire understand these names?
 \end{itemize}
 
 Happy naming!
