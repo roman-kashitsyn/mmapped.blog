@@ -45,6 +45,17 @@
 
 {{ .Body }}
 
+{{- if .Similar -}}
+<h2>Similar articles</h2>
+<ul class="arrows">
+{{- range .Similar -}}
+  <li><a href="{{ .URL }}">{{ .Title }}</a></li>
+{{- end -}}
+</ul>
+</div>
+{{- end -}}
+
+{{- if or .PrevPost .NextPost -}}
 <div id="next-prev-nav">
   {{- if .PrevPost -}}
     <div id="newer"><a href="{{ .PrevPost.URL }}"> ←{{ .PrevPost.Title }}</a></div>
@@ -53,7 +64,9 @@
     <div id="older"><a href="{{ .NextPost.URL }}">{{ .NextPost.Title }}→ </a></div>
   {{- end -}}
 </div>
+{{- end -}}
 <hr>
+
 {{- template "footer" -}}
 </article>
 </body>

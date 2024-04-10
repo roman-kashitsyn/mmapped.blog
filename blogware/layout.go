@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"path"
@@ -31,6 +33,9 @@ const (
 	HTMLExt = ".html"
 	TexExt  = ".tex"
 )
+
+const MaxSimilarArticles = 5
+const SimilarityCutOff = 0.4
 
 const FilePerm = 0o755
 
@@ -105,6 +110,52 @@ func handlePostListRender(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func CountFunc[S ~[]E, E any](s S, f func(E) bool) (count int) {
+	for _, x := range s {
+		if f(x) {
+			count += 1
+		}
+	}
+	return count
+}
+
+func findSimilarArticles(articles []Article, at int) (similar []Article) {
+	type candidate struct {
+		similarity float64
+		article    Article
+	}
+	candidates := make([]candidate, 0, len(articles))
+	for i, article := range articles {
+		if i == at {
+			continue
+		}
+		common := CountFunc(article.Keywords, func(tag string) bool {
+			return slices.Contains(articles[at].Keywords, tag)
+		})
+		ldiff := len(article.Keywords) - common
+		rdiff := len(articles[at].Keywords) - common
+		candidate := candidate{
+			// Prefer articles with the most common tags.
+			// Break ties by preferring articles that near the current one
+			// so that following the links walks you through the entire article collection.
+			similarity: float64(common)/float64(common+ldiff+rdiff) - 0.00001*math.Abs(float64(i)-float64(at)),
+			article:    article,
+		}
+		candidates = append(candidates, candidate)
+	}
+	// Sort candidates by similarity in descending order.
+	slices.SortFunc(candidates, func(a, b candidate) int {
+		return cmp.Compare(b.similarity, a.similarity)
+	})
+	for _, candidate := range candidates {
+		if candidate.similarity < SimilarityCutOff || len(similar) >= MaxSimilarArticles {
+			break
+		}
+		similar = append(similar, candidate.article)
+	}
+	return similar
+}
+
 func renderPostAt(i int, articles []Article) (contents []byte, err error) {
 	article := articles[i]
 	toc, err := article.Toc()
@@ -133,6 +184,7 @@ func renderPostAt(i int, articles []Article) (contents []byte, err error) {
 		Keywords:    article.Keywords,
 		URL:         article.URL,
 		RedditLink:  article.RedditLink,
+		Similar:     findSimilarArticles(articles, i),
 		Toc:         toc,
 		Body:        body,
 		PrevPost:    prevPost,

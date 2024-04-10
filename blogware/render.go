@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"os"
 	"path"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -56,6 +57,7 @@ type PostRenderContext struct {
 	RedditLink  string
 	Toc         []TocSection
 	Body        template.HTML
+	Similar     []Article
 	PrevPost    *Article
 	NextPost    *Article
 }
@@ -156,6 +158,7 @@ func ArticleMetadata(ast []Node) (article Article, err error) {
 			continue
 		}
 	}
+	slices.Sort(article.Keywords)
 	return
 }
 
