@@ -214,6 +214,10 @@ figure.medium-size img {
     width: 50%;
 }
 
+figure.p75 img {
+    width: 75%;
+}
+
 ul.arrows>li:before {
     position: absolute;
     margin-left: -2.5rem;
