@@ -1,0 +1,284 @@
+\documentclass{article}
+
+\title{Extending HTTPS outcalls}
+\subtitle{Making IC's HTTPS outcalls feature more versatile.}
+\date{2024-05-01}
+\modified{2024-05-01}
+\keyword{ic}
+
+\begin{document}
+\section*
+
+The more I learn about the \href{https://chain.link/}{Chainlink platform}, the more parallels I see between Chainlink's systems and the \href{https://internetcomputer.org/}{Internet Computer} (\sc{ic}) network I helped design and implement.
+Both projects aim to provide a solid platform for \href{https://blog.chain.link/what-is-trust-minimization/}{trust-minimized computation}, but they take different paths toward that goal.
+
+One of the limitations of blockchains is their self-contained nature.
+They authenticate the data they store and the transaction history, but can't prove any facts about the external world.
+This problem is commonly called the \href{https://chain.link/education-hub/oracle-problem}{oracle problem}.
+Oracles are services that bring external data, such as price feeds and weather conditions, into a blockchain.
+
+The Chainlink network and \sc{ic} solve the Oracle problem by providing byzantine fault-tolerant protocols.
+Chainlinks relies on the \href{/posts/24-ocr.html}{Off-chain reporting protocol} (\sc{ocr}), while \sc{ic} provides the \href{https://internetcomputer.org/docs/current/references/https-outcalls-how-it-works}{\sc{https} outcalls} feature.
+\sc{ocr} is more general, while \sc{https} outcalls are readily available to all developers and are easier to use.
+
+This article explores how to bridge the gap between the two protocols.
+We will start with an \href{#https-outcalls-overview}{overview} of the \sc{https} outcalls feature.
+Then, we will design an \href{#multi-https-outcalls}{extension} to support cases when \sc{http} responses are not deterministic.
+Finally, we will see how to use this extension to implement a robust \href{#price-feeds}{price feed} canister.
+
+\section{https-outcalls-overview}{HTTPS outcalls in a nutshell}
+
+Smart contracts on the \sc{ic} network can initiate \sc{https} requests to external services.
+
+First, the canister sends a message to the management canister that includes the \sc{https} request payload and the \href{https://internetcomputer.org/docs/current/references/https-outcalls-how-it-works#transformation-function}{transform callback function}.
+The management canister includes this request in a dedicated queue in the node's replicated state.
+
+A background process independent from the replicated state machine called \em{adapter} periodically inspects the request queue and executes requests from the queue.
+Each replica has an independent instance of the adapter process.
+
+\begin{figure}[grayscale-diagram,p75]
+\includegraphics{/images/27-observe-data-source.svg}
+\end{figure}
+
+If the original canister specified the transform callback, the adapter invokes the callback on the canister as a query.
+The callback accepts the raw \sc{http} response and returns its canonicalized version.
+One universal use case for transform callbacks is stripping the response headers since they can contain information unique to the response, such as timestamps, that can make it impossible to reach a consensus.
+
+\begin{figure}[grayscale-diagram,p75]
+\includegraphics{/images/27-transform.svg}
+\end{figure}
+
+The adapter passes the transformed response to the consensus algorithm, and the nodes exchange their observation shares.
+
+\begin{figure}[grayscale-diagram,p75]
+\label{fig-consensus-shares-transformed}
+\includegraphics{/images/27-consensus-shares-transformed.svg}
+\end{figure}
+
+If enough replicas agree on the response, the system includes the response in the block.
+The state machine delivers the response to the management canister, which forwards it to the originator canister.
+
+\begin{figure}[grayscale-diagram,p75]
+\includegraphics{/images/27-outcall-response-transformed.svg}
+\end{figure}
+
+\section{extending-https-outcalls}{Extending HTTPS outcalls}
+
+It turns out, \sc{https} outcalls implement a special case of the \sc{ocr}'s \href{/posts/24-ocr.html#report-generation}{report generation protocol}, where participants are \sc{ic} nodes.
+The \sc{ocr} protocol defines three stages:
+\begin{enumerate}
+    \item
+    In the \em{query} stage, the participants receive a task to observe an external data source.
+    This stage is implicit in \sc{https} outcalls: instead of the protocol leader initiating the query, a canister triggers a query using the system interface.
+    \item
+    In the \em{observation} stage, each node observes the data source, signs its observation, and sends it over the network.
+    The \sc{ic} implements this step through the adapter process discussed in the previous section and the consensus algorithm.
+    The adapter executes an \sc{https} request and filters it through the calling canister's transformation function.
+    The transformation result is the observation.
+    \item In the \em{report} stage, the network aggregates participant observations into the final report.
+    This stage is hard-coded in the \sc{ic} consensus protocol.
+    If \math{2f + 1} nodes observed the same \sc{http} response, its value becomes the report.
+\end{enumerate}
+
+\subsection{multi-https-outcalls}{Multi-HTTP outcalls}
+
+To make \sc{https} outcalls as general as the full report generation protocol, we must make the report stage customizable.
+The \sc{ic} consensus algorithm must allow the canister to observe all response versions and distill them into a report.
+The most straightforward way to achieve this goal is to include all response versions in the block and deliver this batch to the canister.
+
+\begin{figure}[grayscale-diagram,p75]
+\includegraphics{/images/27-multi-consensus.svg}
+\end{figure}
+
+\begin{figure}[grayscale-diagram,p75]
+\includegraphics{/images/27-multi-response.svg}
+\end{figure}
+
+This design requires adding a new endpoint to the \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#ic-management-canister}{management canister interface}.
+Let's call this endpoint \code{multi\_http\_request}.
+It accepts the same request as the existing \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#ic-http_request}{\code{http\_request}} endpoint but returns multiple responses.
+
+\begin{figure}
+\marginnote{mn-multi-http-request}{
+    A hypothetical extension to the \sc{ic} management interface allowing the canister to inspect \sc{http} responses from multiple nodes.
+}
+\begin{code}[candid]
+service ic : {
+    \em{// \ldots}
+    multi_http_request : (http_request_args) -> (vec http_request_result);
+};
+\end{code}
+\end{figure}
+
+This interface poses a new challenge: how can the canister know which responses it can trust?
+The usual approach for numeric observations is to sort them and pick the median. 
+Since there are at most \math{f} Byzantine nodes, and the \code{responses} vector contains at least \math{2f + 1} elements, only the top and bottom \math{f} responses can skew the observation significantly.
+
+If there are more than \math{2f + 1} responses, the aggregation function can make a better choice if it knows the value of \math{f}.
+Thus, the \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#system-api}{system \sc{api}} might provide a function to obtain the maximum number of faulty nodes in a subnet:
+
+\begin{code}
+ic0.max_faulty_nodes : () -> (i32);
+\end{code}
+
+This design significantly restricts the \sc{http} response size.
+Since the vector of responses might contain 34 entries on large subnets, and all the responses must fit in the block size and the two-megabyte response size limits, each response must not exceed 58 kilobytes.
+Luckily, that's enough for many essential use cases, such as observing a frequently updating price feed or the latest Ethereum block number.
+
+\subsection{aggregation-callbacks}{Faulty design: aggregation callbacks}
+
+My first attempt at extending \sc{https} outcalls relied on allowing the canister to specify an additional callback to aggregate multiple observations.
+\href{https://manu.drijve.rs/}{Manu Drijvers} pointed out a fatal flaw in this design, and I think it's helpful to outline it here because it highlights differences and parallels between \sc{ic}'s and \sc{ocr}'s approach to consensus.
+
+The faulty protocol extension would kick in after the consensus algorithm \href{#fig-consensus-shares-transformed}{distributes transformed observations} through the peer-to-peer network.
+Instead of checking whether there are \math{2f + 1} equal observations, the consensus would invoke the aggregation callback on the canister to obtain a report.
+
+\begin{figure}[grayscale-diagram,p75]
+\includegraphics{/images/27-aggregate.svg}
+\end{figure}
+
+The nodes would then distribute their report shares through the peer-to-peer network.
+
+\begin{figure}[grayscale-diagram,p75]
+\includegraphics{/images/27-consensus-shares-aggregated.svg}
+\end{figure}
+
+If there are enough equal report shares to form a consensus, the system sends the report to the canister.
+
+\begin{figure}[grayscale-diagram,p75]
+\includegraphics{/images/27-outcall-aggregated-response.svg}
+\end{figure}
+
+This design would allow the system to save the block space because the block would need to contain only the aggregated response, not all the individual responses.
+
+Unfortunately, this approach doesn't work.
+The problem is that we cannot guarantee that different nodes will see the same subset of responses.
+Each healthy node in the network of \math{3f + 1} nodes will see responses from \em{some} other nodes (at least \math{2f + 1}), but the exact subset might differ for each node.
+Different observation subsets will lead to unequal aggregated reports, and the system might fail to reach consensus.
+
+The \sc{ocr} protocol solves this issue by electing a leader node that picks the subset of observations and distributes it to the followers.
+Thus, all honest nodes must derive the same report from these observations.
+
+There is no leader in the \sc{ic} consensus protocol; \href{https://internetcomputer.org/how-it-works/consensus/#block-making}{blockmaker rank} governs node priority in each round.
+\sc{ic} nodes must agree on the observation subset using block proposals, so including all observations in the block is inevitable.
+However, that requirement doesn't mean that \sc{ic} consensus protocol is less efficient: We can view \sc{ocr} leader as the sole zero-rank block maker that sends the ``block'' with observations to all participants.
+
+\section{price-feeds}{Use-case: price feeds}
+
+One of the most popular use cases for oracles is delivering price feeds to power DeFi applications.
+Unsurprisingly, the \href{https://internetcomputer.org/docs/current/developer-docs/defi/exchange-rate-canister}{exchange rate canister} was one of the first users of the \sc{https} outcalls feature.
+This section is a walk through an implementation of a simplistic price feed canister using the \sc{ocr}-inspired extension of the \sc{https} outcalls feature discussed in the previous section.
+
+The canister queries a hypothetical price feed \sc{api} and returns the observed price and the timestamp.
+Treat the code as pseudo-code: it has never been tested or compiled.
+
+First, we import the necessary \sc{api} to make \sc{https} requests.
+Imports marked in bold do not exist yet.
+
+\begin{code}[rust]
+use ic0::\b{max_faulty_nodes};
+use ic_cdk::api::management_canister::http_request::{
+    \b{mutli_http_request},
+    CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse, TransformArgs,
+    TransformContext,
+};
+\end{code}
+
+Next, we define the data structures specifying the format of the \sc{api} response and the price report the canister produces.
+Since the block space is precious, the \code{ExamplePriceResponse} structure restricts the response contents to the fields we need to construct the report.
+
+\begin{code}[rust]
+\em{/// The format of response we get from the example price feed JSON API.}
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+struct ExamplePriceResponse {
+    price: f64,
+    timestamp_seconds: u64,
+}
+
+#[derive(candid::CandidType, candid::Deserialize, Debug)]
+struct PriceReport {
+    price: f64,
+    timestamp_seconds: u64,
+}
+\end{code}
+
+We then define the transformation function for the \sc{api} response.
+The function removes the response headers and replaces the response body with its restricted canonical version.
+
+\begin{code}[rust]
+#[ic_cdk::query]
+fn transform(args: TransformArgs) -> HttpResponse {
+    let mut response = args.response;
+    response.headers.clear();
+    let parsed_body: ExamplePriceResponse =
+        serde_json::from_slice(&response.body).expect("failed to parse response body");
+    response.body = serde_json::to_vec(&parsed_body).unwrap();
+    response
+}
+\end{code}
+
+
+It's time to send a multi-\sc{http} request to the example price feed \sc{api}.
+
+\begin{code}[rust]
+#[ic_cdk::update]
+async fn observe_icp_price() -> PriceReport {
+    let request = HttpRequest {
+        url: "https://api.example-exchange.com/price-feed?pair=ICP-USD".to_string(),
+        method: HttpMethod::GET,
+        headers: vec![],
+        transform: Some(TransformContext::from_name("transform".to_string(), vec![])),
+        body: None,
+    };
+    let http_responses = multi_http_request(request).await.expect("http call failed");
+    let f = max_faulty_nodes();
+    assert!(http_responses.len() >= 2 * f + 1, "not enough responses for consensus");
+\end{code}
+
+In the next snipped, we parse the \sc{http} responses into a vector of \code{ExamplePriceResponse} objects.
+Note that we cannot assume that all responses are parseable since malicious nodes can intentionally reply with garbage.
+
+\begin{code}[rust]
+    let mut price_responses: Vec<ExamplePriceResponse> = vec![];
+    let mut faulty_responses = 0;
+    for http_response in http_responses {
+        match serde_json::from_slice(&http_response.body) {
+            Ok(price_response) => {
+                price_responses.push(price_response);
+            }
+            Err(e) => {
+                faulty_responses += 1;
+                ic_cdk::print(format!("Failed to parse HTTP response body: {:?}", e));
+            }
+        }
+    }
+    if faulty_responses > f {
+        ic_cdk::trap("too many faulty responses");
+    }
+\end{code}
+
+Finally, we select the median price and timestamp independently.
+We cannot assume the entire response is trustworthy only because one of its fields lies in the middle.
+
+\begin{code}[rust]
+    let median_price = price_responses
+        .select_nth_unstable_by_key(n / 2, |r| r.price)
+        .1.price;
+    let median_ts = price_responses
+        .select_nth_unstable_by_key(n / 2, |r| r.timestamp_seconds)
+        .1.timestamp_seconds;
+
+    PriceReport {
+        price: median_price,
+        timestamp_seconds: median_ts,
+    }
+} \em{// end of observe_icp_price}
+\end{code}
+
+\section{conclusion}{Conclusion}
+
+\sc{https} outcalls feature allows anyone to deploy an oracle service on the \sc{ic} network with minimal effort.
+Unfortunately, the current implementation is limited to use cases of deterministic \sc{http} responses.
+This article explored how to lift this limitation by taking inspiration from the \sc{ocr} protocol and including all the \sc{http} request versions to the requesting canister.
+
+\end{document}
