@@ -55,6 +55,16 @@
 }
 
 @font-face {
+  font-family: "Libertinus Keyboard";
+  font-style: normal;
+  font-weight: normal;
+  src: local("Libertinus Keyboard"),
+       url("/fonts/LibertinusKeyboard-Regular.otf") format("opentype"),
+       url("/fonts/LibertinusKeyboard-Regular.woff2") format("woff2");
+  font-display: swap;
+}
+
+@font-face {
   font-family: "Neo Euler";
   font-style:  normal;
   font-weight: normal;
@@ -356,6 +366,10 @@ pre.apl>code {
 .marginnote .math {
     /* To match the x-height of Neo Euler and Libertinus. */
     font-size: 1.03rem;
+}
+
+kbd {
+    font-family: "Libertinus Keyboard";
 }
 
 /* Tufte CSS styles */
