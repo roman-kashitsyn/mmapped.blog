@@ -3,11 +3,20 @@
 /* Font faces */
 
 @font-face {
-  font-family: "League Gothic";
+  font-family: "Yanone Kaffeesatz";
   font-style:  normal;
   font-weight: 400;
-  src: local(League Gothic),
-       url("/fonts/LeagueGothic-Regular.woff2") format("woff2");
+  src: local(Yanone Kaffeesatz),
+       url("/fonts/YanoneKaffeesatz-Regular.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Yanone Kaffeesatz";
+  font-style:  normal;
+  font-weight: 800;
+  src: local(Yanone Kaffeesatz),
+       url("/fonts/YanoneKaffeesatz-Bold.otf") format("opentype");
   font-display: swap;
 }
 
@@ -156,11 +165,11 @@ a.icon-link:visited {
 }
 
 .posts .article-title {
-    font-size: 3.2rem;
+    font-size: 3rem;
 }
 
 .article-title {
-    font-family: "League Gothic", sans-serif;
+    font-family: "Yanone Kaffeesatz", sans-serif;
 }
 
 .article-abstract {
@@ -417,9 +426,9 @@ h1 {
     font-weight: 400;
     margin-top: 4rem;
     margin-bottom: 1.5rem;
-    font-size: 3.2rem;
+    font-size: 3rem;
     line-height: 1;
-    font-family: 'League Gothic', sans-serif;
+    font-family: "Yanone Kaffeesatz", sans-serif;
     hyphens: none;
 }
 
