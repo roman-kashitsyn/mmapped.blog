@@ -62,6 +62,7 @@ var (
 	SymBlockquote      = BuiltinCmd("blockquote", ArgTypeSeq, ArgTypeSeq)
 	SymMulticolumn     = BuiltinCmd("multicolumn", ArgTypeNum, ArgTypeAlignSpec, ArgTypeSeq)
 	SymTerm            = BuiltinCmd("term", ArgTypeSeq, ArgTypeSeq)
+	SymKbd             = BuiltinCmd("kbd", ArgTypeSeq)
 
 	// Builtin replacement commands
 	SymLdots        = BuiltinReplacement("ldots", "…")

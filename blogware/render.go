@@ -478,6 +478,12 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			return err
 		}
 		buf.WriteString("</span>")
+	case SymKbd:
+		buf.WriteString("<kbd>")
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</kbd>")
 	case SymHref:
 		var dst string
 		if err := cmd.ArgText(0, &dst); err != nil {
