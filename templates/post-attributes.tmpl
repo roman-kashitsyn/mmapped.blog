@@ -4,11 +4,16 @@
   &nbsp;
   <span title="Last modified">✂ <span itemprop="dateModified">{{ FormatDate .ModifiedAt }}</span></span>
   <span class="post-icons">
+  {{ if .HNLink }}
+  <a class="icon-link" href="{{ .HNLink }}" title="Discuss on Hacker News" rel="nofollow" target="_blank">
+    <img class="y-icon" src="/images/y18.svg" alt="Hacker News" />
+  </a>
+  {{- end -}}
   {{ if .RedditLink }}
   <a class="icon-link" href="{{ .RedditLink }}" title="Discuss on Reddit" rel="nofollow" target="_blank">
     <img class="reddit-icon" src="/images/Reddit-Icon.svg" alt="Reddit" />
   </a>
-  </span>
   {{- end -}}
+  </span>
 </span>
 {{- end -}}

@@ -184,6 +184,7 @@ func renderPostAt(i int, articles []Article) (contents []byte, err error) {
 		Keywords:    article.Keywords,
 		URL:         article.URL,
 		RedditLink:  article.RedditLink,
+		HNLink:      article.HNLink,
 		Similar:     findSimilarArticles(articles, i),
 		Toc:         toc,
 		Body:        body,

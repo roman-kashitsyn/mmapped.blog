@@ -33,6 +33,7 @@ type Article struct {
 	Document   Env
 	URL        string
 	RedditLink string
+	HNLink     string
 }
 
 type PostListRenderContext struct {
@@ -55,6 +56,7 @@ type PostRenderContext struct {
 	Keywords    []string
 	URL         string
 	RedditLink  string
+	HNLink      string
 	Toc         []TocSection
 	Body        template.HTML
 	Similar     []Article
@@ -146,6 +148,12 @@ func ArticleMetadata(ast []Node) (article Article, err error) {
 					return
 				}
 				article.RedditLink = url
+			case SymHackernews:
+				var url string
+				if err = v.ArgText(0, &url); err != nil {
+					return
+				}
+				article.HNLink = url
 			}
 		case Env:
 			switch v.name {
