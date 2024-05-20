@@ -1,27 +1,28 @@
 
 \documentclass{article}
 
-\title{Enlightmentware}
+\title{Enlightenmentware}
 \subtitle{Software that makes you a better programmer.}
-\date{2024-05-31}
-\modified{2024-05-31}
+\date{2024-05-20}
+\modified{2024-05-20}
 \keyword{programming}
+\keyword{personal}
 
 \begin{document}
 \section*
 As programmers, we interact with software tools daily.
-Most of these systems are merely tools to get the job done.
+Most of them can barely get the job done.
 But once in a white, we discover a piece of software that transcends mere utility.
-These tools capture our imagination, open a new world of possibilities, and affect how we design our systems.
-I call such software \em{enlightmentware}.
+These tools capture our imagination, open new possibilities, and affect how we design our own systems.
+I call such software \em{enlightenmentware}.
 
 The most common source of enlightenment for programmers is the programming language they use at work or learn as a hobby.
-I also experienced many jolts of enlightenment from expressing my thoughts in programming languages, from \href{https://en.wikipedia.org/wiki/Microsoft_Macro_Assembler}{\sc{masm}} and \href{https://en.wikipedia.org/wiki/C_(programming_language)}{C} to \href{https://en.wikipedia.org/wiki/Prolog}{Prolog} and \href{https://www.idris-lang.org/}{Idris}.
-Many articles, however, already explain why you should many languages and how they will expand your mind\sidenote{sn-norvig}{
+I experienced many jolts of enlightenment from fiddling with programming languages, from \href{https://en.wikipedia.org/wiki/Microsoft_Macro_Assembler}{\sc{masm}} and \href{https://en.wikipedia.org/wiki/C_(programming_language)}{C} to \href{https://en.wikipedia.org/wiki/Prolog}{Prolog} and \href{https://www.idris-lang.org/}{Idris}.
+I won't focus on languages, however, since the effects of language learning on mind expansion is old news\sidenote{sn-norvig}{
   See, for example, Peter Norvig's ``\href{https://norvig.com/21-days.html}{Teach Yourself Programming in Ten Years}''.
-}, so I won't focus on languages here.
+}.
 
-This article describes how various software artifacts entered my life to become my enlightmentware.
+In this article, I praise the tools that contributed the most to my enlightenment as a software engineer.
 
 \section{unix}{UNIX}
 
@@ -31,22 +32,21 @@ This article describes how various software artifacts entered my life to become 
   Anonymous, in the ``Art of \sc{unix} Programming'' by Eric S. Raymond
 }
 
-Around 2008, while studying at university in my hometown of Nizhny Novgorod, I started looking for my first real programming job.
-Almost all the positions I could find required knowledge of some mysterious things called \sc{unix} and \em{sockets}.
-My university program didn't offer a course \sc{unix} or operating systems in general, so I did what my education taught me: get a textbook and master the topic myself. 
+I started looking for my first real programming job around 2008, while studying at university in my hometown of Nizhny Novgorod.
+Almost all the open positions required knowledge of mysterious things called \sc{unix} and \em{sockets}.
+My curriculum didn't offer a course on \sc{unix} or operating systems in general, so I decided to get a textbook and master the topic myself. 
 
 ``\href{https://www.goodreads.com/book/show/22066650-unix}{The \sc{unix} Operating System}'' by Andrey Robachevsky et al., also known as the \em{turtle book} in Russia because of its cover, introduced me to the magical world of \sc{unix}-like operating systems.
-Finally, the operating system got a clear boundary in my head and became something I could understand, explore, and programmatically interact with.
+\sc{unix} became something I could understand, explore, and programmatically interact with.
 All pieces of the puzzle---the filesystem interface, the process model with environments and permissions, forking, sockets, and signals---fell into place and revealed a coherent, beautiful picture.
 
 A search for a working \sc{unix} installation led me to \href{https://en.wikipedia.org/wiki/Mandriva_Linux}{Mandriva Linux}.
-This discovery was exhilarating.
-It was like entering a parallel universe where you don't have to pirate software or spend forty minutes installing an \sc{ide} to compile a \sc{c} program.
+It was like discovering a parallel universe where you don't have to pirate software or spend forty minutes installing an \sc{ide} to compile a \sc{c} program.
 Here, people developed software for fun and shared it freely.
 I couldn't fathom why anyone would use Windows\sidenote{sn-windows}{
   I became significantly more tolerant since my early university years.
   Windows (specifically the \href{https://en.wikipedia.org/wiki/Windows_NT}{NT family}) is a great operating system.
-  I even have it installed on my gaming \sc{pc}.
+  I even have it installed on my gaming \sc{pc} so that I can buy games I never play.
 }.
 
 From that moment on, \sc{unix} followed me through all stages of my life:
@@ -56,7 +56,7 @@ the maturity of returning to Ubuntu \sc{lts} and delaying upgrades until the fir
 and to the overwhelmed parent stage of becoming a happy macOS user.
 
 \sc{unix} also became an essential building block in my profession.
-Most of the software I wrote operates in a \sc{unix} environment, and I still consult my copy of \href{https://www.goodreads.com/book/show/603263.Advanced_Programming_in_the_UNIX_Environment}{Advanced Programming in the \sc{unix} Environment} by W. Richard Stevens and Stephen A. Rago from time to time.
+Most of the software I wrote operates in a \sc{unix} environment, and I still occasionally consult my copy of \href{https://www.goodreads.com/book/show/603263.Advanced_Programming_in_the_UNIX_Environment}{Advanced Programming in the \sc{unix} Environment}.
 
 \section{git}{Git}
 
@@ -68,9 +68,9 @@ Most of the software I wrote operates in a \sc{unix} environment, and I still co
 
 I encountered version control systems in early 2009; the company I worked for used \href{https://en.wikipedia.org/wiki/IBM_Rational_ClearCase}{Rational ClearCase} to manage their code.
 The system versioned each file separately and relied on large configuration files---\em{config specs}---to construct a consistent snapshot of the source tree.
-The tool was utterly confusing and intimidating, so I avoided dealing with it beyond the everyday operations.
+The tool was utterly confusing and intimidating, so I avoided dealing with it beyond the minimal requirements of my job.
 
-About a year later, I joined a shop that used \href{https://subversion.apache.org/}{Subversion} for version control.
+About a year later, I joined a shop that used \href{https://subversion.apache.org/}{Subversion}.
 This time, I invested in learning upfront and swallowed the entire \href{https://svnbook.red-bean.com/}{Version Control with Subversion} before making my first commit.
 Subversion was easy to understand and use; I couldn't imagine how to improve on it.
 Still, I perceived it as a tool that you use at work.
@@ -80,8 +80,9 @@ At the time, Google offered hosting on \href{https://code.google.com/}{Google Co
 And then I discovered \href{https://git-scm.com/}{Git}.
 
 Git was nothing like Subversion.
-It had a steep learning curve and confused everyone around me to no end\sidenote{sn-git-random-man}{
-  \href{https://github.com/Lokaltog}{Kim Ødegaard} created a \href{https://git-man-page-generator.lokaltog.net/}{service} that generates random man pages mocking Git's dense documentation style way before we all got used to ChatGPT.
+It had a steep learning curve and confused everyone to no end\sidenote{sn-git-random-man}{
+  Way before we all got used to ChatGPT,
+  \href{https://github.com/Lokaltog}{Kim Ødegaard} created a \href{https://git-man-page-generator.lokaltog.net/}{service} that generates random man pages mocking Git's dense documentation style.
 }.
 Still, the confusion was qualitatively different from what I experienced with ClearCase.
 ClearCase is confusing like a Russian novel: All the characters have strange names, the plot is complex, and it doesn't end well.
@@ -98,9 +99,9 @@ I also built a toy one-file version control system while learning Rust.
 
 Will Git ever be replaced with something better?
 Just as it was hard to imagine an improvement over Subversion before Git came along, it's hard to imagine a significant improvement over Git now.
-For me, Git's primary disadvantage is its snapshot-oriented structure which makes merges hard to reason about.
+For me, Git's primary disadvantage is its snapshot-oriented approach that makes merges hard to reason about.
 Git, Mercurial, and most other tools make it challenging to separate original code from the decisions that the person merging files had to make\sidenote{sn-janestreet-patch-vs-diff}{
-  Jane Street created a separate review tool to address this problem.
+  Jane Street's tech staff reports similar concerns.
   See, for example, the \href{https://blog.janestreet.com/patch-review-vs-diff-review-revisited/}{Patch review vs. diff review, revisited} blog article.
 }.
 Systems based on \href{https://en.m.wikibooks.org/wiki/Understanding_Darcs/Patch_theory}{patch theory}, such as \href{https://pijul.org/}{Pijul} and \href{https://darcs.net/}{Darcs}, might address these issues.
@@ -111,19 +112,19 @@ Systems based on \href{https://en.m.wikibooks.org/wiki/Understanding_Darcs/Patch
   While any text editor can save your files, only Emacs can save your soul.
 }{Per Abrahamsen}
 
-I edited my first program when I was about twelve years old in a friendly blue screen of \href{https://en.wikipedia.org/wiki/Turbo_Pascal}{Turbo Pascal 7.0}.
+I edited my first programs in a friendly blue window of \href{https://en.wikipedia.org/wiki/Turbo_Pascal}{Turbo Pascal 7.0}.
 The environment had little friction: no project or build configuration, no noticeable build time; you type your code and run it.
 That was a perfect tool for learning.
 
-My university used Pascal for introductory programming classes, so I continued using Turbo Pascal for my assignments.
+My university used Pascal for introductory programming classes, so I also used Turbo Pascal for my assignments.
 Later courses introduced C++ and Java, for which we used \href{https://en.wikipedia.org/wiki/Visual_Studio#6.0_(1998)}{Visual Studio 6.0} and \href{https://en.wikipedia.org/wiki/JBuilder}{JBuilder}.
-Although we learned to invoke compilers from the command line in a few classes, \sc{ide}s dominated my code-editing experience.
+Although we learned to invoke compilers from the command line, \sc{ide}s dominated my early code-editing experience.
 
-At my first programming job, I had to work remotely on a Solaris workstation.
+At my first programming job, I worked on a remote Solaris workstation over a \href{https://en.wikipedia.org/wiki/Citrix_Systems}{Citrix} connection.
 Almost everyone in our group used \href{https://en.wikipedia.org/wiki/NEdit}{NEdit} to edit the code.
-One day, I noticed a person whose editor looked markedly different from everyone else's; their background was dark, and the code glowed with bright colors.
+One day, I noticed a person whose editor looked markedly different from everyone else's; the background was dark, and the code glowed with bright colors.
 To me, that was a sign of their superior technical knowledge.
-A burning desire to learn how to customize my editor filled my soul.
+I \em{needed} to learn how to tweak my editor.
 
 The quest for customization led me to \href{https://www.vim.org/}{Vim} (the workstation had Vim 6 installed out of the box).
 After all, if the goal is to stand out from the crowd, why stop at the color scheme?
@@ -132,16 +133,16 @@ It felt like playing a musical instrument: challenging but fun.
 It turned a mundane job of fixing bugs into an exercise in skill.
 
 I don't remember exactly when and why I got interested in Emacs\sidenote{sn-wolfram-notes}{
-  One of the things I wish I started doing earlier is journaling daily.
+  Daly journaling is one of the things I wish I started doing earlier.
   I'm nowhere near \href{https://writings.stephenwolfram.com/2019/02/seeking-the-productive-life-some-details-of-my-personal-infrastructure/#archiving-and-searching}{Stephen Wolfram's level}, but I enjoy going back and seeing what I was up to a few years ago.
 }.
 Most likely, it was a result of my obsession with Lisp after reading \href{https://en.wikipedia.org/wiki/Structure_and_Interpretation_of_Computer_Programs}{Structure and Interpretation of Computer Programs} and looking for a Lisp to interact with.
-I remember reading \href{https://www.gnu.org/software/emacs/manual/eintr.html}{An Introduction to Programming in Emacs Lisp} around 2010 and having a lot of fun.
+I remember reading \href{https://www.gnu.org/software/emacs/manual/eintr.html}{An Introduction to Programming in Emacs Lisp} around 2010 and having a great time.
 
 I became interested in the editor internals.
-Using \href{https://www.finseth.com/craft/}{The Craft of Text Editing} by Craig A. Finseth as a guide, I explored the source code of various editors to see how they worked: which the data structures they used to represent text buffers, how they implemented the undo mechanism.
-I found Vim's source code somewhat messy and hard to understand.
-Emacs's source was clean, consistent, well-organized, and well-documented.
+Using \href{https://www.finseth.com/craft/}{The Craft of Text Editing} by Craig A. Finseth as a guide, I explored the source code of various editors to see how they worked: which the data structures they used to represent text buffers, how they interacted with extensions and implemented the undo mechanism.
+I found Vim's source code somewhat messy, inconsistent, and hard to understand.
+Emacs's source was spotless, well-organized, and well-documented.
 
 A dive into Emacs internals also revealed the inherent beauty of its architecture.
 Emacs is a Lisp machine that provides text editing and window management capabilities.
@@ -149,15 +150,16 @@ It is a powerful, convenient, and friendly development environment for building 
 
 Almost everything in Emacs is a Lisp object you can inspect, interact with, and access its documentation.
 That makes Emacs' documentation system unparalleled once you master it.
-Emacs' dynamism and closeness to the user make extending it much easier than any other editor.
+Emacs' dynamism makes extending it much easier than any other editor.
 The feedback loop is airtight: you can immediately try out your code in the context of the editor you use to write it.
 
-While I'm writing these words in \href{https://code.visualstudio.com/}{Visual Studio Code}, I always have my Emacs open\sidenote{sn-vim}{
+Although I'm writing these words in \href{https://code.visualstudio.com/}{Visual Studio Code}, I always have my Emacs open\sidenote{sn-vim}{
   I also have a \href{https://github.com/tmux/tmux/wiki}{tmux} session with multiple \href{https://neovim.io/}{nvim} instances running.
   I use these when my pinky gets tired of holding down the \kbd{Ctrl} key.
 }.
 Many things are easier in Emacs; I don't think any software will ever completely replace it for me.
-It's also my editor of choice if I need to implement an extension: Programming Emacs Lisp is a joy.
+It's also my editor of choice if I need to implement an extension.
+Programming Emacs Lisp is a joy, especially compared to writing Vimscript.
 
 \section{boost-graph}{Boost.Graph}
 
@@ -168,31 +170,37 @@ It's also my editor of choice if I need to implement an extension: Programming E
   Donald Knuth, \href{https://www.informit.com/articles/article.aspx?p=1193856}{Interview with Andrew Binstock}
 }
 
-The evening of New Year's Eve in 2013 didn't go as planned.
+The evening of 2013 New Year's Eve didn't go as planned.
 I was on a cruise ship crossing the stormy Baltic Sea and couldn't stay on my feet because of the seasickness.
 Instead of consuming tasty treats with the rest of the passengers, I was lying in bed and reading a book I took for the trip: \href{https://www.goodreads.com/book/show/1705806.The_Boost_Graph_Library}{The Boost Graph Library} by Jeremy G. Siek et al.
 
 Most algorithm libraries require you to commit to a specific data representation, making integrating them into an existing project prohibitively expensive.
 That's especially true for graph algorithms: The vertices and edges are usually implicitly defined and deeply embedded into other data structures, so it's easier to re-implement the algorithm than to use a generic library.
 
-The \href{https://www.boost.io/libraries/graph/}{Boost.Graph} library offers an elegant solution to this problem based on \href{https://en.wikipedia.org/wiki/Alexander_Stepanov}{Alex Stepanov}'s ideas on generic programming.
-It uses a bag of tricks (type traits, property maps, visitors) to implement graph algorithms that will work on almost any graph representation you throw at them, given that you provide an adapter telling the library how to view your data structures as a graph.
+The \href{https://www.boost.io/libraries/graph/}{Boost.Graph} library solves this problem elegantly using \href{https://en.wikipedia.org/wiki/Alexander_Stepanov}{Alex Stepanov}'s ideas on generic programming.
+It uses a bag of tricks (type traits, property maps, visitors) to implement graph algorithms that can work with any graph representation you throw at them, given that you provide an adapter telling the library how to view your data structures as a graph.
 
 Even though I never had a chance to use the library in practice\sidenote{sn-boost-graph-use}{
   Given that I share Donald Knuth's attitude opening this section, I would probably not use the library even if I had a chance.
   I'd rather write one page of interesting code traversing a graph than two pages of boring adapters required to invoke the algorithm.
 }, its design helped me deepen my understanding of \href{https://en.wikipedia.org/wiki/Standard_Template_Library}{\sc{stl}} design and generic programming in general.
 It also helped me understand the motivation for advanced type-level programming features in other programming languages, such as \href{https://wiki.haskell.org/GHC/Type_families}{type families} in Haskell.
-Overall, Boost.Graph is one of the most enlightening software that I've never used.
+Overall, Boost.Graph is one of the most enlightening pieces of software that I've never used.
 
 \section{bazel}{Bazel}
 
-I wrote my first \code{Makefile} around 2009 while working on a research project in computational mathematics for my cybernetics degree.
-I used \href{https://en.wikipedia.org/wiki/Make_(software)}{\code{make}} at work, but I didn't need to understand how it worked.
-This time, I had to compile a \sc{fortran} program from various modules adhering to different language standards: from venerable \sc{fortran} 77 to hip Fortran 2003.
-To get a deeper understanding of the tool, I dived into \href{https://www.oreilly.com/library/view/managing-projects-with/0596006101/}{Managing Projects with GNU Make} by Robert Mecklenburg.
+\epigraph{
+  If make doesn't do what you expect it to, it's a good chance the makefile is wrong.
+}{
+  Adam de Boor, ``\href{https://docs-archive.freebsd.org/44doc/psd/12.make/paper.pdf}{PMake---A Tutorial}''
+}
 
-Reading a book on technology usually excites me; I become enthusiastic about the topic and want to try it out in practice. 
+I wrote my first \code{Makefile} around 2009 while working on a research project in computational mathematics for my degree.
+I already used \href{https://en.wikipedia.org/wiki/Make_(software)}{\code{make}} at work, but I didn't need to understand how it worked.
+This time, I had to compile a \sc{fortran} program mixing sources adhering to different language standards: from venerable \sc{fortran} 77 to hip Fortran 2003.
+To get a deeper understanding of the tool, I referred to \href{https://www.oreilly.com/library/view/managing-projects-with/0596006101/}{Managing Projects with GNU Make} by Robert Mecklenburg.
+
+Most books on technology excite me: I become enthusiastic about the subject and want to try it out in practice. 
 The book on \code{make} had the opposite effect.
 The complexity required to make builds correct and ergonomic made me earn for a better tool\sidenote{sn-modern-cpp-design}{
   One book that made me feel the same way was \href{https://www.goodreads.com/book/show/871669.Modern_C_Design}{Modern C++ Design} by Andrei Alexandrescu.
@@ -200,33 +208,51 @@ The complexity required to make builds correct and ergonomic made me earn for a 
   Another one is \href{https://nostarch.com/autotools2e}{Autotools} by John Calcote.
 }.
 
-Since my first exposure to \code{make}, I often fiddled with build systems at work:
-I introduced \href{https://cmake.org/}{CMake} to a C++ project to replace a bunch of complex and scarily incorrect \code{Makefile} files and
-replaced an inflexible \href{https://ant.apache.org/}{Ant}-based build system in a 500 \sc{kloc} Java project with \href{https://gradle.org/}{Gradle}.
+After my deep dive into \code{make}, I often fiddled with build systems at work:
+I introduced \href{https://cmake.org/}{CMake} to my first C++ project to replace complex and scarily incorrect \code{Makefile} files and
+replaced an inflexible \href{https://ant.apache.org/}{Ant}-based build system in a 500 \sc{kloc} Java project with \href{https://gradle.org/}{Gradle} scripts that everyone on the team could contribute to.
 But all of the tools I tried, including \href{https://cmake.org/}{CMake}, \href{https://ant.apache.org/}{Ant}, \href{https://maven.apache.org/}{Maven}, \href{https://gradle.org/}{Gradle}, \href{https://www.scons.org/}{SCons}, and \href{https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html}{autotools} left me deeply unsatisfied.
 They were clanky, awkward, and hard to extend and compose.
 
 In 2016, I joined Google in Zurich.
-I heard about the internal build tool, \code{blaze}, and couldn't wait to lay my hands on it.
-Surprisingly, I didn't need to fiddle with \code{blaze}.
-Nor did I have to understand how it worked.
+I heard about Google's internal build tool, \code{blaze}, and couldn't wait to lay my hands on it.
+Surprisingly, I didn't need to fiddle with \code{blaze}, nor did I have to understand how it worked.
 I could copy some build targets and edit the dependency list, and the build worked as expected.
 \code{blaze} made correct and fast builds not just easy, but \em{boring} in the good sense.
 Only a few years later, when I attempted to use \href{https://bazel.build/}{Bazel}---the open-source version of \code{blaze}---for a toy personal project, did I have to understand the underlying model.
 
-Bazel was the third and final piece of the puzzle, together with Haskell's core typeclasses and the \href{https://www.tensorflow.org/}{TensorFlow} 1.0 execution model, that made me understand the ubiquitous plan-execute pattern\sidenote{sn-build-systems-a-la-carte}{
-  The \href{https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf}{Build Systems à la Carte} article by Andrey Mokhov, Neil Mitchell, and Simon Peyton Jones explains in detail how various build system designs map to Haskell typeclasses.
+Bazel was the final piece of the puzzle, together with Haskell's typeclasses, \href{https://research.google/pubs/flumejava-easy-efficient-data-parallel-pipelines/}{Flume pipelines} interface,  and the \href{https://www.tensorflow.org/}{TensorFlow} 1.0 execution model, that made me understand the ubiquitous plan-execute pattern\sidenote{sn-build-systems-a-la-carte}{
+  The \href{https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf}{Build Systems à la Carte} article by Andrey Mokhov, Neil Mitchell, and Simon Peyton Jones explains how various build system designs map to Haskell typeclasses.
+  Thomas Leonard's \href{https://roscidus.com/blog/blog/2019/11/14/cicd-pipelines}{CI/CD pipelines: Monad, Arrow or Dart?} blog post is also a great read on this topic.
 }.
 Bazel build file is a program that constructs a slice of the build artifact graph.
-Bazel rules don't run the build commands; they declare how to transform inputs into outputs, and the Bazel engine figures out the rest.
+Bazel rules don't \em{run} the build commands; they \em{declare} how to transform inputs into outputs, and the Bazel engine figures out the rest.
 
 My relationship with the tool reached true intimacy when I helped \href{/posts/17-scaling-rust-builds-with-bazel.html}{transition \sc{dfinity}'s build system to Bazel}.
-Despite all the challenges I faced, Bazel still is my favorite build system.
+Despite all the challenges I faced on the way, Bazel is still my favorite build system.
 It's fast, correct, easy to use, and language-agnostic.
 
-Yet, I think a smaller, simpler, cleaner build system design is buried in Bazel's complexity.
+Paraphrasing \href{https://www.stroustrup.com/quotes.html}{Bjarne Stroustup}, I think a smaller, simpler, cleaner build system is struggling to get out within Bazel.
 I hope this core will someday reveal itself to the world and become the standard tool for building all software.
 
 \section{conclusion}{Conclusion}
+
+After presenting my cases, I find it tempting to look for a common theme.
+What makes a good enlightenmentware?
+For me, these are the key points:
+
+\begin{itemize}
+  \item
+  All these tools address a deep problem, and a kind of problem that I face every day, such as making programs on my computer cooperate, managing concurrent work streams, or generalizing a piece of code.
+  \item
+  They are ``round'': they pack the most volume in the smallest surface area.
+  \sc{unix} surface area is tiny, but it unlocks much power.
+  Emacs and Git are all over the place, but their \em{core} is small, sweet, and easy to appreciate.
+  \item
+  They invite and encourage you to explore their internals.
+  It's not only about being free and open-source; mastering them is also well worth the investment.
+\end{itemize}
+
+What's your enlightenmentware? Tell me on Reddit!
 
 \end{document}
