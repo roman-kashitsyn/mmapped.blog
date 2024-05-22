@@ -18,4 +18,4 @@ render: build
 
 .PHONY: build
 build:
-	pushd blogware; go build; popd
+	cd blogware; go build; cd ..
