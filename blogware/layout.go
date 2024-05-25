@@ -34,8 +34,10 @@ const (
 	TexExt  = ".tex"
 )
 
-const MaxSimilarArticles = 5
-const SimilarityCutOff = 0.4
+const (
+	MaxSimilarArticles = 5
+	SimilarityCutOff   = 0.4
+)
 
 const FilePerm = 0o755
 
@@ -48,6 +50,7 @@ var SiteLayout = []LayoutEntry{
 	{Path: "/css/", Type: StaticFiles},
 	{Path: "/fonts/", Type: StaticFiles},
 	{Path: "/images/", Type: StaticFiles},
+	{Path: "/robots.txt", Type: StaticFiles},
 	{Path: "/posts/", Type: TeXArticles},
 	{Path: "/posts.html", Type: PostList},
 	{Path: "/about.html", Type: StandalonePage},
@@ -392,7 +395,7 @@ func copyRecursively(src, dst string) error {
 		if err != nil {
 			return err
 		}
-		if p == src {
+		if p == src && info.IsDir() {
 			return nil
 		}
 
