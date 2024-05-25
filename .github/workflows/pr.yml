@@ -1,9 +1,8 @@
 on: [pull_request]
 
-name: Preview Website
+name: Build website
 jobs:
   publish:
-    environment: 'Netlify Deploy'
     runs-on: ubuntu-latest
 
     steps:
@@ -14,19 +13,5 @@ jobs:
       with:
         go-version: 1.21.x
 
-    - run: cd blogware && go build
-    - run: blogware/blogware -output site
+    - run: make render DEST=site
 
-    - name: Publish
-      uses: netlify/actions/cli@master
-      with:
-        args: deploy --dir=site --alias=pr-${{github.event.number}}
-      env:
-        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-
-    - uses: actions-ecosystem/action-create-comment@v1
-      with:
-        github_token: ${{ secrets.github_token }}
-        body: |
-          Preview Link: https://pr-${{github.event.number}}--infallible-khorana-f0cacc.netlify.app
