@@ -395,7 +395,7 @@ func copyRecursively(src, dst string) error {
 		if err != nil {
 			return err
 		}
-		if p == src {
+		if p == src && info.IsDir() {
 			return nil
 		}
 
