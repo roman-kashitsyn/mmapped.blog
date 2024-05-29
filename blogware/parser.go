@@ -212,6 +212,10 @@ func ParseVerbatim(s *stream, name sym, opts []sym, pos int) (env Env, err error
 	return
 }
 
+func ParseMath(s *stream) (node Node, err error) {
+	return nil, s.Error("inline math not implemented yet")
+}
+
 func ParseEnv(s *stream, name sym, pos int) (env Env, err error) {
 	var body []Node
 	var t token
@@ -267,6 +271,13 @@ loop:
 				err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
 				break loop
 			}
+		case TokInlineMath:
+			mnode, parseErr := ParseMath(s)
+			if parseErr != nil {
+				err = parseErr
+				return
+			}
+			Push(&body, mnode)
 		default:
 			err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
 			break loop

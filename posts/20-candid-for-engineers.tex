@@ -397,7 +397,7 @@ Let's first consider the shortest possible Candid message: an empty tuple.
   The shell command to encode an empty tuple using the \code{didc} tool.
 }
 \begin{code}[shell]
-$ didc encode '()'
+\$ didc encode '()'
 4449444c0000
 \end{code}
 \end{figure}
@@ -471,8 +471,8 @@ Let's encode a fork with two children equivalent to \code{Tree::Forest(vec!\[Tre
   The \code{--defs} option loads type definitions from a file; the \code{--types} option specifies the types of values in the tuple (see point \circled{2} in the \href{#binary-message-anatomy}{binary message anatomy} section.
 }
 \begin{code}[shell]
-$ echo 'type Tree = variant { leaf : int32; forest : vec Tree };' > tree.did
-$ didc encode \\
+\$ echo 'type Tree = variant { leaf : int32; forest : vec Tree };' > tree.did
+\$ didc encode \\
        --defs   tree.did \\
        --types  '(Tree)' \\
        '(variant { forest = vec { variant { leaf = 1 }; variant { leaf = 2 } } })'

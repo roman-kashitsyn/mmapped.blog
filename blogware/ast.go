@@ -193,3 +193,33 @@ type Table struct {
 func (t Table) String() string {
 	return fmt.Sprintf("Table { beginPos: %d, endPos: %d, opts: %v, spec: %v, rows: %v}", t.beginPos, t.endPos, t.opts, t.spec, t.rows)
 }
+
+// MathNode represents a parsed math expression.
+type MathNode struct {
+	mlist []MathNode
+}
+
+func (n MathNode) String() string {
+	return fmt.Sprintf("MathNode { mlist: %+v }", n.mlist)
+}
+
+// MathTerm represents a term with optional super- and subscripts.
+type MathTerm struct {
+	necleus, subscript, supscript MathNode
+}
+
+// MathSqrt represents a square root of an expression.
+type MathSqrt struct {
+	contents MathNode
+}
+
+// MathFrac represents a fraction.
+type MathFrac struct {
+	thickness  string
+	nom, denom MathNode
+}
+
+// MathText represents arbitrary text that should be rendered by itself.
+type MathText struct {
+	contents []Node
+}

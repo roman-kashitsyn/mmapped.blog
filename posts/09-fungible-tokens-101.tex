@@ -45,32 +45,32 @@ I will use and evolve their scheme to demonstrate the concept of a ledger and it
 
 Geneviève works in a small accounting firm.
 One day she goes into a small restaurant with two of her colleagues, Allen and Meriam.
-They get a fantastic meal and decide to tip \math{$20}.
-Unfortunately, Allen and Meriam do not have \math{$6.66} to share the burden equally.
+They get a fantastic meal and decide to tip \math{\$20}.
+Unfortunately, Allen and Meriam do not have \math{\$6.66} to share the burden equally.
 So they get a notebook, write ``Ledger'' on the cover, and split the first page into three columns.
 Then Allen and Meriam transfer Geneviève imaginary money on that ledger.
 
 \begin{tabular}{l l r}
 From & To & Amount \\
 \hrule
-Allen Brook & Geneviève Bardot & \math{$6.66} \\
-Meriam Bone & Geneviève Bardot & \math{$6.66} \\
+Allen Brook & Geneviève Bardot & \math{\$6.66} \\
+Meriam Bone & Geneviève Bardot & \math{\$6.66} \\
 \end{tabular}
 
-Now Allen and Meriam have \math{-$6.66} on their ``accounts'', and Geneviève has \math{$13.32}.
-The next day, they go to a coffee shop and tip \math{$15}.
+Now Allen and Meriam have \math{-\$6.66} on their ``accounts'', and Geneviève has \math{\$13.32}.
+The next day, they go to a coffee shop and tip \math{\$15}.
 This time Allen pays for everyone, and Geneviève and Meriam add new entries to the ledger.
 
 \begin{tabular}{l l r}
 From & To & Amount \\
 \hrule
-Allen Brook & Geneviève Bardot & \math{$6.66} \\
-Meriam Bone & Geneviève Bardot & \math{$6.66} \\
-Geneviève Bardot & Allen Brook & \math{$5.00} \\
-Meriam Bone & Allen Brook & \math{$5.00} \\
+Allen Brook & Geneviève Bardot & \math{\$6.66} \\
+Meriam Bone & Geneviève Bardot & \math{\$6.66} \\
+Geneviève Bardot & Allen Brook & \math{\$5.00} \\
+Meriam Bone & Allen Brook & \math{\$5.00} \\
 \end{tabular}
 
-Now Allen has \math{$3.34} on his account, Geneviève has \math{$8.32}, and Meriam has \math{-$11.66}\sidenote{sn-compute-balance}{
+Now Allen has \math{\$3.34} on his account, Geneviève has \math{\$8.32}, and Meriam has \math{-\$11.66}\sidenote{sn-compute-balance}{
   To compute a person's balance, go over all the records in the log from top to bottom.
   If the person appears in the \em{from} column, subtract the \em{amount} from their balance;
   if the person appears in the \em{to} column, add the \em{amount} to their balance.
@@ -98,45 +98,45 @@ Imagine now that Geneviève does not trust the folks she hangs out with, but she
 Whenever someone transfers her virtual tokens on a piece of paper, she wants to be sure she can claim her buck back.
 
 One way to approach the issue is to set up a piggy bank at the office.
-Anyone who puts \math{$1} into the bank gets a \em{wrapped} \math{$1} on the ledger.
+Anyone who puts \math{\$1} into the bank gets a \em{wrapped} \math{\$1} on the ledger.
 The transaction converting a physical bill into a virtual token is a \em{mint} transaction.
 
-One day Geneviève, Allen, and Meriam put \math{$10} each into the piggy and mint their wrapped money on the ledger.
+One day Geneviève, Allen, and Meriam put \math{\$10} each into the piggy and mint their wrapped money on the ledger.
 
 \begin{tabular}{l l r r}
 From & To & Amount & Piggy bank \\
 \hrule
---- & Geneviève Bardot & \math{$10.00} & \math{$10.00} \\
---- & Allen Brook & \math{$10.00} & \math{$20.00} \\
---- & Meriam Bone & \math{$10.00} & \math{$30.00} \\
+--- & Geneviève Bardot & \math{\$10.00} & \math{\$10.00} \\
+--- & Allen Brook & \math{\$10.00} & \math{\$20.00} \\
+--- & Meriam Bone & \math{\$10.00} & \math{\$30.00} \\
 \end{tabular}
 
-Then they all go to a coffee shop where Geneviève tips \math{$6} for the group.
+Then they all go to a coffee shop where Geneviève tips \math{\$6} for the group.
 Allen and Meriam transfer their shares to Geneviève on the ledger.
 
 \begin{tabular}{l l r r}
 From & To & Amount & Piggy bank \\
 \hrule
---- & Geneviève Bardot & $\math{10.00} & \math{$10.00} \\
---- & Allen Brook & \math{$10.00} & \math{$20.00} \\
---- & Meriam Bone & \math{$10.00} & \math{$30.00} \\
-Allen Brook & Geneviève Bardot & \math{$\numspace 2.00} & \math{$30.00} \\
-Meriam Bone & Geneviève Bardot & \math{$\numspace 2.00} & \math{$30.00} \\
+--- & Geneviève Bardot & \math{\$10.00} & \math{\$10.00} \\
+--- & Allen Brook & \math{\$10.00} & \math{\$20.00} \\
+--- & Meriam Bone & \math{\$10.00} & \math{\$30.00} \\
+Allen Brook & Geneviève Bardot & \math{\$\numspace 2.00} & \math{\$30.00} \\
+Meriam Bone & Geneviève Bardot & \math{\$\numspace 2.00} & \math{\$30.00} \\
 \end{tabular}
 
 The main difference with the original scheme is that now Geneviève can exit the group and get her money back at any point.
-All she needs is to open the piggy under a supervision of a trusted party, get her \math{$14}, and record a \em{burn} transaction on the ledger by sending her tokens to the void (sometimes called the \em{minting account}).
+All she needs is to open the piggy under a supervision of a trusted party, get her \math{\$14}, and record a \em{burn} transaction on the ledger by sending her tokens to the void (sometimes called the \em{minting account}).
 The sum of all balances on the ledger is always equal to the amount of money in the piggy bank.
 
 \begin{tabular}{l l r r}
 From & To & Amount & Piggy bank \\
 \hrule
---- & Geneviève Bardot & \math{$10.00} & \math{$10.00} \\
---- & Allen Brook & \math{$10.00} & \math{$20.00} \\
---- & Meriam Bone & \math{$10.00} & \math{$30.00} \\
-Allen Brook & Geneviève Bardot & \math{$\numspace 2.00} & \math{$30.00} \\
-Meriam Bone & Geneviève Bardot & \math{$\numspace 2.00} & \math{$30.00} \\
-Geneviève Bardot & --- & \math{$14.00} & \math{$16.00} \\
+--- & Geneviève Bardot & \math{\$10.00} & \math{\$10.00} \\
+--- & Allen Brook & \math{\$10.00} & \math{\$20.00} \\
+--- & Meriam Bone & \math{\$10.00} & \math{\$30.00} \\
+Allen Brook & Geneviève Bardot & \math{\$\numspace 2.00} & \math{\$30.00} \\
+Meriam Bone & Geneviève Bardot & \math{\$\numspace 2.00} & \math{\$30.00} \\
+Geneviève Bardot & --- & \math{\$14.00} & \math{\$16.00} \\
 \end{tabular}
 
 Wrapped tokens are not a recent invention: the U.S. dollar \href{https://en.wikipedia.org/wiki/Gold_standard}{was} a wrapped token for 1.50463 grams of gold in \href{https://en.wikipedia.org/wiki/Coinage_Act_of_1873}{1873}.
@@ -153,16 +153,16 @@ Everyone can hold multiple disjoint accounts on the ledger and move funds from a
 A \href{https://www.investopedia.com/terms/s/sub-account.asp}{subaccount} will be a label demarcating independent accounts belonging to the same person.
 
 Geneviève asks colleagues to transfer funds to her \code{NYYRA OVEGUQNL}\sidenote{nm-subaccount-crypto}{Geneviève applied advanced cryptography to hide the purpose of the subaccount from Allen.} subaccount until the end of the day.
-She burns the tokens on her \code{NYYRA OVEGUQNL} subaccount and withdraws \math{$42.00} from the piggy bank right before leaving the office.
+She burns the tokens on her \code{NYYRA OVEGUQNL} subaccount and withdraws \math{\$42.00} from the piggy bank right before leaving the office.
 
 \begin{tabular}{l l l l r}
   From & Subaccount & To & Subaccount & Amount \\
 \hrule
   \multicolumn{5}{c}{\cdots} \\
-  Geneviève Bardot &  --- & Geneviève Bardot & NYYRA OVEGUQNL & \math{$15.00} \\
-  Meriam Bone &  --- & Geneviève Bardot & NYYRA OVEGUQNL & \math{$15.00} \\
-  Rüdiger Bachmann &  --- & Geneviève Bardot & NYYRA OVEGUQNL & \math{$12.00} \\
-  Geneviève Bardot & NYYRA OVEGUQNL &  --- &  --- & \math{$42.00} \\
+  Geneviève Bardot &  --- & Geneviève Bardot & NYYRA OVEGUQNL & \math{\$15.00} \\
+  Meriam Bone &  --- & Geneviève Bardot & NYYRA OVEGUQNL & \math{\$15.00} \\
+  Rüdiger Bachmann &  --- & Geneviève Bardot & NYYRA OVEGUQNL & \math{\$12.00} \\
+  Geneviève Bardot & NYYRA OVEGUQNL &  --- &  --- & \math{\$42.00} \\
 \end{tabular}
 
 Geneviève heads to the book store and buys the latest edition of \href{https://www.amazon.com/-/en/dp/0884271951}{The Goal} by Eliyahu M. Goldratt.
@@ -189,12 +189,12 @@ The ledger could have another table with spending allowances between two people.
 \begin{tabular}{l l r}
   From & To & Allowance \\
   \hrule
-  Geneviève Bardot & Alex Schiller & \math{$25.00} \\
+  Geneviève Bardot & Alex Schiller & \math{\$25.00} \\
 \end{tabular}
 
 With this record, Alex can transfer money on behalf of Geneviève up to the allowance.
 
-Alex had a lot of fun with Geneviève's colleagues and spent \math{$16.00} at a coffee shop.
+Alex had a lot of fun with Geneviève's colleagues and spent \math{\$16.00} at a coffee shop.
 Allen paid for Alex, and Alex transferred some of Geneviève's tokens to Allen in return.
 This arrangement resulted in two updates to the ledger.
 The first update is the new transaction in the log.
@@ -204,7 +204,7 @@ Note that we need a new column in the table, \sc{on behalf of}, to indicate that
   From & On behalf of & To & Amount \\
   \hrule
   \multicolumn{4}{c}{\cdots} \\
-  Alex Schiller & Geneviève Bardot & Allen Brook & \math{$16.00} \\
+  Alex Schiller & Geneviève Bardot & Allen Brook & \math{\$16.00} \\
 \end{tabular}
 
 The second update lowers the allowance in the approval table by the amount Alex spent.
@@ -212,8 +212,8 @@ The second update lowers the allowance in the approval table by the amount Alex 
 \begin{tabular}{l l r}
   From & To & Allowance \\
   \hrule
-  \strikethrough{Geneviève Bardot} & \strikethrough{Alex Schiller} & \strikethrough{\math{$25.00}} \\
-  Geneviève Bardot & Alex Schiller & \math{$\numspace 9.00} \\
+  \strikethrough{Geneviève Bardot} & \strikethrough{Alex Schiller} & \strikethrough{\math{\$25.00}} \\
+  Geneviève Bardot & Alex Schiller & \math{\$\numspace 9.00} \\
 \end{tabular}
 
 \subsection{fees}{Fees}
@@ -237,9 +237,9 @@ Peppy grabbed a pen and started filling the lines with blocky letters.
 From & To & Amount \\
 \hrule
 \multicolumn{3}{c}{\cdots} \\
-\fun{PEPPY} & \fun{MOM} & \fun{$0} \\
-\fun{PEPPY} & \fun{MR ALLEN} & \fun{$0} \\
-\fun{PEPPY} & \fun{MOM} & \fun{$0} \\
+\fun{PEPPY} & \fun{MOM} & \fun{\$0} \\
+\fun{PEPPY} & \fun{MR ALLEN} & \fun{\$0} \\
+\fun{PEPPY} & \fun{MOM} & \fun{\$0} \\
 \end{tabular}
 
 ``OK, Peppy, stop. There is a new rule: you cannot transfer \em{nothing}. Only a positive amount.''
@@ -254,9 +254,9 @@ She did not stop there, however.
 From & To & Amount \\
 \hrule
 \multicolumn{3}{c}{\cdots} \\
-\fun{---} & \fun{PEPPY} & \fun{$0.05} \\
-\fun{PEPPY} & \fun{PEPPY} & \fun{$0.05} \\
-\fun{PEPPY} & \fun{PEPPY} & \fun{$0.05} \\
+\fun{---} & \fun{PEPPY} & \fun{\$0.05} \\
+\fun{PEPPY} & \fun{PEPPY} & \fun{\$0.05} \\
+\fun{PEPPY} & \fun{PEPPY} & \fun{\$0.05} \\
 \end{tabular}
 
 ``OK, Peppy, a new rule: you can't transfer to yourself. There is no reason to do that!''
@@ -269,8 +269,8 @@ She was so focused that the tip of her tongue stuck from her mouth.
 From & To & Amount \\
 \hrule
 \multicolumn{3}{c}{\cdots} \\
-\fun{PEPPY} & \fun{MOM} & \fun{$0.0001} \\
-\fun{PEPPY} & \fun{MR ALLEN} & \fun{$0.0001} \\
+\fun{PEPPY} & \fun{MOM} & \fun{\$0.0001} \\
+\fun{PEPPY} & \fun{MR ALLEN} & \fun{\$0.0001} \\
 \end{tabular}
 
 ``It's not funny, Peppy. From now on, every record will cost the sender a penny.''

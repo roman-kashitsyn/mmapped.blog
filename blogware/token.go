@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -20,6 +21,7 @@ const (
 	TokRBracket
 	TokAmp
 	TokControl
+	TokInlineMath
 )
 
 type token struct {
@@ -27,6 +29,38 @@ type token struct {
 	// name is the command symbol if kind == TokControl
 	name sym
 	// body is the textual content if kind == TokText
+	body string
+}
+
+type MathTokenKind int
+
+const (
+	// MathTokSym is a single-letter symbol.
+	MathTokSym MathTokenKind = iota
+	// MathTokNum is a number.
+	MathTokNum
+	// MathTokControl is a start of a control sequence (either command or an environment).
+	MathTokControl
+	// MathTokOp is a math operator operator (+, -, braces, etc.).
+	MathTokOp
+	MathTokSup
+	MathTokSub
+	// MathTokGroupStart is the start of a group ({).
+	MathTokGroupStart
+	// MathTokGroupEnd is the end of a group (}).
+	MathTokGroupEnd
+	// MathEndInlineMath is the end of an inline math environment ($).
+	MathEndInlineMath
+)
+
+type mathToken struct {
+	kind MathTokenKind
+	// name is the command symbol if kind == MathTokControl
+	name sym
+	// body is the textual token representation.
+	// * MathTokSym: the character
+	// * MathTokNum: the number
+	// * MathTokOp: the operator
 	body string
 }
 
@@ -46,6 +80,8 @@ func (t *token) String() string {
 		return fmt.Sprintf("Text(%s)", t.body)
 	case TokControl:
 		return fmt.Sprintf("Control(\\%s)", SymbolName(t.name))
+	case TokInlineMath:
+		return "$"
 	}
 	return "Unknown"
 }
@@ -153,7 +189,7 @@ func (s *stream) LookAhead() TokenKind {
 
 func isSpecial(c rune) bool {
 	switch c {
-	case '%', '{', '}', '\\', '[', ']', '&':
+	case '%', '{', '}', '\\', '[', ']', '&', '$':
 		return true
 	default:
 		return false
@@ -276,7 +312,7 @@ func (s *stream) NextToken(tok *token) error {
 			str = str[size1:]
 			c2, size2 := utf8.DecodeRuneInString(str)
 			switch c2 {
-			case '%', '\\', '&', '#', '_', '{', '}', '[', ']':
+			case '%', '\\', '&', '#', '_', '{', '}', '[', ']', '$':
 				tok.kind = TokText
 				tok.body = string(c2)
 				s.Skip(size2)
@@ -284,6 +320,7 @@ func (s *stream) NextToken(tok *token) error {
 			default:
 				// consume the command sequence
 				var nameBuilder strings.Builder
+				// BUG: this code does not handle the last character proerly
 				for pos, c := range str {
 					// TODO: handle comments
 					if IsSymbolic(c) {
@@ -307,7 +344,104 @@ func (s *stream) NextToken(tok *token) error {
 			s.Skip(n - len(str) - 1)
 			continue
 		default:
-			return fmt.Errorf("NextToken(): unexpected rune %v (%s)", c1, string(c1))
+			return fmt.Errorf("%s:%d: NextToken(): unexpected rune %v (%s)", s.source, s.pos, c1, string(c1))
+		}
+	}
+	return io.EOF
+}
+
+func (s *stream) NextMathToken(tok *mathToken) error {
+	for !s.IsEmpty() {
+		str := s.Rest()
+		c1, size1 := utf8.DecodeRuneInString(str)
+		s.Skip(size1)
+		switch c1 {
+		case ' ':
+			// Math mode ignores spaces
+			continue
+		case '{':
+			tok.kind = MathTokGroupStart
+			tok.body = "{"
+			return nil
+		case '}':
+			tok.kind = MathTokGroupEnd
+			tok.body = "}"
+			return nil
+		case '^':
+			tok.kind = MathTokSup
+			tok.body = "^"
+			return nil
+		case '_':
+			tok.kind = MathTokSub
+			tok.body = "_"
+			return nil
+		case '$':
+			tok.kind = MathEndInlineMath
+			tok.body = "$"
+			return nil
+		case '-', '+', '&', '=', ',', '[', ']', '|':
+			tok.kind = MathTokOp
+			tok.body = string(c1)
+			return nil
+		case '\\':
+			str = str[size1:]
+			c2, size2 := utf8.DecodeRuneInString(str)
+			switch c2 {
+			case '%', '{', '}', '\\', '^', '_':
+				tok.kind = MathTokOp
+				tok.body = string(c2)
+				s.Skip(size2)
+				return nil
+			default:
+				// consume the command sequence
+				var nameBuilder strings.Builder
+				n := 0
+				for {
+					c, s := utf8.DecodeRuneInString(str)
+					// TODO: handle comments
+					if IsSymbolic(c) {
+						nameBuilder.WriteRune(c)
+						str = str[s:]
+						n += s
+						continue
+					}
+					break
+				}
+				tok.kind = MathTokControl
+				tok.name = Symbol(nameBuilder.String())
+				s.Skip(n)
+				return nil
+			}
+		case '%':
+			// Comment start: skip until the end of the line
+			n := len(str)
+			str = skipLine(str)
+			s.Skip(n - len(str) - 1)
+			continue
+		default:
+			if unicode.IsLetter(c1) {
+				tok.kind = MathTokSym
+				tok.body = string(c1)
+				return nil
+			}
+			if unicode.IsDigit(c1) {
+				n := 0
+				suffix := str[size1:]
+				for {
+					c, cs := utf8.DecodeRuneInString(suffix)
+					if unicode.IsDigit(c) {
+						n += cs
+						suffix = suffix[cs:]
+						continue
+					}
+					break
+				}
+				tok.kind = MathTokNum
+				tok.body = str[:n+size1]
+				s.Skip(n)
+				return nil
+			}
+			return fmt.Errorf("NextMathToken(): unexpected rune %v (%s)", c1, string(c1))
 		}
 	}
 	return io.EOF

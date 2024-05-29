@@ -4,6 +4,8 @@ type sym int
 
 type ArgType int
 
+type MathArgType int
+
 const (
 	ArgTypeSeq ArgType = iota
 	ArgTypeSym
@@ -12,11 +14,17 @@ const (
 	ArgTypeAlignSpec
 )
 
+const (
+	MathArgExpr MathArgType = iota
+)
+
 var (
 	symTab           = make(map[string]sym, 1000)
 	syms             = make([]string, 0, 1000)
 	cmdArgTypes      = make(map[sym][]ArgType, 1000)
 	replacements     = make(map[sym]string, 1000)
+	mathCmds         = make(map[sym][]MathArgType, 1000)
+	mathOps          = make(map[sym]struct{}, 1000)
 	nextSym      sym = 0
 
 	// Builtin commands
@@ -75,11 +83,13 @@ var (
 	SymInSet        = BuiltinReplacement("in", "∈")
 	SymNiSet        = BuiltinReplacement("ni", "∋")
 	SymNotInSet     = BuiltinReplacement("notin", "∉")
+	SymInf          = BuiltinReplacement("inf", "∞")
 	SymNotNiSet     = BuiltinReplacement("notni", "∌")
 	SymRightArrow   = BuiltinReplacement("rightarrow", "→")
 	SymDRighAarrow  = BuiltinReplacement("Rightarrow", "⇒")
 	SymLeftArrow    = BuiltinReplacement("leftarrow", "←")
 	SymDLeftArrow   = BuiltinReplacement("Leftarrow", "⇐")
+	SymSum          = BuiltinReplacement("sum", "∑")
 	SymLeq          = BuiltinReplacement("leq", "≤")
 	SymIff          = BuiltinReplacement("iff", "⇔")
 
@@ -92,7 +102,30 @@ var (
 	SymTabular     = BuiltinEnv("tabular")
 	SymTabularS    = BuiltinEnv("tabular*")
 	SymDescription = BuiltinEnv("description")
+
+	// Builtin math commands
+	SymFrac = BuiltinMathCmd("frac", MathArgExpr, MathArgExpr)
+
+	mathOpList = []sym{
+		SymInSet,
+		SymNiSet,
+		SymNotInSet,
+		SymNotNiSet,
+		SymRightArrow,
+		SymDRighAarrow,
+		SymLeftArrow,
+		SymDLeftArrow,
+		SymSum,
+		SymLeq,
+		SymIff,
+	}
 )
+
+func init() {
+	for _, s := range mathOpList {
+		mathOps[s] = struct{}{}
+	}
+}
 
 func BuiltinEnv(name string) sym {
 	return Symbol(name)
@@ -101,6 +134,12 @@ func BuiltinEnv(name string) sym {
 func BuiltinCmd(name string, argTypes ...ArgType) sym {
 	s := Symbol(name)
 	cmdArgTypes[s] = argTypes
+	return s
+}
+
+func BuiltinMathCmd(name string, argTypes ...MathArgType) sym {
+	s := Symbol(name)
+	mathCmds[s] = argTypes
 	return s
 }
 

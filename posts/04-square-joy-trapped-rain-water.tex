@@ -412,7 +412,7 @@ Here is how to apply it to our problem:
 
 Let's put this idea in \sc{j} now.
 We start by constructing the initial matrix of distances.
-We'll use the \href{https://code.jsoftware.com/wiki/Vocabulary/dollar}{\code{$} (shape of, reshape)} verb for that.
+We'll use the \href{https://code.jsoftware.com/wiki/Vocabulary/dollar}{\code{\$} (shape of, reshape)} verb for that.
 
 \begin{verbatim}[j]
     NB. We use the inverted cone as our example.
@@ -590,7 +590,7 @@ For example, the analog of the Bellmann-Ford algorithm involves the following st
 \end{itemize}
 
 \begin{code}[j]
-    bf_levels_2d =. (>. (_1&(|.!.0) <. 1&(|.!.0))) ^:_ ($&_ @ $)
+    bf_levels_2d =. (>. (_1&(|.!.0) <. 1&(|.!.0))) ^:_ (\$&_ @ \$)
     bf_levels_2d H
 0 1 1 2 2 2 2 3 2 2 2 1
 \end{code}
