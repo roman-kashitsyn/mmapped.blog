@@ -483,7 +483,7 @@ p.subtitle {
 }
 
 .numeral {
-    font-family: et-book-roman-old-style;
+    font-family: "Libertinus Serif", sans-serif;
 }
 
 .danger {
@@ -666,7 +666,8 @@ img {
 
 .sidenote-number:after,
 .sidenote:before {
-    font-family: et-book-roman-old-style;
+    font-family: "Libertinus Serif", sans-serif;
+    font-variant-numeric: normal;
     position: relative;
     vertical-align: baseline;
 }
@@ -920,6 +921,10 @@ p.svg {
     .sidenote,
     .marginnote {
         display: none;
+    }
+
+    .sidenote-number:after {
+        text-decoration: underline;
     }
 
     .margin-toggle:checked+.sidenote,
