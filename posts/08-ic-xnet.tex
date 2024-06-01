@@ -11,11 +11,11 @@
 \section{introduction}{Introduction}
 
 This article continues the previous post on state machine replication in the Internet Computer (IC), \href{/posts/02-ic-state-machine-replication.html}{A swarm of replicated state machines}.
-This time, we shall examine the protocol over which independent state machines (also known as \em{subnets}) communicate, the \em{XNet protocol}. 
+This time, we shall examine the protocol over which independent state machines (also known as \emph{subnets}) communicate, the \emph{XNet protocol}. 
 
 \section{subnets}{Subnets}
 
-A \em{subnet} is a collection of nodes participating in a single instance of the \href{https://dfinity.org/howitworks/consensus}{consensus protocol}.
+A \emph{subnet} is a collection of nodes participating in a single instance of the \href{https://dfinity.org/howitworks/consensus}{consensus protocol}.
 All the nodes in a subnet have the same state and apply the same blocks.
 
 It might be tempting to think that nodes of a subnet are physically collocated.
@@ -23,7 +23,7 @@ However, the opposite is usually true: subnet nodes are often geographically dis
   There are still good reasons to assign multiple nodes in a data center to the same subnet, such as increasing query call capacity and speeding up recovery in case of a replica restart.
 }.
 The goal is to improve availability: a disaster in a single data center cannot take down the entire subnet.
-The \em{registry} canister maintains the assignment of nodes to physical machines, and the \href{https://dfinity.org/howitworks/network-nervous-system-nns}{Network Nervous System} governs all the changes to the registry.
+The \emph{registry} canister maintains the assignment of nodes to physical machines, and the \href{https://dfinity.org/howitworks/network-nervous-system-nns}{Network Nervous System} governs all the changes to the registry.
 
 Nodes from different subnets can live in the same data center.
 This setup might be counter-intuitive: nodes from different subnets might sometimes have better network connectivity than nodes in the same subnet.
@@ -57,19 +57,19 @@ Each message in the stream gets a unique monotonically increasing index.
   \includegraphics{/images/08-message-streams.svg}
 \end{figure}
 
-The component merging the queues (aptly called \em{stream builder}) should satisfy a few constraints:
+The component merging the queues (aptly called \emph{stream builder}) should satisfy a few constraints:
 \begin{itemize}
   \item
-  \em{Determinism}.
+  \emph{Determinism}.
   All nodes in the subnet must agree on the exact contents of the stream.
-  To do its job, the stream builder needs the mapping from canister identifiers to subnet identifiers, the \em{routing table}.
+  To do its job, the stream builder needs the mapping from canister identifiers to subnet identifiers, the \emph{routing table}.
   The routing table comes from the registry and changes over time.
   To ensure determinism, each block pins the registry version that the state machine is using for message processing.
   \item
-  \em{Ordering}.
+  \emph{Ordering}.
   If canister \math{A} sends two requests to canister \math{B}, \math{R\sub{1}}, and \math{R\sub{2}}, then \math{R\sub{1}} should appear before \math{R\sub{2}} in the stream.
   \item
-  \em{Fairness.}
+  \emph{Fairness.}
   We do not want messages from a single chatty canister to dominate the stream.
   The stream builder tries to interleave messages so that each canister has the same bandwidth.
 \end{itemize}
@@ -80,8 +80,8 @@ When a node from subnet \math{X} decides to get new messages from subnet \math{Y
 
 The job of the consensus protocol is to aggregate messages from the outside world and pack them into a neat block.
 Consensus includes several types of messages into blocks, such as user ingress messages, Bitcoin transactions (for subnets with enabled Bitcoin integration), and inter-canister messages from other subnets.
-We call messages paired with the data required for their validation a \em{payload}.
-We call components that pull payloads from the network \em{payload builders}.
+We call messages paired with the data required for their validation a \emph{payload}.
+We call components that pull payloads from the network \emph{payload builders}.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-payloads}{The consensus algorithm aggregates messages from the outside world into blocks.}
@@ -89,7 +89,7 @@ We call components that pull payloads from the network \em{payload builders}.
 \end{figure}
 
 XNet payload builder pulls messages from nodes assigned to other subnets using a simple HTTP protocol.
-\em{XNet endpoint} is a component that serves messages destined for other subnets over secure TLS connections, accepting connections only from other nodes\sidenote{sn-xnet-tls}{This measure does not imply privacy because malicious nodes can access the data; but ensures that network providers cannot read the messages.}.
+\emph{XNet endpoint} is a component that serves messages destined for other subnets over secure TLS connections, accepting connections only from other nodes\sidenote{sn-xnet-tls}{This measure does not imply privacy because malicious nodes can access the data; but ensures that network providers cannot read the messages.}.
 XNet endpoint fetches the complete list of nodes, their subnet assignment, IP addresses, and public keys (required to establish a TLS connection) from the registry.
 
 \begin{figure}[grayscale-diagram]
@@ -106,17 +106,17 @@ XNet endpoint fetches the complete list of nodes, their subnet assignment, IP ad
 We now know how one subnet accumulates messages destined for another subnet.
 This knowledge begs another question: how do replicas remove messages that the destination subnet has already consumed?
 We need a feedback mechanism allowing the consumer subnet to tell the producer subnet that it does not need some stream prefix anymore.
-We call this mechanism \em{signals}.
+We call this mechanism \emph{signals}.
 
-Signals are a part of the XNet payload specifying the prefix of the \em{reverse} stream that the sending subnet can drop.
-When a node from subnet \math{X} fetches XNet payload from a node from subnet \math{Y}, in addition to actual messages, the \math{Y} node includes the \em{stream header}.
+Signals are a part of the XNet payload specifying the prefix of the \emph{reverse} stream that the sending subnet can drop.
+When a node from subnet \math{X} fetches XNet payload from a node from subnet \math{Y}, in addition to actual messages, the \math{Y} node includes the \emph{stream header}.
 The stream header describes the state of the \math{X ↔ Y} communication:
 
 \begin{itemize}
   \item
     The full range of message indices in the forward stream \math{X → Y}.
   \item
-    The signals for the \em{reverse} stream (\math{Y → X}): for each message index in the reverse stream, \math{Y} tells whether \math{X} can garbage collect the message (an \sc{ack} signal) or should reroute the message (a \sc{reject} signal).
+    The signals for the \emph{reverse} stream (\math{Y → X}): for each message index in the reverse stream, \math{Y} tells whether \math{X} can garbage collect the message (an \sc{ack} signal) or should reroute the message (a \sc{reject} signal).
     A \sc{reject} signal indicates that the destination canister moved, so \math{X} should route the message into another stream.
 \end{itemize}
 
@@ -158,8 +158,8 @@ The XNet protocol relies on the same trick: nodes include streams destined for o
 Conceptually, a node requesting messages from a subnet is not different from a client requesting a response.
 This similarity allows us to use the same\sidenote{sn-same-auth}{
   Currently, there is a minor difference in how we represent certificates in the XNet protocol and the \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#_certificate}{IC HTTP} interface.
-  The HTTP interface certificates combine the data and the hashes required to check the authenticity in a single data structure, the \em{hash tree}.
-  The XNet protocol separates the raw message data and the hashes (called the \em{witness}) into separate data structures.
+  The HTTP interface certificates combine the data and the hashes required to check the authenticity in a single data structure, the \emph{hash tree}.
+  The XNet protocol separates the raw message data and the hashes (called the \emph{witness}) into separate data structures.
   The reason for that distinction is purely historical.
   We implemented the XNet protocol significantly earlier than the response authentication, so we could not benefit from \href{https://www.joachim-breitner.de/blog}{Joachim Breitner's} brilliance.
   Joachim took the XNet authentication scheme as the starting point and simplified it for the IC Interface Specification.

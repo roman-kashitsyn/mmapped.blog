@@ -251,7 +251,7 @@ This design might seem like a re-iteration of the \code{Number} interface story 
     We don't need to modify existing types when we add new functions operating on numbers.
 \end{itemize}
 
-To address the boilerplate issue, we'll introduce the numeric type \em{promotion} operation.
+To address the boilerplate issue, we'll introduce the numeric type \emph{promotion} operation.
 When we add two numbers of different types, we convert the simpler type to the more complex one using the previously discussed type conversion functions.
 We then apply the binary operator dealing with numbers of the same promoted type.
 Finally, we demote the result to the simplest type that can hold the value.
@@ -315,7 +315,7 @@ When I use a tool and get unsatisfactory results, I blame myself for not using t
 At first, I felt the same about the numeric tower case, but now I'm sure the problem is not me; it's the class hierarchies.
 
 The approach of piling classes on top of one another and trying to make this stack coherent is fundamentally flawed.
-It fails spectacularly even on tiny examples where the problem domain is \em{mathematically} specified.
+It fails spectacularly even on tiny examples where the problem domain is \emph{mathematically} specified.
 The numeric tower is one example, but there are more.
 The \href{https://en.wikipedia.org/wiki/Circle%E2%80%93ellipse_problem}{circle-ellipse problem} is a good one,
 but my favorite is how inheriting \code{ColorPoint} from \code{Point} breaks the transitivity property of the \code{equals} method:

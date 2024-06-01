@@ -16,7 +16,7 @@ As programmers, we interact with software tools daily.
 Most of them can barely get the job done.
 But occasionally, we discover a piece of software that transcends mere utility.
 These tools capture our imagination, open new possibilities, and affect how we design our own systems.
-I call such software \em{enlightenmentware}.
+I call such software \emph{enlightenmentware}.
 
 The most common source of enlightenment for programmers is the programming language they use at work or learn as a hobby.
 I experienced many jolts of enlightenment from fiddling with programming languages, from \href{https://en.wikipedia.org/wiki/Microsoft_Macro_Assembler}{\sc{masm}} and \href{https://en.wikipedia.org/wiki/C_(programming_language)}{C} to \href{https://en.wikipedia.org/wiki/Prolog}{Prolog} and \href{https://www.idris-lang.org/}{Idris}.
@@ -35,10 +35,10 @@ In this article, I praise the software that contributed the most to my enlighten
 }
 
 I started looking for my first real programming job around 2008, while studying at university in my hometown of Nizhny Novgorod.
-Almost all the open positions required knowledge of mysterious things called \sc{unix} and \em{sockets}.
+Almost all the open positions required knowledge of mysterious things called \sc{unix} and \emph{sockets}.
 My curriculum didn't offer a course on \sc{unix} or operating systems in general, so I decided to get a textbook and master the topic myself. 
 
-``\href{https://www.goodreads.com/book/show/22066650-unix}{The \sc{unix} Operating System}'' by Andrey Robachevsky et al., also known as the \em{turtle book} in Russia because of its cover, introduced me to the magical world of \sc{unix}-like operating systems.
+``\href{https://www.goodreads.com/book/show/22066650-unix}{The \sc{unix} Operating System}'' by Andrey Robachevsky et al., also known as the \emph{turtle book} in Russia because of its cover, introduced me to the magical world of \sc{unix}-like operating systems.
 \sc{unix} became something I could understand, explore, and programmatically interact with.
 All pieces of the puzzle---the filesystem interface, the process model with environments and permissions, forking, sockets, and signals---fell into place and revealed a coherent, beautiful picture.
 
@@ -69,7 +69,7 @@ Most of the software I wrote operates in a \sc{unix} environment, and I still oc
 }
 
 I encountered version control systems in early 2009; the company I worked for used \href{https://en.wikipedia.org/wiki/IBM_Rational_ClearCase}{Rational ClearCase} to manage their code.
-The system versioned each file separately and relied on large configuration files---\em{config specs}---to construct a consistent snapshot of the source tree.
+The system versioned each file separately and relied on large configuration files---\emph{config specs}---to construct a consistent snapshot of the source tree.
 The tool was utterly confusing and intimidating, so I avoided dealing with it beyond the minimal requirements of my job.
 
 About a year later, I joined a shop that used \href{https://subversion.apache.org/}{Subversion}.
@@ -92,7 +92,7 @@ Git is confusing like math: It slowly melts your brain and molds it into a \href
 
 Git removed the friction from using version control; there was no excuse not to version anything of value anymore.
 Merging branches with Git didn't cause anxiety disorders.
-The staging area---confusingly named \em{index}---became essential to my workflows.
+The staging area---confusingly named \emph{index}---became essential to my workflows.
 But my favorite feature was the breathtaking beauty of Git's design, the elegant mix of distributed systems, acyclic graphs, and content-addressed storage.
 
 Learning about Git's internals was so much fun that I became interested in the bits and bolts of other version control systems.
@@ -126,7 +126,7 @@ At my first programming job, I worked on a remote Solaris workstation over a \hr
 Almost everyone in our group used \href{https://en.wikipedia.org/wiki/NEdit}{NEdit} to edit the code.
 One day, I noticed a person whose editor looked markedly different from everyone else's; the background was dark, and the code glowed with bright colors.
 To me, that was a sign of their superior technical knowledge.
-I \em{needed} to learn how to tweak my editor.
+I \emph{needed} to learn how to tweak my editor.
 
 The quest for customization led me to \href{https://www.vim.org/}{Vim} (the workstation had Vim 6 installed out of the box).
 After all, if the goal is to stand out from the crowd, why stop at the color scheme?
@@ -220,7 +220,7 @@ In 2016, I joined Google in Zurich.
 I heard about Google's internal build tool, \code{blaze}, and couldn't wait to lay my hands on it.
 Surprisingly, I didn't need to fiddle with \code{blaze}, nor did I have to understand how it worked.
 I could copy some build targets and edit the dependency list, and the build worked as expected.
-\code{blaze} made correct and fast builds not just easy, but \em{boring} in the good sense.
+\code{blaze} made correct and fast builds not just easy, but \emph{boring} in the good sense.
 Only a few years later, when I attempted to use \href{https://bazel.build/}{Bazel}---the open-source version of \code{blaze}---for a toy personal project, did I have to understand the underlying model.
 
 Bazel was the final piece of the puzzle, together with Haskell's typeclasses, \href{https://research.google/pubs/flumejava-easy-efficient-data-parallel-pipelines/}{Flume pipelines} interface,  and the \href{https://www.tensorflow.org/}{TensorFlow} 1.0 execution model, that made me understand the ubiquitous plan-execute pattern\sidenote{sn-build-systems-a-la-carte}{
@@ -228,7 +228,7 @@ Bazel was the final piece of the puzzle, together with Haskell's typeclasses, \h
   Thomas Leonard's \href{https://roscidus.com/blog/blog/2019/11/14/cicd-pipelines}{CI/CD pipelines: Monad, Arrow or Dart?} blog post is also a great read on this topic.
 }.
 Bazel build file is a program that constructs a slice of the build artifact graph.
-Bazel rules don't \em{run} the build commands; they \em{declare} how to transform inputs into outputs, and the Bazel engine figures out the rest.
+Bazel rules don't \emph{run} the build commands; they \emph{declare} how to transform inputs into outputs, and the Bazel engine figures out the rest.
 
 My relationship with the tool reached true intimacy when I helped \href{/posts/17-scaling-rust-builds-with-bazel.html}{transition \sc{dfinity}'s build system to Bazel}.
 Despite all the challenges I faced on the way, Bazel is still my favorite build system.
@@ -249,7 +249,7 @@ For me, these are the key points:
   \item
   They are ``round'': they pack the most volume in the smallest surface area.
   \sc{unix} surface area is tiny, but it unlocks much power.
-  Emacs and Git are all over the place, but their \em{core} is small, sweet, and easy to appreciate.
+  Emacs and Git are all over the place, but their \emph{core} is small, sweet, and easy to appreciate.
   \item
   They invite and encourage you to explore their internals.
   It's not only about being free and open-source; mastering them is also well worth the investment.

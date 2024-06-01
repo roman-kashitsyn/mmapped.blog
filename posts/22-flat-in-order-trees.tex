@@ -67,11 +67,11 @@ This article describes an intuitive model for flat in-order tree navigation and 
 \section{sec-nomenclature}{Nomenclature}
 
 We will consider two types of trees.
-First, we'll analyze the case of \em{perfect binary trees} (\code{PBT}), i.e., binary trees in which all interior nodes have two children and all leaves have the same depth.
+First, we'll analyze the case of \emph{perfect binary trees} (\code{PBT}), i.e., binary trees in which all interior nodes have two children and all leaves have the same depth.
 These trees correspond to sequences of \math{2\sup{K}} data blocks and contain \math{2\sup{K+1}-1} nodes.
 
 Second, we'll generalize perfect trees to handle sequences of any \math{N} data blocks.
-There is no established name for such trees, so we'll call them \em{left-perfect binary trees} (\code{LPBT}).
+There is no established name for such trees, so we'll call them \emph{left-perfect binary trees} (\code{LPBT}).
 A left-perfect tree with \math{N} leaves is either a perfect tree or a fork where the left child is a perfect tree containing at least \math{N/2} leaves, and the right child is a left-perfect tree containing the rest of the leaves.
 
 \begin{figure}[grayscale-diagram,medium-size]
@@ -141,17 +141,17 @@ We'll need two primitive bit-twiddling operations for the tree navigation: locat
 #include <assert.h>
 #include <stdint.h>
 
-\em{// Isolates the last set bit of number N.}
+\emph{// Isolates the last set bit of number N.}
 uint64_t LastSetBit(const uint64_t n) {
     return n - ((n - 1) & n);
 }
 
-\em{// Isolates the last unset bit of number N.}
+\emph{// Isolates the last unset bit of number N.}
 uint64_t LastZeroBit(const uint64_t n) {
     return LastSetBit(n + 1);
 }
 
-\em{// Rounds the argument up to the next highest power of two.}
+\emph{// Rounds the argument up to the next highest power of two.}
 uint64_t RoundUpPowerOf2(uint64_t n) {
     // See \href{https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2}{Bit Twiddling Hacks}.
     n--;
@@ -170,7 +170,7 @@ We are now ready to define the tree navigation functions.
 The addressing scheme proof suggests the function for locating the tree root: we divide the tree size by two.
 
 \begin{code}[c]
-\em{// Computes the root of the perfect binary tree of the given SIZE.}
+\emph{// Computes the root of the perfect binary tree of the given SIZE.}
 uint64_t PBT_Root(const uint64_t size) {
     assert(size == 1 || RoundUpPowerOf2(size) == size + 1);
     return size >> 1;
@@ -189,7 +189,7 @@ According to the scheme, we must find the last zero in the binary representation
 \end{figure}
 
 \begin{code}[c]
-\em{// Computes the parent of node I in a perfect binary tree.}
+\emph{// Computes the parent of node I in a perfect binary tree.}
 uint64_t PBT_Parent(const uint64_t i) {
     return (LastZeroBit(i) | i) & ~(LastZeroBit(i) << 1);
 }
@@ -201,15 +201,15 @@ For the left child, we must set bit \math{k-1} to zero.
 For the right child, we also need to set bit \math{k} to one.
 
 \begin{code}[c]
-\em{// Computes the left child of node P in a perfect binary tree.}
-\em{// Requires: P is not a leaf.}
+\emph{// Computes the left child of node P in a perfect binary tree.}
+\emph{// Requires: P is not a leaf.}
 uint64_t PBT_LeftChild(const uint64_t p) {
     assert(p & 1);
     return p & ~(LastZeroBit(p) >> 1);
 }
 
-\em{// Computes the right child of node P in a perfect binary tree.}
-\em{// Requires: P is not a leaf.}
+\emph{// Computes the right child of node P in a perfect binary tree.}
+\emph{// Requires: P is not a leaf.}
 uint64_t PBT_RightChild(const uint64_t p) {
     assert(p & 1);
     return (p | LastZeroBit(p)) & ~(LastZeroBit(p) >> 1);
@@ -224,7 +224,7 @@ The left subtree of a left-perfect binary tree is a perfect binary tree by defin
 Hence the formula for the left child we developed for perfect binary trees works as-is.
 
 \begin{code}[c]
-\em{// Computes the left child in a flat in-order left-perfect binary tree.}
+\emph{// Computes the left child in a flat in-order left-perfect binary tree.}
 uint64_t LPBT_LeftChild(const uint64_t i) { return PBT_LeftChild(i); }
 \end{code}
 
@@ -243,7 +243,7 @@ In a left-perfect binary tree, the tree root is the same node that the smallest 
 Thus, given the number of tree nodes, we compute the root of the smallest perfect tree containing the input tree.
 
 \begin{code}[c]
-\em{// Computes the root of a left-perfect binary tree of the given SIZE.}
+\emph{// Computes the root of a left-perfect binary tree of the given SIZE.}
 uint64_t LPBT_Root(const uint64_t size) {
     return PBT_Root(RoundUpPowerOf2(size + 1) - 1);
 }
@@ -264,7 +264,7 @@ We apply the \code{PBT_Parent} function until the computed node falls within the
 \end{figure}
 
 \begin{code}[c]
-\em{// Computes the parent of node I in a left-perfect binary tree of the given SIZE.}
+\emph{// Computes the parent of node I in a left-perfect binary tree of the given SIZE.}
 uint64_t LPBT_Parent_Iterative(uint64_t i, const uint64_t size) {
     do { i = PBT_Parent(i); } while (i >= size);
     reutrn i;
@@ -279,12 +279,12 @@ Furthermore, if node \code{i} is a right child, its parent is always the node pr
 Thus, we can attempt to compute the parent using \code{PBT_Parent} first and adjust the result if it falls out of bounds.
 
 \begin{code}[c]
-\em{// Computes the leftmost leaf of node I in a perfect binary tree.}
+\emph{// Computes the leftmost leaf of node I in a perfect binary tree.}
 uint64_t PBT_LeftmostLeaf(const uint64_t i) {
     return i & (i + 1);
 }
 
-\em{// Computes the parent of node I in a left-perfect binary tree of the given SIZE.}
+\emph{// Computes the parent of node I in a left-perfect binary tree of the given SIZE.}
 uint64_t LPBT_Parent(const uint64_t i, const uint64_t size) {
     assert(i != LPBT_Root(size));
     const uint64_t p = PBT_Parent(i);
@@ -297,7 +297,7 @@ Notice that the \code{PBT_RightChild} function gives correct results if the outp
 If the outcome falls outside the tree bounds, the recursive definition of left-perfect trees implies that the right child must be the root of the right subtree.
 
 \begin{code}[c]
-\em{// Computes the right child of node I in a left-perfect binary tree of the given SIZE.}
+\emph{// Computes the right child of node I in a left-perfect binary tree of the given SIZE.}
 uint64_t LPBT_RightChild(const uint64_t i, const uint64_t size) {
     assert(n & 1);
     const uint64_t r = PBT_RightChild(i);
@@ -308,7 +308,7 @@ uint64_t LPBT_RightChild(const uint64_t i, const uint64_t size) {
 Alternatively, if \code{PBT_RightChild}'s result falls outside of the tree, we can follow the left links in the ``virtual'' perfect tree until we hit the tree bounds again.
 
 \begin{code}[c]
-\em{// Computes the right child of node I in a left-perfect binary tree of the given SIZE.}
+\emph{// Computes the right child of node I in a left-perfect binary tree of the given SIZE.}
 uint64_t LPBT_RightChild_Iterative(const uint64_t i, const uint64_t size) {
     assert(n & 1);
     uint64_t r;
@@ -333,7 +333,7 @@ The \href{#sec-addressing}{tree addressing scheme} suggests a simple way to comp
 We must find the most significant bit where the leaves differ, set this bit to zero, and set all lower bits.
 
 \begin{code}[c]
-\em{// Extracts the most significant bit from number N.}
+\emph{// Extracts the most significant bit from number N.}
 uint64_t MostSignificantBit(uint64_t n) {
     uint64_t x = n;
     x |= (x >> 1);
@@ -345,8 +345,8 @@ uint64_t MostSignificantBit(uint64_t n) {
     return x - (x >> 1);
 }
 
-\em{// Computes the lowest common ancestor of leaves X and Y in a left-perfect}
-\em{// binary tree.}
+\emph{// Computes the lowest common ancestor of leaves X and Y in a left-perfect}
+\emph{// binary tree.}
 uint64_t LPBT_LeavesLCA(const uint64_t x, const uint64_t y) {
     assert(!(x & 1));
     assert(!(y & 1));
@@ -361,19 +361,19 @@ We can now proceed with the segment tree implementation.
 Let's define the data structures representing the tree.
 
 \begin{code}[c]
-\em{// The type of values stored in the tree nodes.}
+\emph{// The type of values stored in the tree nodes.}
 typedef int64_t value_t;
 
-\em{// The maximum number of nodes in the tree.}
+\emph{// The maximum number of nodes in the tree.}
 const size_t MAX_NODES = 10001;
 
-\em{// The current number of nodes in the tree.}
-\em{// Invariant: G_NumNodes <= MAX_NODES}
-\em{// Invariant: G_NumNodes == 0 || G_NumNodes \% 2 == 1}
+\emph{// The current number of nodes in the tree.}
+\emph{// Invariant: G_NumNodes <= MAX_NODES}
+\emph{// Invariant: G_NumNodes == 0 || G_NumNodes \% 2 == 1}
 size_t G_NumNodes;
 
-\em{// The flat in-order representation of the tree.}
-\em{// Even elements correspond to the sequence items.}
+\emph{// The flat in-order representation of the tree.}
+\emph{// Even elements correspond to the sequence items.}
 value_t G_Nodes[MAX_NODES];
 \end{code}
 
@@ -389,7 +389,7 @@ We then define procedure \code{ST_Set} updating the sequence.
 It sets the corresponding leaf value and traverses the tree upwards, recomputing the parent node values.
 
 \begin{code}[c]
-\em{// Updates the sequence to contain the given ITEM at the specified POSITION.}
+\emph{// Updates the sequence to contain the given ITEM at the specified POSITION.}
 void ST_Set(const size_t position, const value_t item) {
     assert(G_NumNodes > 0);
     assert(position <= G_NumNodes / 2);
@@ -415,7 +415,7 @@ The empty sequence is a special case because there are no interior nodes to upda
 In the case of non-empty sequences, the procedure adds a new interior node and a leaf and delegates the rest to the previously defined \code{ST_Set} procedure.
 
 \begin{code}[c]
-\em{// Appends the given ITEM to the sequence.}
+\emph{// Appends the given ITEM to the sequence.}
 void ST_Append(const value_t item) {
     assert(G_NumNodes + 2 <= MAX_NODES);
 
@@ -430,8 +430,8 @@ void ST_Append(const value_t item) {
 
 The \code{ST_Sum} function computing the sum of sequence items in the specified range is the most involved part of the implementation.
 It relies on the \code{LPBT_LeavesLCA} function to compute the LCA of the two leaves corresponding to the requested bounds.
-It then traverses the tree from the left bound to the LCA node, summing all unaccounted \em{right} subtrees on the way up.
-It does the same for the right bound, summing all unaccounted \em{left} subtrees on the path.
+It then traverses the tree from the left bound to the LCA node, summing all unaccounted \emph{right} subtrees on the way up.
+It does the same for the right bound, summing all unaccounted \emph{left} subtrees on the path.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-lca-sum}{
@@ -442,7 +442,7 @@ It does the same for the right bound, summing all unaccounted \em{left} subtrees
 \end{figure}
 
 \begin{code}[c]
-\em{// Computes the sum of the sequence items in the index interval \[l, r\].}
+\emph{// Computes the sum of the sequence items in the index interval \[l, r\].}
 value_t ST_Sum(const size_t l, const size_t r) {
     assert(r * 2 < G_NumNodes);
     assert(l <= r);
@@ -455,8 +455,8 @@ value_t ST_Sum(const size_t l, const size_t r) {
     const uint64_t lca = LPBT_LeavesLCA(i, j);
     value_t acc = Combine(G_Nodes[i], G_Nodes[j]);
 
-    \em{// Traverse the tree upwards from the left bound and sum up all}
-    \em{// the right subtrees on the way.}
+    \emph{// Traverse the tree upwards from the left bound and sum up all}
+    \emph{// the right subtrees on the way.}
     while (1) {
         const uint64_t p = LPBT_Parent(i, G_NumNodes);
         if (p == lca) break;
@@ -465,8 +465,8 @@ value_t ST_Sum(const size_t l, const size_t r) {
         if (rc != i) acc = Combine(acc, G_Nodes[rc]);
         i = p;
     }
-    \em{// Traverse the tree upwards from the right bound and sum up all}
-    \em{// the left subtrees on the way.}
+    \emph{// Traverse the tree upwards from the right bound and sum up all}
+    \emph{// the left subtrees on the way.}
     while (1) {
         const uint64_t p = LPBT_Parent(j, G_NumNodes);
         if (p == lca) break;

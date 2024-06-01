@@ -41,12 +41,12 @@ We don't like rain very much: the two-dimensional water gets stuck between the b
 As city architects, we know the heights in units of all the buildings.
 We need to compute how much water (in square units) accumulates between the buildings after heavy rain.
 
-More dryly: given an array of non-negative integers \em{H}, representing heights of unit-width bars placed next to one another, compute the total area of water trapped by the configuration after a rain.
+More dryly: given an array of non-negative integers \emph{H}, representing heights of unit-width bars placed next to one another, compute the total area of water trapped by the configuration after a rain.
 
 \subsection{example-2d}{Example}
 \begin{tabular*}{r l}
-    \em{Input} & \code{0 1 0 2 1 0 1 3 2 1 2 1} \\
-    \em{Output} & \code{6} \\
+    \emph{Input} & \code{0 1 0 2 1 0 1 3 2 1 2 1} \\
+    \emph{Output} & \code{6} \\
 \end{tabular*}
 
 \newline
@@ -64,7 +64,7 @@ If we knew that, summing contributions of levels above each bar would give us th
 So, let's focus on the bar at an arbitrary index \math{i}.
 What would stop the water from flowing out?
 Another bar that is higher than \math{H\[i\]}.
-Furthermore, we need bars higher than \math{H\[i\]} on \em{both} sides of \math{i} for the water to stay.
+Furthermore, we need bars higher than \math{H\[i\]} on \emph{both} sides of \math{i} for the water to stay.
 So, the water level at index \math{i} is determined by the minimum of the highest bars on the left and right.
 
 Computing the highest bar to the left and to the right for each index is not efficient: we would need to make \math{O(N\sup{2})} steps.
@@ -185,7 +185,7 @@ Their entire body is shorter and more expressive than any name we could come up 
 
 \section{drawing-solutions}{Drawing solutions}
 
-Knowing the answer is excellent, but being able to \em{see} it at a glance would be even better.
+Knowing the answer is excellent, but being able to \emph{see} it at a glance would be even better.
 In this section, we'll write code to represent solutions visually.
 
 What would we like to see in that picture?
@@ -346,7 +346,7 @@ However, this approach needs more configuration and is slightly more cumbersome 
 One of the ways to better understand a problem is to generalize it.
 Let's break out into the third dimension.
 
-Given a \em{two-dimensional} array of non-negative integers \math{H}, representing heights of square-unit bars placed next to one another, compute the total \em{volume} of water trapped by the configuration after it rains.
+Given a \emph{two-dimensional} array of non-negative integers \math{H}, representing heights of square-unit bars placed next to one another, compute the total \emph{volume} of water trapped by the configuration after it rains.
 
 To make the problem more concrete, let's inspect a few instances.
 We'll use \href{https://code.jsoftware.com/wiki/Vocabulary/tilde}{\code{~} (reflex)} adverb to save us some typing.
@@ -607,7 +607,7 @@ Dijkstra gives rise to a very efficient ``two-pointer'' solution:
   \item 
     Always move the pointer that looks at the lowest height.
     The left pointer moves to the right; the right pointer moves to the left.
-  \item If one of the two pointers looks at height \em{M} greater than the lowest boundary, update the lowest boundary to be \em{M}.
+  \item If one of the two pointers looks at height \emph{M} greater than the lowest boundary, update the lowest boundary to be \emph{M}.
 \end{itemize}
 
 That is precisely how a Dijkstra graph search would propagate, always picking the shortest edge to proceed.

@@ -31,7 +31,7 @@ The book provides a few recommendations on how to create good names\sidenote{mn-
   There are many books with naming heuristics ranging from classics such as ``\href{https://www.goodreads.com/book/show/4845.Code_Complete}{Code Complete}'' by Steve McConnell and ``\href{https://www.goodreads.com/book/show/3735293-clean-code}{Clean Code}'' by Robert C. Martin
   to more recent ``\href{https://www.goodreads.com/book/show/123009242-naming-things}{Naming things.}'' by Tom Benner.
 }, but it left me unsatisfied.
-I felt that I already knew \em{how} to choose good names, but I wanted to have a good mathematical model for what good names \em{are}.
+I felt that I already knew \emph{how} to choose good names, but I wanted to have a good mathematical model for what good names \emph{are}.
 This article is the result of my exploration.
 
 \section{objects-concepts-expressions}{Objects, concepts, and expressions}
@@ -56,9 +56,9 @@ That's where the Word comes into the picture.
 Words are arbitrary symbols representing concepts.
 
 I'll borrow terminology from \href{https://link.springer.com/book/10.1007/978-94-007-1736-7}{Tretise on Intuitionistic Type Theory} and use
-\em{object} to refer to things existing in the world (we won't need them much, though),
-\em{concept} to refer to mental representations of these objects,
-and \em{expression} to refer to words or sentences used to communicate concepts.
+\emph{object} to refer to things existing in the world (we won't need them much, though),
+\emph{concept} to refer to mental representations of these objects,
+and \emph{expression} to refer to words or sentences used to communicate concepts.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-object-concept-expression}{
@@ -83,7 +83,7 @@ More precisely, expressions and concepts form a \href{https://en.wikipedia.org/w
   \includegraphics{/images/26-concepts-words.svg}
 \end{figure}
 
-We must add another ingredient to the picture to tackle the problem of names: the \em{context}.
+We must add another ingredient to the picture to tackle the problem of names: the \emph{context}.
 Context refers to all the other things that influence the interpretation of an expression: surrounding words in the sentence, the task the reader is trying to accomplish, and the reader's culture and background.
 The amount of information in the context is vast as it includes the strengths of all the neuron connections in the reader's brain.
 
@@ -112,7 +112,7 @@ Your only solace is that sometimes, his solution was not \href{https://en.wikipe
 
 In information theory, a channel is a theoretical construction that allows sending messages through time and space.
 A channel takes messages from a set \math{X} as inputs and produces messages from a set \math{Y} as outputs.
-Channels are \em{noisy}: they distort the messages passing them; that's why the channel's input and output sets might differ.
+Channels are \emph{noisy}: they distort the messages passing them; that's why the channel's input and output sets might differ.
 We represent the noise mathematically by using \href{https://en.wikipedia.org/wiki/Conditional_probability}{conditional probabilities}: \math{p(y | x)} is the probability of receiving message \math{y} if the sender sent message \math{x}.
 
 When you think of a channel, you probably imagine a cable transmitting electrical signals or how the space around you buzzes with electromagnetic waves.
@@ -170,7 +170,7 @@ This definition is abstract and took me a while to appreciate, so let's apply it
 We start with the sets in question and their orderings.
 
 Our first set is the set of expressions \math{E}.
-For expressions \math{e\sub{1}, e\sub{2} \in  E}, we say that \math{e\sub{1} \leq  e\sub{2}} if \math{e\sub{1}} at least as expressive as \math{e\sub{2}} \em{given the reader context}.
+For expressions \math{e\sub{1}, e\sub{2} \in  E}, we say that \math{e\sub{1} \leq  e\sub{2}} if \math{e\sub{1}} at least as expressive as \math{e\sub{2}} \emph{given the reader context}.
 If the expressions are equally expressive, we define the shorter element as smaller.
 The reader context is a crucial component of the \math{\leq} operator.
 For example, ``cat'' is more expressive than ``felis catus'' in a regular conversation, but it might be the other way around in a scientific paper.

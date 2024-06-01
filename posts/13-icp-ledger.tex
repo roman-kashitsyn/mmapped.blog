@@ -17,8 +17,8 @@ This article wil examine some design choices powering this critical canister.
 
 \section{background}{Background}
 
-Unlike BTC for Bitcoin and ETH for Ethereum, the ICP token is not the Internet Computer's native currency\sidenote{sn-cycles}{\em{Cycles} is the native currency of the ICP protocol. You pay cycles for installing and running smart contracts. The network allows you to exchange ICP for cycles with the help of the Cycles Minting Canister (CMC).}.
-ICP is a \em{utility token}; its primary purpose is participation in network governance.
+Unlike BTC for Bitcoin and ETH for Ethereum, the ICP token is not the Internet Computer's native currency\sidenote{sn-cycles}{\emph{Cycles} is the native currency of the ICP protocol. You pay cycles for installing and running smart contracts. The network allows you to exchange ICP for cycles with the help of the Cycles Minting Canister (CMC).}.
+ICP is a \emph{utility token}; its primary purpose is participation in network governance.
 
 In the early prototypes of the IC, canisters could hold ICP directly and send them around freely without consulting any third party.
 This design was unsatisfactory for two reasons:
@@ -44,7 +44,7 @@ The ICP ledger identifies accounts using 32-byte blobs computed from the owner's
 }
 \begin{code}[pseudocode]
 account_identifier(principal, subaccount) := CRC32(h) || h
-    \em{where} h = SHA224("\\x0Aaccount-id" || principal || subaccount)
+    \emph{where} h = SHA224("\\x0Aaccount-id" || principal || subaccount)
 \end{code}
 \end{figure}
 
@@ -84,7 +84,7 @@ The concept of account identifiers also adds a few problems:
 
 \section{transactions-and-blocks}{Transactions and blocks}
 
-The \href{https://rosetta-api.org}{Rosetta API} expects a blockchain to have \em{blocks} containing \em{transactions}.
+The \href{https://rosetta-api.org}{Rosetta API} expects a blockchain to have \emph{blocks} containing \emph{transactions}.
 Smart contracts on the IC do not have access to raw blocks and messages within them, so the ICP ledger models its own ``blockchain'' to satisfy the Rosetta data model. 
 Each ledger operation, such as minting or transferring tokens, becomes a transaction that the ledger wraps into a unique block and adds to the chain.
 
@@ -165,7 +165,7 @@ Canisters could use up to four gigabytes of main memory and up to four gigabytes
 There needed to be more than the capacity of a single canister to store an entire transaction history.
 
 The team solved the storage issue beautifully.
-When the transaction history grows above a pre-configured threshold, the ledger creates a new canister, an \em{archive node}, and moves old transactions to the archive memory.
+When the transaction history grows above a pre-configured threshold, the ledger creates a new canister, an \emph{archive node}, and moves old transactions to the archive memory.
 The ledger spawns a new archive node when the previous archive node becomes full.
 
 \begin{figure}[grayscale-diagram]
@@ -212,7 +212,7 @@ Due to these obstacles, the transaction signatures are ephemeral: they exist in 
 
 Even though a few significant changes to the base protocol could resolve the technical issues, retaining transaction witnesses at the ICP ledger layer would have a downside: the space required to store these witnesses would exceed the transaction data by an order of magnitude (most transactions are tiny, about one hundred bytes).
 
-This design reminds me of Bitcoin's \href{https://en.wikipedia.org/wiki/SegWit}{Segregated Witnesses} (\em{SegWit}) proposal separating the transaction data from unlock scripts.
+This design reminds me of Bitcoin's \href{https://en.wikipedia.org/wiki/SegWit}{Segregated Witnesses} (\emph{SegWit}) proposal separating the transaction data from unlock scripts.
 SegWit transactions require signatures for validation, but \href{https://en.bitcoinwiki.org/wiki/Simplified_Payment_Verification}{Simple Payment Verification} nodes get blocks without signatures to save storage space and bandwidth.
 
 \section{references}{References}

@@ -72,8 +72,8 @@ Meriam Bone & Allen Brook & \math{\$5.00} \\
 
 Now Allen has \math{\$3.34} on his account, Geneviève has \math{\$8.32}, and Meriam has \math{-\$11.66}\sidenote{sn-compute-balance}{
   To compute a person's balance, go over all the records in the log from top to bottom.
-  If the person appears in the \em{from} column, subtract the \em{amount} from their balance;
-  if the person appears in the \em{to} column, add the \em{amount} to their balance.
+  If the person appears in the \emph{from} column, subtract the \emph{amount} from their balance;
+  if the person appears in the \emph{to} column, add the \emph{amount} to their balance.
 }.
 This ledger has an interesting property: the sum of all balances is always zero because we started with no funds, and each record only moves funds.
 
@@ -87,19 +87,19 @@ But how do the first tokens get into the system?
 
 \subsection{minting-burning}{Minting and burning}
 
-All ledgers have a way to produce, or \em{mint}\sidenote{sn-newton-ming}{Did you know that Sir Isaac Newton worked at the \href{https://newtonandthemint.history.ox.ac.uk/}{Royal Mint} for three decades?}, tokens out of thin air.
+All ledgers have a way to produce, or \emph{mint}\sidenote{sn-newton-ming}{Did you know that Sir Isaac Newton worked at the \href{https://newtonandthemint.history.ox.ac.uk/}{Royal Mint} for three decades?}, tokens out of thin air.
 Bitcoin network mints tokens as a reward for participants that help the ledger grow.
 The IC mints ICP utility tokens to reward participants in the network governance and node providers.
 
-Another popular scheme is \em{wrapped tokens}, where the ledger mints tokens as proxies for other assets.
+Another popular scheme is \emph{wrapped tokens}, where the ledger mints tokens as proxies for other assets.
 Let us extend the tip ledger example to make it operate on wrapped dollars.
 
 Imagine now that Geneviève does not trust the folks she hangs out with, but she wants to continue enjoying the convenience of virtual money.
 Whenever someone transfers her virtual tokens on a piece of paper, she wants to be sure she can claim her buck back.
 
 One way to approach the issue is to set up a piggy bank at the office.
-Anyone who puts \math{\$1} into the bank gets a \em{wrapped} \math{\$1} on the ledger.
-The transaction converting a physical bill into a virtual token is a \em{mint} transaction.
+Anyone who puts \math{\$1} into the bank gets a \emph{wrapped} \math{\$1} on the ledger.
+The transaction converting a physical bill into a virtual token is a \emph{mint} transaction.
 
 One day Geneviève, Allen, and Meriam put \math{\$10} each into the piggy and mint their wrapped money on the ledger.
 
@@ -125,7 +125,7 @@ Meriam Bone & Geneviève Bardot & \math{\$\numspace 2.00} & \math{\$30.00} \\
 \end{tabular}
 
 The main difference with the original scheme is that now Geneviève can exit the group and get her money back at any point.
-All she needs is to open the piggy under a supervision of a trusted party, get her \math{\$14}, and record a \em{burn} transaction on the ledger by sending her tokens to the void (sometimes called the \em{minting account}).
+All she needs is to open the piggy under a supervision of a trusted party, get her \math{\$14}, and record a \emph{burn} transaction on the ledger by sending her tokens to the void (sometimes called the \emph{minting account}).
 The sum of all balances on the ledger is always equal to the amount of money in the piggy bank.
 
 \begin{tabular}{l l r r}
@@ -183,7 +183,7 @@ All that was left is to formalize this arrangement on the ledger.
 Geneviève could transfer some budget to Alex before he goes out, and he could transfer her the leftover when he is back.
 That solves the problem, but Geneviève cannot use the locked funds herself during that time because, technically, they belong to Alex.
 
-Another approach popularized by the Ethereum community is to introduce the notion of \em{approvals}.
+Another approach popularized by the Ethereum community is to introduce the notion of \emph{approvals}.
 The ledger could have another table with spending allowances between two people.
 
 \begin{tabular}{l l r}
@@ -227,9 +227,9 @@ Her eyes caught a little devilish fire when she saw how her mother used the ledg
 
 ``No more than you have on your account,'' replied Meriam.
 
-``I don't have anything yet. Can I send \em{nothing}?''
+``I don't have anything yet. Can I send \emph{nothing}?''
 
-``Ahm\ldots  Well, there are no rules prohibiting \em{that}, I suppose.''
+``Ahm\ldots  Well, there are no rules prohibiting \emph{that}, I suppose.''
 
 Peppy grabbed a pen and started filling the lines with blocky letters.
 
@@ -242,7 +242,7 @@ From & To & Amount \\
 \fun{PEPPY} & \fun{MOM} & \fun{\$0} \\
 \end{tabular}
 
-``OK, Peppy, stop. There is a new rule: you cannot transfer \em{nothing}. Only a positive amount.''
+``OK, Peppy, stop. There is a new rule: you cannot transfer \emph{nothing}. Only a positive amount.''
 
 Peppy stopped.
 A few wrinkles appeared on her forehead, and then her lips curled into a smile.
@@ -286,6 +286,6 @@ The ICP ledger also uses fees as a mechanism for spam prevention.
 
 We have seen that fungible tokens are an essential part of our daily life.
 We learned that \href{#asset-ledgers}{ledger} is a robust accounting mechanism that we can adapt to the task at hand by adopting various features: \href{#minting-burning}{mints}, \href{#subaccounts}{subaccounts}, \href{#approvals}{approvals}, and \href{#fees}{transfer fees}.
-In \href{/posts/10-payment-flows.html}{the following article}, we will discuss protocols allowing clients to exchange tokens for service, known as \em{payment flows}.
+In \href{/posts/10-payment-flows.html}{the following article}, we will discuss protocols allowing clients to exchange tokens for service, known as \emph{payment flows}.
 
 \end{document}

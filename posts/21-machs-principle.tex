@@ -17,18 +17,18 @@
 }
 
 If you have ever tried to move a closet, you know how much sweat you must shed before the damn thing ends up where you want it to be.
-Physicists call this mysterious property of objects \em{inertia}\sidenote{sn-inertia}{
+Physicists call this mysterious property of objects \emph{inertia}\sidenote{sn-inertia}{
   More formally, inertia is the tendency of a body to stay at rest or continue moving in a straight line unless some force acts on the body.
 }.
 
 Believe it or not, physicists have no idea where inertia comes from.
-Sure, there is the \href{https://en.wikipedia.org/wiki/Newton's_laws_of_motion}{first Newton's law} \em{postulating} inertia, but its source remains obscure.
+Sure, there is the \href{https://en.wikipedia.org/wiki/Newton's_laws_of_motion}{first Newton's law} \emph{postulating} inertia, but its source remains obscure.
 
 Newton believed in absolute time and space.
 In his worldview, inertia is the resistance of bodies to forces accelerating them relative to the eternal cosmic frame of reference.
 
 \href{https://en.wikipedia.org/wiki/Ernst_Mach}{Ernst Mach}, an Austrian physicist and philosopher, disagreed with Newton's position.
-In his mind, all the interactions in nature, including the laws of motion and inertia, should be \em{relative}.
+In his mind, all the interactions in nature, including the laws of motion and inertia, should be \emph{relative}.
 
 
 The difference between Newton's and Mach's views is subtle.
@@ -76,7 +76,7 @@ Is the offer still as attractive as it would be two decades ago?
 
 Or you may find yourself caught up in a dysfunctional relationship.
 You feel lonely and depressed, yet you can't find the strength to quit.
-You still get \em{some} scraps of affection from your partner, a shared household is somewhat convenient, and you don't want to decide what to do with Charlie, your \href{https://en.wikipedia.org/wiki/Labrador_Retriever}{Labrador}.
+You still get \emph{some} scraps of affection from your partner, a shared household is somewhat convenient, and you don't want to decide what to do with Charlie, your \href{https://en.wikipedia.org/wiki/Labrador_Retriever}{Labrador}.
 
 Relationships are the source of inertia in our lives.
 These include your loved ones, friends, community, church, and places you enjoy visiting.
@@ -85,7 +85,7 @@ Relationships make our lives worth living, but they also resist drastic changes.
 \section{inertia-in-software}{Inertia in software}
 
 \epigraph{
-  Complexity is caused by two things: \em{dependencies} and \em{obscurity}.
+  Complexity is caused by two things: \emph{dependencies} and \emph{obscurity}.
 }{John Ousterhout, \href{https://www.amazon.com/Philosophy-Software-Design-2nd/dp/173210221X}{A Philosophy of Software Design, 2nd Edition}.}
 
 Changing software is hard.
@@ -112,8 +112,8 @@ Similarly, we can often remove unused functions without affecting the program's 
 However, the more callers a function has, the harder it is to change \href{https://www.hyrumslaw.com/}{anything} about it.
 
 Interestingly, we can see \href{https://en.wikipedia.org/wiki/Regression_testing}{regression testing} as a way to increase software's inertia.
-The ultimate goal of such tests is to make \em{destructive} changes harder to make.
-Unfortunately, tests often turn into \href{https://testing.googleblog.com/2015/01/testing-on-toilet-change-detector-tests.html}{change detectors}, making \em{any} change unnecessarily complicated.
+The ultimate goal of such tests is to make \emph{destructive} changes harder to make.
+Unfortunately, tests often turn into \href{https://testing.googleblog.com/2015/01/testing-on-toilet-change-detector-tests.html}{change detectors}, making \emph{any} change unnecessarily complicated.
 
 The \href{https://github.com/github/renaming}{default Git branch renaming} is one of my favorite examples of inertia in software.
 The idea behind the change is trivial; it would take Linus about a minute to change the default branch name from \code{master} to \code{main} back in 2005.
@@ -129,18 +129,18 @@ We are ready to formulate Mach's principle in its general form after seeing how 
 
 We can draw a few practical implications from this principle.
 
-Firstly, we must \em{account for hidden relations when we estimate project costs}.
+Firstly, we must \emph{account for hidden relations when we estimate project costs}.
 The approach most people employ is to base estimates solely on the change to be done.
 It seems reasonable and rational, but \href{https://en.wikipedia.org/wiki/Planning_fallacy}{it doesn't work}.
 Any change worth doing is trapped in a web of dependencies hidden from an unsuspecting observer; even minor changes might require herculean efforts.
 The best predictor of project completion time is the time it took to complete similar projects in the past.
 
-Secondly, we can \em{achieve goals faster by reducing dependencies}.
+Secondly, we can \emph{achieve goals faster by reducing dependencies}.
 Minimizing the number of teams involved in a project can drastically reduce the \href{https://www.investopedia.com/terms/l/leadtime.asp}{lead time}.
 Fred Brooks \href{https://en.wikipedia.org/wiki/The_Mythical_Man-Month}{observed} similar dynamics while managing a large team at IBM:
 Adding more people to a project running late tends to increase its inertia, further delaying the delivery.
 
-Lastly, we must \em{address bad decisions before they get tangled in dependencies}.
+Lastly, we must \emph{address bad decisions before they get tangled in dependencies}.
 We want to fix our mistakes quickly before others rely on them.
 The tighter the feedback loop, the cheaper our mistakes become.
 Tinkering, experimentation, and \href{https://agilemanifesto.org/}{incremental delivery} almost always trump theorizing and planning.

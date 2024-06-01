@@ -43,7 +43,7 @@ The \href{https://internetcomputer.org/docs/current/developer-docs/backend/candi
 \begin{figure}
 \begin{code}[candid]
 \b{service} counter : {
-  \em{// A method taking a reference to a function.}
+  \emph{// A method taking a reference to a function.}
   subscribe : (func (int) -> ()) -> ();
 }
 \end{code}
@@ -73,7 +73,7 @@ A \code{.did} file contains type definitions and at most one primary service def
 };
 
 \b{service} TokenRegistry : {
-  \em{// Returns a reference to a token ledger service given the token symbol.}
+  \emph{// Returns a reference to a token ledger service given the token symbol.}
   lookup : (symbol : text) -> (opt Token) query;
 }
 \end{code}
@@ -81,7 +81,7 @@ A \code{.did} file contains type definitions and at most one primary service def
 
 Two syntactic forms can introduce a service definition: with and without init arguments.
 The technical term for a service definition with init arguments is \href{https://github.com/dfinity/candid/blob/master/spec/Candid.md#services}{service constructor}\sidenote{sn-class}{
-    Some implementations use the term \href{https://docs.rs/candid/0.8.4/candid/types/internal/enum.Type.html#variant.Class}{\em{class}}.
+    Some implementations use the term \href{https://docs.rs/candid/0.8.4/candid/types/internal/enum.Type.html#variant.Class}{\emph{class}}.
 }
 
 \begin{figure}
@@ -91,13 +91,13 @@ The technical term for a service definition with init arguments is \href{https:/
 \begin{code}[candid]
 \b{service} Token : {
   balance : (record { of : principal }) -> (nat) query;
-  \em{// ...}
+  \emph{// ...}
 }
 \end{code}
 \begin{code}[candid]
 \b{service} Token : \b{(init_balances : vec record \{ principal; nat \})} -> {
   balance : (record { of : principal }) -> (nat) query;
-  \em{// ...}
+  \emph{// ...}
 }
 \end{code}
 \end{figure}
@@ -105,9 +105,9 @@ The technical term for a service definition with init arguments is \href{https:/
 Conceptually, a service constructor represents an uninitialized canister, whereas a service represents a deployed canister.
 Init arguments describe the value the canister maintainers must specify when instantiating the canister.
 
-Ideally, canister \em{build} tools should produce a \b{service constructor}.
+Ideally, canister \emph{build} tools should produce a \b{service constructor}.
 If the module contains no init args, the tools should use the form \code{service : () -> \{\ldots\}}.
-Canister \em{deploy} tools, such as \href{https://internetcomputer.org/docs/current/references/cli-reference/dfx-deploy}{\code{dfx deploy}}, should use the init args to install the canister, and use the \b{service} as the public metadata, stripping out the init args.
+Canister \emph{deploy} tools, such as \href{https://internetcomputer.org/docs/current/references/cli-reference/dfx-deploy}{\code{dfx deploy}}, should use the init args to install the canister, and use the \b{service} as the public metadata, stripping out the init args.
 As of July 2023, Motoko compiler and Rust CDK don't follow these conventions, so people often conflate the two concepts.
 
 \subsection{types}{Types}
@@ -125,10 +125,10 @@ In addition to a rich set of primitive types, such as booleans (\code{bool}), fl
     The \href{https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t}{\code{vec}} type constructor for declaring collections.
     \item
     \href{https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--}{Records} as product types (also known as \code{structs}) with named fields, such as \newline
-    \code{\b{record} \{ \em{first_line} : text; \em{second_line} : \b{opt} text; \em{zip} : text; /* \ldots  */ \}}.
+    \code{\b{record} \{ \emph{first_line} : text; \emph{second_line} : \b{opt} text; \emph{zip} : text; /* \ldots  */ \}}.
     \item
     \href{https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--}{Variants} as sum types (also known as \code{enums}) with named alternatives, such as \newline
-    \code{\b{variant} \{ \em{cash}; \em{credit_card} : \b{record} \{ /* \ldots  */ \} \}}.
+    \code{\b{variant} \{ \emph{cash}; \emph{credit_card} : \b{record} \{ /* \ldots  */ \} \}}.
     \item
     The \href{https://internetcomputer.org/docs/current/references/candid-ref#type-reserved}{\code{reserved}} type for retiring unused fields.
     \item
@@ -160,7 +160,7 @@ Records and variants are the bread and butter of working with Candid.
 
 Records and variants have similar syntax; the primary difference is the keyword introducing the type.
 The meanings of the constructs are complementary, however.
-A record type indicates that \em{all} of its fields must be set, and a variant type indicates that precisely \em{one} field must be set.
+A record type indicates that \emph{all} of its fields must be set, and a variant type indicates that precisely \emph{one} field must be set.
 
 \begin{figure}
 \marginnote{mn-record-vs-variant}{
@@ -214,13 +214,13 @@ There are two constructs closely resembling tuples, however.
   Tuple-like constructions in Candid: a record with tuple fields (top) and argument sequences (bottom).
 }
 \begin{code}[candid]
-\em{// A record with tuple fields.}
+\emph{// A record with tuple fields.}
 \b{type} Entry  = \b{record} { text; nat };
-\em{// The Entry and ExplicitEntry types are equivalent.}
+\emph{// The Entry and ExplicitEntry types are equivalent.}
 \b{type} ExplicitEntry = \b{record} { \b{0} : text; \b{1} : nat };
 
 service ArithmeticService : {
-  \em{// Argument and result sequences.}
+  \emph{// Argument and result sequences.}
   div : (divident : nat, divisor : nat) -> (quotient : nat, reminder : nat) query;
 }
 \end{code}
@@ -250,7 +250,7 @@ Candid's type system is \href{https://en.wikipedia.org/wiki/Structural_type_syst
 Type names serve as monikers for the type structure, not as the type's identity.
 
 Variable bindings in Rust are a good analogy for type names in Candid.
-The \code{let x = 5;} statement \em{binds} name \em{x} to value \code{5}, but \em{x} does not become the identity of that value.
+The \code{let x = 5;} statement \emph{binds} name \emph{x} to value \code{5}, but \emph{x} does not become the identity of that value.
 Expressions such as \code{x == 5} and \code{\{ let y = 5; y == x \}} evaluate to \code{true}.
 
 \begin{figure}
@@ -259,7 +259,7 @@ Expressions such as \code{x == 5} and \code{\{ let y = 5; y == x \}} evaluate to
 }
 
 \begin{code}[candid]
-\em{// These types are identical from Candid's point of view.}
+\emph{// These types are identical from Candid's point of view.}
 type Point2d = record { x : int; y : int };
 type ECPoint = record { x : int; y : int };
 \end{code}
@@ -308,7 +308,7 @@ Let's inspect some of the basic subtyping rules for simple values (not functions
     Adding a new field to a record creates a subtype.\newline
     \code{record \{ name : text; status : variant \{ user; admin \} \} <: record \{ name : text \} }
     \item
-    Less intuitively, removing an \em{optional} field also creates a subtype.
+    Less intuitively, removing an \emph{optional} field also creates a subtype.
     \newline
     \code{record \{ name : text \} <: record \{ name : text; status : \b{opt} variant \{ user; admin \} \} }
     \item
@@ -338,22 +338,22 @@ Let's consider a few examples of common changes that preserve backward compatibi
 
 \begin{itemize}
     \item
-    Remove an unused record field (or, better, change its type to \code{reserved}) from the method \em{input} argument.
+    Remove an unused record field (or, better, change its type to \code{reserved}) from the method \emph{input} argument.
     \item
-    Add a new case to a variant in the method \em{input} argument.
+    Add a new case to a variant in the method \emph{input} argument.
     \item
-    Add a new field to a record in the method \em{result} type.
+    Add a new field to a record in the method \emph{result} type.
     \item
-    Remove an optional field from a record in the method \em{result} type.
+    Remove an optional field from a record in the method \emph{result} type.
     \item
-    Remove an alternative from a variant type in the method \em{result} type.
+    Remove an alternative from a variant type in the method \emph{result} type.
 \end{itemize}
 
 Before we close the subtyping discussion, let's consider a sequence of type changes where an optional field gets removed and re-introduced later with a different type.
 
 \begin{figure}
 \marginnote{mn-subtype-opt}{
-  An example of the \em{special opt subtyping rule}.
+  An example of the \emph{special opt subtyping rule}.
   Step \circled{1} removes the optional \code{status} field; step \circled{2} adds an optional field with the same name but an incompatible type.
   The horizontal bar applies the transitive property of subtyping, eliminating the intermediate type without the \code{status} field.
 }
@@ -367,7 +367,7 @@ Before we close the subtyping discussion, let's consider a sequence of type chan
 \end{figure}
 
 Indeed, in Candid, \math{opt T <: opt V} holds for any types \math{T} and \math{V}.
-This counter-intuitive property bears the name of the \em{special opt rule}, and it causes a lot of grief in practice.
+This counter-intuitive property bears the name of the \emph{special opt rule}, and it causes a lot of grief in practice.
 Multiple developers reported changing an optional field in an incompatible way, causing the corresponding values to decode as \code{null} after the upgrade.
 
 Joachim Breitner's \href{https://www.joachim-breitner.de/blog/784-A_Candid_explainer__Opt_is_special}{opt is special} article explores the topic in more detail and provides historical background.
@@ -377,12 +377,12 @@ Joachim Breitner's \href{https://www.joachim-breitner.de/blog/784-A_Candid_expla
 In Candid, a binary message defines a tuple of \math{n} values and logically consists of three parts:
 \begin{enumerate}
     \item
-    The \em{type table} part defines composite types (\href{https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--}{records}, \href{https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--}{variants}, \href{https://internetcomputer.org/docs/current/references/candid-ref#type-opt-t}{options}, \href{https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t}{vectors}, etc.) required to decode the message.
+    The \emph{type table} part defines composite types (\href{https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--}{records}, \href{https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--}{variants}, \href{https://internetcomputer.org/docs/current/references/candid-ref#type-opt-t}{options}, \href{https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t}{vectors}, etc.) required to decode the message.
     \item
-    The \em{types} part is an \math{n}-tuple of integers specifying the types \math{(T\sub{1},\ldots,T\sub{n})} of values in the next section.
+    The \emph{types} part is an \math{n}-tuple of integers specifying the types \math{(T\sub{1},\ldots,T\sub{n})} of values in the next section.
     The types are either primitives (negative integers) or pointers into the type table (non-negative integers).
     \item
-    The \em{values} part is an \math{n}-tuple of serialized values \math{(V\sub{1},\ldots,V\sub{n})}.
+    The \emph{values} part is an \math{n}-tuple of serialized values \math{(V\sub{1},\ldots,V\sub{n})}.
 \end{enumerate}
 
 The tuple values usually correspond to service method arguments or results.
@@ -440,11 +440,11 @@ Let's consider an encoding of a \href{https://en.wikipedia.org/wiki/Rose_tree}{r
   A definition of a \href{https://en.wikipedia.org/wiki/Rose_tree}{rose tree} data type containing 32-bit integers (top) and the Candid representation of the same type (bottom).
 }
 \begin{code}[rust]
-\em{// Rust}
+\emph{// Rust}
 pub enum Tree { Leaf(i32), Forest(Vec<Tree>) }
 \end{code}
 \begin{code}[candid]
-\em{// Candid}
+\emph{// Candid}
 type Tree = variant { leaf : int32; forest : vec Tree };
 \end{code}
 \end{figure}
@@ -548,7 +548,7 @@ Removing an \code{opt} field is always safe, but prefer marking it \code{reserve
 Reserved fields make it unlikely that future service developers will use the field name in an unexpected way.
 
 \begin{code}[good]
-\em{// OK: the age field is optional.}
+\emph{// OK: the age field is optional.}
  type User = record {
    name : text;
 -  age : opt nat;
@@ -561,7 +561,7 @@ Reserved fields make it unlikely that future service developers will use the fie
 \end{code}
 
 \begin{code}[good]
-\em{// GOOD: marking an opt field as reserved.}
+\emph{// GOOD: marking an opt field as reserved.}
  type User = record {
    name : text;
 -  age : opt nat;
@@ -595,7 +595,7 @@ You can remove the field if the type appears only in method arguments but prefer
 You should preserve the field if the type appears in a method return type.
 
 \begin{code}[bad]
-\em{// BAD: the User type appears as an argument \b{and} a result.}
+\emph{// BAD: the User type appears as an argument \b{and} a result.}
  type User = record {
    name : text;
 -  age : nat;
@@ -636,7 +636,7 @@ You can safely add a non-optional field if the record appears only in method ret
 Adding a non-optional field breaks backward compatibility if the record appears in a method argument.
 
 \begin{code}[bad]
- \em{// BAD: breaks the client code}
+ \emph{// BAD: breaks the client code}
  service UserService : {
 -  add_user : (record { name : text            }) -> (nat);
 +  add_user : (record { name : text; \b{age : nat} }) -> (nat);
@@ -650,7 +650,7 @@ Changing optional variant fields is always\sidenote{sn-remove-candid-0.9}{
 } safe.
 
 \begin{code}[good]
- \em{// OK: changing an optional field}
+ \emph{// OK: changing an optional field}
  type OrderDetails = record {
 -  size : \b{opt} variant { tiny; small; medium; large }
 +  size : \b{opt} variant {       small; medium; large }
@@ -673,7 +673,7 @@ You can remove alternatives if the variant appears only in method results.
 \end{code}
 
 \begin{code}[bad]
- \em{// BAD: this change might break clients.}
+ \emph{// BAD: this change might break clients.}
  service CoffeeShop : {
 -  order_coffee : (record { size : variant { tiny; small; medium; large } }) -> (nat);
 +  order_coffee : (record { size : variant {       small; medium; large } }) -> (nat);
@@ -687,7 +687,7 @@ Changing optional variant fields is always\sidenote{sn-remove-candid-0.9}{
 } safe.
 
 \begin{code}[good]
- \em{// OK: changing an optional field}
+ \emph{// OK: changing an optional field}
  type User = record {
    name : text;
 -  age : \b{opt} variant { child;           adult }
@@ -712,7 +712,7 @@ If the variant appears only in method arguments, you can safely add new alternat
 \end{code}
 
 \begin{code}[bad]
-\em{// BAD: the User type appears as an argument \b{and} a result.}
+\emph{// BAD: the User type appears as an argument \b{and} a result.}
  type User = record {
    name : text;
 -  age : variant { child;           adult }
@@ -769,12 +769,12 @@ You can define a variant type to distinguish between these.
 \begin{code}[candid]
 \b{type} ServiceArg = variant {
   Init    : record { minter : principal };
-  \em{// We might want to override the minter on upgrade.}
+  \emph{// We might want to override the minter on upgrade.}
   Upgrade : record { minter : \b{opt} principal }
 };
 
 \b{service} TokenService : (ServiceArg) -> {
-  \em{// \ldots}
+  \emph{// \ldots}
 }
 \end{code}
 \end{figure}

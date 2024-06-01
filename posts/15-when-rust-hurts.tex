@@ -34,16 +34,16 @@ This article details on how frustrating Rust can be if you approach it with a fu
 
 Understanding the difference between objects, values, and references is helpful before diving deeper into Rust.
 
-In the context of this article, \em{values} are entities with distinct identities, such as numbers and strings.
-An \em{object} is a representation of a value in the computer memory.
-A \em{reference} is the address of an object that we can use to access the object or its parts.
+In the context of this article, \emph{values} are entities with distinct identities, such as numbers and strings.
+An \emph{object} is a representation of a value in the computer memory.
+A \emph{reference} is the address of an object that we can use to access the object or its parts.
 
 \begin{figure}[grayscale-diagram]
 \marginnote{mn-objects-values-refs}{
   A visualization of values, objects, and references on an example of an integer in a 16-bit computer.
   The value is number five, which has no inherent type.
   The object is a 16-bit integer stored at address \code{0x0300} (\href{https://en.wikipedia.org/wiki/Endianness}{little-endian}).
-  The memory contains a \em{reference} to the number, represented as a pointer to address \code{0x0300}.
+  The memory contains a \emph{reference} to the number, represented as a pointer to address \code{0x0300}.
 }
 \includegraphics{/images/15-objects-values-references.svg}
 \end{figure}
@@ -219,7 +219,7 @@ struct S { map: HashMap<i64, String>, def: String }
 impl S {
   fn ensure_has_entry(&mut self, key: i64) {
     use std::collections::hash_map::Entry::*;
-    \em{// This version is more verbose, but it works with Rust 2018.}
+    \emph{// This version is more verbose, but it works with Rust 2018.}
     match self.map.entry(key) {
       Occupied(mut e) => e.get_mut(),
       Vacant(mut e) => e.insert(self.def.clone()),
@@ -250,7 +250,7 @@ impl std::fmt::Display for Hex {
 }
 
 println!("{}", Hex((0..32).collect()));
-\em{// => 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f}
+\emph{// => 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f}
 \end{code}
 
 The new type idiom is efficient: the representation of the \code{Hex} type in the machine's memory is identical to that of \code{Vec<u8>}.
@@ -286,15 +286,15 @@ Most functions in Rust take arguments by reference and return results as a self-
   Some functions return references to one of their arguments.
 }.
 This pattern is so common that it might be helpful to define new terms.
-I call input types with lifetime parameters \em{views} because they are optimal for inspecting data.
-I call regular output types \em{bundles} because they are self-contained.
+I call input types with lifetime parameters \emph{views} because they are optimal for inspecting data.
+I call regular output types \emph{bundles} because they are self-contained.
 
 The following snippet comes from the (sunset) \href{https://github.com/bytecodealliance/lucet}{Lucet} WebAssembly runtime.
 \begin{code}[rust]
-\em{/// A WebAssembly global along with its export specification.}
-\em{/// The lifetime parameter exists to support zero-copy deserialization}
-\em{/// for the `\&str` fields at the leaves of the structure.}
-\em{/// For a variant with owned types at the leaves, see `OwnedGlobalSpec`.}
+\emph{/// A WebAssembly global along with its export specification.}
+\emph{/// The lifetime parameter exists to support zero-copy deserialization}
+\emph{/// for the `\&str` fields at the leaves of the structure.}
+\emph{/// For a variant with owned types at the leaves, see `OwnedGlobalSpec`.}
 pub struct \href{https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f842db437d94abb6eb439d7c92/lucet-module/src/globals.rs#L8}{\code{GlobalSpec}}<'a> {
     global: Global<'a>,
     export_names: Vec<&'a str>,
@@ -302,8 +302,8 @@ pub struct \href{https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f8
 
 \ldots 
 
-\em{/// A variant of `GlobalSpec` with owned strings throughout.}
-\em{/// This type is useful when directly building up a value to be serialized.}
+\emph{/// A variant of `GlobalSpec` with owned strings throughout.}
+\emph{/// This type is useful when directly building up a value to be serialized.}
 pub struct \href{https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f842db437d94abb6eb439d7c92/lucet-module/src/globals.rs#L112}{\code{OwnedGlobalSpec}} {
     global: OwnedGlobal,
     export_names: Vec<String>,
@@ -313,11 +313,11 @@ pub struct \href{https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f8
 The authors duplicated the \code{GlobalSpec} data structure to support two use cases:
 \begin{itemize}
   \item
-    \code{GlobalSpec<'a>} is a \em{view} object that the code authors parse from a byte buffer.
+    \code{GlobalSpec<'a>} is a \emph{view} object that the code authors parse from a byte buffer.
     Individual fields of this view point back to the relevant regions of the buffer.
     This representation is helpful for functions that need to inspect values of type \code{GlobalSpec} without modifying them.
   \item
-    \code{OwnedGlobalSpec} is a \em{bundle}: it does not contain references to other data structures.
+    \code{OwnedGlobalSpec} is a \emph{bundle}: it does not contain references to other data structures.
     This representation is helpful for functions that construct values of type \code{GlobalSpec} and pass them around or put them into a container.
 \end{itemize}
 
@@ -348,10 +348,10 @@ We might want to bundle\sidenote{sn-db-iterator}{
 } the database with its snapshot, but Rust will not let us.
 
 \begin{code}[bad]
-\em{// There is no way to define the following struct without}
-\em{// contaminating it with lifetimes.}
+\emph{// There is no way to define the following struct without}
+\emph{// contaminating it with lifetimes.}
 struct DbSnapshot {
-  snapshot: Snapshot<'a>, \em{// what should 'a be?}
+  snapshot: Snapshot<'a>, \emph{// what should 'a be?}
   db: Arc<Db>,
 }
 \end{code}
@@ -362,7 +362,7 @@ Rust forbids sibling pointers in safe code because they undermine Rust's safety 
 As discussed in the \href{#objects-values-references}{Objects, values, and references} section, modifying a referenced object is usually a bug.
 In our case, the \code{snapshot} object might depend on the physical location of the \code{db} object.
 If we move the \code{DbSnapshot} as a whole, the physical location of the \code{db} field will change, corrupting references in the \code{snapshot} object.
-We \em{know} that moving \code{Arc<Db>} will not change the location of the \code{Db} object, but there is no way to communicate this information to \code{rustc}.
+We \emph{know} that moving \code{Arc<Db>} will not change the location of the \code{Db} object, but there is no way to communicate this information to \code{rustc}.
 
 Another issue with \code{DbSnapshot} is that the order of its field \href{https://doc.rust-lang.org/stable/reference/destructors.html}{destruction} matters.
 If Rust allowed sibling pointers, changing the field order could introduce undefined behavior: the \code{snapshot}'s destructor could try to access fields of a destroyed \code{db} object.
@@ -427,7 +427,7 @@ In other words, the package defining the trait must depend on the package defini
 \includegraphics{/images/15-orphan-rules.svg}
 \end{figure}
 
-These rules make it easy for the compiler to guarantee \em{coherence}, which is a smart way to say that all parts of your program see the same trait implementation for a particular type.
+These rules make it easy for the compiler to guarantee \emph{coherence}, which is a smart way to say that all parts of your program see the same trait implementation for a particular type.
 In exchange, this rule significantly complicates integrating traits and types from unrelated libraries.
 
 One example is traits we want to use only in tests, such as \href{https://altsysrq.github.io/rustdoc/proptest/1.0.0/proptest/arbitrary/trait.Arbitrary.html}{\code{Arbitrary}} from the \href{https://crates.io/crates/proptest}{proptest} package.
@@ -460,7 +460,7 @@ Despite these claims, my \href{https://en.wikipedia.org/wiki/Cortisol}{cortisol}
     Obviously such a program isn't very good, but Rust can only hold your hand so far.
 }{The Rustonomicon, \href{https://doc.rust-lang.org/nomicon/races.html}{Data Races and Race Conditions}}
 
-Safe Rust prevents a specific type of concurrency bug called \em{data race}.
+Safe Rust prevents a specific type of concurrency bug called \emph{data race}.
 Concurrent Rust programs have plenty of other ways to behave incorrectly.
 
 One class of concurrency bugs that I experienced firsthand is \href{https://en.wikipedia.org/wiki/Deadlock}{deadlock}.
@@ -474,19 +474,19 @@ The bug might be hard to spot if \code{do_something} and \code{helper_function} 
 impl Service {
   pub fn do_something(&self) {
     let guard = self.lock.read();
-    \em{// \ldots }
-    self.helper_function(); \em{// \b{BUG}: will panic or deadlock}
-    \em{// \ldots }
+    \emph{// \ldots }
+    self.helper_function(); \emph{// \b{BUG}: will panic or deadlock}
+    \emph{// \ldots }
   }
 
   fn helper_function(&self) {
     let guard = self.lock.read();
-    \em{// \ldots }
+    \emph{// \ldots }
   }
 }
 \end{code}
 
-The documentation for \href{https://doc.rust-lang.org/std/sync/struct.RwLock.html#method.read}{\code{RwLock::read}} mentions that the function \em{might} panic if the current thread already holds the lock.
+The documentation for \href{https://doc.rust-lang.org/std/sync/struct.RwLock.html#method.read}{\code{RwLock::read}} mentions that the function \emph{might} panic if the current thread already holds the lock.
 All I got was a hanging program.
 
 Some languages tried to provide a solution to this problem in their concurrency toolkits.
@@ -496,7 +496,7 @@ Two technologies that approach the problem fundamentally are \href{https://en.wi
 
 \subsection{filesystem-shared-resource}{Filesystem is a shared resource}
 \epigraph{
-    We can view a path as an \em{address}.
+    We can view a path as an \emph{address}.
     Then a string representing a path is a pointer, and accessing a file through a path is a pointer dereference.
     Thus, component interference due to file overwriting can be viewed as an address collision problem: two components occupy overlapping parts of the address space.
 }{Eelco Dolstra, \href{https://edolstra.github.io/pubs/phd-thesis.pdf}{The Purely Functional Software Deployment Model}, p. 53}
@@ -535,7 +535,7 @@ fn innocently_looking_function() {
   \href{https://docs.rs/tokio/1.25.0/tokio/fn.spawn.html}{\code{tokio::spawn}}(some_async_func());
   // ^
   // |
-  // \em{This code will panic if we remove this line. Spukhafte Fernwirkung!}
+  // \emph{This code will panic if we remove this line. Spukhafte Fernwirkung!}
 } //                                     |
   //                                     |
 fn main() { //                           v
@@ -566,7 +566,7 @@ Some might argue that threading ubiquitous arguments through the entire call sta
 }{Bob Nystrom, \href{https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/}{What Color is Your Function?}}
 
 Rust's \code{async/.await} syntax simplifies the composition of asynchronous algorithms.
-In return, it brings a fair amount of complexity, \href{https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/}{painting every function} in \em{blue} (sync) or \em{red} (async) color.
+In return, it brings a fair amount of complexity, \href{https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/}{painting every function} in \emph{blue} (sync) or \emph{red} (async) color.
 There are new rules to follow:
 \begin{itemize}
   \item
@@ -581,7 +581,7 @@ There are new rules to follow:
     Not all sync functions are equally blue.
 \end{itemize}
 
-That is it; some sync functions are secretly \em{purple}: they can read files, join threads, or \href{https://doc.rust-lang.org/std/thread/fn.sleep.html}{\code{thread::sleep}} on a couch.
+That is it; some sync functions are secretly \emph{purple}: they can read files, join threads, or \href{https://doc.rust-lang.org/std/thread/fn.sleep.html}{\code{thread::sleep}} on a couch.
 We do not want to call these purple (blocking) functions from red (async) functions because they will block the runtime and kill the performance benefits that motivated us to step into this asynchrony mess.
 
 Unfortunately, purple functions are secretive: you cannot tell whether a function is purple without inspecting its body and the bodies of all other functions in its \href{https://en.wikipedia.org/wiki/Call_graph}{call graph}.

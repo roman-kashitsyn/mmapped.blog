@@ -107,19 +107,19 @@ Let us see how the IC implementation responds to this challenge.
 
 \section{snapshots-deltas}{Snapshots and deltas}
 
-The implementation divides the contents of each memory into 4096-byte chunks called \em{pages}.
-When the actor executes a message, the system automatically detects the memory pages that the actor modifies or \em{dirties}.
+The implementation divides the contents of each memory into 4096-byte chunks called \emph{pages}.
+When the actor executes a message, the system automatically detects the memory pages that the actor modifies or \emph{dirties}.
 The system uses low-level \sc{unix api}s to detect page modifications.
 Since most operating systems operate on 4096-byte memory pages, using the same page size in the replica is the most natural choice.
 
 The memory snapshot of an actor is a map from a page index to the page contents.
-We call this data structure a \em{page map}.
+We call this data structure a \emph{page map}.
 There are many ways to implement this data structure.
 The primary assumption that guided the current implementation is that each message execution modifies only a small number of pages.
 This assumption holds in practice: as of April 2022, 95\% of message executions change at most seven memory pages.
 
 If the expected number of dirtied pages is small, it is natural to apply some delta-encoding scheme.
-Thus we chose to represent page maps as a combination of on-disk \em{checkpoint files} and in-memory \em{page deltas}.
+Thus we chose to represent page maps as a combination of on-disk \emph{checkpoint files} and in-memory \emph{page deltas}.
 A checkpoint file is a flat binary file with a full copy of the actor memory that the system creates at the end of some execution rounds.
 Once created, checkpoint files are immutable.
 A page delta is a \href{https://en.wikipedia.org/wiki/Persistent_data_structure}{persistent} map that contains pages dirtied by the actor since the last checkpoint.

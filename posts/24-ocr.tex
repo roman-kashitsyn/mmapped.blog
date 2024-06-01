@@ -11,11 +11,11 @@
 \section{abstract}{Abstract}
 
 This article is a high-level overview of the Off-Chain Reporting protocol (\sc{ocr}) powering most of \href{https://chain.link/}{Chainlink} products.
-The protocol allows a group of \math{n} nodes called \em{oracles}, up to \math{f} of which could be \href{https://en.wikipedia.org/wiki/Byzantine_fault}{byzantine} (\math{f < n⁄3}), to agree on a data point and record it on a blockchain supporting smart contracts (e.g., Ethereum).
+The protocol allows a group of \math{n} nodes called \emph{oracles}, up to \math{f} of which could be \href{https://en.wikipedia.org/wiki/Byzantine_fault}{byzantine} (\math{f < n⁄3}), to agree on a data point and record it on a blockchain supporting smart contracts (e.g., Ethereum).
 
 \section{components}{Protocol components}
 
-All \sc{ocr} deployments have two parts with different execution models: the on-chain part, implemented as a smart contract called the \em{aggregator}, and the off-chain part, implemented as a peer-to-peer network of oracles.
+All \sc{ocr} deployments have two parts with different execution models: the on-chain part, implemented as a smart contract called the \emph{aggregator}, and the off-chain part, implemented as a peer-to-peer network of oracles.
 The off-chain communication protocol, in turn, consists of three sub-protocols layered on top of one another: the \href{#pacemaker}{pacemaker}, the \href{#report-generation}{report generation}, and the \href{#transmission}{transmission} protocols. 
 
 \subsection{aggregator-contract}{The aggregator contract}
@@ -31,9 +31,9 @@ The contract owner has administrative privileges, such as adding or removing nod
 
 \subsection{pacemaker}{Pacemaker}
 
-The \em{pacemaker} algorithm of the \sc{ocr} protocol periodically assigns a node to be a \em{leader} coordinating the rest of the protocol functions.
-The period between two consecutive leader assignments is called an \em{epoch}.
-Within each epoch, the leader initiates \em{rounds} of the \href{#report-generation}{report generation} algorithm.
+The \emph{pacemaker} algorithm of the \sc{ocr} protocol periodically assigns a node to be a \emph{leader} coordinating the rest of the protocol functions.
+The period between two consecutive leader assignments is called an \emph{epoch}.
+Within each epoch, the leader initiates \emph{rounds} of the \href{#report-generation}{report generation} algorithm.
 The tuple \math{(e, r)}, where \math{e} is the epoch number and \math{r} is the round number, serves as a logical clock for the protocol.
 
 \begin{figure}[grayscale-diagram]
@@ -50,7 +50,7 @@ The protocol can advance the epoch in two circumstances:
     \item The protocol didn't progress for the configured time amount.
 \end{enumerate}
 
-The function mapping epoch numbers to leader nodes is a \href{https://crypto.stanford.edu/pbc/notes/crypto/prf.html}{cryptographic pseudo-random function} parameterized by a secret key (called the \em{seed} key) known only to the oracles.
+The function mapping epoch numbers to leader nodes is a \href{https://crypto.stanford.edu/pbc/notes/crypto/prf.html}{cryptographic pseudo-random function} parameterized by a secret key (called the \emph{seed} key) known only to the oracles.
 Thus, oracles know the exact sequence of all leader assignments in advance, but to all outside observers, the assignments are indistinguishable from random.
 
 \subsection{report-generation}{Report generation}
@@ -58,23 +58,23 @@ Thus, oracles know the exact sequence of all leader assignments in advance, but 
 The report generation algorithm produces a data point for the \href{#aggregator-contract}{aggregator contract}.
 For example, if the aggregator contract records an asset price in \sc{usd}, the algorithm produces a price that faulty oracles can't manipulate.
 
-First, the leader initiates a new round by picking a \em{query} describing the task the followers need to execute and sending it to all the followers.
+First, the leader initiates a new round by picking a \emph{query} describing the task the followers need to execute and sending it to all the followers.
 \begin{figure}[grayscale-diagram,medium-size]
 \includegraphics{/images/24-report-1.svg}
 \end{figure}
 
-The followers execute the query (usually by observing an external data source) and send a signed \em{observation} back to the leader.
+The followers execute the query (usually by observing an external data source) and send a signed \emph{observation} back to the leader.
 In the asset price example, the observation will be their guess of the asset price.
 \begin{figure}[grayscale-diagram,medium-size]
 \includegraphics{/images/24-report-2.svg}
 \end{figure}
 
-If the leader receives at least \math{2f+1} observations, it distributes these signed (or \em{attributed}) observations among the followers.
+If the leader receives at least \math{2f+1} observations, it distributes these signed (or \emph{attributed}) observations among the followers.
 \begin{figure}[grayscale-diagram,medium-size]
 \includegraphics{/images/24-report-3.svg}
 \end{figure}
 
-Next, the followers distill attributed observations into a \em{report}, sign it, and send it to the leader.
+Next, the followers distill attributed observations into a \emph{report}, sign it, and send it to the leader.
 In the asset price example, the report is the median price.
 The observation aggregation function must consider any \math{f} out of at least \math{2f+1} observations untrustworthy for the protocol to be byzantine-fault-tolerant.
 For example, the asset price application must not pick one of the top or bottom \math{f} prices.
@@ -82,7 +82,7 @@ For example, the asset price application must not pick one of the top or bottom 
 \includegraphics{/images/24-report-4.svg}
 \end{figure}
 
-If at least \math{f+1} followers signed the same report, the leader aggregates the report and the signatures into an \em{attested} report and transmits it to all the followers.
+If at least \math{f+1} followers signed the same report, the leader aggregates the report and the signatures into an \emph{attested} report and transmits it to all the followers.
 \begin{figure}[grayscale-diagram,medium-size]
 \includegraphics{/images/24-report-5.svg}
 \end{figure}

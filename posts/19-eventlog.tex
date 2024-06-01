@@ -12,7 +12,7 @@
 \section{intro}{Introduction}
   
 The \href{https://medium.com/dfinity/chain-key-bitcoin-a-decentralized-bitcoin-twin-ceb8f4ddf95e}{chain-key Bitcoin} (ckBTC) project became \href{https://twitter.com/dfinity/status/1642887821731004418}{publicly available} on April 3, 2023.
-The ckBTC \em{minter} smart contract is the most novel part of the product responsible for converting Bitcoin to ckBTC tokens and back.
+The ckBTC \emph{minter} smart contract is the most novel part of the product responsible for converting Bitcoin to ckBTC tokens and back.
 This contract features several design choices that some developers might find insightful.
 This article describes how the ckBTC minter, which I will further refer to as ``the minter'', organizes its storage.
 
@@ -38,7 +38,7 @@ We preferred to avoid pre-upgrade hooks altogether to eliminate the possibility 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-traditional-upgrade}{
     The traditional canister state management scheme.
-    The canister applies \em{state transitions} \math{T\sub{i}} to its states \math{S\sub{i}} on the Wasm heap (designated with a circle) and marshals the state through stable memory on upgrades.
+    The canister applies \emph{state transitions} \math{T\sub{i}} to its states \math{S\sub{i}} on the Wasm heap (designated with a circle) and marshals the state through stable memory on upgrades.
     This approach requires state representations to be backward compatible only within the scope of a single upgrade.
     The number of instructions needed for an upgrade is proportional to the state size.
   }
@@ -51,7 +51,7 @@ We preferred to avoid pre-upgrade hooks altogether to eliminate the possibility 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-stable-memory}{
     Managing the canister state in directly stable memory.
-    The canister applies \em{state transitions} \math{T\sub{i}} to its states \math{S\sub{i}} persisted in stable memory.
+    The canister applies \emph{state transitions} \math{T\sub{i}} to its states \math{S\sub{i}} persisted in stable memory.
     This approach trades the flexibility of state representation for the predictability and safety of upgrades.
     The number of instructions needed for an upgrade is constant.
   }
@@ -115,9 +115,9 @@ One crucial aspect of the design is the log record's content.
 The brute-force approach is to record as events the arguments of all incoming update calls, all outgoing inter-canister calls, and the corresponding replies.
 This approach might work, but it takes a lot of work to implement and requires a complicated log replay procedure.
 
-Differentiating between \em{requests} (sometimes called \em{commands}) and \em{events} is a better option.
-\em{Requests} come from the outside world (ingress messages, replies, timers) and \em{might} trigger canister state changes.
-\em{Events} record effects of productive requests on the canister state.
+Differentiating between \emph{requests} (sometimes called \emph{commands}) and \emph{events} is a better option.
+\emph{Requests} come from the outside world (ingress messages, replies, timers) and \emph{might} trigger canister state changes.
+\emph{Events} record effects of productive requests on the canister state.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-request-event}{

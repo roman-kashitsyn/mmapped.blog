@@ -13,7 +13,7 @@
 \section{introduction}{Introduction}
 
 In the previous article, \href{/posts/09-fungible-tokens-101.html}{Fungible tokens 101}, I introduced the concept of a ledger and various extensions that can help us solve practical problems.
-In this article, we shall analyze a few \em{payment flows}---protocols built on top of a ledger allowing clients to exchange tokens for a service---in the context of the \href{https://internetcomputer.org}{Internet Computer}.
+In this article, we shall analyze a few \emph{payment flows}---protocols built on top of a ledger allowing clients to exchange tokens for a service---in the context of the \href{https://internetcomputer.org}{Internet Computer}.
 
 \section{prerequisites}{Prerequisites}
 \subsection{the-payment-scenario}{The payment scenario}
@@ -30,11 +30,11 @@ In the rest of the article, we will fantasize about what the payment page can lo
 Each flow will involve the following participants:
 
 \begin{tabular*}{l l}
-\includegraphics[grayscale]{/images/10-me.png} & \em{Me}: a merry human sitting in front of a computer and ordering a new laptop. \\
-\includegraphics[grayscale]{/images/10-shop.png} & \em{Shop}: an Internet Computer smart contract accepting orders. \\
-\includegraphics[grayscale]{/images/10-webpage.png} & \em{Web page}: a spaghetti of markup, styling, and scripts serving the \em{shop} UI. \\
-\includegraphics[grayscale]{/images/10-wallet.png} & \em{Wallet}: a trusty hardware wallet device, such as \href{https://www.ledger.com/}{Ledger} or \href{https://trezor.io/}{Trezor}, with a corresponding UI for interacting with the ledger, such as \href{https://www.ledger.com/ledger-live}{Ledger Live}. A more sophisticated wallet can smoothen the UX, but the ideas remain the same. \\
-\includegraphics[grayscale]{/images/10-ledger.png} & \em{Ledger}: an Internet Computer smart contract processing payments. \\
+\includegraphics[grayscale]{/images/10-me.png} & \emph{Me}: a merry human sitting in front of a computer and ordering a new laptop. \\
+\includegraphics[grayscale]{/images/10-shop.png} & \emph{Shop}: an Internet Computer smart contract accepting orders. \\
+\includegraphics[grayscale]{/images/10-webpage.png} & \emph{Web page}: a spaghetti of markup, styling, and scripts serving the \emph{shop} UI. \\
+\includegraphics[grayscale]{/images/10-wallet.png} & \emph{Wallet}: a trusty hardware wallet device, such as \href{https://www.ledger.com/}{Ledger} or \href{https://trezor.io/}{Trezor}, with a corresponding UI for interacting with the ledger, such as \href{https://www.ledger.com/ledger-live}{Ledger Live}. A more sophisticated wallet can smoothen the UX, but the ideas remain the same. \\
+\includegraphics[grayscale]{/images/10-ledger.png} & \emph{Ledger}: an Internet Computer smart contract processing payments. \\
 \end{tabular*}
 
 \subsection{payment-phases}{Payment phases}
@@ -42,36 +42,36 @@ Each flow will involve the following participants:
 All the payment flows we will analyze have three phases:
 \begin{enumerate}
   \item 
-    \em{The negotiation phase}.
-    After I place my order and fill in the shipment details, the shop creates a unique order identifier, \em{Invoice ID}.
-    The \em{web page} displays the payment details (e.g., as a \sc{qr} code of the request I need to sign) and instructions on how to proceed with the order.
+    \emph{The negotiation phase}.
+    After I place my order and fill in the shipment details, the shop creates a unique order identifier, \emph{Invoice ID}.
+    The \emph{web page} displays the payment details (e.g., as a \sc{qr} code of the request I need to sign) and instructions on how to proceed with the order.
   \item 
-    \em{The payment phase}.
-    I use my \em{wallet} to execute the transaction as instructed on the \em{web page}.
+    \emph{The payment phase}.
+    I use my \emph{wallet} to execute the transaction as instructed on the \emph{web page}.
     This phase is essentially the same in all flows; only the transaction type varies.
   \item 
-    \em{The notification phase}.
+    \emph{The notification phase}.
     The shop receives a payment notification for the Invoice ID, validates the payment, and updates the order status.
-    The \em{web page} displays an upbeat message, completing the flow.
+    The \emph{web page} displays an upbeat message, completing the flow.
 \end{enumerate}
 
 \section{invoice-account}{Invoice account}
 
 The first payment flow we will analyze relies on the \href{/posts/09-fungible-tokens-101.html#subaccounts}{subaccounts} ledger feature.
-The idea behind the flow is quite clever: the shop can use its subaccount identified by the \em{Invoice ID} as a temporary ``cell'' for the payment.
+The idea behind the flow is quite clever: the shop can use its subaccount identified by the \emph{Invoice ID} as a temporary ``cell'' for the payment.
 I can transfer my tokens to this cell, and the shop can move tokens out because the cell belongs to the shop.
 
 The happy case of the flow needs only one primitive from the ledger, the \code{transfer} method specified below.
 
 \begin{code}[candid]
 service : {
-  \em{// Transfers token \b{amount} from the account of the (implicit) \b{caller}}
-  \em{// to the account specified by the principal and the subaccount.}
-  \em{// Arguments:}
-  \em{//   \b{amount} - the token amount to transfer.}
-  \em{//   \b{from_subaccount} - the subaccount of the caller to transfer tokens from.}
-  \em{//   \b{to} - the receiver of the tokens.}
-  \em{//   \b{to_subaccount} - which subaccount of the receiver the tokens will land on.}
+  \emph{// Transfers token \b{amount} from the account of the (implicit) \b{caller}}
+  \emph{// to the account specified by the principal and the subaccount.}
+  \emph{// Arguments:}
+  \emph{//   \b{amount} - the token amount to transfer.}
+  \emph{//   \b{from_subaccount} - the subaccount of the caller to transfer tokens from.}
+  \emph{//   \b{to} - the receiver of the tokens.}
+  \emph{//   \b{to_subaccount} - which subaccount of the receiver the tokens will land on.}
   \b{transfer}(record {
     amount : nat;
     from_subaccount : opt blob;
@@ -84,12 +84,12 @@ service : {
 The flow proceeds as follows:
 \begin{enumerate}
   \item 
-    In the negotiation phase, the webpage instructs me to transfer tokens to the shop's \em{Invoice ID} subaccount and displays a big green ``Done'' button that I need to press after the payment succeeds.
+    In the negotiation phase, the webpage instructs me to transfer tokens to the shop's \emph{Invoice ID} subaccount and displays a big green ``Done'' button that I need to press after the payment succeeds.
   \item 
     In the payment phase, I use my wallet to execute the \code{transfer(\{ amount = Price, to = Shop, to_subaccount = InvoiceId\})} call on the ledger.
   \item 
-    In the notification phase, I click on the ``Done'' button dispatching a notification to the \em{shop} indicating that I paid the invoice (the webpage can remember the \em{Invoice ID} on the client side, so I do not have to type it in).
-    Upon receiving the notification, the shop attempts to transfer the amount from its \em{Invoice ID} subaccount to its default account, calling \code{transfer(\{ amount = Price - Fee, from_subaccount = InvoiceID, to = Shop \})} on the ledger.
+    In the notification phase, I click on the ``Done'' button dispatching a notification to the \emph{shop} indicating that I paid the invoice (the webpage can remember the \emph{Invoice ID} on the client side, so I do not have to type it in).
+    Upon receiving the notification, the shop attempts to transfer the amount from its \emph{Invoice ID} subaccount to its default account, calling \code{transfer(\{ amount = Price - Fee, from_subaccount = InvoiceID, to = Shop \})} on the ledger.
     If that final transfer succeeds, the order is complete.
 \end{enumerate}
 
@@ -103,7 +103,7 @@ The flow proceeds as follows:
 The invoice account flow has a few interesting properties:
 \begin{itemize}
   \item The ledger must process at least two messages: one transfer from me and another from the shop.
-  \item Two transfers mean that the ledger charges \em{two} fees for each flow: one from me and another from the shop.
+  \item Two transfers mean that the ledger charges \emph{two} fees for each flow: one from me and another from the shop.
   \item 
     The ledger needs to remember one additional \code{(principal, subaccount, amount)} tuple for the duration of the flow.
     The tuple occupies at least 70 bytes.
@@ -122,35 +122,35 @@ One strategy that the shop could use to improve the user experience in such case
 The approve-transfer-from pattern relies on the \href{/posts/09-fungible-tokens-101.html#approvals}{approvals} ledger feature, first appearing in the \href{https://ethereum.org/en/developers/docs/standards/tokens/erc-20/}{ERC-20} token standard.
 The flow uses two new ledger primitives, \code{approve} and \code{transfer_from}, and involves three parties:
 \begin{enumerate}
-  \item The \em{owner} holds tokens on the ledger. The owner can \em{approve} transfers from its account to a \em{delegate}.
-  \item The \em{delegate} can \em{transfer} tokens \em{from} the owner's account within the approved cap.
-  \item The \em{beneficiary} receives tokens from the delegate as if the owner sent them.
+  \item The \emph{owner} holds tokens on the ledger. The owner can \emph{approve} transfers from its account to a \emph{delegate}.
+  \item The \emph{delegate} can \emph{transfer} tokens \emph{from} the owner's account within the approved cap.
+  \item The \emph{beneficiary} receives tokens from the delegate as if the owner sent them.
 \end{enumerate}
 
-In our \href{#payment-scenario}{scenario}, the delegate and the beneficiary are the same entity---the \em{shop}.
+In our \href{#payment-scenario}{scenario}, the delegate and the beneficiary are the same entity---the \emph{shop}.
 
 We can capture the required ledger primitives in the following Candid interface:
 \begin{code}[candid]
 service : {
-  \em{// Entitles the \b{delegate} to spend at most the specified token \b{amount} on behalf}
-  \em{// of the (implicit) \b{caller}.}
-  \em{// Arguments:}
-  \em{//   \b{amount} - the cap on the amount the delegate can transfer from the caller's account.}
-  \em{//   \b{delegate} - the actor entitled to make payments on behalf of the caller.}
+  \emph{// Entitles the \b{delegate} to spend at most the specified token \b{amount} on behalf}
+  \emph{// of the (implicit) \b{caller}.}
+  \emph{// Arguments:}
+  \emph{//   \b{amount} - the cap on the amount the delegate can transfer from the caller's account.}
+  \emph{//   \b{delegate} - the actor entitled to make payments on behalf of the caller.}
   \b{approve}(record {
     amount : nat;
     delegate : principal;
   }) -> ();
 
-  \em{// Transfers the specified token \b{amount} from the \b{owner} account to the}
-  \em{// specified account.}
-  \em{// Arguments:}
-  \em{//   \b{amount} - the token amount to transfer.}
-  \em{//   \b{owner} - the account to transfer tokens from.}
-  \em{//   \b{to} - the receiver of the tokens (the beneficiary).}
-  \em{//}
-  \em{// PRECONDITION: the \b{owner} has approved at least the \b{amount} to the (implicit) \b{caller}.}
-  \em{// POSTCONDITION: the caller's allowance decreases by the \b{amount}.}
+  \emph{// Transfers the specified token \b{amount} from the \b{owner} account to the}
+  \emph{// specified account.}
+  \emph{// Arguments:}
+  \emph{//   \b{amount} - the token amount to transfer.}
+  \emph{//   \b{owner} - the account to transfer tokens from.}
+  \emph{//   \b{to} - the receiver of the tokens (the beneficiary).}
+  \emph{//}
+  \emph{// PRECONDITION: the \b{owner} has approved at least the \b{amount} to the (implicit) \b{caller}.}
+  \emph{// POSTCONDITION: the caller's allowance decreases by the \b{amount}.}
   \b{transfer_from}(record {
     amount : nat;
     owner : principal;
@@ -168,7 +168,7 @@ The flow proceeds as follows:
   \item In the payment phase, I use my wallet to execute the \code{approve(\{to = Shop, amount = Price\})} call on the ledger.
   \item 
     In the notification phase, I paste my ledger address into the text field and press the button.
-    Once the shop receives the notification with my address and the \em{Invoice ID}, it executes \code{transfer_from(\{ amount = Price; owner = Wallet; to = Shop \})} call on the ledger.
+    Once the shop receives the notification with my address and the \emph{Invoice ID}, it executes \code{transfer_from(\{ amount = Price; owner = Wallet; to = Shop \})} call on the ledger.
     If that transfer is successful, the order is complete.
 \end{enumerate}
 
@@ -182,7 +182,7 @@ The flow proceeds as follows:
 Let us see how this flow compares to the \href{#invoice-account}{invoice account} flow:
 \begin{itemize}
   \item The ledger must process at least two messages: approval from the owner and a transfer from the shop.
-  \item The ledger charges \em{two} fees for each payment: one for my approval and another for the shop's transfer.
+  \item The ledger charges \emph{two} fees for each payment: one for my approval and another for the shop's transfer.
   \item 
     The ledger needs to remember one additional \code{(principal, principal, amount)} tuple for the duration of the flow.
     The tuple occupies at least 68 bytes.
@@ -205,19 +205,19 @@ What if the ledger automatically delivered the notification to the receiver over
 That is the idea behind the transfer-notify flow.
 
 There is one issue we need to sort out, however.
-When we relied on the webpage to send the notification, we could include the \em{Invoice ID} into the payload, making it possible for the shop to identify the relevant order.
-If we ask the ledger to send the payment notification, we must pass the \em{Invoice ID} in that message.
+When we relied on the webpage to send the notification, we could include the \emph{Invoice ID} into the payload, making it possible for the shop to identify the relevant order.
+If we ask the ledger to send the payment notification, we must pass the \emph{Invoice ID} in that message.
 The common way to address this issue is to add the \code{memo} argument to the transfer arguments, allowing the caller to attach an arbitrary payload to the transaction details.
 
 \begin{code}[candid]
 service : {
-  \em{// Transfers token \b{amount} from the account of the (implicit) \b{caller}}
-  \em{// to the account specified by the principal.}
-  \em{// If the transfer is successful, sends a notification to the receiver.}
-  \em{// Arguments:}
-  \em{//   \b{amount} - the token amount to transfer.}
-  \em{//   \b{to} - the receiver of the tokens.}
-  \em{//   \b{memo} - an opaque identifier attached to the notification.}
+  \emph{// Transfers token \b{amount} from the account of the (implicit) \b{caller}}
+  \emph{// to the account specified by the principal.}
+  \emph{// If the transfer is successful, sends a notification to the receiver.}
+  \emph{// Arguments:}
+  \emph{//   \b{amount} - the token amount to transfer.}
+  \emph{//   \b{to} - the receiver of the tokens.}
+  \emph{//   \b{memo} - an opaque identifier attached to the notification.}
   \b{transfer_notify}(record {
     amount : nat;
     to : principal;
@@ -231,7 +231,7 @@ The flow proceeds as follows:
   \item In the negotiation phase, the webpage displays the payment details and starts polling the shop for payment confirmation.
   \item In the payment phase, I use my wallet to execute the \code{transfer_notify(\{to = Shop, amount = Price, memo = InvoiceID\})} call on the ledger.
   \item 
-    Once the transfer succeeds, the ledger notifies the shop about the payment, providing the amount and the \code{memo} containing the \em{Invoice ID}.
+    Once the transfer succeeds, the ledger notifies the shop about the payment, providing the amount and the \code{memo} containing the \emph{Invoice ID}.
     The shop consumes the notification and changes the order status.
     The next time the webpage polls the shop, the shop replies with a confirmation, and I see a positive message.
 \end{enumerate}
@@ -265,29 +265,29 @@ Let us check how this flow compares to the previous ones:
 \section{transfer-notify}{Transfer-fetch}
 
 The transfer-fetch flow relies on the ability to request details of past transactions from the ledger.
-After I transfer tokens to the shop, specifying the \em{Invoice ID} as the transaction memo, the ledger issues a unique transaction identifier.
+After I transfer tokens to the shop, specifying the \emph{Invoice ID} as the transaction memo, the ledger issues a unique transaction identifier.
 I can then pass this identifier to the shop as proof of my payment.
 The shop can fetch transaction details directly from the ledger to validate the payment.
 Below is the interface we expect from the ledger.
 
 \begin{code}[candid]
 service : {
-  \em{// Transfers token \b{amount} from the account of the (implicit) \b{caller}}
-  \em{// to the account specified by the principal.}
-  \em{// Returns a unique transaction identifier.}
-  \em{// Arguments:}
-  \em{//   \b{amount} - the token amount to transfer.}
-  \em{//   \b{to} - the receiver of the tokens.}
-  \em{//   \b{memo} - an opaque identifier attached to the transaction.}
+  \emph{// Transfers token \b{amount} from the account of the (implicit) \b{caller}}
+  \emph{// to the account specified by the principal.}
+  \emph{// Returns a unique transaction identifier.}
+  \emph{// Arguments:}
+  \emph{//   \b{amount} - the token amount to transfer.}
+  \emph{//   \b{to} - the receiver of the tokens.}
+  \emph{//   \b{memo} - an opaque identifier attached to the transaction.}
   \b{transfer}(record {
     amount : nat;
     to : principal;
     memo : opt blob;
   }) -> (nat);
 
-  \em{// Retrieves details of the transaction with the specified identifier.}
-  \em{// Arguments:}
-  \em{//   \b{txid} - a unique transaction identifier.}
+  \emph{// Retrieves details of the transaction with the specified identifier.}
+  \emph{// Arguments:}
+  \emph{//   \b{txid} - a unique transaction identifier.}
   \b{fetch}(txid : nat) -> (opt record {
     from : principal;
     to : principal;

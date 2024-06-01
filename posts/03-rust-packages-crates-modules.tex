@@ -20,7 +20,7 @@ This article evaluates Rust code organization options and suggests ways to use t
 
 \section{personae}{Dramatis Personae}
 
-Rust terminology proved to be confusing because the term \em{crate} is overloaded.
+Rust terminology proved to be confusing because the term \emph{crate} is overloaded.
 For example, the first edition of the venerable \href{https://doc.rust-lang.org/1.25.0/book/}{The Rust Programming Language} book contained the following misleading passage
 
 \blockquote{
@@ -74,7 +74,7 @@ In the ideal world where Rust compiles instantly, turning the repository into a 
 The bitter reality is that Rust takes quite some time to compile, and modules don't help you shorten the compilation time:
 \begin{itemize}
 \item 
-  The basic unit of compilation is a \em{crate}, not a \em{module}.
+  The basic unit of compilation is a \emph{crate}, not a \emph{module}.
   You must recompile all the modules in a crate even if you change only one.
   The more code you put in a crate, the longer it takes to compile.
 \item 
@@ -98,7 +98,7 @@ There are two types of dependency hubs:
   (proptest strategies, mock and fake component implementations, helper functions, etc.),
   and the \code{replica} package instantiating all the components.
 \item 
-  Packages with lots of \em{reverse dependencies}.
+  Packages with lots of \emph{reverse dependencies}.
   Examples from the IC codebase are the \code{types} package containing common type definitions and the \code{interfaces} package specifying component interfaces.
 \end{itemize}
 
@@ -112,7 +112,7 @@ If you modify a package with many reverse dependencies (e.g., \code{types}), car
 
 Sometimes it is possible to eliminate a dependency hub.
 For example, the \code{test-utils} package is a union of independent utilities.
-We can group these utilities by the component they help to test and factor the code into multiple \code{\em{<component>}-test-utils} packages.
+We can group these utilities by the component they help to test and factor the code into multiple \code{\emph{<component>}-test-utils} packages.
 
 More often, however, dependency hubs will have to stay.
 Some types from \code{types} are pervasive.
@@ -147,7 +147,7 @@ When we need to break a circular dependency, we can move common definitions into
 The \code{replicated_state} package is heavy; we didn't want to merge its contents with \code{interfaces}.
 So we took the first option and moved the types shared between \code{interfaces} and \code{replicated_state} into the \code{types} package.
 
-One property of trait definitions in the \code{interfaces} package is that the traits depend only on the \code{ReplicatedState} type \em{name}.
+One property of trait definitions in the \code{interfaces} package is that the traits depend only on the \code{ReplicatedState} type \emph{name}.
 The traits do not need to know \code{ReplicatedState}'s definition.
 
 \begin{figure}
@@ -214,7 +214,7 @@ One of the most common questions new developers ask on the dev channel is ``Why 
 What a great question.
 I would ask the same thing in 2019!
 
-Global variables are \href{http://wiki.c2.com/?GlobalVariablesAreBad}{\em{bad}}, but my previous experience suggested that loggers and metric sinks are special.
+Global variables are \href{http://wiki.c2.com/?GlobalVariablesAreBad}{\emph{bad}}, but my previous experience suggested that loggers and metric sinks are special.
 Oh well, they aren't, after all.
 
 The usual problems with implicit state dependencies are especially prominent in Rust.
@@ -230,7 +230,7 @@ The usual problems with implicit state dependencies are especially prominent in 
   Explicitly passing loggers eliminates that problem.
 \item 
   Testing code relying on an implicit state often becomes hard or impossible in a multi-threaded environment.
-  The code recording your metrics is, well, \em{code}.
+  The code recording your metrics is, well, \emph{code}.
   It also deserves to be tested.
 \item 
   If you use a library relying on implicit state, you can introduce subtle bugs if you depend on incompatible library versions in different packages.
@@ -246,7 +246,7 @@ One day, we discovered a bug: we could not see metrics from some of our componen
 Our code seemed correct, yet the metrics were missing.
 
 One of the packages depended on prometheus version \code{0.9}, while all other packages used \code{0.10}.
-According to \href{https://semver.org/}{semver}, these versions are incompatible, so cargo linked both versions into the binary, introducing \em{two} implicit registries.
+According to \href{https://semver.org/}{semver}, these versions are incompatible, so cargo linked both versions into the binary, introducing \emph{two} implicit registries.
 We exposed only the \code{0.10} version registry over the HTTP interface.
 As you correctly guessed, the missing components recorded metrics to the \code{0.9} registry.
 
@@ -379,12 +379,12 @@ error[E0432]: unresolved imports `crate::Image`, `crate::transform_image`
 
 
 Oh, how is that?
-Aren't \code{lib.rs} and \code{transmogrify.rs} in the same \em{crate}?
+Aren't \code{lib.rs} and \code{transmogrify.rs} in the same \emph{crate}?
 No, they are not.
-The \code{image-magic} \em{package} defines two \em{crates}: a \em{library crate} named \code{image_magic} (note that cargo replaced the dash in the package name with an underscore) and a \em{binary crate} named \code{transmogrify}.
+The \code{image-magic} \emph{package} defines two \emph{crates}: a \emph{library crate} named \code{image_magic} (note that cargo replaced the dash in the package name with an underscore) and a \emph{binary crate} named \code{transmogrify}.
 
 So when you write \code{use crate::Image} in \code{transmogrify.rs}, you tell the compiler to look for the type defined in the same binary.
-The \code{image_magic} \em{crate} is just as external to \code{transmogrify} as any other library would be, so we have to specify the library name in the use declaration:
+The \code{image_magic} \emph{crate} is just as external to \code{transmogrify} as any other library would be, so we have to specify the library name in the use declaration:
 
 \begin{figure}
 \begin{code}[good]
@@ -410,10 +410,10 @@ For example:
    Cargo uses this profile when you run \code{cargo build}.
  }
  \term{test}{
-   Mostly the same as the \em{dev} profile.
+   Mostly the same as the \emph{dev} profile.
    When you test a library crate, cargo builds the library with the \code{test} profile and injects the main function executing the test harness.
    This profile is enabled when you run \code{cargo test}.
-   Cargo builds dependencies of the crate under test using the \em{dev} profile.
+   Cargo builds dependencies of the crate under test using the \emph{dev} profile.
  }
 \end{description}
 
@@ -457,7 +457,7 @@ foo = { path = "../foo" }
 Wait, didn't we create a dependency cycle?
 \code{foo} depends on \code{foo-test-utils} that depends on \code{foo}, right?
 
-There is no circular dependency because cargo compiles \code{foo} twice: once with \em{dev} profile to link with \code{foo-test-utils} and once with \em{test} profile to add the test harness.
+There is no circular dependency because cargo compiles \code{foo} twice: once with \emph{dev} profile to link with \code{foo-test-utils} and once with \emph{test} profile to add the test harness.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-dep-foo}{Dependency diagram for \code{foo} library test.}
@@ -521,7 +521,7 @@ error[E0308]: mismatched types
 \end{figure}
 
 What could that mean?
-The compiler tells us that type definitions in the \em{test} and the \em{dev} versions of \code{foo} are incompatible.
+The compiler tells us that type definitions in the \emph{test} and the \emph{dev} versions of \code{foo} are incompatible.
 Technically, these are different, incompatible crates even though these crates share the name.
 
 The way out of trouble is to define a separate integration test crate in the \code{foo} package and move the tests there.
@@ -538,7 +538,7 @@ fn test_foo_frobnication() {
 \end{code}
 \end{figure}
 
-The test above compiles fine because cargo links the test and \code{foo_test_utils} with the \em{dev} version of \code{foo}.
+The test above compiles fine because cargo links the test and \code{foo_test_utils} with the \emph{dev} version of \code{foo}.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-foo-test-dep-diag}{Dependency diagram for \code{foo_test} integration test.}

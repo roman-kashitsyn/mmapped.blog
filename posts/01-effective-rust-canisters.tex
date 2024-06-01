@@ -105,8 +105,8 @@ The undesired mutation might happen deep in the function call stack.
 The issue can stay undetected until your canister is in active use, storing (and corrupting) user data.
 If we used a \code{RefCell}, the code would panic before we shipped it.
 
-It should now be clear \em{how} to declare global variables.
-Let us discuss \em{where} to put them.
+It should now be clear \emph{how} to declare global variables.
+Let us discuss \emph{where} to put them.
 
 \advice{clear-state}{Put all your globals in one basket.}
 
@@ -132,10 +132,10 @@ thread_local! {
 I borrowed \href{https://sdk.dfinity.org/docs/language-guide/upgrades.html#_declaring_stable_variables}{Motoko terminology} here:
 \begin{enumerate}
   \item 
-    The system preserves \em{stable} variables across upgrades.
+    The system preserves \emph{stable} variables across upgrades.
     For example, a user database should probably be stable.
   \item 
-    The system discards \em{flexible} variables on code upgrades.
+    The system discards \emph{flexible} variables on code upgrades.
     For example, you can make a cache flexible if it is not crucial for your canister.
 \end{enumerate}
 
@@ -405,7 +405,7 @@ The first step towards an optimized system is profiling.
 
 \advice{instruction-counter}{Measure the number of instructions your endpoints consume.}
 
-The \href{https://docs.rs/ic-cdk/0.5.3/ic_cdk/api/fn.instruction_counter.html}{\code{instruction_counter}} API will tell you the number of \em{instructions} your code consumed since the last \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#entry-points}{entry point}.
+The \href{https://docs.rs/ic-cdk/0.5.3/ic_cdk/api/fn.instruction_counter.html}{\code{instruction_counter}} API will tell you the number of \emph{instructions} your code consumed since the last \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#entry-points}{entry point}.
 Instructions are the internal currency of the IC runtime.
 One IC instruction is the \href{https://en.wikipedia.org/wiki/Quantum}{quantum} of work that the system can do, such as loading a 32-bit integer from a memory address.
 The system assigns an instruction cost equivalent to each \href{https://sourcegraph.com/github.com/dfinity/ic@cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156/-/blob/rs/embedders/src/wasm_utils/instrumentation.rs?L155-177}{WebAssembly instruction} and \href{https://sourcegraph.com/github.com/dfinity/ic@cfdbbf5/-/blob/rs/embedders/src/wasmtime_embedder/system_api_complexity.rs?L40-107}{system call}.
@@ -432,7 +432,7 @@ async fn transfer(from: Account, to: Account, amount: Nat) -> Result<TxId, Error
   let tx = apply_transfer(from, to, amount)?;
   let tx_id = archive_transaction(tx).\b{await}?;
 
-  \em{// \b{BAD}: the await point above resets the instruction counter.}
+  \emph{// \b{BAD}: the await point above resets the instruction counter.}
   let end = ic_cdk::api::instruction_counter();
   record_measurement(end - start);
 
@@ -454,7 +454,7 @@ The \code{HttpResponse} from the canister http protocol is a good example.
 struct HttpResponse {
     status_code: u16,
     headers: Vec<(String, String)>,
-    \em{// \b{BAD}: inefficient}
+    \emph{// \b{BAD}: inefficient}
     body: Vec<u8>,
 }
 \end{code}
@@ -466,7 +466,7 @@ The \code{body} field can be large; let us tell serde to encode this field more 
 struct HttpResponse {
     status_code: u16,
     headers: Vec<(String, String)>,
-    \em{// \b{OK}: encoded efficiently}
+    \emph{// \b{OK}: encoded efficiently}
     #[serde(with = "serde_bytes")]
     body: Vec<u8>,
 }
@@ -479,7 +479,7 @@ Alternatively, we can use the \href{https://docs.serde.rs/serde_bytes/struct.Byt
 struct HttpResponse {
     status_code: u16,
     headers: Vec<(String, String)>,
-    \em{// \b{OK}: also efficient}
+    \emph{// \b{OK}: also efficient}
     body: serde_bytes::ByteBuf,
 }
 \end{code}
@@ -537,7 +537,7 @@ struct HttpResponse {
 
 #[query]
 fn http_request(_request: HttpRequest) -> HttpResponse {
-    \em{// \b{NOTE}: we are making a full copy of the asset.}
+    \emph{// \b{NOTE}: we are making a full copy of the asset.}
     let body = ASSET.with(|cell| cell.borrow().clone());
 
     HttpResponse {
@@ -619,7 +619,7 @@ You should prefer the reference-counting approach unless you have to work with d
 I experimented with a one-megabyte asset and measured that the original code relying on a deep copy consumed 16 million instructions.
 At the same time, versions with reference counting and explicit lifetimes needed only 12 million instructions\sidenote{sn-candid-copy}{
   The 25\% improvement shows that our code does little but copy bytes.
-  The code did at least \em{three} copies: \circled{1} from a \code{thread_local} to an \code{HttpResponse}, \circled{2} from the \code{HttpResponse} to candid's \href{https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L28}{value buffer}, and \circled{3} from candid's \href{https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L61}{value buffer} to the call's \href{https://sourcegraph.com/github.com/dfinity/cdk-rs@39cd49a3b2ca6736d7c3d3bf3605e567302825b7/-/blob/src/ic-cdk/src/api/call.rs?L481-500}{argument buffer}.
+  The code did at least \emph{three} copies: \circled{1} from a \code{thread_local} to an \code{HttpResponse}, \circled{2} from the \code{HttpResponse} to candid's \href{https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L28}{value buffer}, and \circled{3} from candid's \href{https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L61}{value buffer} to the call's \href{https://sourcegraph.com/github.com/dfinity/cdk-rs@39cd49a3b2ca6736d7c3d3bf3605e567302825b7/-/blob/src/ic-cdk/src/api/call.rs?L481-500}{argument buffer}.
   We removed ⅓ of copies and got ¼ improvement in instruction consumption.
   So only ¼ of our instructions contributed to work unrelated to copying the asset's byte array.
 }.
@@ -673,7 +673,7 @@ Sometimes changing the design of your code or switching a library can significan
 As with any optimization process, you need a profiler to guide your experiments.
 The \href{https://rustwasm.github.io/twiggy/}{\code{twiggy}}\sidenote{sn-twiggy-order}{
   \code{twiggy} needs debug info to display function names.
-  Run it \em{before} you shrink your module with \code{ic-wasm}.
+  Run it \emph{before} you shrink your module with \code{ic-wasm}.
 } tool is excellent for finding the largest functions in your WebAssembly modules.
 
 \begin{figure}
@@ -764,7 +764,7 @@ As soon as you deploy your canister to the mainnet, the only way to ship new cod
 You can view stable memory as a communication channel between your canister's old and new versions.
 All proper communication protocols have a version.
 One day, you might want to change the stable data layout or serialization format radically.
-The code becomes messy and brittle if the stable memory decoding procedure needs to \em{guess} the data format.
+The code becomes messy and brittle if the stable memory decoding procedure needs to \emph{guess} the data format.
 
 Save your nerve cells and think about versioning in advance.
 It is as easy as declaring, ``the first byte of my stable memory is the version number.''

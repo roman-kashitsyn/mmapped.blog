@@ -17,7 +17,7 @@ We shall take a close look at some design choices that make the IC fast, scalabl
 \section{state-machine}{The state machine}
 
 Before we dive into the internals of the protocol, let's first define the \href{https://en.wikipedia.org/wiki/Finite-state_machine}{state machine} that we'll be dealing with.
-Nodes participating in the Internet Computer are grouped into units called \em{subnet blockchains}, or simply \em{subnets}.
+Nodes participating in the Internet Computer are grouped into units called \emph{subnet blockchains}, or simply \emph{subnets}.
 Nodes in the same subnet run their own instance of the core Internet Computer Protocol (i.e., they form an independent peer-to-peer network and reach consensus independently from other subnets).
 We'll model as a state machine the computation that nodes in the same subnet perform.
 
@@ -28,7 +28,7 @@ Let's play by the book and define components of our state machine:
   These blocks are the inputs of our state machine.
 }
 \term{Outputs}{
-    In our model, the main artifact of the execution is a data structure called \em{state tree}.
+    In our model, the main artifact of the execution is a data structure called \emph{state tree}.
     We'll learn more about state trees in a moment.}
 \term{States}{
   The single most important thing that the Internet Computer does is hosting canisters.
@@ -48,7 +48,7 @@ Let's play by the book and define components of our state machine:
   \item Executes the messages on the selected canisters and records the execution results.
   \end{itemize}
   All of the above modifies the data structure that we call ``state'' and acts as a transition function.
-  Note that we can call this procedure a \em{function} only if it's deterministic: given the same block and the same original state, the replica will modify the state in exactly the same way.
+  Note that we can call this procedure a \emph{function} only if it's deterministic: given the same block and the same original state, the replica will modify the state in exactly the same way.
   Thanks to the careful design of execution algorithms and guarantees that WebAssembly provides, the procedure is indeed deterministic.
 }
 \term{Output function}{
@@ -62,7 +62,7 @@ Let's play by the book and define components of our state machine:
 }
 \end{description}
 
-I call these state machines (one for each subnet) \em{replicated} because each honest node on a subnet has an exact copy of the machine.
+I call these state machines (one for each subnet) \emph{replicated} because each honest node on a subnet has an exact copy of the machine.
 
 \subsection{checkpoints}{Checkpoints}
 
@@ -70,14 +70,14 @@ Let's say we want to add a new node to an existing subnet because a flood destro
 This new node cannot start processing and proposing new blocks until it has the right state, the state that results from execution of all the blocks produced by this subnet so far.
 
 One way to bring the node up to date is to download all those blocks and ``replay'' them.
-This sounds simple, but if the rate of change is high and message execution is costly, the new node might need a \em{lot} of time to catch up.
+This sounds simple, but if the rate of change is high and message execution is costly, the new node might need a \emph{lot} of time to catch up.
 As the Red Queen put it: ``My dear, here we must run as fast as we can, just to stay in place.
 And if you wish to go anywhere you must run twice as fast as that.''
 
 Another solution is to create persistent snapshots of the state from time to time.
 The peers can fetch and load those snapshots when they need help.
 This method works really well for our state machine: it reduces the catch up time from days to minutes.
-Let's call those persistent snapshots \em{checkpoints}.
+Let's call those persistent snapshots \emph{checkpoints}.
 
 \begin{figure}[grayscale-diagram]
 \marginnote{sm-components}{Components of the state machine: blocks as inputs, states, state trees as outputs, and checkpoints.}
@@ -149,13 +149,13 @@ If a replica was out for a brief period of time, it can use its own checkpoint t
 Load the checkpoint, replay a few blocks, and you're ready to rock.
 There is a more interesting case, however: a healthy replica can help other replicas catch up by sending them a recent checkpoint.
 
-Replicas in a subnet communicate by exchanging \em{artifacts} using a peer-to-peer protocol.
+Replicas in a subnet communicate by exchanging \emph{artifacts} using a peer-to-peer protocol.
 Most of these artifacts (e.g., user ingress messages, random beacons, state certifications) are relatively small, up to a few megabytes in size.
 But the machinery for artifact transfer is quite general: the protocol supports fetching arbitrary large artifacts by slicing them into chunks, provided that there is a way to authenticate each chunk independently.
 Furthermore, multiple chunks can be fetched in parallel from multiple peers.
 Sounds a lot like \href{https://en.wikipedia.org/wiki/BitTorrent}{BitTorrent}, isn't it?
 
-Before advertising a checkpoint, replica computes a \em{manifest} for that checkpoint.
+Before advertising a checkpoint, replica computes a \emph{manifest} for that checkpoint.
 Manifest is an inventory of files constituting a checkpoint.
 Files are sliced into chunks, and the manifest enumerates paths, sizes and cryptographic hashes of every file and every chunk of each file.
 In our BitTorrent analogy, manifest plays a role of a \href{https://en.wikipedia.org/wiki/Torrent_file}{.torrent file}.
@@ -177,7 +177,7 @@ How does our poor replica decide which state it needs to fetch?
 As you might have guessed, the consensus subsystem armed with \href{https://en.wikipedia.org/wiki/Threshold_cryptosystem}{threshold signatures} comes to the rescue again.
 Replicas gather a threshold signature on a full state hash and use that signature as a proof of checkpoint authenticity.
 The result is an artifact containing a state height, a full state hash, and a threshold signature.
-We'll call this artifact a \em{catch-up package}.
+We'll call this artifact a \emph{catch-up package}.
 
 The interaction between the replica consensus module and the state machine is something like the following
 \begin{enumerate}

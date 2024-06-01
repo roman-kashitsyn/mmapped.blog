@@ -49,7 +49,7 @@ var (
 	SymBold            = BuiltinCmd("b", ArgTypeSeq)
 	SymUnderline       = BuiltinCmd("u", ArgTypeSeq)
 	SymNormal          = BuiltinCmd("normal", ArgTypeSeq)
-	SymEmphasis        = BuiltinCmd("em", ArgTypeSeq)
+	SymEmphasis        = BuiltinCmd("emph", ArgTypeSeq)
 	SymSmallCaps       = BuiltinCmd("sc", ArgTypeSeq)
 	SymCircled         = BuiltinCmd("circled", ArgTypeNum)
 	SymCode            = BuiltinCmd("code", ArgTypeSeq)

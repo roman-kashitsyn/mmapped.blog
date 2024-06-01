@@ -12,7 +12,7 @@
 \section{introduction}{Introduction}
 
 If I had to pick my favorite \href{https://www.rust-lang.org/}{Rust language} feature, that would be its systematic approach to error handling.
-Sum types, generics (such as \href{https://doc.rust-lang.org/std/result/enum.Result.html}{\code{Result<T, E>}}), and a holistic standard library design perfectly\sidenote{sn-polimorphic-variants}{\em{Almost} perfectly: I miss \href{https://dev.realworldocaml.org/variants.html#scrollNav-4}{polymorphic variants} badly.} match my obsession with edge cases.
+Sum types, generics (such as \href{https://doc.rust-lang.org/std/result/enum.Result.html}{\code{Result<T, E>}}), and a holistic standard library design perfectly\sidenote{sn-polimorphic-variants}{\emph{Almost} perfectly: I miss \href{https://dev.realworldocaml.org/variants.html#scrollNav-4}{polymorphic variants} badly.} match my obsession with edge cases.
 Rust error handling is so good that even \href{https://haskell.org/}{Haskell} looks bleak and woefully unsafe\sidenote{sn-haskell-exceptions}{
   Haskell can replicate Rust's approach to error handling, but the standard library chose the route of runtime exceptions, and \href{https://www.fpcomplete.com/haskell/tutorial/exceptions/}{practitioners} followed the lead.
 }.
@@ -75,7 +75,7 @@ pub enum ProjectWideError {
   DatabaseConnectionError,
   Unauthorized,
   FileNotFound,
-  \em{// \ldots }
+  \emph{// \ldots }
 }
 
 pub fn frobnicate(n: u64) -> Result<String, ProjectWideError> { /* \ldots  */ }
@@ -84,7 +84,7 @@ pub fn frobnicate(n: u64) -> Result<String, ProjectWideError> { /* \ldots  */ }
 
 These approaches might work fine for you, but I found them unsatisfactory for library design\sidenote{sn-anyhow}{
   However, I often use the \code{anyhow} approach to simplify structuring errors in command-line tools and daemons.
-} in the long run: they facilitate \em{propagating} errors (often with little context about the operation that caused the error), not \em{handling} errors.
+} in the long run: they facilitate \emph{propagating} errors (often with little context about the operation that caused the error), not \emph{handling} errors.
 
 When it comes to interface clarity and simplicity, nothing beats \href{https://en.wikipedia.org/wiki/Algebraic_data_type}{algebraic data types} (\sc{adt}s).
 Let us use the power of \sc{adt}s to fix the \code{frobnicate} function interface.
@@ -95,9 +95,9 @@ Let us use the power of \sc{adt}s to fix the \code{frobnicate} function interfac
 }
 \begin{code}[good]
 pub enum FrobnicateError {
-  \em{/// Frobnicate does not accept inputs above this number.}
+  \emph{/// Frobnicate does not accept inputs above this number.}
   InputExceeds(u64),
-  \em{/// Frobnicate cannot work on mondays. Court order.}
+  \emph{/// Frobnicate cannot work on mondays. Court order.}
   CannotFrobnicateOnMondays,
 }
 
@@ -106,7 +106,7 @@ pub fn frobnicate(n: u64) -> Result<String, FrobnicateError> { /* \ldots  */ }
 \end{figure}
 
 
-Now the type system tells the readers what exactly can go wrong, making \em{handling} the errors a breeze.
+Now the type system tells the readers what exactly can go wrong, making \emph{handling} the errors a breeze.
 
 You might think, ``I will never finish my project if I define a new enum for each function that can fail.''
 In my experience, expressing failures using the type system takes less work than documenting all the quirks of the interface.
@@ -149,7 +149,7 @@ Use the type system to guide them.
   A library function relying on documentation to specify correct inputs.
 }
 \begin{code}[bad]
-\em{/// Frobnicates an integer.
+\emph{/// Frobnicates an integer.
 ///
 /// \b{# Panics}
 ///
@@ -160,7 +160,7 @@ pub fn frobnicate(n: u64) -> String { /* \ldots  */ }
 \end{code}
 \end{figure}
 
-Feel free to use panics and assertions to check invariants that must hold in \em{your} code.
+Feel free to use panics and assertions to check invariants that must hold in \emph{your} code.
 
 \begin{figure}
 \marginnote{mn-panic-doc}{
@@ -191,9 +191,9 @@ Let us consider the following interface of a function that sends an email.
 }
 \begin{code}[bad]
 pub enum SendMailError {
-  \em{/// One of the addresses passed to \code{send_mail} is invalid.}
+  \emph{/// One of the addresses passed to \code{send_mail} is invalid.}
   \b{MalformedAddress} { address: String, reason: String },
-  \em{/// Failed to connect to the mail server.}
+  \emph{/// Failed to connect to the mail server.}
   FailedToConnect { source: std::io::Error, reason: String },
   /* \ldots  */
 }
@@ -211,7 +211,7 @@ In this case, we can introduce the \code{EmailAddress} type that holds only vali
   Introducing a new type to make \code{send_mail} inputs valid by construction.
 }
 \begin{code}[good]
-\em{/// Represents valid email addresses}.
+\emph{/// Represents valid email addresses}.
 pub struct EmailAddress(String);
 
 impl std::str::FromStr for EmailAddress {
@@ -220,7 +220,7 @@ impl std::str::FromStr for EmailAddress {
 }
 
 pub enum SendMailError {
-  \em{// no more InvalidAddress!}
+  \emph{// no more InvalidAddress!}
   FailedToConnect { source: std::io::Error, reason: String },
   /* \ldots  */
 }
@@ -289,7 +289,7 @@ pub fn fetch_signed_transaction(
 \end{code}
 \end{figure}
 
-This error type does not tell the caller \em{what} problem you are solving but \em{how} you solve it.
+This error type does not tell the caller \emph{what} problem you are solving but \emph{how} you solve it.
 Implementation details leak into the caller's code, causing much pain:
 \begin{itemize}
  \item
@@ -315,30 +315,30 @@ Let us redesign the \code{FetchTxError} type, focusing on the well-being of fell
 }
 \begin{code}[good]
 pub enum FetchTxError {
-  \em{/// Could not connect to the server.}
+  \emph{/// Could not connect to the server.}
   ConnectionFailed {
     url: String,
     reason: String,
     cause: Option<std::io::Error>, // \circled{1}
   },
 
-  \em{/// Cannot find transaction with the specified txid.}
+  \emph{/// Cannot find transaction with the specified txid.}
   TxNotFound(Txid), // \circled{2}
 
-  \em{/// The object data is not valid CBOR.}
+  \emph{/// The object data is not valid CBOR.}
   InvalidEncoding { // \circled{3}
     data: Bytes,
     error_offset: Option<usize>,
     error_message: String,
   },
 
-  \em{/// The public key is malformed.}
+  \emph{/// The public key is malformed.}
   MalformedPublicKey { // \circled{4}
     key_bytes: Vec<u8>,
     reason: String,
   },
 
-  \em{/// The transaction signature does not match the public key.}
+  \emph{/// The transaction signature does not match the public key.}
   SignatureVerificationFailed { // \circled{4}
     txid: Txid,
     pk: Pubkey,

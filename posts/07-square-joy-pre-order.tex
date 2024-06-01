@@ -20,7 +20,7 @@ Our goal is to solve the problem using only flat arrays and high-level array tra
 
 Given two sequences of distinct values, \code{inorder} and \code{preorder},
 where \code{inorder} is an \href{https://en.wikipedia.org/wiki/Tree_traversal#In-order,_LNR}{in-order traversal} of a binary tree,
-and \code{preorder} is a \href{https://en.wikipedia.org/wiki/Tree_traversal#Pre-order,_NLR}{pre-order traversal} of the \em{same} tree, recover the tree structure.
+and \code{preorder} is a \href{https://en.wikipedia.org/wiki/Tree_traversal#Pre-order,_NLR}{pre-order traversal} of the \emph{same} tree, recover the tree structure.
 
 For example, if our inputs are the following sequences
 
@@ -47,7 +47,7 @@ then the corresponding tree has the shape depicted on the figure below.
 The way we represent the inputs and outputs of our problem shapes our approach to a solution.
 
 Our inputs, \code{inorder} and \code{preorder}, are already arrays.
-However, there is something peculiar about these arrays: they contain the same values, or, in math terms, \code{preorder} is a \em{permutation} of \code{inorder}.
+However, there is something peculiar about these arrays: they contain the same values, or, in math terms, \code{preorder} is a \emph{permutation} of \code{inorder}.
 We can eliminate this redundancy by compressing the inputs to a single numeric array: the permutation that turns \code{inorder} into \code{preorder}.
 A primitive J operation, dyadic \href{https://code.jsoftware.com/wiki/Vocabulary/idot#dyadic}{\code{i.} (index of)}, transforms the original inputs to the more convenient and compact permutation form.
 
@@ -287,11 +287,11 @@ We shall deal with this issue in the next section.
 
 \subsection{computing-parent-vector}{Computing the parent vector}
 
-We have two ways to compute the parents: one works for left children (let us call it the \em{L-algorithm}), and another works for right children (the \em{R-algorithm}).
+We have two ways to compute the parents: one works for left children (let us call it the \emph{L-algorithm}), and another works for right children (the \emph{R-algorithm}).
 How do we combine these results?
 
 Note that array \code{L} had zeros for all right children. 
-Also, note that the L-algorithm produces larger values than the R-algorithm: the L-algorithm looks for \em{larger} nodes to the left of each position, while the R-algorithm looks for \em{smaller} nodes.
+Also, note that the L-algorithm produces larger values than the R-algorithm: the L-algorithm looks for \emph{larger} nodes to the left of each position, while the R-algorithm looks for \emph{smaller} nodes.
 So taking the maximum of arrays \math{L} and \math{R} gives us the correct answer.
 
 \begin{verbatim}[j]

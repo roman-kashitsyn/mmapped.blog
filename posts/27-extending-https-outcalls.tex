@@ -33,7 +33,7 @@ Smart contracts on the \sc{ic} network can initiate \sc{https} requests to exter
 First, the canister sends a message to the management canister that includes the \sc{https} request payload and the \href{https://internetcomputer.org/docs/current/references/https-outcalls-how-it-works#transformation-function}{transform callback function}.
 The management canister includes this request in a dedicated queue in the node's replicated state.
 
-A background process independent from the replicated state machine called \em{adapter} periodically inspects the request queue and executes requests from the queue.
+A background process independent from the replicated state machine called \emph{adapter} periodically inspects the request queue and executes requests from the queue.
 Each replica has an independent instance of the adapter process.
 
 \begin{figure}[grayscale-diagram,p75]
@@ -68,14 +68,14 @@ It turns out, \sc{https} outcalls implement a special case of the \sc{ocr}'s \hr
 The \sc{ocr} protocol defines three stages:
 \begin{enumerate}
     \item
-    In the \em{query} stage, the participants receive a task to observe an external data source.
+    In the \emph{query} stage, the participants receive a task to observe an external data source.
     This stage is implicit in \sc{https} outcalls: instead of the protocol leader initiating the query, a canister triggers a query using the system interface.
     \item
-    In the \em{observation} stage, each node observes the data source, signs its observation, and sends it over the network.
+    In the \emph{observation} stage, each node observes the data source, signs its observation, and sends it over the network.
     The \sc{ic} implements this step through the adapter process discussed in the previous section and the consensus algorithm.
     The adapter executes an \sc{https} request and filters it through the calling canister's transformation function.
     The transformation result is the observation.
-    \item In the \em{report} stage, the network aggregates participant observations into the final report.
+    \item In the \emph{report} stage, the network aggregates participant observations into the final report.
     This stage is hard-coded in the \sc{ic} consensus protocol.
     If \math{2f + 1} nodes observed the same \sc{http} response, its value becomes the report.
 \end{enumerate}
@@ -104,7 +104,7 @@ It accepts the same request as the existing \href{https://internetcomputer.org/d
 }
 \begin{code}[candid]
 service ic : {
-    \em{// \ldots}
+    \emph{// \ldots}
     multi_http_request : (http_request_args) -> (vec http_request_result);
 };
 \end{code}
@@ -153,7 +153,7 @@ This design would allow the system to save the block space because the block wou
 
 Unfortunately, this approach doesn't work.
 The problem is that we cannot guarantee that different nodes will see the same subset of responses.
-Each healthy node in the network of \math{3f + 1} nodes will see responses from \em{some} other nodes (at least \math{2f + 1}), but the exact subset might differ for each node.
+Each healthy node in the network of \math{3f + 1} nodes will see responses from \emph{some} other nodes (at least \math{2f + 1}), but the exact subset might differ for each node.
 Different observation subsets will lead to unequal aggregated reports, and the system might fail to reach consensus.
 
 The \sc{ocr} protocol solves this issue by electing a leader node that picks the subset of observations and distributes it to the followers.
@@ -188,7 +188,7 @@ Next, we define the data structures specifying the format of the \sc{api} respon
 Since the block space is precious, the \code{ExamplePriceResponse} structure restricts the response contents to the fields we need to construct the report.
 
 \begin{code}[rust]
-\em{/// The format of response we get from the example price feed JSON API.}
+\emph{/// The format of response we get from the example price feed JSON API.}
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 struct ExamplePriceResponse {
     price: f64,
@@ -272,7 +272,7 @@ We cannot assume the entire response is trustworthy only because one of its fiel
         price: median_price,
         timestamp_seconds: median_ts,
     }
-} \em{// end of observe_icp_price}
+} \emph{// end of observe_icp_price}
 \end{code}
 
 \section{conclusion}{Conclusion}

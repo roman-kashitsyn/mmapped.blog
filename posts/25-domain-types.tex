@@ -26,8 +26,8 @@ The following quote from one of my favorite books on software design illustrates
 }{John Ousterhout, ``A Philosophy of Software Design'', Chapter 14, ``Choosing names''}
 
 The author attributes the bug to poor variable naming, but this blame is misplaced.
-If the programmer had defined \em{distinct types} for logical and physical block numbers, the compiler would have caught this mistake immediately.
-In this article, I call such definitions \em{domain types}.
+If the programmer had defined \emph{distinct types} for logical and physical block numbers, the compiler would have caught this mistake immediately.
+In this article, I call such definitions \emph{domain types}.
 They serve as documentation, help catch bugs at compile time, and make the code more secure\sidenote{sn-secure-by-design}{
   The book \href{https://www.manning.com/books/secure-by-design}{Secure by Design} by Dan Bergh Johnsson et al. provides many examples of using domain types for building a secure system from the ground up.
 }.
@@ -38,7 +38,7 @@ This article shows a systematic approach to domain types, provides examples of d
 
 Many languages provide syntax for simplifying domain type definitions.
 Such definitions create a new distinct type sharing representation with a chosen underlying type (e.g., a 64-bit integer).
-The semantics of such definitions vary across languages, but they usually fall into one of two categories: \em{newtypes} and \em{typedefs}.
+The semantics of such definitions vary across languages, but they usually fall into one of two categories: \emph{newtypes} and \emph{typedefs}.
 
 \subsection{newtypes}{Newtypes}
 
@@ -52,7 +52,7 @@ Newtypes are flexible but may need boilerplate code to implement all features re
   Some third-party packages, such as \href{https://crates.io/crates/derive_more}{\code{derive\_more}}, make this task easier.
 }
 \begin{code}
-\em{/// The number of standard SI apples.}
+\emph{/// The number of standard SI apples.}
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct MetricApples(i64);
 
@@ -77,7 +77,7 @@ Typedefs introduce a new name for an existing type, inheriting all underlying ty
   Typedefs inherit all operations from the underlying type, even those meaningless for the new type.
 }
 \begin{code}
-\em{/// MetricApples hold the number of standard SI apples.}
+\emph{/// MetricApples hold the number of standard SI apples.}
 type MetricApples int64
 
 func main() {
@@ -91,7 +91,7 @@ func main() {
 \end{code}
 \end{figure}
 
-\href{https://go.dev/ref/spec#Type_definitions}{Go}, \href{https://dlang.org/library/std/typecons/typedef.html}{D} and \href{https://en.wikibooks.org/wiki/Ada_Programming/Type_System#Derived_types}{Ada} provide typedefs (Ada calls typedefs \em{derived types}).
+\href{https://go.dev/ref/spec#Type_definitions}{Go}, \href{https://dlang.org/library/std/typecons/typedef.html}{D} and \href{https://en.wikibooks.org/wiki/Ada_Programming/Type_System#Derived_types}{Ada} provide typedefs (Ada calls typedefs \emph{derived types}).
 The \href{https://www.boost.org/}{Boost} project for C++ implements \href{https://www.boost.org/doc/libs/1_61_0/libs/serialization/doc/strong_typedef.html}{typedefs} as a library
 (C's \href{https://en.cppreference.com/w/c/language/typedef}{typedef declarations} are ``weak typedefs'': they introduce an alias for an existing type, not a new type).
 
@@ -115,30 +115,30 @@ I use pseudo-Rust syntax to illustrate the concepts, but the ideas should easily
 }
 \begin{code}
 trait DomainType {
-  \em{/// The primitive type representing the domain value.}
+  \emph{/// The primitive type representing the domain value.}
   type Representation; \label{representation-type}
 
-  \em{/// Creates a domain value from its representation value.}
+  \emph{/// Creates a domain value from its representation value.}
   fn from_repr(repr: Representation) -> Self;
 
-  \em{/// Extracts the representation value from the domain value.}
+  \emph{/// Extracts the representation value from the domain value.}
   fn to_repr(self) -> Representation;
 }
 \end{code}
 \end{figure}
 
-The code snippets present \em{minimal} interfaces for each type class.
+The code snippets present \emph{minimal} interfaces for each type class.
 Practical concerns often require adding more operations.
 For example, using identifiers as keys in a dictionary requires exposing a hash function (for hash maps) or imposing an ordering (for search trees), and serializing values requires accessing their internal representation.
 
 \subsection{identifiers}{Identifiers}
 
 One of the most common uses of domain types is a transparent handle for an entity or an asset in the real world, such as a customer identifier in an online store or an employee number in a payroll application.
-I call these types \em{identifiers}.
+I call these types \emph{identifiers}.
 
 Identifiers have no structure, i.e., we don't care about their internal representation.
 The only fundamental requirement is the ability to compare values of those types for equality.
-This lack of structure suggests an appropriate mathematical model for such types: a \em{set}, a collection of distinct objects.
+This lack of structure suggests an appropriate mathematical model for such types: a \emph{set}, a collection of distinct objects.
 
 \begin{figure}
 \marginnote{mn-identifiers-interface}{
@@ -146,7 +146,7 @@ This lack of structure suggests an appropriate mathematical model for such types
 }
 \begin{code}
 trait Eq {
-  \em{/// Returns true if two values are equal.}
+  \emph{/// Returns true if two values are equal.}
   fn eq(&self, other: &Self) -> bool;
 }
 
@@ -181,27 +181,27 @@ Vector space is a set with additional operations defined on the elements of this
 }
 \begin{code}
 trait Ord: Eq {
-  \em{/// Compares two values.}
+  \emph{/// Compares two values.}
   fn cmp(&self, other: &Self) -> Ordering;
 }
 
 trait VectorSpace {
-  \em{/// The scalar type is usually the same as the \href{#representation-type}{Representation} type.}
+  \emph{/// The scalar type is usually the same as the \href{#representation-type}{Representation} type.}
   type Scalar;
 
-  \em{/// Returns the additive inverse of the value.}
+  \emph{/// Returns the additive inverse of the value.}
   fn neg(self) -> Self;
   
-  \em{/// Adds two vectors.}
+  \emph{/// Adds two vectors.}
   fn add(self, other: Self) -> Self;
 
-  \em{/// Subtracts the other vector from self.}
+  \emph{/// Subtracts the other vector from self.}
   fn sub(self, other: Self) -> Self;
 
-  \em{/// Multiplies the vector by a scalar.}
+  \emph{/// Multiplies the vector by a scalar.}
   fn mul(self, factor: Scalar) -> Self;
 
-  \em{/// Divides the vector by a scalar.}
+  \emph{/// Divides the vector by a scalar.}
   fn div(self, factor: Scalar) -> Self;
 }
 
@@ -226,10 +226,10 @@ While distances behave the same way as \href{#amounts}{amounts}, positions are t
 We can compare, order, and subtract them to compute the distance between two points.
 For example, subtracting 5 am on Friday from 3 am on Saturday gives us twenty-two hours.
 Adding or multiplying these dates makes no sense, however.
-This semantic demands a new class of types, \em{loci} (plural of \em{locus}).
+This semantic demands a new class of types, \emph{loci} (plural of \emph{locus}).
 
 One example of the locus/distance dichotomy coming from system programming is the memory address arithmetic.
-Low-level programming languages differentiate \em{pointers} (memory addresses) and \em{offsets} (distances between addresses).
+Low-level programming languages differentiate \emph{pointers} (memory addresses) and \emph{offsets} (distances between addresses).
 In the C programming language, the \code{void*} type represents a memory address, and the \code{ptrdiff\_t} type represents an offset.
 Subtracting two pointers gives an offset, but adding or multiplying pointers is meaningless.
 
@@ -242,25 +242,25 @@ Changing the origin or the distance type calls for a new locus type.
 }
 \begin{code}
 trait LocusLike: IdentifierLike + Ord {
-  \em{/// The type representing the distance between two positions.}
+  \emph{/// The type representing the distance between two positions.}
   type Distance: AmountLike;
 
-  \em{/// The origin for the absolute coordinate system.}
+  \emph{/// The origin for the absolute coordinate system.}
   const ORIGIN: Self;
 
-  \em{/// Moves the point away from the origin by the specified distance.}
+  \emph{/// Moves the point away from the origin by the specified distance.}
   fn add(self, other: Distance) -> Self;
 
-  \em{/// Returns the distance between two points.}
+  \emph{/// Returns the distance between two points.}
   fn sub(self, other: Self) -> Distance;
 }
 \end{code}
 \end{figure}
 
 Timestamps offer an excellent demonstration of the ``distance type + the origin'' concept.
-Go and Rust represent timestamps as a number of \em{nanoseconds} passed from the \sc{unix} epoch (midnight of January 1st, 1970),
-The C programming language defines the \href{https://en.cppreference.com/w/c/chrono/time_t}{\code{time\_t}} type, which is almost always the number of \em{seconds} from the \sc{unix} epoch.
-The \href{https://en.wikipedia.org/wiki/Q_(programming_language_from_Kx_Systems)}{q programming language} also uses nanoseconds, but \href{https://code.kx.com/q4m3/2_Basic_Data_Types_Atoms/#253-date-time-types}{chose the \em{millennium}} (midnight of January 1st, 2000) as its origin point.
+Go and Rust represent timestamps as a number of \emph{nanoseconds} passed from the \sc{unix} epoch (midnight of January 1st, 1970),
+The C programming language defines the \href{https://en.cppreference.com/w/c/chrono/time_t}{\code{time\_t}} type, which is almost always the number of \emph{seconds} from the \sc{unix} epoch.
+The \href{https://en.wikipedia.org/wiki/Q_(programming_language_from_Kx_Systems)}{q programming language} also uses nanoseconds, but \href{https://code.kx.com/q4m3/2_Basic_Data_Types_Atoms/#253-date-time-types}{chose the \emph{millennium}} (midnight of January 1st, 2000) as its origin point.
 Changing the distance type (e.g., seconds to nanoseconds) or the origin (e.g., \sc{unix} epoch to the millennium) calls for a different timestamp type.
 
 The Go standard library employs the locus type design for its \href{https://pkg.go.dev/time}{\code{time}} package, differentiating the time instant (\href{https://pkg.go.dev/time#Time}{\code{time.Time}}) and time duration (\href{https://pkg.go.dev/time#Duration}{\code{time.Duration}}).
@@ -278,15 +278,15 @@ A financial application might need to multiply the dollar amount by the conversi
 We can model complex type interactions using methods of \href{https://en.wikipedia.org/wiki/Dimensional_analysis}{dimensional analysis}.
 If we view \href{#amounts}{amounts} as values with an attached label identifying their unit, then our new types are a natural extension demanding a more structured label equivalent to a vector of base units raised to rational powers.
 For example, acceleration would have label \math{(distance \times  time\sup{-2})}, and the \sc{usd}/\sc{eur} \href{https://en.wikipedia.org/wiki/Currency_pair}{pair} exchange rate would have label \math{(eur \times  usd\sup{-1})}.
-I call types with such rich label structure \em{quantities}.
+I call types with such rich label structure \emph{quantities}.
 
 Quantities are a proper extension of amounts: addition, subtraction, and scalar multiplication work the same way, leaving the label structure untouched.
 The additional label structure gives meaning to multiplication and division.
 
-The result of multiplication will have a base unit vector with the component-wise \em{sum} of the power vectors of the unit factors.
+The result of multiplication will have a base unit vector with the component-wise \emph{sum} of the power vectors of the unit factors.
 For example, car fuel consumption computation could use an expression like \math{2 (km) \times  0.05 (liter \times  km\sup{-1}) = 0.1 (liter)}.
 
-Dividing values produces a label that's a component-wise \em{difference} between the dividend and divisor power vectors.
+Dividing values produces a label that's a component-wise \emph{difference} between the dividend and divisor power vectors.
 For example, running pace computation could use an expression like \math{10 (min) / 2 (km) = 5 (min \times  km\sup{-1})}.
 
 \begin{figure}
@@ -295,11 +295,11 @@ For example, running pace computation could use an expression like \math{10 (min
 }
 \begin{code}
 trait QuantityLike<DimA>: AmountLike {
-  \em{/// Multiplies two quantities.}
+  \emph{/// Multiplies two quantities.}
   fn mul<O: QuantityLike<DimB>>(self, other: O)
     -> impl QuantityLike<AddUnitPowers<DimA, DimB>>;
 
-  \em{/// Divides self by the specified quantity.}
+  \emph{/// Divides self by the specified quantity.}
   fn div<O: QuantityLike<DimB>>(self, other: O)
     -> impl QuantityLike<SubUnitPowers<DimA, DimB>>;
 }

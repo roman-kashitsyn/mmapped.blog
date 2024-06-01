@@ -28,13 +28,13 @@ This article will explain how the Internet Identity canister uses its stable mem
 \section{ii-data-model}{Internet Identity data model}
 
 The Internet Identity service acts as a proxy between the browser's \href{https://webauthn.io/}{authentication mechanism} and the Internet Computer authentication system.
-A user registers in the service by creating an \em{anchor} (a short number) and associating authentication devices, such as \href{https://en.wikipedia.org/wiki/YubiKey}{Yubikey} or \href{https://en.wikipedia.org/wiki/Touch_ID}{Apple Touch ID}, with that anchor.
+A user registers in the service by creating an \emph{anchor} (a short number) and associating authentication devices, such as \href{https://en.wikipedia.org/wiki/YubiKey}{Yubikey} or \href{https://en.wikipedia.org/wiki/Touch_ID}{Apple Touch ID}, with that anchor.
 The Internet Identity canister stores these associations and presents a consistent identity to each DApp integrated with the authentication protocol.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-ii-model}{
     The data model of the Internet Identity system.
-    The system allocates a unique \em{anchor} (a short number) for each user.
+    The system allocates a unique \emph{anchor} (a short number) for each user.
     The user can attach one or more authentication devices to the anchor.
     The Internet Identity system allows users to log into DApps that support the authentication protocol.
     The DApps will see the same user identity (also known as the \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#principal}{principal}) consistently, regardless of which device the user used for authentication.
@@ -105,8 +105,8 @@ The post-upgrade hook does little work besides reading and validating a few byte
 \subsection{ii-memory-layout}{The memory layout}
 
 The Internet Identity canister divides the stable memory space into non-overlapping sections.
-The first section is the \em{header} holding the canister configuration, such as the random salt for hashing and the assigned anchor range.
-The rest of the memory is an array of \em{entries}; each entry corresponds to the data of a single anchor.
+The first section is the \emph{header} holding the canister configuration, such as the random salt for hashing and the assigned anchor range.
+The rest of the memory is an array of \emph{entries}; each entry corresponds to the data of a single anchor.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-ii-memory-layout}{
@@ -121,20 +121,20 @@ The size of the header section is 512 bytes; the layout reserves most of this sp
 The following is the list of all header fields as of October 2022:
 \begin{enumerate}
   \item 
-    \em{Magic} (3 bytes): a fixed string \code{"IIC"} \href{https://en.wikipedia.org/wiki/Magic_number_(programming)#Format_indicators}{indicating} the Internet Identity stable memory layout.
+    \emph{Magic} (3 bytes): a fixed string \code{"IIC"} \href{https://en.wikipedia.org/wiki/Magic_number_(programming)#Format_indicators}{indicating} the Internet Identity stable memory layout.
   \item 
-    \em{Version} (1 byte): the version of the memory layout.
+    \emph{Version} (1 byte): the version of the memory layout.
     If we need to change the layout significantly, the version will tell the canister how to interpret the data after the code upgrade.
   \item 
-    \em{Entry count} (4 bytes): the total number of anchors allocated so far.
+    \emph{Entry count} (4 bytes): the total number of anchors allocated so far.
   \item 
-    \em{Min anchor} (8 bytes): the value of the first anchor assigned to the canister.
+    \emph{Min anchor} (8 bytes): the value of the first anchor assigned to the canister.
     The canister allocates anchors sequentially, starting from this number.
   \item 
-    \em{Max anchor} (8 bytes): the value of the largest anchor assigned to the canister.
+    \emph{Max anchor} (8 bytes): the value of the largest anchor assigned to the canister.
     The canister becomes full and stops allocating anchors when \code{MinAnchor + EntryCount = MaxAnchor}.
   \item 
-    \em{Salt} (32 bytes): salt for hashing.
+    \emph{Salt} (32 bytes): salt for hashing.
     The canister initializes the salt upon the first request by issuing a \href{https://internetcomputer.org/docs/current/references/ic-interface-spec/#ic-raw_rand}{\code{raw_rand}} call.
 \end{enumerate}
 
