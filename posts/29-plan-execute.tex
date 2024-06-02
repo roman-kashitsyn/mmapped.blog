@@ -19,7 +19,7 @@ This article describes one of the most ubiquitous and helpful patterns software 
 
 \section{motivation}{The motivation}
 
-Imagine traveling from Washington, \sc{dc}, to New York City (from Vienna to Prague, from Zurich to Munich, etc.).
+Imagine traveling from Washington, \textsc{dc}, to New York City (from Vienna to Prague, from Zurich to Munich, etc.).
 One approach is getting in your car, driving, following the road signs, and stopping at gas stations when needed.
 I call this approach ``just do it.''
 Another approach is to sit down with a map or a navigation app and plan your trip, deciding which paths to take and where to stop in advance.
@@ -27,43 +27,55 @@ Another approach is to sit down with a map or a navigation app and plan your tri
 I'm sure most people prefer the latter approach.
 Yet, we often take the ``just do it'' path in software engineering.
 
-The first time I applied this pattern was during my work on the \href{/posts/02-ic-state-machine-replication.html#incremental-sync}{incremental state synchronization protocol} at \sc{dfinity}.
+The first time I applied this pattern was during my work on the \href{/posts/02-ic-state-machine-replication.html#incremental-sync}{incremental state synchronization protocol} at \textsc{dfinity}.
 The protocol brings a stale replica up to date: it takes the current replica state and the target state descriptions and reconstructs the target state checkpoint on disk.
 
-The major problem with the protocol is testing.
+One major challenge with this protocol was testing.
 The protocol is a black box that takes inputs and outputs the final state; how do I know it took the most efficient path to reconstruct the checkpoint?
 All correct checkpoints are the same.
 
 The solution I came up with was to factor the implementation into stages.
 First, the implementation will acquire all the information required to reach its goal: the data structures describing the local and target states.
 Next, the protocol builds a plan: a data structure encapsulating all the decisions the protocol will take: what data to fetch, what to copy from the existing state, and where to place all those pieces.
-The last stage is the plan execution: the protocol fetches data from peers and applies disk writes according to the plan.
+The last stage is the plan execution: the protocol fetches data from peers and schedules disk writes according to the plan.
 
 The planning phase was the most challenging part, and factoring it into a separate pure function made testing it a breeze.
 
-\section{problem}{The problem}
+\section{pattern}{The pattern}
 
 We are now ready to define the problem when the pattern can be beneficial:
 Given a complex algorithm that can take many paths to reach its goal, we want to ensure it takes the expected path.
 
-\section{solution}{The solution}
-
 The solution is to split the algorithm into two parts.
-The planning phase takes the inputs and outputs a \emph{plan}: a data structure encapsulating all the decisions the algorithm will take.
+The planning phase takes the inputs and outputs a \emph{plan}: a data structure encapsulating all the decisions the algorithm should take.
+The execution phase accepts the plan and executes it.
+
+This pattern allows us to lift most of the complex logic from effectful code and test it separately and thoroughly.
 
 \section{examples}{Examples}
 
-\begin{itemize}
-    \item \sc{rdbms} query execution.
-    \item Bazel build planner.
-    \item TensorFlow computation graph execution.
-    \item The pattern is a special case of the ``functional core, imperative shell'' paradigm\sidenote{sn-functional-core}{
-      I couldn't find an authoritative source explaining this paradigm, but \href{https://www.destroyallsoftware.com/talks/boundaries}{Gary Bernhardt's talk} is a good start.
-    }.
-    See also: \href{https://sans-io.readthedocs.io/how-to-sans-io.html}{Sans-I/O} protocol implementations.
-    \item Programming in general.
-    ``Programming'' was a synonym of ``planning'' before computers conquered the world.
-    Programs \emph{are} plans: a programmer takes care of all the decisions in advance, leaving it to the computer to execute them.
-\end{itemize}
+The \href{https://en.wikipedia.org/wiki/Query_plan}{\textsc{rdbms} query planner} is one of the primary inspirations for the pattern.
+There are many ways to execute an \textsc{sql} query, and the database engine should always use the most efficient one.
+\href{https://en.wikipedia.org/wiki/Query_plan}{Query plans} are paramount for understanding and tweaking database performance.
+
+Bazel build rules design relies on a similar idea of staged computation.
+The rules don't execute any actions, they only construct a build graph.
+A rule inspects inputs, declares which outputs to expect, and how to transform inputs into outputs.
+All these transformations are symbolic and pure: rules can't read or write any files, they can only add actions to the build graph.
+The execution stage is baked into Bazel internals.
+This design contributes to the initial confusion that most people have with Bazel, but it allows for significant performance gains.
+
+TensorFlow 1.x relied on a similar pattern:
+The programmer constructed a computation graph using library primitives and passed it to the execution engine.
+This design allowed for advanced performance optimizations, but most programmers found it confusing, and it didn't work well with networks that require dynamic graphs, such as \href{https://en.wikipedia.org/wiki/Recursive_neural_network}{recursive neural networks},
+so TensorFlow 2 adapted a more dynamic approach (see \href{https://www.tensorflow.org/guide/migrate/tf1_vs_tf2}{TensorFlow 1.x vs TensorFlow 2}).
+
+The pattern is a special case of the ``functional core, imperative shell'' paradigm\sidenote{sn-functional-core}{
+  I couldn't find an authoritative source explaining this paradigm, but \href{https://www.destroyallsoftware.com/talks/boundaries}{Gary Bernhardt's talk} is a good start.
+}.
+See also: \href{https://sans-io.readthedocs.io/how-to-sans-io.html}{Sans-I/O} protocol implementations.
+
+All programs are plans: a programmer takes care of all the decisions in advance and codifies them some binary form, leaving it to the computer to execute them.
+``Programming'' was a synonym of ``planning'' before computers conquered the world.
 
 \end{document}
