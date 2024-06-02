@@ -20,7 +20,7 @@ Programmers had to mark transaction boundaries so that the system could identify
 
 \begin{figure}
 \marginnote{mn-ps-algol}{
-  A slightly modified snippet of code in \href{https://en.wikipedia.org/wiki/PS-algol}{\sc{ps}-algol} from the paper ``An Approach to Persistent Programming'' by Atkinson et al.
+  A slightly modified snippet of code in \href{https://en.wikipedia.org/wiki/PS-algol}{\textsc{ps}-algol} from the paper ``An Approach to Persistent Programming'' by Atkinson et al.
   Note explicit calls to \code{commit} and \code{abort} procedures.
 }
 \begin{code}[algol]
@@ -109,7 +109,7 @@ Let us see how the IC implementation responds to this challenge.
 
 The implementation divides the contents of each memory into 4096-byte chunks called \emph{pages}.
 When the actor executes a message, the system automatically detects the memory pages that the actor modifies or \emph{dirties}.
-The system uses low-level \sc{unix api}s to detect page modifications.
+The system uses low-level \textsc{unix api}s to detect page modifications.
 Since most operating systems operate on 4096-byte memory pages, using the same page size in the replica is the most natural choice.
 
 The memory snapshot of an actor is a map from a page index to the page contents.
@@ -160,12 +160,12 @@ There are multiple approaches to this problem:
     This approach works on all platforms but can slow down execution by an order of magnitude.
   \item 
     Use memory protection and signal handlers to detect memory reads and writes at runtime.
-    This approach works well on \sc{unix} platforms and is reasonably efficient.
+    This approach works well on \textsc{unix} platforms and is reasonably efficient.
     We shall discuss this approach in more detail shortly.
   \item 
-    Implement a custom filesystem backend as a \href{https://en.wikipedia.org/wiki/Filesystem_in_Userspace}{\sc{fuse}} library, then \href{https://man7.org/linux/man-pages/man2/mmap.2.html}{memory-map} actor memory as a virtual file.
+    Implement a custom filesystem backend as a \href{https://en.wikipedia.org/wiki/Filesystem_in_Userspace}{\textsc{fuse}} library, then \href{https://man7.org/linux/man-pages/man2/mmap.2.html}{memory-map} actor memory as a virtual file.
     The operating system will call into our library when the actor code reads from or writes to the memory-mapped file, allowing us to perform the required bookkeeping.
-    This approach works great on platforms that support \sc{fuse} (Linux and macOS), but it has some administrative disadvantages.
+    This approach works great on platforms that support \textsc{fuse} (Linux and macOS), but it has some administrative disadvantages.
     For example, the replica will need priveledged access to be able to mount a virtual filesystem.
   \item 
     Use Linux \href{https://man7.org/linux/man-pages/man1/pmap.1.html}{pmap} utility to extract \href{https://techtalk.intersec.com/2013/07/memory-part-2-understanding-process-memory/#pmap-detailed-mapping}{memory access statistics} right after the message execution.
@@ -174,10 +174,10 @@ There are multiple approaches to this problem:
 
 \subsection{signal-handler}{The signal handler}
 
-The \href{https://man7.org/linux/man-pages/man2/mprotect.2.html}{memory protection \sc{api}} allows us to set read and write permissions on page ranges.
+The \href{https://man7.org/linux/man-pages/man2/mprotect.2.html}{memory protection \textsc{api}} allows us to set read and write permissions on page ranges.
 If the process violates the permissions by reading a read-protected region or writing to a write-protected region, the operating system sends a signal (usually \code{SIGSEGV}) to the thread that triggered the violation.
-The \href{https://man7.org/linux/man-pages/man7/signal.7.html}{signal handling \sc{api}} allows us to intercept these signals and inspect the address that caused them.
-We can build a robust and efficient memory access detection mechanism by combining these \sc{api}s.
+The \href{https://man7.org/linux/man-pages/man7/signal.7.html}{signal handling \textsc{api}} allows us to intercept these signals and inspect the address that caused them.
+We can build a robust and efficient memory access detection mechanism by combining these \textsc{api}s.
 
 \begin{figure}
 \marginnote{mn-mem-access-pseudocode}{Pseudocode of the memory access detection state machine.}
@@ -308,8 +308,8 @@ The system would wipe out the transient memory during the upgrade but persist th
   Such memories open up attractive optimization opportunities, but we did not have enough pressure to implement them. 
 } storage. 
 
-Since the IC needed to support upgrades before the multi-memory proposal was implemented, the runtime emulates one extra memory via the \href{https://smartcontracts.org/docs/interface-spec/index.html#system-api-stable-memory}{stable memory \sc{api}}.
-This \sc{api} intentionally mimics WebAssembly \href{https://webassembly.github.io/bulk-memory-operations/core/exec/instructions.html#memory-instructions}{memory instructions} to facilitate future migration to multi-memory modules.
+Since the IC needed to support upgrades before the multi-memory proposal was implemented, the runtime emulates one extra memory via the \href{https://smartcontracts.org/docs/interface-spec/index.html#system-api-stable-memory}{stable memory \textsc{api}}.
+This \textsc{api} intentionally mimics WebAssembly \href{https://webassembly.github.io/bulk-memory-operations/core/exec/instructions.html#memory-instructions}{memory instructions} to facilitate future migration to multi-memory modules.
 Internally, the main memory and the stable memory share the \href{#snapshots-deltas}{representation}.
 
 Currently, most actors serialize their entire state to stable memory in the pre-upgrade hook and read it back in the post-upgrade hook.
@@ -318,7 +318,7 @@ There is an ongoing effort to build tools that make it easier to use stable memo
 \section{conclusion}{Conclusion}
 
 We examined the classical approach to orthogonal persistence and its \href{#actors}{synergy} with the actor model.
-We learned about the \href{#snapshots-deltas}{page map}, the data structure that IC replicas use to store multiple versions of an actor's memory efficiently, and the \href{#signal-handler}{\sc{sigsegv}-based memory access detection system}.
+We learned about the \href{#snapshots-deltas}{page map}, the data structure that IC replicas use to store multiple versions of an actor's memory efficiently, and the \href{#signal-handler}{\textsc{sigsegv}-based memory access detection system}.
 Lastly, we saw that orthogonal persistence is not the final solution to state persistence and why we need better tools to handle \href{#upgrades}{program upgrades}.
 
 \section{references}{References}

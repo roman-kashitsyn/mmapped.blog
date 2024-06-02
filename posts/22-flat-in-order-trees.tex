@@ -87,7 +87,7 @@ A left-perfect tree with \math{N} leaves is either a perfect tree or a fork wher
 
 We'll first examine addressing nodes within a flat in-order perfect binary tree and then extend the approach to left-perfect binary trees.
 
-\sc{theorem}: in a flat in-order perfect binary tree of depth \math{D}, node's index \math{i} has the following structure:
+\textsc{theorem}: in a flat in-order perfect binary tree of depth \math{D}, node's index \math{i} has the following structure:
 \begin{itemize}
     \item
     The longest run of least-significant set bits in \math{i}'s binary representation indicates the depth of subtrees rooted at \math{i}.
@@ -104,7 +104,7 @@ We'll first examine addressing nodes within a flat in-order perfect binary tree 
   \includegraphics{/images/22-addressing-scheme.svg}
 \end{figure}
 
-\sc{proof}: by induction on the tree depth \math{D}.
+\textsc{proof}: by induction on the tree depth \math{D}.
 
 Base case: the theorem is vacuously true for trees of depth one (a single node with index zero).
 The case of a tree of depth two is more instructive:

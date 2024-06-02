@@ -86,8 +86,8 @@ These approaches might work fine for you, but I found them unsatisfactory for li
   However, I often use the \code{anyhow} approach to simplify structuring errors in command-line tools and daemons.
 } in the long run: they facilitate \emph{propagating} errors (often with little context about the operation that caused the error), not \emph{handling} errors.
 
-When it comes to interface clarity and simplicity, nothing beats \href{https://en.wikipedia.org/wiki/Algebraic_data_type}{algebraic data types} (\sc{adt}s).
-Let us use the power of \sc{adt}s to fix the \code{frobnicate} function interface.
+When it comes to interface clarity and simplicity, nothing beats \href{https://en.wikipedia.org/wiki/Algebraic_data_type}{algebraic data types} (\textsc{adt}s).
+Let us use the power of \textsc{adt}s to fix the \code{frobnicate} function interface.
 
 \begin{figure}
 \marginnote{mn-adt-frobnicate}{

@@ -10,12 +10,12 @@
 \begin{document}
 \section{abstract}{Abstract}
 
-This article is a high-level overview of the Off-Chain Reporting protocol (\sc{ocr}) powering most of \href{https://chain.link/}{Chainlink} products.
+This article is a high-level overview of the Off-Chain Reporting protocol (\textsc{ocr}) powering most of \href{https://chain.link/}{Chainlink} products.
 The protocol allows a group of \math{n} nodes called \emph{oracles}, up to \math{f} of which could be \href{https://en.wikipedia.org/wiki/Byzantine_fault}{byzantine} (\math{f < n⁄3}), to agree on a data point and record it on a blockchain supporting smart contracts (e.g., Ethereum).
 
 \section{components}{Protocol components}
 
-All \sc{ocr} deployments have two parts with different execution models: the on-chain part, implemented as a smart contract called the \emph{aggregator}, and the off-chain part, implemented as a peer-to-peer network of oracles.
+All \textsc{ocr} deployments have two parts with different execution models: the on-chain part, implemented as a smart contract called the \emph{aggregator}, and the off-chain part, implemented as a peer-to-peer network of oracles.
 The off-chain communication protocol, in turn, consists of three sub-protocols layered on top of one another: the \href{#pacemaker}{pacemaker}, the \href{#report-generation}{report generation}, and the \href{#transmission}{transmission} protocols. 
 
 \subsection{aggregator-contract}{The aggregator contract}
@@ -31,7 +31,7 @@ The contract owner has administrative privileges, such as adding or removing nod
 
 \subsection{pacemaker}{Pacemaker}
 
-The \emph{pacemaker} algorithm of the \sc{ocr} protocol periodically assigns a node to be a \emph{leader} coordinating the rest of the protocol functions.
+The \emph{pacemaker} algorithm of the \textsc{ocr} protocol periodically assigns a node to be a \emph{leader} coordinating the rest of the protocol functions.
 The period between two consecutive leader assignments is called an \emph{epoch}.
 Within each epoch, the leader initiates \emph{rounds} of the \href{#report-generation}{report generation} algorithm.
 The tuple \math{(e, r)}, where \math{e} is the epoch number and \math{r} is the round number, serves as a logical clock for the protocol.
@@ -56,7 +56,7 @@ Thus, oracles know the exact sequence of all leader assignments in advance, but 
 \subsection{report-generation}{Report generation}
 
 The report generation algorithm produces a data point for the \href{#aggregator-contract}{aggregator contract}.
-For example, if the aggregator contract records an asset price in \sc{usd}, the algorithm produces a price that faulty oracles can't manipulate.
+For example, if the aggregator contract records an asset price in \textsc{usd}, the algorithm produces a price that faulty oracles can't manipulate.
 
 First, the leader initiates a new round by picking a \emph{query} describing the task the followers need to execute and sending it to all the followers.
 \begin{figure}[grayscale-diagram,medium-size]
@@ -111,18 +111,18 @@ The aggregator contract owner can mitigate this issue by monitoring the transmis
 
 \section{iterations}{Protocol version iterations}
 \begin{itemize}
-    \item \sc{ocr 1.0} specifically targeted data feeds for \sc{evm} blockchains.
-    \item \sc{ocr 2.0} is a major iteration that introduced a plugin architecture, significantly extending the protocol's capabilities.
-    This version also features reduced gas costs, a more secure \sc{p2p} networking stack based on \sc{tls1.3}, and better performance characteristics (lower latency, higher throughput).
-    \item \sc{ocr 3.0} made the plugin interface more flexible, introduced the observation history chain, reduced the latency, and improved throughput using the report batching feature.
+    \item \textsc{ocr 1.0} specifically targeted data feeds for \textsc{evm} blockchains.
+    \item \textsc{ocr 2.0} is a major iteration that introduced a plugin architecture, significantly extending the protocol's capabilities.
+    This version also features reduced gas costs, a more secure \textsc{p2p} networking stack based on \textsc{tls1.3}, and better performance characteristics (lower latency, higher throughput).
+    \item \textsc{ocr 3.0} made the plugin interface more flexible, introduced the observation history chain, reduced the latency, and improved throughput using the report batching feature.
 \end{itemize}
 
 \section{resources}{Resources}
 
 \begin{itemize}
     \item The \href{https://research.chain.link/ocr.pdf}{Chainlink Off-chain Reporting Protocol} whitepaper by Lorenz Breidenbach et al. describes the first protocol version in great detail and contains proofs of its security properties.
-    \item The \href{https://github.com/smartcontractkit/libocr/blob/6359502d2ff1165c7e6b77b9eff2c5a46a7a4fbb/offchainreporting2plus/ocr3types/plugin.go#L94}{\sc{ocr3} plugin interface} documents the general flow and extention points.
-    \item In the \href{https://youtu.be/XKiLkmwVaYA}{Looking under the hood of \sc{ocr} 2.0} video, Lorenz Breidenbach explains the protocol evolution and the plugin architecture.
-    \item In the \href{https://youtu.be/VPVH3QCwc0U}{\sc{ocr3} protocol overview} video, Chrysa Stathakopoulou outlines the protocol structure and mentions features added in its third iteration.
+    \item The \href{https://github.com/smartcontractkit/libocr/blob/6359502d2ff1165c7e6b77b9eff2c5a46a7a4fbb/offchainreporting2plus/ocr3types/plugin.go#L94}{\textsc{ocr3} plugin interface} documents the general flow and extention points.
+    \item In the \href{https://youtu.be/XKiLkmwVaYA}{Looking under the hood of \textsc{ocr} 2.0} video, Lorenz Breidenbach explains the protocol evolution and the plugin architecture.
+    \item In the \href{https://youtu.be/VPVH3QCwc0U}{\textsc{ocr3} protocol overview} video, Chrysa Stathakopoulou outlines the protocol structure and mentions features added in its third iteration.
 \end{itemize}
 \end{document}

@@ -18,10 +18,10 @@ In this article, we shall analyze a few \emph{payment flows}---protocols built o
 \section{prerequisites}{Prerequisites}
 \subsection{the-payment-scenario}{The payment scenario}
 
-Abstract protocols can be dull and hard to comprehend, so let us model a specific payment scenario: me buying a new laptop online and paying for it in \sc{wxdr} (wrapped \href{https://en.wikipedia.org/wiki/Special_drawing_rights}{\sc{sdr}}) tokens locked in a ledger hosted on the Internet Computer.
+Abstract protocols can be dull and hard to comprehend, so let us model a specific payment scenario: me buying a new laptop online and paying for it in \textsc{wxdr} (wrapped \href{https://en.wikipedia.org/wiki/Special_drawing_rights}{\textsc{sdr}}) tokens locked in a ledger hosted on the Internet Computer.
 
 I open the website of the hardware vendor I trust, select the configuration (the memory capacity, the number of cores, etc.) that suits my needs, fill in the shipment details, and go to the payment page.
-I choose an option to pay in \sc{wxdr}.
+I choose an option to pay in \textsc{wxdr}.
 
 In the rest of the article, we will fantasize about what the payment page can look like and how it can interact with the shop.
 
@@ -44,7 +44,7 @@ All the payment flows we will analyze have three phases:
   \item 
     \emph{The negotiation phase}.
     After I place my order and fill in the shipment details, the shop creates a unique order identifier, \emph{Invoice ID}.
-    The \emph{web page} displays the payment details (e.g., as a \sc{qr} code of the request I need to sign) and instructions on how to proceed with the order.
+    The \emph{web page} displays the payment details (e.g., as a \textsc{qr} code of the request I need to sign) and instructions on how to proceed with the order.
   \item 
     \emph{The payment phase}.
     I use my \emph{wallet} to execute the transaction as instructed on the \emph{web page}.
@@ -112,7 +112,7 @@ The invoice account flow has a few interesting properties:
     The ledger implementation is straightforward: the subaccounts feature is the only requirement for the flow.
 \end{itemize}
 
-What happens if I transfer my \sc{wxdr}s but never click the ``Done'' button?
+What happens if I transfer my \textsc{wxdr}s but never click the ``Done'' button?
 Or what if my browser loses network connection right before it sends the shop notification?
 The shop will not receive any notifications, likely never making progress with my order.
 One strategy that the shop could use to improve the user experience in such cases is to monitor balances for unpaid invoices and complete transactions automatically if the notification does not arrive in a reasonable amount of time.

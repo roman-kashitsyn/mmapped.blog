@@ -116,8 +116,8 @@ The stream header describes the state of the \math{X ↔ Y} communication:
   \item
     The full range of message indices in the forward stream \math{X → Y}.
   \item
-    The signals for the \emph{reverse} stream (\math{Y → X}): for each message index in the reverse stream, \math{Y} tells whether \math{X} can garbage collect the message (an \sc{ack} signal) or should reroute the message (a \sc{reject} signal).
-    A \sc{reject} signal indicates that the destination canister moved, so \math{X} should route the message into another stream.
+    The signals for the \emph{reverse} stream (\math{Y → X}): for each message index in the reverse stream, \math{Y} tells whether \math{X} can garbage collect the message (an \textsc{ack} signal) or should reroute the message (a \textsc{reject} signal).
+    A \textsc{reject} signal indicates that the destination canister moved, so \math{X} should route the message into another stream.
 \end{itemize}
 
 Signals solve the issue of collecting obsolete messages, but they introduce another problem: now we also need to garbage-collect signals!

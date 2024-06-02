@@ -261,7 +261,7 @@ The official documentation of the venerable \href{https://crates.io/crates/slog}
   Especially libraries should expose full flexibility to their users, and not use implicit logging behaviour.
 
   Usually \code{Logger} instances fit pretty neatly into data structures in your code representing resources, so it's not that hard to pass them in constructors, and use \code{info!(self.log, ...)} everywhere. 
-}{\href{https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around}{\code{slog} \sc{faq}}}
+}{\href{https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around}{\code{slog} \textsc{faq}}}
 
 By passing state implicitly, you gain temporary convenience but make your code less clear, less testable, and more error-prone.
 Every type of resource we passed implicitly\sidenote{sn-resource-types}{\href{https://crates.io/crates/slog-scope}{scoped} loggers, \href{https://crates.io/crates/prometheus}{Prometheus} metrics registries, \href{https://crates.io/crates/rayon}{Rayon} thread pools, \href{https://crates.io/crates/tokio}{Tokio} runtimes, to name a few.} caused hard-to-diagnose issues and wasted a lot of engineering time.

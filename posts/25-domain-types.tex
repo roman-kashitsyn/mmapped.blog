@@ -11,7 +11,7 @@
 
 \begin{document}
 \epigraph{
-  \sc{in strong typing we trust}
+  \textsc{in strong typing we trust}
 }{Inscription on the \href{https://people.cs.kuleuven.be/~dirk.craeynest/ada-belgium/pictures/ada-strong.html}{Ada coin}}
 
 \section{intro}{Introduction}
@@ -160,7 +160,7 @@ But given the choice, typedefs are safer than raw integers or strings.
 
 \subsection{amounts}{Amounts}
 
-Another typical use of domain types is representing quantities, such as the amount of money in \sc{usd} on a bank account or the file size in bytes.
+Another typical use of domain types is representing quantities, such as the amount of money in \textsc{usd} on a bank account or the file size in bytes.
 Being able to compare, add, and subtract amounts is essential.
 
 Generally, we cannot multiply or divide two compatible amounts and expect to get the amount of the same type back\sidenote{sn-amount-probability}{
@@ -258,15 +258,15 @@ trait LocusLike: IdentifierLike + Ord {
 \end{figure}
 
 Timestamps offer an excellent demonstration of the ``distance type + the origin'' concept.
-Go and Rust represent timestamps as a number of \emph{nanoseconds} passed from the \sc{unix} epoch (midnight of January 1st, 1970),
-The C programming language defines the \href{https://en.cppreference.com/w/c/chrono/time_t}{\code{time\_t}} type, which is almost always the number of \emph{seconds} from the \sc{unix} epoch.
+Go and Rust represent timestamps as a number of \emph{nanoseconds} passed from the \textsc{unix} epoch (midnight of January 1st, 1970),
+The C programming language defines the \href{https://en.cppreference.com/w/c/chrono/time_t}{\code{time\_t}} type, which is almost always the number of \emph{seconds} from the \textsc{unix} epoch.
 The \href{https://en.wikipedia.org/wiki/Q_(programming_language_from_Kx_Systems)}{q programming language} also uses nanoseconds, but \href{https://code.kx.com/q4m3/2_Basic_Data_Types_Atoms/#253-date-time-types}{chose the \emph{millennium}} (midnight of January 1st, 2000) as its origin point.
-Changing the distance type (e.g., seconds to nanoseconds) or the origin (e.g., \sc{unix} epoch to the millennium) calls for a different timestamp type.
+Changing the distance type (e.g., seconds to nanoseconds) or the origin (e.g., \textsc{unix} epoch to the millennium) calls for a different timestamp type.
 
 The Go standard library employs the locus type design for its \href{https://pkg.go.dev/time}{\code{time}} package, differentiating the time instant (\href{https://pkg.go.dev/time#Time}{\code{time.Time}}) and time duration (\href{https://pkg.go.dev/time#Duration}{\code{time.Duration}}).
 
 The Rust standard module \href{https://doc.rust-lang.org/std/time/index.html}{\code{std::time}} is a more evolved example.
-It defines the \href{https://doc.rust-lang.org/std/time/struct.SystemTime.html}{\code{SystemTime}} type for wall clock time (the origin is the \href{https://doc.rust-lang.org/std/time/struct.SystemTime.html#associatedconstant.UNIX_EPOCH}{\sc{unix} epoch}), \href{https://doc.rust-lang.org/std/time/struct.Instant.html}{\code{Instant}} for monotonic clocks (the origin is ``some unspecified point in the past'', usually the system boot time), and the \href{https://doc.rust-lang.org/std/time/struct.Duration.html}{\code{Duration}} type for distances between two clock measurements.
+It defines the \href{https://doc.rust-lang.org/std/time/struct.SystemTime.html}{\code{SystemTime}} type for wall clock time (the origin is the \href{https://doc.rust-lang.org/std/time/struct.SystemTime.html#associatedconstant.UNIX_EPOCH}{\textsc{unix} epoch}), \href{https://doc.rust-lang.org/std/time/struct.Instant.html}{\code{Instant}} for monotonic clocks (the origin is ``some unspecified point in the past'', usually the system boot time), and the \href{https://doc.rust-lang.org/std/time/struct.Duration.html}{\code{Duration}} type for distances between two clock measurements.
 
 \subsection{quantities}{Quantities}
 
@@ -277,7 +277,7 @@ A financial application might need to multiply the dollar amount by the conversi
 
 We can model complex type interactions using methods of \href{https://en.wikipedia.org/wiki/Dimensional_analysis}{dimensional analysis}.
 If we view \href{#amounts}{amounts} as values with an attached label identifying their unit, then our new types are a natural extension demanding a more structured label equivalent to a vector of base units raised to rational powers.
-For example, acceleration would have label \math{(distance \times  time\sup{-2})}, and the \sc{usd}/\sc{eur} \href{https://en.wikipedia.org/wiki/Currency_pair}{pair} exchange rate would have label \math{(eur \times  usd\sup{-1})}.
+For example, acceleration would have label \math{(distance \times  time\sup{-2})}, and the \textsc{usd}/\textsc{eur} \href{https://en.wikipedia.org/wiki/Currency_pair}{pair} exchange rate would have label \math{(eur \times  usd\sup{-1})}.
 I call types with such rich label structure \emph{quantities}.
 
 Quantities are a proper extension of amounts: addition, subtraction, and scalar multiplication work the same way, leaving the label structure untouched.

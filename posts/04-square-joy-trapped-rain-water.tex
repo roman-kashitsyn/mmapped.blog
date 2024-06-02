@@ -23,12 +23,12 @@ For me, the hardest and the most rewarding part of array programming is coming u
 Idiomatic solutions require knowledge of many little tricks array-wrangling wizards developed in their chambers over the last fifty years.
 I would love to learn or rediscover these tricks, and I hope you might derive some pleasure and insights from reading about my little discoveries.
 
-In this article, we'll use the \href{https://www.jsoftware.com/#/}{\sc{j} programming language}.
-Why \sc{j} and not, say, \href{https://dyalog.com/}{\sc{apl}}?
-\sc{j} is easier to type on most keyboards, and it's \href{https://github.com/jsoftware/jsource}{open source}.
+In this article, we'll use the \href{https://www.jsoftware.com/#/}{\textsc{j} programming language}.
+Why \textsc{j} and not, say, \href{https://dyalog.com/}{\textsc{apl}}?
+\textsc{j} is easier to type on most keyboards, and it's \href{https://github.com/jsoftware/jsource}{open source}.
 
-The code in this article will look like line noise if you aren't familiar with \sc{j}.
-Don't be discouraged; this reaction is typical when working with \sc{j}.
+The code in this article will look like line noise if you aren't familiar with \textsc{j}.
+Don't be discouraged; this reaction is typical when working with \textsc{j}.
 I'll explain most of the steps, but the steps might still look like black magic sometimes.
 My goal is not to explain every aspect of the language but to demonstrate the problem-solving approach.
 
@@ -79,9 +79,9 @@ Summing up all volumes gives us the answer.
 
 \section{translating-to-j}{Translating our idea to J}
 
-\sc{j} is an interpreted language and it has a \href{https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop}{\sc{repl}}.
-It's pretty standard for \sc{j} programmers to build solutions incrementally by trying snippets of code in the \sc{repl} and observing the effects.
-The code in this article is also an interactive \sc{repl} session that you can replicate locally.
+\textsc{j} is an interpreted language and it has a \href{https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop}{\textsc{repl}}.
+It's pretty standard for \textsc{j} programmers to build solutions incrementally by trying snippets of code in the \textsc{repl} and observing the effects.
+The code in this article is also an interactive \textsc{repl} session that you can replicate locally.
 Let us get some data to play with.
 
 \begin{code}[j]
@@ -107,10 +107,10 @@ The next item on our agenda is computing the left and right running maxima.
 
 Wait, where is all the code?
 Let me break it down.
-In \sc{j}, \href{https://code.jsoftware.com/wiki/Vocabulary/gtdot#dyadic}{\code{>.} (max)} is a verb (\sc{j} word for "function") that, when you use it dyadically (\sc{J} word for ``with two arguments''), computes the maximum of the arguments.
+In \textsc{j}, \href{https://code.jsoftware.com/wiki/Vocabulary/gtdot#dyadic}{\code{>.} (max)} is a verb (\textsc{j} word for "function") that, when you use it dyadically (\textsc{J} word for ``with two arguments''), computes the maximum of the arguments.
 It's easy to guess that \href{https://code.jsoftware.com/wiki/Vocabulary/ltdot#dyadic}{\code{<.} (min)} is an analogous verb that computes the minimum.
 
-The single character \href{https://code.jsoftware.com/wiki/Vocabulary/slash}{\code{/} (insert)} is an adverb (\sc{j} word for ``function modifier'') that takes a dyadic verb to the left and turns it into a verb that folds an entire array.
+The single character \href{https://code.jsoftware.com/wiki/Vocabulary/slash}{\code{/} (insert)} is an adverb (\textsc{j} word for ``function modifier'') that takes a dyadic verb to the left and turns it into a verb that folds an entire array.
 Why is it called ``insert''?
 Because it inserts the verb between elements of the array it operates on.
 For example, summing up an array is just \code{+/}.
@@ -179,7 +179,7 @@ Let us bind our beautiful tacit expression to a name.
 6
 \end{verbatim}
 
-The full implementation of our idea now fits into 12 \sc{ascii} characters.
+The full implementation of our idea now fits into 12 \textsc{ascii} characters.
 One surprising property of array languages is that it's often not worth naming functions.
 Their entire body is shorter and more expressive than any name we could come up with.
 
@@ -297,13 +297,13 @@ We are one step away from turning this matrix into a picture.
  █░██░██████
 \end{verbatim}
 
-\code{ucp} is a built-in verb that constructs an array of Unicode codepoints from a \sc{utf}-8 encoded string.
+\code{ucp} is a built-in verb that constructs an array of Unicode codepoints from a \textsc{utf}-8 encoded string.
 \href{https://code.jsoftware.com/wiki/Vocabulary/curlylf#dyadic}{\code{\{} (from)} is at the heart of our drawing trick.
 This verb selects items from the right argument according to the indices from the left argument.
 The effect is that all zeros got replaced with a space, ones---with a watery-looking glyph, and twos---with a solid rectangle.
 
 Our pseudo-graphics look quite impressive already, but we can do even better.
-\sc{j} comes with a convenient \href{https://code.jsoftware.com/wiki/Studio/Viewmat}{viewmat} library that can visualize arrays.
+\textsc{j} comes with a convenient \href{https://code.jsoftware.com/wiki/Studio/Viewmat}{viewmat} library that can visualize arrays.
 
 \begin{code}[j]
     require 'viewmat'
@@ -410,7 +410,7 @@ Here is how to apply it to our problem:
   \item Iterate the previous step until the distance grid converges.
 \end{itemize}
 
-Let's put this idea in \sc{j} now.
+Let's put this idea in \textsc{j} now.
 We start by constructing the initial matrix of distances.
 We'll use the \href{https://code.jsoftware.com/wiki/Vocabulary/dollar}{\code{\$} (shape of, reshape)} verb for that.
 
@@ -510,7 +510,7 @@ We are now ready to define the relaxation function.
     step =. >. ((_1 & (|.!.0)) <. (1 & (|.!.0)) <. (_1 & (|.!.0)"1) <. (1 & (|.!.0)"1))
 \end{verbatim}
 
-To apply this function iteratively, we'll use the \href{https://code.jsoftware.com/wiki/Vocabulary/hatco}{\code{^:} (power of verb)} conjunction (another \sc{j} word for ``verb modifier'').
+To apply this function iteratively, we'll use the \href{https://code.jsoftware.com/wiki/Vocabulary/hatco}{\code{^:} (power of verb)} conjunction (another \textsc{j} word for ``verb modifier'').
 If we raise a verb to power \math{N}, we get a verb that applies the original verb \math{N} times in a row.
 If we raise a verb to infinite power \href{https://code.jsoftware.com/wiki/Vocabulary/under}{\code{_} (infinity)}, the original verb gets applied until the computation reaches a fixed point.
 
@@ -636,13 +636,13 @@ long trapped_water(int H[], int N) {
 \end{figure}
 
 \section{where-to-go-next}{Where to go next}
-That was all the \sc{j} magic for today!
+That was all the \textsc{j} magic for today!
 If you are confused and intrigued, I can recommend the following resources:
 
 \begin{itemize}
   \item Solve this problem on \href{https://leetcode.com/problems/trapping-rain-water/}{Leetcode}.
   \item Watch \href{https://youtu.be/ftcIcn8AmSY}{Four Solutions to a Trivial Problem}, a talk by Guy Steele where he explores the problem from different angles.
-  \item Read some \href{https://code.jsoftware.com/wiki/Books}{Books on \sc{j}}.
+  \item Read some \href{https://code.jsoftware.com/wiki/Books}{Books on \textsc{j}}.
   \item Listen to the \href{https://arraycast.com/}{Arraycast podcast}.
 \end{itemize}
 \end{document}

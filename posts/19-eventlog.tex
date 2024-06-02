@@ -21,7 +21,7 @@ The minter is a complicated system that must maintain a lot of state variables:
 
 \begin{itemize}
     \item
-    \href{https://en.wikipedia.org/wiki/Unspent_transaction_output}{Unspent Transaction Outputs} (\sc{utxo}s) the minter owns on the Bitcoin network, indexed and sliced in various ways (by account, state, etc.).
+    \href{https://en.wikipedia.org/wiki/Unspent_transaction_output}{Unspent Transaction Outputs} (\textsc{utxo}s) the minter owns on the Bitcoin network, indexed and sliced in various ways (by account, state, etc.).
     \item
     ckBTC to Bitcoin conversion requests, indexed by state and the arrival time.
     \item
@@ -136,16 +136,16 @@ Let's use the minter's \href{https://sourcegraph.com/github.com/dfinity/ic@1cbf1
   \item
     The user calls the \code{update_balance} endpoint on the minter.
   \item
-    The minter fetches the list of its \sc{utxo}s matching the user account from the \href{https://github.com/dfinity/bitcoin-canister}{Bitcoin canister} and checks whether there are new items in the list.
+    The minter fetches the list of its \textsc{utxo}s matching the user account from the \href{https://github.com/dfinity/bitcoin-canister}{Bitcoin canister} and checks whether there are new items in the list.
   \item
-    The minter mints ckBTC tokens on the ledger smart contract for each new \sc{utxo} and reports the results to the user.
+    The minter mints ckBTC tokens on the ledger smart contract for each new \textsc{utxo} and reports the results to the user.
 \end{enumerate}
 
 That's a lot of interactions!
-Luckily, the only significant outcome of these actions is the minter acquiring a new \sc{utxo}.
+Luckily, the only significant outcome of these actions is the minter acquiring a new \textsc{utxo}.
 That's our event type: \code{minted(utxo, account)}.
 
-If any of the intermediate steps fails or there are no new \sc{utxo}s in the list, the original request doesn't affect the minter state.
+If any of the intermediate steps fails or there are no new \textsc{utxo}s in the list, the original request doesn't affect the minter state.
 Thus a malicious user cannot fill the minter's memory with unproductive events.
 Creating an event requires sending funds on the Bitcoin network, and that's a slow and expensive operation.
 

@@ -174,7 +174,7 @@ For expressions \math{e\sub{1}, e\sub{2} \in  E}, we say that \math{e\sub{1} \le
 If the expressions are equally expressive, we define the shorter element as smaller.
 The reader context is a crucial component of the \math{\leq} operator.
 For example, ``cat'' is more expressive than ``felis catus'' in a regular conversation, but it might be the other way around in a scientific paper.
-This paragraph doesn't do a good job at defining expression ordering, but it's \sc{ok}: the whole point of the Galois connection is to make expression comparison precise through its connection with better-defined objects.
+This paragraph doesn't do a good job at defining expression ordering, but it's \textsc{ok}: the whole point of the Galois connection is to make expression comparison precise through its connection with better-defined objects.
 
 Our second set is the set of concepts \math{C}.
 If we have concepts \math{c\sub{1}, c\sub{2} \in  C}, we say that \math{c\sub{1} \leq  c\sub{2}} if \math{c\sub{1}} is at least as specific as \math{c\sub{2}}.
@@ -186,7 +186,7 @@ These functions are monotone because \math{encode} maps more specific concepts t
 The connection becomes \math{decode(e) \leq  c \iff  e \leq  encode(c)}.
 
 Even the specialized equivalence looks unintuitive, so let's see how it holds with an example.
-Imagine we want to name a variable holding the amount of \sc{usd} in a bank account (that's our concept \math{c}).
+Imagine we want to name a variable holding the amount of \textsc{usd} in a bank account (that's our concept \math{c}).
 Would \math{value} be an appropriate variable name?
 
 Let's see what our connection tells us: \math{decode(value)} is a vague concept, less specific than the bank account balance.

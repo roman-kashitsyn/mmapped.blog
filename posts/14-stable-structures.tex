@@ -32,7 +32,7 @@ This article explains the philosophy behind the library\sidenote{sn-library-vers
 \section{design-principles}{Design principles}
 \epigraph{
     The point is that you must decide, in advance, what the coding priorities and quality bars will be; otherwise, the team will have to waste time rewriting misconceived or substandard code.
-}{Steve Maguire, ``Debugging the Development Process'', \sc{the groundwork}, p. 19}
+}{Steve Maguire, ``Debugging the Development Process'', \textsc{the groundwork}, p. 19}
 
 Software designs reflect their creators' values.
 The following principles shaped the \code{stable-structures} library design.
@@ -75,7 +75,7 @@ There are other libraries with similar goals whose authors chose a slightly diff
 \epigraph{
   In solving a problem with or without a computer it is necessary to choose an abstraction of reality, i.e., to define a set of data that is to represent the real situation.
   The choice must be guided by the problem to be solved.
-}{Niklaus Wirth, ``Algorithms + Data Structures = Programs'', \sc{fundamental data structures}, p. 1}
+}{Niklaus Wirth, ``Algorithms + Data Structures = Programs'', \textsc{fundamental data structures}, p. 1}
 
 \subsection{memory}{Memory}
 
@@ -203,7 +203,7 @@ For example, you can persist an IC \href{https://internetcomputer.org/docs/curre
 \section{data-structures}{Data structures}
 \epigraph{
     One has an intuitive feeling that data precede algorithms: you must have some objects before you can perform operations on them.
-}{Niklaus Wirth, ``Algorithms + Data Structures = Programs'', \sc{preface}, p. xiii}
+}{Niklaus Wirth, ``Algorithms + Data Structures = Programs'', \textsc{preface}, p. xiii}
 
 The heart of the \code{stable-structures} library is a collection of data structures, each spanning one or more \href{#memory}{memories}.
 
@@ -380,7 +380,7 @@ The log is a versatile data structure that can be helpful in almost any applicat
 \subsection{stable-btree}{Stable B-tree}
 \epigraph{
     \emph{Deletion} of items from a B-tree is fairly straightforward in principle, but it is complicated in the details.
-}{Niklaus Wirth, ``Algorithms + Data Structures = Programs'', \sc{dynamic information structures}, p. 250}
+}{Niklaus Wirth, ``Algorithms + Data Structures = Programs'', \textsc{dynamic information structures}, p. 250}
 
 The \href{https://docs.rs/ic-stable-structures/0.4.0/ic_stable_structures/btreemap/struct.BTreeMap.html}{\code{BTreeMap}} stable structure is an associative container that can hold any \href{#storable-types}{bounded storable type}.
   The map must know the sizes of the keys and values because it allocates nodes from a pool of fixed-size tree nodes\sidenote{sn-}{
@@ -481,7 +481,7 @@ Each data structure \code{T} in the library declares at least three constructors
 \begin{itemize}
   \item\code{T::new} allocates a new copy of \code{T} in the given \href{#memory}{memory}, potentially overwriting previous memory content.
   \item\code{T::load} recovers a previously constructed \code{T} from the given \href{#memory}{memory}.
-  \item\code{T::init} is a \href{https://en.wikipedia.org/wiki/DWIM}{\sc{dwim}} constructor acting as \code{T::new} if the given \href{#memory}{memory} is empty and as \code{T::load} otherwise.
+  \item\code{T::init} is a \href{https://en.wikipedia.org/wiki/DWIM}{\textsc{dwim}} constructor acting as \code{T::new} if the given \href{#memory}{memory} is empty and as \code{T::load} otherwise.
 \end{itemize}
 
 In practice, most canisters need only \code{T::init}.
@@ -570,7 +570,7 @@ enum \b{Tx} {
 
 The next step is to decide on the data serialization format.
 I use \href{https://cbor.io/}{Concise Binary Object Representation} in the example because this encoding served me well in production.
-Instead of implementing the \href{#storable-trait}{\code{Storable}} trait for \code{Metadata} and \code{Tx}, I define a generic wrapper type \code{Cbor<T>} that I use for all types I want to encode as \sc{cbor} and implement \href{#storable-trait}{\code{Storable}} only for the wrapper.
+Instead of implementing the \href{#storable-trait}{\code{Storable}} trait for \code{Metadata} and \code{Tx}, I define a generic wrapper type \code{Cbor<T>} that I use for all types I want to encode as \textsc{cbor} and implement \href{#storable-trait}{\code{Storable}} only for the wrapper.
 I also implement \href{https://doc.rust-lang.org/std/ops/trait.Deref.html}{\code{std::ops::Deref}} to improve the ergonomics of the wrapper type.
 
 \begin{code}[rust]

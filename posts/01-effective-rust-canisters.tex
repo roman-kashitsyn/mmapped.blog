@@ -719,7 +719,7 @@ Compressing the counter canister shrinks the module size from 340KiB to 115KiB (
 \subsection{builds}{Builds}
 
 People using your canister might want to verify that it does what it claims to do (especially if the canister moves people's tokens around).
-The Internet Computer allows anyone to inspect the \sc{sha256} hash sum of the canister WebAssembly module.
+The Internet Computer allows anyone to inspect the \textsc{sha256} hash sum of the canister WebAssembly module.
 However, there are no good tools yet to review the canister's source code.
 The developer is responsibile for providing a reproducible way of building a WebAssembly module from the published source code.
 
@@ -830,7 +830,7 @@ There are a few downsides to this approach, however:
 \item 
   Changing the layout of your data might be infeasible.
   It will simply be too much work for a canister to complete the data migration in one go.
-  Imagine writing a program that reformats an eight-gigabyte disk from \sc{fat32} to \sc{ntfs} without losing any data.
+  Imagine writing a program that reformats an eight-gigabyte disk from \textsc{fat32} to \textsc{ntfs} without losing any data.
   By the way, that program must complete in under 5 seconds.
 \item 
   You must think carefully about the backward compatibility of your data structures.
@@ -843,7 +843,7 @@ If you plan to store gigabytes of state and upgrade the code, consider using sta
 \subsection{observability}{Observability}
 
 
-At \href{https://dfinity.org/}{\sc{dfinity}}, we use metrics extensively and monitor all our production services.
+At \href{https://dfinity.org/}{\textsc{dfinity}}, we use metrics extensively and monitor all our production services.
 Metrics are indispensable for understanding the behaviors of a complex distributed system.
 Canisters are not unique in this regard.
 
