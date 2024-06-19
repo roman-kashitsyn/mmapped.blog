@@ -5,77 +5,205 @@
 \date{2024-06-20}
 \modified{2024-06-20}
 \keyword{programming}
+\keyword{software-design}
 
 \begin{document}
 \section*
+
 I feel uneasy about design patterns.
 On the one hand, my university class on design patterns revived my interest in programming.
-On the other hand, I find most patterns in the \href{https://www.goodreads.com/book/show/85009.Design_Patterns}{Gang of Four book} to be irrelevant to my daily work; most of them don't solve real problems but rather problems that the programming language or paradigm creates.
+On the other hand, I find most patterns in the \href{https://www.goodreads.com/book/show/85009.Design_Patterns}{Gang of Four} book to be irrelevant to my daily work;
+they solve problems that a choice of programming language or paradigm creates.
 
 My litmus test of a good design pattern is its cross-disciplinary applicability.
-And the most convincing patterns are the ones that appear in my daily life.
+I'm more likely to accept an idea that pops up in fields beyond software engineering.
+And the most convincing patterns are the ones that help me in everyday life.
 
-This article describes one of the most ubiquitous and helpful patterns software engineers rarely discuss: the plan-execute pattern.
+This article describes a universal pattern that billions of people rely on daily, but software engineers rarely discuss---the plan-execute pattern.
 
-\section{motivation}{The motivation}
+\section{background}{Background}
 
-Imagine traveling from Washington, \textsc{dc}, to New York City (from Vienna to Prague, from Zurich to Munich, etc.).
-One approach is getting in your car, driving, following the road signs, and stopping at gas stations when needed.
-I call this approach ``just do it.''
-Another approach is to sit down with a map or a navigation app and plan your trip, deciding which paths to take and where to stop in advance.
-
-I'm sure most people prefer the latter approach.
-Yet, we often take the ``just do it'' path in software engineering.
-
-The first time I applied this pattern was during my work on the \href{/posts/02-ic-state-machine-replication.html#incremental-sync}{incremental state synchronization protocol} at \textsc{dfinity}.
-The protocol brings a stale replica up to date: it takes the current replica state and the target state descriptions and reconstructs the target state checkpoint on disk.
+In early August 2020 I was working on \textsc{dfinity}'s \href{/posts/02-ic-state-machine-replication.html#incremental-sync}{incremental state synchronization protocol}.
+The protocol brings a stale replica up to date by computing and applying state deltas on top of an existing state snapshot.
 
 One major challenge with this protocol was testing.
-The protocol is a black box that takes inputs and outputs the final state; how do I know it took the most efficient path to reconstruct the checkpoint?
-All correct checkpoints are the same.
+If the protocol implementation is a black box that outputs the final state, then how do I check that it took the most efficient path to reconstruct the checkpoint?
+Simply observing the output won't work.
 
-The solution I came up with was to factor the implementation into stages.
-First, the implementation will acquire all the information required to reach its goal: the data structures describing the local and target states.
-Next, the protocol builds a plan: a data structure encapsulating all the decisions the protocol will take: what data to fetch, what to copy from the existing state, and where to place all those pieces.
-The last stage is the plan execution: the protocol fetches data from peers and schedules disk writes according to the plan.
+To address this problem, I factored the implementation into stages:
+\begin{enumerate}
+  \item Acquire all the information required for synchronization: the bill of materials for the local and target replica states.
+  \item Build a \emph{plan}---a data structure encapsulating decisions: what data to fetch, what to copy from the local state, and how to assemble the pieces.
+  \item Execute: fetch the data and schedule disk writes according to the plan.
+\end{enumerate}
 
-The planning phase was the most challenging part, and factoring it into a separate pure function made testing it a breeze.
+Since then, the pattern has become one of my favorite techniques.
+I used it a few more times with great success and started recognizing it in other software.
 
-\section{pattern}{The pattern}
+\section{plan}{Plan}
 
-We are now ready to define the problem when the pattern can be beneficial:
-Given a complex algorithm that can take many paths to reach its goal, we want to ensure it takes the expected path.
+\epigraph{
+    Planning can be seen as reformulating a problem in a simpler problem space, solving it in the simpler space, and then trying to generalize that approach to the real problem space.
+}{Scott H. Young, ``Get Better at Anything''}
 
-The solution is to split the algorithm into two parts.
-The planning phase takes the inputs and outputs a \emph{plan}: a data structure encapsulating all the decisions the algorithm should take.
-The execution phase accepts the plan and executes it.
+Imagine traveling from Washington, \textsc{dc}, to New York City.
+One approach is getting in your car, starting the engine, and following the road signs until you reach the destination.
+I call this approach ``just do it.''
+Alternatively, you can sit down with a map and plan your itinerary, deciding which routes you will take and where you'll stop for a break.
 
-This pattern allows us to lift most of the complex logic from effectful code and test it separately and thoroughly.
+In software engineering, we often deal with complex algorithms that can take many paths to reach its goal.
+A ``just do it'' implementation freely interleaves decisions and actions, hiding the execution details from observers.
 
-\section{examples}{Examples}
+\begin{figure}[grayscale-diagram]
+\marginnote{mn-just-do-it}{
+  The ``just do it'' implementation of an algorithm hides all decisions it takes.
+}
+\includegraphics{images/29-just-do-it.svg}
+\end{figure}
 
-The \href{https://en.wikipedia.org/wiki/Query_plan}{\textsc{rdbms} query planner} is one of the primary inspirations for the pattern.
+The plan-execute pattern tackles the problem in two stages.
+The planning stage takes the inputs and produces a plan: a data structure encapsulating all the decisions the algorithm should make.
+The execution stage realizes the plan.
+
+\begin{figure}[grayscale-diagram]
+\marginnote{mn-plan-execute}{
+  The plan-execute pattern consists of two stages: the planning stage outputs the decisions as a data structure, and the execution stage realizes the plan.
+}
+\includegraphics{images/29-plan-execute.svg}
+\end{figure}
+
+This approach allows for more comprehensive testing of the decision-making part.
+It also extends the system's debugging capabilities: since the plan is a data structure, humans can inspect it to understand what the system is about to do without causing any side effects.
+
+\section{execution}{Execution}
+
+\epigraph{If you want to make God laugh, tell him about your plans.}{Woody Allen}
+
+In some cases, the execution part of the pattern is straightforward: traverse the plan data structure and run predefined steps:
+Turn left, turn right, \href{https://xkcd.com/461/}{take the ferry across the lake}.
+That works well if the execution environment is predictable.
+
+When driving a car, we might take an unplanned route because of traffic, weather conditions, missed turns, and construction works.
+In environments where execution steps can involve concurrency or potential failure, our programs must adjust the plan as we go.
+
+My favorite way to deal with uncertainty is to split the execution stage further into a state machine and a driver loop.
+The driver feeds external events into the state machine, and the state machine emits actions that the driver must take.
+The original plan becomes an initializer for the state machine starting state.
+
+\begin{figure}[grayscale-diagram]
+\marginnote{mn-dynamic-planning}{
+
+}
+\includegraphics{images/29-dynamic-planning.svg}
+\end{figure}
+
+The beauty of this approach is that the state machine doesn't depend on messy execution details,
+so we can test it exhaustively and thoroughly,
+potentially applying \href{https://propertesting.com/book_state_machine_properties.html}{property-based testing techniques}.
+
+\section{build-system-example}{Build system example}
+
+The following simplistic build system design demonstrates how all the pieces of the plan-execute pattern fit together.
+
+The inputs for a build are the build graph, the set of outputs the caller requested to materialize, and the build cache state.
+The plan is the list of tasks we need to execute to materialize the desired artifacts, in the topological order.
+
+\begin{code}[rust]
+struct Node {
+    id: NodeId,
+    inputs: Vec<ArtifactId>,
+    outputs: Vec<ArtifactId>,
+    transform: Command,
+}
+
+struct BuildGraph(\ldots)
+
+type BuildPlan = Vec<Node>;
+
+fn plan(
+    g: &BuildGraph,
+    cache: &BuildCache,
+    targets: &[ArtifactId],
+) -> Result<BuildPlan, BuildError> { \ldots  }
+\end{code}
+
+The most straightforward execution function would go over the tasks in the plan and execute them sequentially.
+
+\begin{code}[rust]
+fn run_build_sequentially(
+    plan: &BuildPlan,
+    cache: &BuildCache,
+    sandbox: &Sandbox,
+) -> Result<(), BuildError> {
+    for node in plan {
+        sandbox.execute(node, cache)?;
+    }
+    Ok(())
+}
+\end{code}
+
+A more efficient approach is to implement pipeline parallelism and execute independent tasks concurrently.
+This execution model adds a lot of complexity, and the build plan doesn't help us address this complexity.
+So we introduce a state machine that keeps track of unfinished work and adjusts the plan as the execution unfolds.
+
+\begin{code}[rust]
+struct ExecutionState {
+    graph: BuildGraph,
+    todo: Vec<NodeId>,
+    in_progress: Vec<NodeId>,
+    depcount: HashMap<NodeId, usize>,
+}
+
+enum Action {
+    Schedule(Vec<Node>),
+    Finish,
+}
+
+impl ExecutionState {
+    \emph{// Returns the first action to take.}
+    fn init(&self) -> Action { \ldots  }
+
+    \emph{// Indicates that the task corresponding to the node is in progress.}
+    fn started(&must self, node: NodeId) { \ldots  }
+
+    \emph{// Indicates that the task corresponding to the node has completed.}
+    \emph{// Returns the next action to take.}
+    fn completed(&mut self, node: NodeId) -> Action { \ldots  }
+}
+\end{code}
+
+The \code{run\_build} function is the driver loop that spawns processes and feeds their results to the state machine, which either outputs more tasks or reports that the build has finished.
+
+\begin{code}[rust]
+fn run_build(
+    cache: &BuildCache,
+    sandbox: &Sandbox,
+    state: ExecutionState,
+) -> Result<(), BuildError> { \ldots  }
+\end{code}
+
+This design splits a hard problem into smaller pieces that are easy to understand.
+The most algorithm-heavy portions (planning and execution control) do not require any I/O and are easy to test.
+Only the \code{run\_build} function needs to interact with the operating system, and it should be relatively straightforward to implement.
+The planning function is also helpful in implementing the \code{--dry-run} feature.
+
+\section{instances-relatives}{Instances and relatives}
+
+The \href{https://en.wikipedia.org/wiki/Query_plan}{\textsc{rdbms} query planner} is a supreme example of the pattern.
 There are many ways to execute an \textsc{sql} query, and the database engine should always use the most efficient one.
-\href{https://en.wikipedia.org/wiki/Query_plan}{Query plans} are paramount for understanding and tweaking database performance.
+Query plans give us insight into which path the engine is going to take; they are paramount for understanding and tweaking database performance.
 
-Bazel build rules design relies on a similar idea of staged computation.
-The rules don't execute any actions, they only construct a build graph.
-A rule inspects inputs, declares which outputs to expect, and how to transform inputs into outputs.
-All these transformations are symbolic and pure: rules can't read or write any files, they can only add actions to the build graph.
-The execution stage is baked into Bazel internals.
-This design contributes to the initial confusion that most people have with Bazel, but it allows for significant performance gains.
+The \href{https://en.wikipedia.org/wiki/Interpreter_pattern}{interpreter pattern} is a special case of the plan-execute pattern,
+where plans are syntactic trees expressing the intent,
+and the execution stage is their interpretation.
 
-TensorFlow 1.x relied on a similar pattern:
-The programmer constructed a computation graph using library primitives and passed it to the execution engine.
-This design allowed for advanced performance optimizations, but most programmers found it confusing, and it didn't work well with networks that require dynamic graphs, such as \href{https://en.wikipedia.org/wiki/Recursive_neural_network}{recursive neural networks},
-so TensorFlow 2 adapted a more dynamic approach (see \href{https://www.tensorflow.org/guide/migrate/tf1_vs_tf2}{TensorFlow 1.x vs TensorFlow 2}).
+The \href{https://sans-io.readthedocs.io/how-to-sans-io.html}{Sans-I/O} protocol implementations provide a blueprint for extracting execution state machines from input/output driver loops
+as discussed in the \href{#execution}{Execution} section.
+This practice goes back to functional programming ideas;
+\href{https://www.destroyallsoftware.com/talks/boundaries}{Gary Bernhardt} called it ``functional core, imperative shell''.
 
-The pattern is a special case of the ``functional core, imperative shell'' paradigm\sidenote{sn-functional-core}{
-  I couldn't find an authoritative source explaining this paradigm, but \href{https://www.destroyallsoftware.com/talks/boundaries}{Gary Bernhardt's talk} is a good start.
-}.
-See also: \href{https://sans-io.readthedocs.io/how-to-sans-io.html}{Sans-I/O} protocol implementations.
-
-All programs are plans: a programmer takes care of all the decisions in advance and codifies them some binary form, leaving it to the computer to execute them.
+Finally, all programs are plans: a programmer makes all decisions in advance and encodes them as a byte array,
+leaving it to the computer to take care of the execution.
 ``Programming'' was a synonym of ``planning'' before computers conquered the world.
 
 \end{document}
