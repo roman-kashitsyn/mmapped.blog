@@ -213,8 +213,8 @@ The complexity required to make builds correct and ergonomic made me yearn for a
 After my deep dive into \code{make}, I often fiddled with build systems at work:
 I introduced \href{https://cmake.org/}{CMake} to my first C++ project to replace complex and scarily incorrect \code{Makefile} files and
 replaced an inflexible \href{https://ant.apache.org/}{Ant}-based build system in a 500 \textsc{kloc} Java project with \href{https://gradle.org/}{Gradle} scripts that everyone on the team could contribute to.
-But all of the tools I tried, including \href{https://cmake.org/}{CMake}, \href{https://ant.apache.org/}{Ant}, \href{https://maven.apache.org/}{Maven}, \href{https://gradle.org/}{Gradle}, \href{https://www.scons.org/}{SCons}, and \href{https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html}{autotools} left me deeply unsatisfied.
-They were clanky, awkward, and hard to extend and compose.
+But all the tools I tried, including \href{https://cmake.org/}{CMake}, \href{https://ant.apache.org/}{Ant}, \href{https://maven.apache.org/}{Maven}, \href{https://gradle.org/}{Gradle}, \href{https://www.scons.org/}{SCons}, and \href{https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html}{autotools} left me deeply unsatisfied.
+They were clunky, awkward, and hard to extend and compose.
 
 In 2016, I joined Google in Zurich.
 I heard about Google's internal build tool, \code{blaze}, and couldn't wait to lay my hands on it.
@@ -223,7 +223,7 @@ I could copy some build targets and edit the dependency list, and the build work
 \code{blaze} made correct and fast builds not just easy, but \emph{boring} in the good sense.
 Only a few years later, when I attempted to use \href{https://bazel.build/}{Bazel}---the open-source version of \code{blaze}---for a toy personal project, did I have to understand the underlying model.
 
-Bazel was the final piece of the puzzle, together with Haskell's typeclasses, \href{https://research.google/pubs/flumejava-easy-efficient-data-parallel-pipelines/}{Flume pipelines} interface,  and the \href{https://www.tensorflow.org/}{TensorFlow} 1.0 execution model, that made me understand the ubiquitous plan-execute pattern\sidenote{sn-build-systems-a-la-carte}{
+Bazel was the final piece of the puzzle, together with Haskell's typeclasses, \href{https://research.google/pubs/flumejava-easy-efficient-data-parallel-pipelines/}{Flume pipelines} interface,  and the \href{https://www.tensorflow.org/}{TensorFlow} 1.0 execution model, that made me understand the ubiquitous \href{/posts/29-plan-execute.html}{plan-execute pattern}\sidenote{sn-build-systems-a-la-carte}{
   The \href{https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf}{Build Systems à la Carte} article by Andrey Mokhov, Neil Mitchell, and Simon Peyton Jones explains how various build system designs map to Haskell typeclasses.
   Thomas Leonard's \href{https://roscidus.com/blog/blog/2019/11/14/cicd-pipelines}{CI/CD pipelines: Monad, Arrow or Dart?} blog post is also a great read on this topic.
 }.

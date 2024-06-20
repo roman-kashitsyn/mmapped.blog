@@ -28,12 +28,12 @@ The protocol brings a stale replica up to date by computing and applying state d
 
 One major challenge with this protocol was testing.
 If the protocol implementation is a black box that outputs the final state, then how do I check that it took the most efficient path to reconstruct the checkpoint?
-Simply observing the output won't work.
+Simply observing the output won't work: it might have decided to fetch the entire new state instead of re-using locally available pieces.
 
 To address this problem, I factored the implementation into stages:
 \begin{enumerate}
   \item Acquire all the information required for synchronization: the bill of materials for the local and target replica states.
-  \item Build a \emph{plan}---a data structure encapsulating decisions: what data to fetch, what to copy from the local state, and how to assemble the pieces.
+  \item Build a \emph{plan}---a data structure encapsulating the protocol decisions: what data to fetch, what to copy from the local state, and how to assemble the pieces.
   \item Execute: fetch the data and schedule disk writes according to the plan.
 \end{enumerate}
 
@@ -46,12 +46,13 @@ I used it a few more times with great success and started recognizing it in othe
     Planning can be seen as reformulating a problem in a simpler problem space, solving it in the simpler space, and then trying to generalize that approach to the real problem space.
 }{Scott H. Young, ``Get Better at Anything''}
 
-Imagine traveling from Washington, \textsc{dc}, to New York City.
-One approach is getting in your car, starting the engine, and following the road signs until you reach the destination.
+There are two ways to get from Washington, \textsc{dc}, to New York City by car.
+One approach is getting in your vehicle, starting the engine, and following the road signs until you reach the destination.
 I call this approach ``just do it.''
-Alternatively, you can sit down with a map and plan your itinerary, deciding which routes you will take and where you'll stop for a break.
+Alternatively, you can sit down with a map and plan your itinerary, deciding which routes you will take and where you'll stop for a break, and then follow the planned route.
+That's the plan-execute approach.
 
-In software engineering, we often deal with complex algorithms that can take many paths to reach its goal.
+In software engineering, we often deal with complex algorithms that can take many paths to reach their goals.
 A ``just do it'' implementation freely interleaves decisions and actions, hiding the execution details from observers.
 
 \begin{figure}[grayscale-diagram]
@@ -73,7 +74,7 @@ The execution stage realizes the plan.
 \end{figure}
 
 This approach allows for more comprehensive testing of the decision-making part.
-It also extends the system's debugging capabilities: since the plan is a data structure, humans can inspect it to understand what the system is about to do without causing any side effects.
+It also extends the system's debugging capabilities: since the plan is a data structure, humans can inspect it to understand what the system is about to do without causing \href{https://en.wikipedia.org/wiki/Side_effect_(computer_science)}{side effects}.
 
 \section{execution}{Execution}
 
@@ -83,8 +84,8 @@ In some cases, the execution part of the pattern is straightforward: traverse th
 Turn left, turn right, \href{https://xkcd.com/461/}{take the ferry across the lake}.
 That works well if the execution environment is predictable.
 
-When driving a car, we might take an unplanned route because of traffic, weather conditions, missed turns, and construction works.
-In environments where execution steps can involve concurrency or potential failure, our programs must adjust the plan as we go.
+When driving a car, however, we might have to take an unplanned route because of traffic, weather conditions, missed turns, and construction work.
+Similarly, when execution steps can involve concurrency or potential failure, our programs must adjust the plan as they realize it.
 
 My favorite way to deal with uncertainty is to split the execution stage further into a state machine and a driver loop.
 The driver feeds external events into the state machine, and the state machine emits actions that the driver must take.
@@ -103,8 +104,7 @@ potentially applying \href{https://propertesting.com/book_state_machine_properti
 
 \section{build-system-example}{Build system example}
 
-The following simplistic build system design demonstrates how all the pieces of the plan-execute pattern fit together.
-
+The following simplistic build system design demonstrates how all the pattern pieces fit together.
 The inputs for a build are the build graph, the set of outputs the caller requested to materialize, and the build cache state.
 The plan is the list of tasks we need to execute to materialize the desired artifacts, in the topological order.
 
@@ -143,7 +143,7 @@ fn run_build_sequentially(
 \end{code}
 
 A more efficient approach is to implement pipeline parallelism and execute independent tasks concurrently.
-This execution model adds a lot of complexity, and the build plan doesn't help us address this complexity.
+This execution model adds a lot of complexity, which the build plan alone doesn't address.
 So we introduce a state machine that keeps track of unfinished work and adjusts the plan as the execution unfolds.
 
 \begin{code}[rust]
@@ -184,7 +184,7 @@ fn run_build(
 
 This design splits a hard problem into smaller pieces that are easy to understand.
 The most algorithm-heavy portions (planning and execution control) do not require any I/O and are easy to test.
-Only the \code{run\_build} function needs to interact with the operating system, and it should be relatively straightforward to implement.
+Only the \code{run\_build} function needs to interact with the operating system.
 The planning function is also helpful in implementing the \code{--dry-run} feature.
 
 \section{instances-relatives}{Instances and relatives}
@@ -197,13 +197,23 @@ The \href{https://en.wikipedia.org/wiki/Interpreter_pattern}{interpreter pattern
 where plans are syntactic trees expressing the intent,
 and the execution stage is their interpretation.
 
-The \href{https://sans-io.readthedocs.io/how-to-sans-io.html}{Sans-I/O} protocol implementations provide a blueprint for extracting execution state machines from input/output driver loops
+The \href{https://sans-io.readthedocs.io/how-to-sans-io.html}{Sans-\textsc{i/o}} protocol implementations provide a blueprint for extracting execution state machines from input/output driver loops
 as discussed in the \href{#execution}{Execution} section.
-This practice goes back to functional programming ideas;
+This practice goes back to functional programming folklore;
 \href{https://www.destroyallsoftware.com/talks/boundaries}{Gary Bernhardt} called it ``functional core, imperative shell''.
 
 Finally, all programs are plans: a programmer makes all decisions in advance and encodes them as a byte array,
 leaving it to the computer to take care of the execution.
 ``Programming'' was a synonym of ``planning'' before computers conquered the world.
+
+\section{conclusion}{Conclusion}
+
+This article presented two approaches to implementing complex algorithms:
+the ``just do it'' approach where decisions and actions are intertwined,
+and the plan-execute pattern that separates decisions from actions.
+
+The former approach is the natural first choice that leads to straightforward code.
+As our systems grow and become more complex,
+the plan-execute pattern becomes a viable alternative that helps separate concerns and test our code more easily and thoroughly.
 
 \end{document}
