@@ -166,7 +166,7 @@ impl ExecutionState {
     \emph{// Indicates that the task corresponding to the node is in progress.}
     fn started(&must self, node: NodeId) { \ldots  }
 
-    \emph{// Indicates that the task corresponding to the node has completed.}
+    \emph{// Indicates that the task corresponding to the node has been completed.}
     \emph{// Returns the next action to take.}
     fn completed(&mut self, node: NodeId) -> Action { \ldots  }
 }
