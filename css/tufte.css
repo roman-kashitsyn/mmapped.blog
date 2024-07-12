@@ -3,143 +3,168 @@
 /* Font faces */
 
 @font-face {
-  font-family: "Yanone Kaffeesatz";
-  font-style:  normal;
-  font-weight: 400;
-  src: local(Yanone Kaffeesatz),
-       url("/fonts/YanoneKaffeesatz-Regular.otf") format("opentype");
-  font-display: swap;
+    font-family: "Yanone Kaffeesatz";
+    font-style: normal;
+    font-weight: 400;
+    src: local(Yanone Kaffeesatz),
+        url("/fonts/YanoneKaffeesatz-Regular.otf") format("opentype");
+    font-display: swap;
 }
 
 @font-face {
-  font-family: "Yanone Kaffeesatz";
-  font-style:  normal;
-  font-weight: 800;
-  src: local(Yanone Kaffeesatz),
-       url("/fonts/YanoneKaffeesatz-Bold.otf") format("opentype");
-  font-display: swap;
+    font-family: "Yanone Kaffeesatz";
+    font-style: normal;
+    font-weight: 800;
+    src: local(Yanone Kaffeesatz),
+        url("/fonts/YanoneKaffeesatz-Bold.otf") format("opentype");
+    font-display: swap;
 }
 
 @font-face {
-  font-family: "Libertinus Serif";
-  font-style:  normal;
-  font-weight: 400;
-  src: local(Libertinum Serif),
-       local(Linux Libertine O),
-       url("/fonts/LibertinusSerif-Regular.otf") format("opentype"), 
-       url("/fonts/LibertinusSerif-Regular.woff2") format("woff2");
-  font-display: swap;
+    font-family: "Libertinus Serif";
+    font-style: normal;
+    font-weight: 400;
+    src: local(Libertinum Serif),
+        local(Linux Libertine O),
+        url("/fonts/LibertinusSerif-Regular.otf") format("opentype"),
+        url("/fonts/LibertinusSerif-Regular.woff2") format("woff2");
+    font-display: swap;
 }
 
 @font-face {
-  font-family: "Libertinus Serif";
-  font-style:  italic;
-  font-weight: 400;
-  src: local(Libertinus Serif Italic), 
-       url("/fonts/LibertinusSerif-Italic.otf") format("opentype"), 
-       url("/fonts/LibertinusSerif-Italic.woff2") format("woff2");
-  font-display: swap;
+    font-family: "Libertinus Serif";
+    font-style: italic;
+    font-weight: 400;
+    src: local(Libertinus Serif Italic),
+        url("/fonts/LibertinusSerif-Italic.otf") format("opentype"),
+        url("/fonts/LibertinusSerif-Italic.woff2") format("woff2");
+    font-display: swap;
 }
 
 @font-face {
-  font-family: "Libertinus Sans";
-  font-style: normal;
-  font-weight: normal;
-  src: local("Libertinus Sans"),
-       local("Linux Biolinum O"),
-       url("/fonts/LibertinusSans-Regular.otf") format("opentype"),
-       url("/fonts/LibertinusSans-Regular.woff2") format("woff2");
-  font-display: swap;
+    font-family: "Libertinus Serif";
+    font-style: italic;
+    font-weight: 400;
+    src: local(Libertinus Serif Italic),
+        url("/fonts/LibertinusSerif-Italic.otf") format("opentype"),
+        url("/fonts/LibertinusSerif-Italic.woff2") format("woff2");
+    font-display: swap;
 }
 
 @font-face {
-  font-family: "Libertinus Sans";
-  font-style: italic;
-  font-weight: normal;
-  src: local("Libertinus Sans"),
-       local("Linux Biolinum O"),
-       url("/fonts/LibertinusSans-Italic.otf") format("opentype"),
-       url("/fonts/LibertinusSans-Italic.woff2") format("woff2");
-  font-display: swap;
+    font-family: "Libertinus Sans";
+    font-style: normal;
+    font-weight: normal;
+    src: local("Libertinus Sans"),
+        local("Linux Biolinum O"),
+        url("/fonts/LibertinusSans-Regular.otf") format("opentype"),
+        url("/fonts/LibertinusSans-Regular.woff2") format("woff2");
+    font-display: swap;
 }
 
 @font-face {
-  font-family: "Libertinus Keyboard";
-  font-style: normal;
-  font-weight: normal;
-  src: local("Libertinus Keyboard"),
-       url("/fonts/LibertinusKeyboard-Regular.otf") format("opentype"),
-       url("/fonts/LibertinusKeyboard-Regular.woff2") format("woff2");
-  font-display: swap;
+    font-family: "Libertinus Sans";
+    font-style: italic;
+    font-weight: normal;
+    src: local("Libertinus Sans Italic"),
+        local("Linux Biolinum O"),
+        url("/fonts/LibertinusSans-Italic.otf") format("opentype"),
+        url("/fonts/LibertinusSans-Italic.woff2") format("woff2");
+    font-display: swap;
 }
 
 @font-face {
-  font-family: "Neo Euler";
-  font-style:  normal;
-  font-weight: normal;
-  src: url("/fonts/NeoEuler.otf") format("opentype"); 
-  font-display: swap;
+    font-family: "Libertinus Sans";
+    font-weight: bold;
+    src: local("Libertinus Sans Bold"),
+        local("Linux Biolinum O"),
+        url("/fonts/LibertinusSans-Bold.otf") format("opentype"),
+        url("/fonts/LibertinusSans-Bold.woff2") format("woff2");
+    font-display: swap;
 }
 
 @font-face {
-  font-family: "Iosevka";
-  font-style:  normal;
-  font-weight: normal;
-  src: local(Iosevka),
-       url("/fonts/Iosevka-Regular.woff2") format("woff2");
-  font-display: swap;
-}
-@font-face {
-  font-family: "Iosevka";
-  font-style:  italic;
-  font-weight: normal;
-  src: local(Iosevka),
-       url("/fonts/Iosevka-Italic.woff2") format("woff2");
-  font-display: swap;
-}
-@font-face {
-  font-family: "Iosevka";
-  font-style:  normal;
-  font-weight: bold;
-  src: local(Iosevka),
-       url("/fonts/Iosevka-Bold.woff2") format("woff2");
-  font-display: swap;
-}
-@font-face {
-  font-family: "Iosevka";
-  font-style:  italic;
-  font-weight: bold;
-  src: local(Iosevka),
-       url("/fonts/Iosevka-BoldItalic.woff2") format("woff2");
-  font-display: swap;
+    font-family: "Libertinus Keyboard";
+    font-style: normal;
+    font-weight: normal;
+    src: local("Libertinus Keyboard"),
+        url("/fonts/LibertinusKeyboard-Regular.otf") format("opentype"),
+        url("/fonts/LibertinusKeyboard-Regular.woff2") format("woff2");
+    font-display: swap;
 }
 
 @font-face {
-  font-family: "Comic Sans Mono";
-  font-style: normal;
-  font-weight: 400;
-  src: url("/fonts/ComicMono.ttf") format("truetype")
+    font-family: "Neo Euler";
+    font-style: normal;
+    font-weight: normal;
+    src: url("/fonts/NeoEuler.otf") format("opentype");
+    font-display: swap;
 }
 
 @font-face {
-  font-family: "APL385 Unicode";
-  font-style:  normal;
-  font-weight: 400;
-  src: local(APL385 Unicode),
-       url("/fonts/Apl385.ttf") format("truetype");
-  font-display: swap;
+    font-family: "Iosevka";
+    font-style: normal;
+    font-weight: normal;
+    src: local(Iosevka),
+        url("/fonts/Iosevka-Regular.woff2") format("woff2");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Iosevka";
+    font-style: italic;
+    font-weight: normal;
+    src: local(Iosevka),
+        url("/fonts/Iosevka-Italic.woff2") format("woff2");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Iosevka";
+    font-style: normal;
+    font-weight: bold;
+    src: local(Iosevka),
+        url("/fonts/Iosevka-Bold.woff2") format("woff2");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Iosevka";
+    font-style: italic;
+    font-weight: bold;
+    src: local(Iosevka),
+        url("/fonts/Iosevka-BoldItalic.woff2") format("woff2");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Comic Sans Mono";
+    font-style: normal;
+    font-weight: 400;
+    src: url("/fonts/ComicMono.ttf") format("truetype")
+}
+
+@font-face {
+    font-family: "APL385 Unicode";
+    font-style: normal;
+    font-weight: 400;
+    src: local(APL385 Unicode),
+        url("/fonts/Apl385.ttf") format("truetype");
+    font-display: swap;
 }
 
 /* Customized styles */
 .post-icons {
     margin-left: 1em;
 }
+
 a.icon-link:link,
 a.icon-link:visited {
     text-decoration: none;
     background: none;
     vertical-align: middle;
 }
+
 .social-icon {
     height: 16px;
     width: 16px;
@@ -272,27 +297,29 @@ li.toc {
 }
 
 ul.toc a:link {
-    font-size: 1rem;
     font-feature-settings: normal;
     text-transform: initial;
     text-decoration: none;
     background: none;
     font-family: "Libertinus Sans", sans-serif;
+    font-size: 1rem;
 }
 
 ul.toc-level-1 {
     padding-left: 0px;
 }
 
+ul.toc-level-1>li>a {
+    font-weight: bold;
+}
+
 ul.toc-level-2 {
     padding-left: 1em;
 }
 
-li.toc-level-2 > a {
-    font-style: italic;
-}
-
-a:link, .tufte-underline, .hover-tufte-underline:hover {
+a:link,
+.tufte-underline,
+.hover-tufte-underline:hover {
     text-decoration: none;
     background: -webkit-linear-gradient(#fffff8, #fffff8), -webkit-linear-gradient(#fffff8, #fffff8), -webkit-linear-gradient(currentColor, currentColor);
     background: linear-gradient(#fffff8, #fffff8), linear-gradient(#fffff8, #fffff8), linear-gradient(currentColor, currentColor);
@@ -329,6 +356,7 @@ div.advice>p {
     font-style: italic;
     text-align: center;
 }
+
 div.advice code {
     font-style: italic;
 }
@@ -417,7 +445,9 @@ body {
         background-image: url(/images/GitHub-Mark-Light-32px.png);
     }
 
-    figure.grayscale-diagram svg, figure.grayscale-diagram img, img.grayscale {
+    figure.grayscale-diagram svg,
+    figure.grayscale-diagram img,
+    img.grayscale {
         filter: invert(100%);
     }
 }
@@ -433,7 +463,7 @@ h1 {
 }
 
 h2 {
-    font-weight: 400;
+    font-weight: bold;
     margin-top: 2.1rem;
     margin-bottom: 1.4rem;
     font-size: 2.2rem;
@@ -442,21 +472,18 @@ h2 {
     hyphens: none;
 }
 
-h1 a:link, h2 a:link, h3 a:link {
+h1 a:link,
+h2 a:link,
+h3 a:link {
     background: none;
     text-decoration: none;
     font-feature-settings: normal;
     text-transform: initial;
 }
 
-h3 > a {
-    font-style: italic;
-}
-
 h3 {
-    font-style: italic;
-    font-weight: 400;
-    font-size: 1.7rem;
+    font-weight: bold;
+    font-size: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 1.4rem;
     line-height: 1;
@@ -705,30 +732,39 @@ div.table-wrapper {
 table {
     border-collapse: collapse;
 }
-table .math, table .code {
+
+table .math,
+table .code {
     font-size: 1rem;
 }
 
-th, td {
+th,
+td {
     text-align: left;
 }
 
-table > thead > tr:last-child > td,
-table > thead > tr:last-child > th,
-table > tbody > tr:last-child > th {
+table>thead>tr:last-child>td,
+table>thead>tr:last-child>th,
+table>tbody>tr:last-child>th {
     padding-bottom: 0.5rem;
     font-variant: all-small-caps;
 }
 
-.table-3 td, .table-3 th {
+.table-3 td,
+.table-3 th {
     width: 33%;
 }
-.table-4 td, .table-4 th {
+
+.table-4 td,
+.table-4 th {
     width: 25%;
 }
-.table-5 td, .table-5 th {
+
+.table-5 td,
+.table-5 th {
     width: 20%;
 }
+
 .num-col {
     text-align: right;
     padding-right: 4em;
@@ -738,15 +774,17 @@ table > tbody > tr:last-child > th {
     text-align: right;
     padding-right: 4em;
 }
+
 .align-l {
     text-align: left;
 }
+
 .align-c {
     text-align: center;
 }
 
-table > tbody > tr:first-child > td,
-table > tbody > tr:first-child > th {
+table>tbody>tr:first-child>td,
+table>tbody>tr:first-child>th {
     padding-top: 0.5rem;
 }
 
@@ -784,8 +822,7 @@ pre>code {
 .marginnote>code,
 .marginnote>a>code,
 .sidenote>code,
-.sidenote>a>code
-{
+.sidenote>a>code {
     font-size: 0.95rem;
 }
 
