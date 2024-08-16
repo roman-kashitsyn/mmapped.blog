@@ -1,0 +1,234 @@
+\documentclass{article}
+
+\title{Transaction models are programming paradigms}
+\subtitle{Functional programming vs OOP, now on a blockchain.}
+\date{2024-08-16}
+\modified{2024-08-16}
+\keyword{blockchain}
+
+\begin{document}
+\section*
+
+In late 2023, I had a lunch discussion with Thomas Locher,
+a researcher at \textsc{dfinity} at the time,
+with whom I worked on the \href{https://internetcomputer.org/ckbtc}{chain-key Bitcoin} project (ckBTC).
+I told him that I find the \textsc{utxo} model quite elegant,
+but Thomas argued that using the model for digital currency was the wrong decision
+and that he couldn't see any benefits of using it.
+
+I didn't have strong arguments to counter Thomas' statement, but
+having built transaction managers for both Bitcoin and Ethereum,
+I felt inclined toward Bitcoin's approach to transactions.
+
+This article explores the differences between the account and \textsc{utxo} transaction models,
+which are surprisingly similar to distinctions between programming styles.
+Account-based chains model computation using the object-oriented style,
+where each update touches the global ledger state,
+while \textsc{utxo}-based chains employ functional style with \href{https://en.wikipedia.org/wiki/Substructural_type_system}{substructural typing}.
+The benefits and downsides of each model mirror those of the corresponding programming styles.
+
+\section{utxos-vs-accounts}{UTXOs vs accounts}
+
+Many articles\sidenote{sn-utxo-articles}{
+  See, for example, \href{https://docs.alchemy.com/docs/utxo-vs-account-models}{\textsc{utxo} vs. Account Models} from Alchemy.
+} explain the differences between the transaction models from the end user's point of view.
+In contrast, this section explores the engineering aspects of these models:
+resistance to replay attacks, multi-way transactions\sidenote{sn-multi-way}{
+  Since there is no official term for transactions with multiple inputs and outputs,
+  I will call them \emph{multi-way transactions} in this article.
+}, error recovery, and regulatory compliance.
+The \textsc{utxo} model fairs well on all these dimensions.
+
+\subsection{replay-attack-resistance}{Replay attack resistance}
+
+A replay attack occurs when a malicious actor executes a transaction more than once.
+Suppose Alice sends tokens to Eva in exchange for some goods.
+If Eva could somehow resubmit Alice's transaction and receive double the amount,
+she would have successfully mounted a replay attack.
+
+Since account-based models contain generic instructions such as ``move X tokens from address A to address B,''
+they require extra care to prevent replay attacks.
+The Ethereum network requires each transaction to have a \emph{nonce}, a unique sequence number.
+The network increments the sender's next expected nonce after every transaction.
+This approach works, but it significantly complicates \href{#error-recovery}{error recovery}.
+
+Some chains, such as \href{https://tron.network/}{Tron} and \href{https://internetcomputer.org/}{Internet Computer}, rely on time tracking to prevent replays,
+allowing transactions to be valid only in a relatively short time window.
+If the transaction validity range is outside the validity window, the system rejects the transaction.
+When the system accepts a transaction, it adds the transaction to the deduplication pool and ignores all copies.
+The system can safely remove a transaction from the pool once its validity range falls outside the active time window.
+
+The \textsc{utxo} model solves the problem most elegantly.
+Its transaction instructions are unambiguous: ``burn coins A and B and mint coin C,''
+where A, B, and C are unique identifiers (the transaction hash and the output number).
+Once a coin appears as input in a mined transaction,
+all honest nodes reject further transactions referencing it as input.
+
+\subsection{multi-way-transaction}{Multi-way transactions}
+
+The \textsc{utxo} model allows transactions to have multiple inputs and outputs,
+whereas the account model allows only point-to-point transfers.
+
+The \textsc{dfinity} team employed multi-way transactions in the ckBTC token design.
+Each \textsc{ic} user had a unique Bitcoin deposit address,
+and the system could pool funds from several past deposits when someone wanted to withdraw their Bitcoin from the system.
+This design increased the system transparency and made deposits cheap and convenient.
+
+The next token the team worked on was \href{https://support.dfinity.org/hc/en-us/articles/20273018220180-What-are-ckETH-and-ckERC-20-tokens}{chain-key Ethereum} (ckETH).
+Following the Bitcoin model,
+the team wanted to have a unique deposit Ethereum address for each \textsc{ic} user,
+but that design would require pooling funds from multiple accounts on withdrawals.
+The team decided that submitting multiple transactions for a single withdrawal
+introduces too much complexity and creates too many error conditions.
+As a result, the team settled on a deposit flow
+where users must identify themselves on each deposit by calling a helper smart contract.
+This design led to increased deposit fees and made direct deposit from centralized exchanges impossible,
+but it was the lesser of evils.
+
+The main downside of multi-way transactions is the need for a robust \textsc{utxo} selection algorithm---%
+a function that selects coins for a transaction with a given value.
+Such an algorithm must solve a multi-objective optimization problem,
+balancing the transaction size, the coin pool size, and the extra value locked in unconfirmed transactions\sidenote{sn-utxo-algorithms}{
+  See \href{https://arxiv.org/abs/2311.01113}{A Survey on Coin Selection Algorithms in UTXO-based Blockchains} for a review of coin selection algorithms.
+}.
+Luckily, a simple greedy algorithm works quite well in practice,
+so the benefits of a more complex transaction model outweigh the downsides in my book.
+
+\subsection{error-recovery}{Error recovery}
+
+Error recovery is the most challenging aspect of any distributed system.
+In my experience, more than half of the code in a security-critical system can account for handling edge cases.
+
+Nonce-based transaction models are most susceptible to failures requiring non-trivial intervention:
+If a single transaction gets stuck, the system won't process any subsequent transactions.
+The programmer has to keep track of the entire transaction queue and plan for recovery actions to unblock the queue.
+This issue is not theoretical: I observed it first-hand while working with \textsc{evm} chains at Chainlink Labs,
+where stuck transaction queues frequently cause oracle outages.
+
+Time-scoped transactions allow for a simpler, localized recovery logic.
+A single stuck transaction won't block other transactions from the same address,
+and the system will heal itself with time
+as blockchain nodes evict expired transactions from the mempool.
+
+In the \textsc{utxo} model, failures are also local because they affect only coins participating in the failed transactions.
+Further transactions can proceed normally unless a clever programmer decides to chain transactions opportunistically (i.e., use outputs from unconfirmed transactions in subsequent transactions) to reduce the system latency.
+
+\subsection{regulatory-compliance}{Regulatory compliance}
+
+A significant fraction of all tokens in circulation participated in questionable transactions (money laundering, for example).
+Enforcement agencies, such as \href{https://en.wikipedia.org/wiki/Office_of_Foreign_Assets_Control}{\textsc{ofac}}, publish lists of sanctioned individuals and addresses.
+All major exchanges integrate with chain analytics services (e.g., \href{https://www.chainalysis.com/}{Chainalysis}) that check whether incoming funds are ``tainted.''
+
+In the account model, the account balance is a single number, and the tokens are genuinely fungible:
+When an address receives a deposit, this deposit mixes with all the other tokens on the address.
+A user cannot ``choose'' which tokens the system should use for the transfer.
+On Ethereum, a malicious actor can taint your address by sending you tokens from a blocklisted account.
+
+The \textsc{utxo} model packages tokens into distinct coins.
+You can track each coin's history back to the block \href{https://en.bitcoin.it/wiki/Coinbase}{coinbase transaction} that minted its value.
+Unique histories make coins non-interchangeable: some exchanges might refuse to accept ``tainted'' coins with a dubious history.
+On Bitcoin, you can ignore coins you didn't expect to receive\sidenote{sn-tainted-coins}{
+  By default, Bitcoin wallets will silently accept all coins and use them for payments
+  unless you opt-in for \href{https://bitcoin.design/guide/how-it-works/coin-selection/#manual-coin-selection-aka-coin-control}{manual \textsc{utxo} selection}.
+}, making tainting less effective.
+
+The topic of tainted tokens is controversial and raises questions that will puzzle any rational mind\sidenote{sn-}{
+  The \href{https://cryptoforensic.com/blog/tainted-bitcoin-isnt-what-you-think-it-is/}{Tainted Bitcoin Isn't What You Think It Is} article provides a good overview of the subject.
+}.
+We must accept regulations as a part of life; they are a product of fear and exist to make life complicated, not to make rational sense.
+The \textsc{utxo} model deals with regulatory compliance slightly better because it allows ignoring unsolicited tainted coins.
+
+\section{programming-models}{Programming models}
+
+This section deals with extending the transaction models to support smart contracts.
+The account model extends naturally to the message-passing programming style,
+while the \textsc{utxo} model is similar to functional programming with resource types.
+
+\subsection{objects-and-actors}{Objects and actors}
+
+The Ethereum network was the first to extend blockchain technology to support arbitrary computations.
+Ethereum virtual machine (\textsc{evm}) is close in spirit to the \href{https://en.wikipedia.org/wiki/Smalltalk}{Smalltalk} virtual machine.
+Smart contracts are objects hiding their state and exchanging messages,
+where the first message in the call chain comes from a user transaction.
+There is no way to tell which parts of the blockchain state the transaction will touch without executing the transaction for real.
+
+Continuing the analogy, the \href{https://internetcomputer.org/}{Internet Computer} blockchain (\textsc{ic}) relates to Ethereum
+in the same way \href{https://www.erlang.org/}{Erlang} relates to Smalltalk.
+Smart contracts on the \textsc{ic} are \href{https://en.wikipedia.org/wiki/Actor_model}{actors} that send and receive messages asynchronously.
+To make this model viable, \textsc{ic} introduced \href{https://internetcomputer.org/capabilities/reverse-gas/}{reverse gas model}:
+The burden of transaction fees shifted from users to smart contract operators.
+
+Despite their differences, both systems share the fundamental programming model:
+A smart contract is a stateful object reacting to incoming messages,
+and a transaction is a request to invoke a message handler on that object with specified arguments.
+In general, the exact effects of message processing are unpredictable.
+
+\subsection{functions-and-resources}{Functions and resources}
+
+Both \textsc{evm} and \textsc{ic} assume that a single transaction can arbitrarily modify the entire chain state.
+The \textsc{utxo} model does not extend well in the same direction.
+It packages state into independent values and requires that each transaction explicitly enumerates the resources it produces and consumes.
+
+The most common generalization of the \textsc{utxo} model is to separate smart contract logic from the state,
+turning the contract into a static rule for transforming transaction inputs into outputs.
+That pattern corresponds to functional programming with \href{https://en.wikipedia.org/wiki/Substructural_type_system#Linear_type_systems}{linear types}.
+
+Under the generalized \textsc{utxo} model,
+a transaction is a functional expression that consumes resources (e.g., coins) created from previous transactions and produces new resources.
+In Bitcoin, the resources can be only \textsc{btc} coins,
+and the transition execution logic is hard-coded in the protocol.
+A more general chain can allow \textsc{utxo}s to contain arbitrarily complex data structures and support arbitrary transition rules.
+
+We can further allow immutable values that transactions can reference without consuming.
+These \textsc{utxo} never become spent; they act as chemical catalysts transforming digital goods.
+This feature comes in handy for storing transaction scripts on chain.
+
+Unsurprisingly, blockchains based on the extended \textsc{utxo} model have deep roots in functional programming.
+Two such chains, \href{https://cardano.org/}{Cardano} and \href{https://www.digitalasset.com/}{Digital Asset},
+offer \href{https://www.haskell.org/}{Haskell}-inspired smart contract languages
+(\href{https://developers.cardano.org/docs/smart-contracts/plutus/}{Plutus} and \href{https://github.com/digital-asset/daml}{\textsc{daml}}, respectively).
+
+
+\section{conclusion}{Conclusion}
+
+The \textsc{utxo} model was no mistake.
+It works well with pure value transfers and offers a refreshing take on general-purpose programming on chain.
+
+The extended \textsc{utxo} model offers benefits over the account model
+that are similar to those that functional programming offers over object-oriented style:
+
+\begin{itemize}
+  \item
+    \emph{Local reasoning.}
+    Transaction effects are apparent from the transaction itself;
+    there is no need to execute the transaction to understand what state it touches.
+  \item
+    \emph{Reproducibility.}
+    The transaction submitter can check locally whether the transaction succeeds because its execution doesn't depend on the entire chain
+    (under the assumption that transaction execution doesn't depend on the context, such as time or block number).
+  \item
+    \emph{Fewer unexpected interactions.}
+    The blast radius of bugs in smart contracts is smaller because possible interactions within a transaction are limited.
+  \item
+    \emph{Better optimization opportunities.}
+    The system can determine which transactions do not interfere based solely on their inputs and execute them in parallel.
+\end{itemize}
+
+The downsides of this model are the mirror image of their strengths.
+The functional style is alien to most developers,
+and it hinders complicated interactions and integrations that are dominant in mainstream blockchain programming.
+
+Finally, the analogy between transaction and computation models explains why the \textsc{utxo} model felt more elegant to me:
+My functional programming background primed me to like the model it resembles.
+Functional programming with linear types is how I think about most problems.
+
+\section{resources}{Resources}
+
+\begin{itemize}
+  \item \href{https://web.stanford.edu/class/ee374/lec_notes/lec4.pdf}{Transactions and the UTXO Model} lecture notes provide a general introduction to the \textsc{utxo} model.
+  \item \href{https://files.zotero.net/eyJleHBpcmVzIjoxNzIxODU0MzcwLCJoYXNoIjoiYTVhYmY4NjdiY2E2YzdkNTNjODkwNWNmZDZhYmM5MjAiLCJjb250ZW50VHlwZSI6ImFwcGxpY2F0aW9uXC9wZGYiLCJjaGFyc2V0IjoiIiwiZmlsZW5hbWUiOiJDaGFrcmF2YXJ0eSBldCBhbC4gLSAyMDIwIC0gVGhlIEV4dGVuZGVkIFVUWE8gTW9kZWwucGRmIn0%3D/a3b27bc632152d8227dc27019859f91bb2a4ff8664fcf0a277cd90785570a2c2/Chakravarty%20et%20al.%20-%202020%20-%20The%20Extended%20UTXO%20Model.pdf}{The Extended UTXO Model}
+  paper describes an extension of the \textsc{utxo} model introduced to support smart contracts on the Cardano network.
+  \item The \href{https://www.digitalasset.com/hubfs/Canton/Canton%20Network%20-%20White%20Paper.pdf}{Canton Network} whitepaper describes how the network extends the \textsc{utxo} model.
+\end{itemize}
+
+\end{document}
