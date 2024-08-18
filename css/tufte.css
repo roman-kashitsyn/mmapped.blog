@@ -102,38 +102,39 @@
 }
 
 @font-face {
-    font-family: "Iosevka";
+    font-family: "JetBrains Mono";
     font-style: normal;
     font-weight: normal;
-    src: local(Iosevka),
-        url("/fonts/Iosevka-Regular.woff2") format("woff2");
+    src: local(JetBrains Mono),
+        url("/fonts/JetBrainsMono-Regular.woff2") format("woff2");
     font-display: swap;
 }
 
 @font-face {
-    font-family: "Iosevka";
-    font-style: italic;
-    font-weight: normal;
-    src: local(Iosevka),
-        url("/fonts/Iosevka-Italic.woff2") format("woff2");
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Iosevka";
+    font-family: "JetBrains Mono";
     font-style: normal;
     font-weight: bold;
-    src: local(Iosevka),
-        url("/fonts/Iosevka-Bold.woff2") format("woff2");
+    src: local(JetBrains Mono),
+        url("/fonts/JetBrainsMono-Bold.woff2") format("woff2");
     font-display: swap;
 }
 
 @font-face {
-    font-family: "Iosevka";
+    font-family: "JetBrains Mono";
+    font-style: italic;
+    font-weight: normal;
+    src: local(JetBrains Mono),
+        url("/fonts/JetBrainsMono-Italic.woff2") format("woff2");
+    font-display: swap;
+}
+
+
+@font-face {
+    font-family: "JetBrains Mono";
     font-style: italic;
     font-weight: bold;
-    src: local(Iosevka),
-        url("/fonts/Iosevka-BoldItalic.woff2") format("woff2");
+    src: local(JetBrains Mono),
+        url("/fonts/JetBrainsMono-SemiBoldItalic.woff2") format("woff2");
     font-display: swap;
 }
 
@@ -808,8 +809,9 @@ tr.border-bot {
 
 code,
 pre>code {
-    font-family: 'Iosevka', monospace;
-    font-size: 0.83em;
+    font-family: 'JetBrains Mono', monospace;
+    font-feature-settings: 'ss02', 'zero';
+    font-size: 0.75em;
     line-height: 1.42;
     font-variant-numeric: normal;
     -webkit-text-size-adjust: 100%;
@@ -817,7 +819,7 @@ pre>code {
 }
 
 .sans>code {
-    font-size: 0.83em;
+    font-size: 0.75em;
 }
 
 .marginnote>code,
