@@ -1,0 +1,80 @@
+
+\documentclass{article}
+
+\title{Transposing tensor files}
+\subtitle{Where does file metadata belong?}
+\date{2024-09-05}
+\modified{2024-09-05}
+
+\keyword{programming}
+
+
+\begin{document}
+\section*
+
+I recently spent much time working with machine learning serialization formats,
+especially \href{https://onnx.ai/}{\textsc{onnx}}.
+This file format uses Protocol Buffers for its binary representation
+and inherits the two-gigabyte restriction on the file format size.
+The suggested way to bypass this restriction is to store tensors
+in another file and reference this data from the \textsc{onnx} file.
+
+But what should the tensor file format be?
+The \href{https://huggingface.co/docs/safetensors/index}{safetensors} from Huggingface is a popular choice for representing tensors on disk.
+I admire the simplicity of this format, but its lack of sophistication makes it harder to work with than it should be.
+Only a few minor design tweaks could have made the format more pleasant to deal with.
+
+This article explains the safetensors file format,
+suggests that placing its metadata block at the end would make the format more convenient to work with,
+and explores approaches to metadata placement in other binary file formats.
+
+\section{safe-tensors}{The safetensors file format}
+
+A \code{safetensors} file stores a collection of multi-dimensional arrays.
+Its first eight bytes indicate the size of the metadata section,
+then follows the metadata section describing the type and the shape of each tensor,
+then comes the data section containing flat arrays back-to-back.
+
+The metadata section is a \textsc{json} object,
+where the key is the tensor name, and the value is an object describing the tensor shape, element type, offset from the beginning of the data section, and length.
+
+This file organization has at least three flaws:
+\begin{enumerate}
+\item 
+  Constructing a safetensors file demands two passes over the dataset.
+  In the first pass, you gather the tensor metadata section and write it to disk.
+  In the second pass, you append the raw tensor data to the file.
+\item
+  The tensor locations described in the metadata section are relative to the data section, not absolute within a file.
+  This design choice makes working with these files more cumbersome:
+  You must add the size of the metadata section (and the size of this size, eight bytes) to the tensor offset to compute the real position of the tensor within the file.
+  The reason for this inconvenience is a chicken-and-egg problem:
+  the real offset depends on the size of the metadata section,
+  and the size of the metadata section depends on the offset.
+\item
+  The amount of work required to add a new tensor or update the metadata section in any other way is proportional to the entire file size,
+  no the the change size.
+\end{enumerate}
+
+\section{easy-fix}{An easy fix}
+
+I like to imagine a tensor file as a safe, and tensors inside as gold ingots.
+The metadata section is a slip of paper describing the weight, purity, and location of each ingot in the safe.
+If I wanted to put the gold into a safe the safetensors way,
+I would fill out the paper first,
+then place the paper at the back of the safe,
+and then assembled the ingots as described on the paper.
+
+Luckily, there is an easier way.
+Put the ingots first, jotting down the size and location on the paper as you go.
+Once all the gold is in the safe, put the paper in front of it and seal the safe.
+
+\section{bin-metadata}{Binary file metadata}
+
+\epigraph{
+  Here is a problem related to yours and solved before.
+  Could you use it?
+}{G. Pólya, ``How to Solve It'', second edition, p. 9}
+
+\section{conclusion}{Conclusion}
+\end{document}
