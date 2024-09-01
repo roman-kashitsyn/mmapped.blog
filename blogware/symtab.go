@@ -98,6 +98,7 @@ var (
 	SymAbstract    = BuiltinEnv("abstract")
 	SymEnumerate   = BuiltinEnv("enumerate")
 	SymItemize     = BuiltinEnv("itemize")
+	SymChecklist   = BuiltinEnv("checklist")
 	SymFigure      = BuiltinEnv("figure")
 	SymTabular     = BuiltinEnv("tabular")
 	SymTabularS    = BuiltinEnv("tabular*")

@@ -636,6 +636,13 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 			return err
 		}
 		buf.WriteString(`</ul>`)
+	case SymChecklist:
+		newRc.parent = UnorderedListCtx
+		buf.WriteString(`<ul class="checklist">`)
+		if err := renderGenericSeq(&newRc, buf, env.body); err != nil {
+			return err
+		}
+		buf.WriteString(`</ul>`)
 	case SymVerbatim:
 		fmt.Fprintf(buf, `<div class="source-container"><pre class="source %s"><code>`, optsToCSSClasses(env.opts))
 		for _, n := range env.body {
