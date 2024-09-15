@@ -1,0 +1,253 @@
+\documentclass{article}
+
+\title{Effective design docs}
+\subtitle{An opinionated guide to writing software design docs.}
+\date{2024-09-15}
+\modified{2024-09-15}
+\keyword{programming}
+
+\begin{document}
+\section*
+
+Design docs are a controversial topic, especially among \href{https://agilemanifesto.org/}{agile developers} who ``value working software over comprehensive documentation.''
+Yet, all engineering organizations I worked at in the last decade, from tech giants to lean startups, employed writing design docs as an essential part of the development process.
+
+This article is an opinionated guide to writing design docs for software projects.
+It explains why and when to write design docs, how to think like a researcher, how to put words on the page like Neil Gaiman, and why Jane Street rediscovered ideas from the publishing industry.
+
+\section{doc-types}{Types of design docs}
+
+There are at least two types of documents that people call design docs:
+A \emph{functional specification} describes what a system must do from the user's point of view.
+A \emph{design doc} describes a software architecture or an approach to solving a technical problem.
+
+These types serve different purposes and require different workflows:
+\begin{itemize}
+\item Functional specs describe the system from the user's perspective; design documents deal with its internals.
+\item Functional specs describe the behavior of the entire system; design docs focus on solving a specific problem.
+\item Engineers write design documents for themselves, and product managers write functional specs for diverse audiences, such as engineers, external developers, and QA staff.
+\item Functional specs must evolve with the product; design docs are static.
+\end{itemize}
+
+The following table summarizes the differences.
+
+\begin{tabular}{rll}
+&  Functional spec & Design doc \\
+\hrule
+Target audience & Diverse & Engineers \\
+Abstraction level & Interface & Implementation \\
+Author & Product manager & Engineers \\
+Scope & Entire system & Specific problem \\
+Evolution model & Evolving & Static \\
+\end{tabular}
+
+We can imagine a third document type: a \emph{technical specification} describing the implementation details of the entire system and evolving with it.
+Unfortunately, I've never seen this idea working:
+\begin{itemize}
+\item
+  The implementation moves too fast; a technical spec quickly becomes obsolete.
+\item The document's ownership is unclear.
+  Nobody knows (and probably can't) all aspects of a large system.
+  When many people own a document, nobody owns it.
+\item
+  The system's source code is its most detailed technical specification.
+\end{itemize}
+
+This article deals with the second documentation type: design docs.
+
+\section{why}{Why write design docs}
+
+\subsection{write-to-think}{To put thoughts in order}
+
+\epigraph{
+  Writing is nature's way of letting you know how sloppy your thinking is.
+}{Guindon, San Francisco Chronicle, 3/1/89 Guindon}
+
+No matter how clear an idea seems in your head, the first attempt to express it in writing turns it into mashed potatoes.
+This mysterious property of writing is the main benefit of writing a design doc.
+It forces you to formulate your problem and a solution before you fiddle with code.
+Even if nobody reads your design doc, you save time by writing things down:
+If your architecture and interfaces look bad on paper, the code implementing them will look even worse.
+
+\subsection{correct-mistakes-early}{To correct mistakes early}
+
+The cheapest mistakes are the ones you correct early.
+Your first design will be flawed;
+a design doc will enable your colleagues to point out flaws in your ideas and refine them before you invest weeks in implementing them.
+
+\subsection{communicate-context}{To communicate context}
+
+One of my most frustrating experiences as a code reviewer was when colleagues from another side of the globe asked me to approve a sizeable controversial change that touched the interface between our components.
+The diffs were all over the place, and the system went in a direction that didn't feel right.
+The change author claimed everything should become clear once I see other (not yet written) patches in the sequence.
+Yeah, sure.
+
+According to \href{https://www.cabird.com/}{Christian Bird} and other scientists who studied code reviews at Microsoft, the biggest challenges reviewers face are \emph{large code changes} and \emph{understanding the reason for a change}\sidenote{sn-code-review-paper}{
+See the \href{https://www.cabird.com/static/617bcf1e4c7b29784d396d71e1c1c010/macleod2018codereviewing.pdf}{Code Reviewing in the Trenches: Understanding Challenges and Best Practices} paper, for example.
+}.
+When you implement your designs in small incremental patches to address the first challenge, a reference to the design doc in the change description takes care of the second.
+
+\subsection{onboard-new-team-members}{To onboard new team members}
+
+Sociologist Karl Maton envisions optimal learning of a new concept as riding a \href{https://www.researchgate.net/publication/294799589_Semantic_waves_Context_complexity_and_academic_discourse}{Semantic wave}.
+The learner starts with a high-level, technical description of the concept, then \emph{unpacks} details using simpler context-dependent language, and returns to the high-level description, enlightened (Maton calls this last step \emph{repacking})\sidenote{sn-monad}{
+I vividly recall going through this process when I tried to understand \href{https://wiki.haskell.org/Monad}{monads} in Haskell.
+I first stared at the definition, baffled.
+I then read a bunch of ``monad is like a ...'' tutorials.
+Finally, six months later, the original formal definition became obvious.
+I didn't need the safety wheels anymore.
+}.
+
+This idea implies that design docs are among the best resources for onboarding new team members.
+Instead of painfully deriving the purpose and structure of a system from the code base,
+they can get a high-level overview from a design doc,
+and dive into the codebase with enough mental hooks to anchor their discoveries.
+
+\subsection{record-history}{To record history}
+\epigraph{
+An engineering project shouldn't be considered complete until it is summarized and filed so that the information can be recalled or used again.  
+}{W.J. King, Unwritten Laws of Engineering, second edition}
+
+Have you ever worked on a project that felt like the \href{https://skeptics.stackexchange.com/questions/6828/was-the-experiment-with-five-monkeys-a-ladder-a-banana-and-a-water-spray-condu#6859}{five-monkey experiment}?
+Everyone on the project does something in a peculiar way, but nobody remembers why exactly, and everyone is afraid of challenging the status quo.
+
+Design docs are historical records of your team's decisions and their reasoning; they are a solution to \href{https://fs.blog/chestertons-fence/}{Chesterton's fence} problem.
+Thanks to these records, future designers will know whether the constraints you codified still apply to their context.
+
+\section{when}{When to write a design doc}
+
+Most changes don't need a design doc.
+My heuristic is to start a design doc when one of the following conditions is true:
+\begin{itemize}
+\item The change requires more than two weeks of engineering work.
+\item The problem has multiple solutions, and the optimal choice is not apparent.
+\item The design involves non-trivial changes between software components.
+\end{itemize}
+
+Most importantly, write designs before you start implementing the system.
+Documenting the system post-factum takes away most of the benefits of writing a design doc.
+Furthermore, once the system works, you'll be too eager to move on and view documentation as a drag, so the chance of producing anything of value becomes infinitesimal.
+
+\section{how}{How to write a design doc}
+
+\epigraph{
+Writing papers is a primary mechanism for doing research (not just for reporting it).
+}{Simon Peyton Jones, \href{https://youtu.be/WP-FkUaOcOM}{How to Write a Good Research Paper}}
+
+Most people hate writing and will do almost anything instead of putting words on the page: read Slack, help colleagues, stare at metrics dashboards, consume ungodly amounts of coffee, or even groom their Jira backlog.
+There is an easy fix for this problem: schedule your writing sessions.
+Neil Gaiman allows himself to do only two things during his writing sessions: sit in front of the document and do nothing or write.
+After some time, putting words in will seem more fun than just sitting there.
+
+Unfortunately, engineers can't always follow the same routines as novelists.
+Fiction writers disengage from the real world when they create their masterpieces.
+Software designs conceived in isolation look plausible on paper but disintegrate once they meet reality.
+To avoid this trap, follow the lead of mechanical engineers: build prototypes---miniature versions of the system---to test whether your ideas hold water.
+
+Should you start by building prototypes or drafting the doc? An analogy can help answer this question.
+Design docs are not novels; they are research papers:
+Your problem is to build or reshape a piece of software, and your goal is to convince yourself and your peers that your plan is the best option.
+In his talk \href{https://youtu.be/WP-FkUaOcOM}{How to Write a Good Research Paper}, \href{https://simon.peytonjones.org/}{Simon Peyton Jones}, a former principal researcher at Microsoft Research, recommends starting with a paper and using it to drive the research.
+This recommendation suggests a workflow alternating writing and prototyping:
+\begin{enumerate}
+\item Start with the background section.
+  Explain the problem you're trying to solve, and enumerate your assumptions, constraints, goals, and non-goals.
+\item Lay out the design alternatives.
+\item Research the alternatives in sufficient depth and build prototypes when necessary.
+  Go back and forth between writing the doc and doing the research.
+\item Pick the best design and describe it in detail.
+  Explain why all other options are worse.
+\item Write the summary.
+\end{enumerate}
+
+The summary should be the first section of a design doc, but you write it last.
+You can't summarize the research you haven't done.
+Even Mozart, who could envision large pieces of music in his head and later record them on paper speckless in one sitting, composed overtures for his operas only after finishing the rest of the score; he needed to know all the themes to create a perfect introduction into his musical worlds.
+Famously, he wrote an overture for Don Giovanni the night before the premiere.
+
+\section{what}{What should go into a design doc}
+
+There is no one-size-fits-all template for design docs.\marginnote{mn-cs-paper-sections}{
+  The research paper analogy also helps us structure design docs.
+  Design doc sections correspond to parts of a typical paper on computer science: ``summary'' is ``abstract,'' ``background'' is ``introduction,'' ``proposed design'' is the ``key idea,'' etc.
+}
+Experiment to find what works best for your organization.
+Most design docs contain the following sections in one form or another:
+\begin{itemize}
+\item \emph{Metadata.}
+  Place the author, creation time, and status near the top of the document.
+  The reader should know whether to read it and whom to ask about it.
+\item \emph{Summary.}
+  This section provides a bird's-eye view of the entire document: a single paragraph explaining the problem and the solution in the simplest terms.
+\item \emph{Context/Background.}
+  Explain the current state of affairs and the problem you aim to solve.
+  This section should make sense to a secondary audience, not only experts in the field.
+\item \emph{Goals/Non-goals.}
+  State which aspects of the problem are inside and outside the project scope.
+  For example, in an early version of a system, you might avoid handling performance considerations or integrations with external systems.
+\item \emph{Proposed design.}
+  Go into details of your key idea.
+  Include diagrams, schemas, and back-of-envelope calculations.
+  Cover all the significant design aspects relevant to your field: security, privacy, scalability, portability, observability, accessibility, and backward compatibility.
+\item \emph{Alternatives considered.}
+  Describe other design options you considered and why you chose your primary option.
+  No design is always strictly better than alternatives on all dimensions; list the upsides and downsides of each approach.
+  If possible, add a comparison table where one dimension is design options, and another is design criteria (complexity, cost, delivery time estimates, etc.).
+\end{itemize}
+
+\section{feedback}{Seeking feedback}
+
+If nobody reads or comments on your design doc, you lose most of the benefits of writing it.
+Unfortunately, tricking other people into reading your writing is hard.
+As Steven Pressfield puts it, ``\href{https://www.amazon.com/gp/product/B01GZ1TJBI}{nobody wants to read your sh*t.}''
+Furthermore, making engineers re-read new revisions of a document is nearly impossible.
+
+When seeking feedback, we face a dilemma.
+If you request feedback too early, your colleagues will point out the most obvious flaws and probably never give your document another chance.
+On the other hand, if you slave on a doc for weeks until it becomes ``perfect,'' you will likely waste time developing bad ideas.
+
+Jane Street found one solution to this dilemma: each document writer should have a buddy.
+Once the doc has enough substance, the buddy helps the author polish the document before requesting feedback from a wider audience.
+This approach is a miniature version of the publishing industry workflow, where the author iterates on the manuscript with a dedicated editor before the text goes to print.
+
+People find walls of text scary and procrastinate reading them.
+The best way to make your doc readable is to keep it short and to the point.
+Cut ruthlessly, make the structure apparent, and keep the language simple.
+Another way to trick people into reading is to make the document visually appealing.
+To combat monotonicity, intersperse the text with diagrams, use lists, and be generous with blank space.
+Refer to the \href{#resources}{Resources} section for book recommendations that can help you with structural and visual components.
+
+\section{faq}{FAQ}
+
+\subsection{faq-updates}{Should I update a design doc as the code evolves?}
+
+Probably not.
+Design doc captures your thinking at a specific point in time.
+If the situation changes and you must revise the design, write a new document referencing the original.
+Scientists never edit their published papers; they write new ones.
+
+However, feel free to modify the design doc if you change your mind or discover new challenges during development.
+Editorial changes that make the doc more accessible are also welcome.
+
+\section{resources}{Resources}
+
+\begin{itemize}
+\item \href{https://www.designdocs.dev/}{\code{designdocs.dev}} offers examples and templates of software design docs.
+\item The ``Painless Functional Specifications'' articles by Joel Spolsky cover many aspects of authoring a functional spec:
+\href{https://www.joelonsoftware.com/2000/10/02/painless-functional-specifications-part-1-why-bother/}{Part 1: Why Bother},
+\href{https://www.joelonsoftware.com/2000/10/03/painless-functional-specifications-part-2-whats-a-spec/}{Part 2: What's a Spec?},
+\href{https://www.joelonsoftware.com/2000/10/04/painless-functional-specifications-part-3-but-how/}{Part 3: But\ldots  How?}
+\href{https://www.joelonsoftware.com/2000/10/15/painless-functional-specifications-part-4-tips/}{Part 4: Tips}.
+\item \href{https://www.principiae.be/X0100.php}{Trees, maps, and theorems} contains excellent advice on all steps of authoring a technical document, emphasizing structure.
+\item \href{https://www.amazon.com/gp/product/020137921X}{Bugs in Writing} gives you tactics for writing good technical English.
+The previous book is about the forest and trees; this one is about the leaves.
+\item \href{https://www.amazon.com/gp/product/1433829738}{How to Write a Lot} teaches you how to become a productive writer.
+In short, schedule your writing time and do writing-related work during these sessions.
+\item If you can read only one book on graphical design, let it be \href{https://www.amazon.com/gp/product/1566091594}{The Non-Designer's Design Book}.
+\end{itemize}
+
+% More interesting resources:
+% * https://www.freecodecamp.org/news/how-to-write-a-good-software-design-document-66fcf019569c/
+% * https://swimm.io/learn/software-documentation/how-to-write-a-great-software-documentation-design-sdd-doc
+
+\end{document}
