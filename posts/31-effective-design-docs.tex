@@ -98,10 +98,10 @@ Finally, six months later, the original formal definition became obvious.
 I didn't need the safety wheels anymore.
 }.
 
-This idea implies that design docs are among the best resources for onboarding new team members.
+Design docs are among the best resources for onboarding new team members.
 Instead of painfully deriving the purpose and structure of a system from the code base,
 they can get a high-level overview from a design doc,
-and dive into the codebase with enough mental hooks to anchor their discoveries.
+and then dive into the codebase with enough mental hooks to anchor their discoveries.
 
 \subsection{record-history}{To record history}
 \epigraph{
@@ -140,11 +140,12 @@ Neil Gaiman allows himself to do only two things during his writing sessions: si
 After some time, putting words in will seem more fun than just sitting there.
 
 Unfortunately, engineers can't always follow the same routines as novelists.
-Fiction writers disengage from the real world when they create their masterpieces.
+Fiction writers disengage from the world when they create their masterpieces.
 Software designs conceived in isolation look plausible on paper but disintegrate once they meet reality.
-To avoid this trap, follow the lead of mechanical engineers: build prototypes---miniature versions of the system---to test whether your ideas hold water.
+To avoid this trap, build prototypes---miniature versions of the system---to test whether your ideas hold water.
 
-Should you start by building prototypes or drafting the doc? An analogy can help answer this question.
+Should you start by building prototypes or drafting the doc?
+The research community has an answer.
 Design docs are not novels; they are research papers:
 Your problem is to build or reshape a piece of software, and your goal is to convince yourself and your peers that your plan is the best option.
 In his talk \href{https://youtu.be/WP-FkUaOcOM}{How to Write a Good Research Paper}, \href{https://simon.peytonjones.org/}{Simon Peyton Jones}, a former principal researcher at Microsoft Research, recommends starting with a paper and using it to drive the research.
@@ -206,7 +207,7 @@ When seeking feedback, we face a dilemma.
 If you request feedback too early, your colleagues will point out the most obvious flaws and probably never give your document another chance.
 On the other hand, if you slave on a doc for weeks until it becomes ``perfect,'' you will likely waste time developing bad ideas.
 
-Jane Street found one solution to this dilemma: each document writer should have a buddy.
+\href{https://www.janestreet.com/}{Jane Street} found one solution to this dilemma: each document writer should have a buddy.
 Once the doc has enough substance, the buddy helps the author polish the document before requesting feedback from a wider audience.
 This approach is a miniature version of the publishing industry workflow, where the author iterates on the manuscript with a dedicated editor before the text goes to print.
 
@@ -224,7 +225,7 @@ Refer to the \href{#resources}{Resources} section for book recommendations that 
 Probably not.
 Design doc captures your thinking at a specific point in time.
 If the situation changes and you must revise the design, write a new document referencing the original.
-Scientists never edit their published papers; they write new ones.
+Scientists don't edit their published papers; they write new ones.
 
 However, feel free to modify the design doc if you change your mind or discover new challenges during development.
 Editorial changes that make the doc more accessible are also welcome.
@@ -236,7 +237,7 @@ Editorial changes that make the doc more accessible are also welcome.
 \item The ``Painless Functional Specifications'' articles by Joel Spolsky cover many aspects of authoring a functional spec:
 \href{https://www.joelonsoftware.com/2000/10/02/painless-functional-specifications-part-1-why-bother/}{Part 1: Why Bother},
 \href{https://www.joelonsoftware.com/2000/10/03/painless-functional-specifications-part-2-whats-a-spec/}{Part 2: What's a Spec?},
-\href{https://www.joelonsoftware.com/2000/10/04/painless-functional-specifications-part-3-but-how/}{Part 3: But\ldots  How?}
+\href{https://www.joelonsoftware.com/2000/10/04/painless-functional-specifications-part-3-but-how/}{Part 3: But\ldots  How?},
 \href{https://www.joelonsoftware.com/2000/10/15/painless-functional-specifications-part-4-tips/}{Part 4: Tips}.
 \item \href{https://www.principiae.be/X0100.php}{Trees, maps, and theorems} contains excellent advice on all steps of authoring a technical document, emphasizing structure.
 \item \href{https://www.amazon.com/gp/product/020137921X}{Bugs in Writing} gives you tactics for writing good technical English.
