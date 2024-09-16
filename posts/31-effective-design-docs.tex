@@ -3,7 +3,7 @@
 \title{Effective design docs}
 \subtitle{An opinionated guide to writing software design docs.}
 \date{2024-09-15}
-\modified{2024-09-15}
+\modified{2024-09-16}
 \keyword{programming}
 
 \begin{document}
@@ -13,13 +13,15 @@ Design docs are a controversial topic, especially among \href{https://agilemanif
 Yet, all engineering organizations I worked at in the last decade, from tech giants to lean startups, employed writing design docs as an essential part of the development process.
 
 This article is an opinionated guide to writing design docs for software projects.
-It explains why and when to write design docs, how to think like a researcher, how to put words on the page like Neil Gaiman, and why Jane Street rediscovered ideas from the publishing industry.
+It explains why and when to write design docs, how to think like a researcher,
+how to put words on the page like Neil Gaiman,
+and what we can learn from the publishing industry.
 
 \section{doc-types}{Types of design docs}
 
 There are at least two types of documents that people call design docs:
-A \emph{functional specification} describes what a system must do from the user's point of view.
-A \emph{design doc} describes a software architecture or an approach to solving a technical problem.
+a \emph{functional specification} describes what a system must do from the user's point of view,
+and a \emph{design doc} describes a software architecture or an approach to solving a technical problem.
 
 These types serve different purposes and require different workflows:
 \begin{itemize}
@@ -192,7 +194,7 @@ Most design docs contain the following sections in one form or another:
   Cover all the significant design aspects relevant to your field: security, privacy, scalability, portability, observability, accessibility, and backward compatibility.
 \item \emph{Alternatives considered.}
   Describe other design options you considered and why you chose your primary option.
-  No design is always strictly better than alternatives on all dimensions; list the upsides and downsides of each approach.
+  Your proposal is unlikely to be strictly better than alternatives on all dimensions; list the upsides and downsides of each approach.
   If possible, add a comparison table where one dimension is design options, and another is design criteria (complexity, cost, delivery time estimates, etc.).
 \end{itemize}
 
@@ -207,7 +209,8 @@ When seeking feedback, we face a dilemma.
 If you request feedback too early, your colleagues will point out the most obvious flaws and probably never give your document another chance.
 On the other hand, if you slave on a doc for weeks until it becomes ``perfect,'' you will likely waste time developing bad ideas.
 
-\href{https://www.janestreet.com/}{Jane Street} found one solution to this dilemma: each document writer should have a buddy.
+One of my colleagues found a solution to this dilemma during his time at \href{https://www.janestreet.com/}{Jane Street}:
+each document writer should have a buddy.
 Once the doc has enough substance, the buddy helps the author polish the document before requesting feedback from a wider audience.
 This approach is a miniature version of the publishing industry workflow, where the author iterates on the manuscript with a dedicated editor before the text goes to print.
 
