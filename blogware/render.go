@@ -200,13 +200,24 @@ type RenderingCtx struct {
 	pendingPara    bool
 }
 
+func cmdClosesParagraph(cmd sym) bool {
+	switch cmd {
+	case SymSection, SymSectionS, SymSubSection, SymEpigraph, SymBlockquote:
+		return true
+	default:
+		return false
+	}
+}
+
 func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error {
 	for _, n := range seq {
 		switch v := n.(type) {
 		case Text:
 			renderText(rc, buf, v.body)
 		case Cmd:
-			handlePendingPara(rc, buf)
+			if !cmdClosesParagraph(v.name) {
+				handlePendingPara(rc, buf)
+			}
 			if err := renderGenericCmd(rc, buf, v); err != nil {
 				return err
 			}
