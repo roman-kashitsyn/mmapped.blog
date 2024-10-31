@@ -1,0 +1,130 @@
+\documentclass{article}
+
+\title{Programming avant-garde}
+\subtitle{Programmers and thinkers who inspire me.}
+\date{2024-10-31}
+\modified{2024-10-31}
+
+\begin{document}
+\section*
+Programmers know the giants who laid our technological foundations, such as Donald Knuth, John McCarthy, Niklaus Wirth, Edsger Dijkstra, Ken Iverson, Leslie Lamport, Guido van Rossum, Fabrice Bellard, and Linus Torvalds.
+Their work stood the test of time and became mainstream.
+
+On the shoulders of these giants stands the next generation of explorers who are finding new ways of thinking about programming.
+This article mentions four less-known programmers and thinkers whose work interests me and who I consider programming avant-garde.
+
+\section{edward-kmett}{Edward Kmett}
+
+Edward Kmett is a household name in the Haskell community.
+He authored \href{https://github.com/ekmett?tab=repositories&q=&type=source&language=haskell&sort=stargazers}{over a hundred Haskell packages}
+and is best known for his work on the \href{https://hackage.haskell.org/package/lens}{lens} package.
+Lenses transformed the Haskell ecosystem, giving Haskellers a new, powerful language for expressing data manipulation based on a coherent mathematical structure\sidenote{sn-putting-lenses-to-work}{
+  John Wiegley's \href{https://youtu.be/QZy4Yml3LTY?si=mD0THsEVBZoodLZ6}{Putting Lenses to Work} talk is an excellent introduction to the topic.
+}.
+
+Edward is one of the rare people interested in applying decades-old mathematical insight to everyday programming.
+He is a board member of the \href{https://topos.institute/}{Topos Institute}---a non-profit organization that bridges advanced mathematics and science.
+
+Edward is a regular guest at \href{https://zfoh.ch/zurihac2024/}{ZuriHac}, the biggest Haskell hackathon in the world.
+He hosts an unofficial conference track, scribbling diagrams on a whiteboard for hours and enthusiastically explaining something to half a dozen nodding disciples.
+
+If you want to learn more about Edward and his work:
+
+\begin{itemize}
+\item Watch his \href{https://youtu.be/j0XmixCsWjs}{Stop Treading Water} talk, where he gives compelling arguments for seeking better tools for solving problems and practical advice on how to keep them sharp. He explains how to become a genius consultant and why many stupid mathematicians are better than one smart mathematician.
+\item Watch \href{https://www.youtube.com/@ekmett}{Edward's videos on YouTube}. His live coding skills are awe-inspiring.
+\item Read his blog, \href{http://comonad.com/reader/}{The Comonad.Reader}. Heavy stuff.
+\item Watch the \href{https://youtu.be/jZrCVp5ekbA?si=rBOp2FIoJ5NEu5mI}{``Across the Kmettverse with Edward Kmett'' episode of the Functional Futures podcast}.
+\end{itemize}
+
+\section{casey-muratori}{Casey Muratori}
+
+\href{https://caseymuratori.com/about}{Casey Muratori} is a software engineer who knows how to build software that doesn't suck.
+He credits many of his insights to his apprenticeship at \href{https://www.radgametools.com/}{RAD Game Tools} company and interaction with \href{https://github.com/jeffrbig2}{Jeff Roberts} and \href{https://rawg.io/creators/john-miles}{John Miles}.
+
+In 2014, Casey started the \href{https://guide.handmadehero.org/}{Handmade Hero} project to live-stream the development of a game engine in C from scratch for education and later reflection.
+The audience response was overwhelming: hundreds of people attribute their career starts to Casey's streams.
+The project spawned the \href{https://handmade.network/manifesto}{Handmade Movement}, a community of programmers who enjoy building great software from scratch\sidenote{sn-suckless-tools}{
+  The \href{https://suckless.org/philosophy/}{suckless tools project} has a similar philosophy but is grounded in the UNIX ecosystem.}.
+Currently, Casey distills the treasure trove of knowledge buried in hundreds of Handmade Hero episodes into a \href{https://www.computerenhance.com/p/table-of-contents}{course on performance-aware programming}.
+
+Casey also recorded many insightful talks:
+
+\begin{itemize}
+\item \href{https://youtu.be/Z1qyvQsjK5Y?si=5H2oCzHt5L4w_zza}{Immediate-Mode \textsc{gui}} presents a surprisingly simple \textsc{gui} library design.
+\item \href{https://caseymuratori.com/blog_0031}{The thirty million lines of code problem} estimates the number of lines of code required to render text in a browser and proposes a way to cut this number.
+\item \href{https://youtu.be/5IUj1EZwpJY?si=H2jAfn705HYxIMsP}{The Only Unbreakable Law} argues that \href{https://en.wikipedia.org/wiki/Conway's_law}{Conway's law} is the only real law in software architecture.
+\item \href{https://caseymuratori.com/blog_0024}{Designing and Evaluating Reusable Components} proposes criteria for evaluating library designs.
+\end{itemize}
+
+If you want to learn more about Casey's journey, listen to \href{https://youtu.be/0WYgKc00J8s?si=x_VwD4bJj-jceMgG}{episode 27 of the Game Engineering podcast} and \href{https://corecursive.com/062-game-programming/}{episode 62 of the Corecursive podcast}.
+
+\section{aaron-hsu}{Aaron Hsu}
+
+\href{https://www.sacrideo.us/}{Aaron Hsu} is a computer scientist who researches approaches to writing, teaching, and thinking about software engineering.
+He started his path as a \href{https://www.scheme.org/}{Scheme} enthusiast,
+but his views changed significantly when he discovered the \href{https://aplwiki.com/}{\textsc{apl} programming language} and fell in love with the array programming paradigm.
+
+Aaron's most inspiring work is \href{https://github.com/Co-dfns/Co-dfns}{Co-dfns}, a self-hosted \textsc{apl} compiler that runs on \textsc{gpu}.
+This project excites me for several reasons:
+
+\begin{itemize}
+\item It's the first compiler that runs entirely on \textsc{gpu}.
+\item Aaron wrote the compiler in a data-parallel style using arrays as the primary data abstraction tool. The source code has no branching, loops, or recursion.
+\item The first version of the code was so concise that \href{https://www.bonfire.com/co-dfns-thesis-edition}{it fit on a t-shirt}.
+  \href{https://github.com/Co-dfns/Co-dfns/blob/63ff5921fab3d9dc238330e2d28f0ace4b801e9a/cmp/TT.apl}{Later versions} became quite a bit longer
+  (and the \href{https://github.com/Co-dfns/Co-dfns/blob/63ff5921fab3d9dc238330e2d28f0ace4b801e9a/cmp/PS.apl}{parser} is longer still),
+  but the code is surprisingly compact.
+\end{itemize}
+
+The following resources cover more of Aaron's work and views:
+
+\begin{itemize}
+\item His dissertation, \href{https://scholarworks.iu.edu/dspace/items/3ab772c9-92c9-4f59-bd95-40aff99e8c7a}{A data parallel compiler hosted on the \textsc{gpu}},
+  describes the compiler and the algorithms it employs in detail.
+\item \href{https://youtu.be/v7Mt0GYHU9A?si=owpqFmu8fJEoLMkF}{The Design Patterns vs. Anti-patterns in \textsc{apl}} talk offers a fresh perspective on practices commonly accepted in computer science and engineering.  
+\item In \href{https://www.arraycast.com/episodes/episode19-aaron-hsu}{episode 19 of the Arraycast podcast}, Aaron talks about his journey to programming and beyond.
+\end{itemize}
+
+\section{bret-victor}{Bret Victor}
+
+\href{https://worrydream.com}{Bret Victor} is an interface designer with a unique perspective on computing.
+He started his career as an electrical engineer and worked on musical equipment.
+After a few years in the industry, he found his true calling---designing machine-human interfaces.
+
+Bret doesn't consider himself a software engineer, but he wrote a lot of fine software for his design experiments.
+These experiments resulted in talks that became folklore; these talks move you deeply and make you yearn for better tools.
+
+\begin{itemize}
+\item \href{https://youtu.be/8pTEmbeENF4?si=qe385Fdh_NDQTvdA}{The Future of Programming} is my favorite Bret's talk.
+  It's a theatrical performance that drives home a sad point: technology changes fast, but human minds don't.
+\item In \href{https://youtu.be/PUv66718DII?si=blwP72mJuUfeMYCU}{Inventing on Principle}, Bret explains the principle that guides his work---creators need an immediate connection to the thing they create---and gives a few jaw-dropping applications of this principle.
+  The \href{https://youtu.be/oUaOucZRlmE?si=jHKxVhtmQ1JLrTMR}{Media for Thinking the Unthinkable} talk presents more inspiring examples\sidenote{sn-nile-demo}{
+    My favorite fragment is a \href{https://youtu.be/oUaOucZRlmE?si=NWos1M4-k28_TzRh&t=1501}{demo of the programming environment} for the \href{https://github.com/damelang/nile}{Nile programming language} visualizing a Bezier curve rasterizer.
+  }.
+\item \href{https://youtu.be/ZfytHvgHybA?si=ouk9qok4m87bVUto}{Stop Drawing Dead Fish} demonstrates tools to make digital art using computational media.
+\item The \href{https://youtu.be/ef2jpjTEB5U?si=iLrCtZCDiForNSj5}{Drawing Dynamic Visualizations} talk shows intuitive tools for creating complex data visualizations.
+\end{itemize}
+
+Currently, Bret focuses on building \href{https://dynamicland.org/}{Dynamicland},
+an interactive physical environment for idea exploration powered by the \href{http://youtu.be/-80VsIdAHZw}{Realtalk operating system}.
+He talks about his path in \href{https://archive.postlight.com/podcast/computing-is-everywhere}{episode 109 of the Catalyst podcast}.
+His website, worrydream.com, links to his other projects and essays\sidenote{sn-bret-favorite-essays}{
+  \href{https://worrydream.com/ABriefRantOnTheFutureOfInteractionDesign/}{A Brief Rant on The Future of Interaction Design} is one of my favorites;
+  I find the interface of modern phones deeply unsatisfying.
+  \href{https://worrydream.com/MagicInk/}{Magic Ink} is also a classic.
+}.
+
+\section*
+
+Many more programmers deserve to be on that list, including \href{https://www.linkedin.com/in/mikeacton/}{Mike Acton},
+who \href{https://youtu.be/rX0ItVEVjHc?si=cXC754Fp8a84bBUD}{popularized} and \href{https://unity.com/dots}{democratized} data-oriented design;
+\href{https://leodemoura.github.io/}{Leonardo de Moura}, the author of \href{https://github.com/Z3Prover/z3}{\textsc{z3 smt} solver} and the \href{https://lean-lang.org/}{Lean} theorem prover;
+and Andrew Kelley, the designer of the \href{https://ziglang.org/}{Zig programming language}.
+I didn't cover their work in detail to keep the article short.
+
+These people inspire me to find my path in computing.
+They remind me to seek a deeper meaning in my daily work and focus on things that make a difference instead of treading water.
+And they show how diverse, deep, and interesting our profession can be.
+
+\end{document}
