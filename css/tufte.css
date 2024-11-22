@@ -6,7 +6,8 @@
     font-family: "Yanone Kaffeesatz";
     font-style: normal;
     font-weight: 400;
-    src: local(Yanone Kaffeesatz),
+    src:
+        local(Yanone Kaffeesatz),
         url("/fonts/YanoneKaffeesatz-Regular.otf") format("opentype");
     font-display: swap;
 }
@@ -15,7 +16,8 @@
     font-family: "Yanone Kaffeesatz";
     font-style: normal;
     font-weight: 800;
-    src: local(Yanone Kaffeesatz),
+    src:
+        local(Yanone Kaffeesatz),
         url("/fonts/YanoneKaffeesatz-Bold.otf") format("opentype");
     font-display: swap;
 }
@@ -24,7 +26,8 @@
     font-family: "Libertinus Serif";
     font-style: normal;
     font-weight: 400;
-    src: local(Libertinum Serif),
+    src:
+        local(Libertinum Serif),
         local(Linux Libertine O),
         url("/fonts/LibertinusSerif-Regular.otf") format("opentype"),
         url("/fonts/LibertinusSerif-Regular.woff2") format("woff2");
@@ -35,7 +38,8 @@
     font-family: "Libertinus Serif";
     font-style: italic;
     font-weight: 400;
-    src: local(Libertinus Serif Italic),
+    src:
+        local(Libertinus Serif Italic),
         url("/fonts/LibertinusSerif-Italic.otf") format("opentype"),
         url("/fonts/LibertinusSerif-Italic.woff2") format("woff2");
     font-display: swap;
@@ -45,7 +49,8 @@
     font-family: "Libertinus Serif";
     font-style: italic;
     font-weight: 400;
-    src: local(Libertinus Serif Italic),
+    src:
+        local(Libertinus Serif Italic),
         url("/fonts/LibertinusSerif-Italic.otf") format("opentype"),
         url("/fonts/LibertinusSerif-Italic.woff2") format("woff2");
     font-display: swap;
@@ -55,7 +60,8 @@
     font-family: "Libertinus Sans";
     font-style: normal;
     font-weight: normal;
-    src: local("Libertinus Sans"),
+    src:
+        local("Libertinus Sans"),
         local("Linux Biolinum O"),
         url("/fonts/LibertinusSans-Regular.otf") format("opentype"),
         url("/fonts/LibertinusSans-Regular.woff2") format("woff2");
@@ -66,7 +72,8 @@
     font-family: "Libertinus Sans";
     font-style: italic;
     font-weight: normal;
-    src: local("Libertinus Sans Italic"),
+    src:
+        local("Libertinus Sans Italic"),
         local("Linux Biolinum O"),
         url("/fonts/LibertinusSans-Italic.otf") format("opentype"),
         url("/fonts/LibertinusSans-Italic.woff2") format("woff2");
@@ -76,7 +83,8 @@
 @font-face {
     font-family: "Libertinus Sans";
     font-weight: bold;
-    src: local("Libertinus Sans Bold"),
+    src:
+        local("Libertinus Sans Bold"),
         local("Linux Biolinum O"),
         url("/fonts/LibertinusSans-Bold.otf") format("opentype"),
         url("/fonts/LibertinusSans-Bold.woff2") format("woff2");
@@ -87,7 +95,8 @@
     font-family: "Libertinus Keyboard";
     font-style: normal;
     font-weight: normal;
-    src: local("Libertinus Keyboard"),
+    src:
+        local("Libertinus Keyboard"),
         url("/fonts/LibertinusKeyboard-Regular.otf") format("opentype"),
         url("/fonts/LibertinusKeyboard-Regular.woff2") format("woff2");
     font-display: swap;
@@ -105,7 +114,8 @@
     font-family: "JetBrains Mono";
     font-style: normal;
     font-weight: normal;
-    src: local(JetBrains Mono),
+    src:
+        local(JetBrains Mono),
         url("/fonts/JetBrainsMono-Regular.woff2") format("woff2");
     font-display: swap;
 }
@@ -114,7 +124,8 @@
     font-family: "JetBrains Mono";
     font-style: normal;
     font-weight: bold;
-    src: local(JetBrains Mono),
+    src:
+        local(JetBrains Mono),
         url("/fonts/JetBrainsMono-Bold.woff2") format("woff2");
     font-display: swap;
 }
@@ -123,17 +134,18 @@
     font-family: "JetBrains Mono";
     font-style: italic;
     font-weight: normal;
-    src: local(JetBrains Mono),
+    src:
+        local(JetBrains Mono),
         url("/fonts/JetBrainsMono-Italic.woff2") format("woff2");
     font-display: swap;
 }
-
 
 @font-face {
     font-family: "JetBrains Mono";
     font-style: italic;
     font-weight: bold;
-    src: local(JetBrains Mono),
+    src:
+        local(JetBrains Mono),
         url("/fonts/JetBrainsMono-SemiBoldItalic.woff2") format("woff2");
     font-display: swap;
 }
@@ -142,14 +154,15 @@
     font-family: "Comic Sans Mono";
     font-style: normal;
     font-weight: 400;
-    src: url("/fonts/ComicMono.ttf") format("truetype")
+    src: url("/fonts/ComicMono.ttf") format("truetype");
 }
 
 @font-face {
     font-family: "APL385 Unicode";
     font-style: normal;
     font-weight: 400;
-    src: local(APL385 Unicode),
+    src:
+        local(APL385 Unicode),
         url("/fonts/Apl385.ttf") format("truetype");
     font-display: swap;
 }
@@ -203,16 +216,16 @@ a.icon-link:visited {
     font-family: "Libertinus Sans", sans;
 }
 
-figure>div.source-container {
+figure > div.source-container {
     width: 100%;
 }
 
-div.source-container>pre.good>code,
-div.source-container>pre.bad>code {
+div.source-container > pre.good > code,
+div.source-container > pre.bad > code {
     padding: 1rem;
 }
 
-div.source-container>pre>code {
+div.source-container > pre > code {
     padding: 1rem 0;
 }
 
@@ -224,7 +237,7 @@ ul.posts {
     margin-bottom: 0.1em;
 }
 
-ul.posts>li {
+ul.posts > li {
     list-style: none;
 }
 
@@ -264,21 +277,25 @@ figure.p75 img {
     width: 75%;
 }
 
-ul.arrows>li:before {
+ul.arrows > li:before {
     position: absolute;
     margin-left: -2.5rem;
     content: "➞ ";
 }
 
-ul.arrows>li {
+ul.checklist > li:before {
+    position: absolute;
+    margin-left: -2.5rem;
+    content: "☐ ";
+}
+
+ul.arrows > li,
+ul.checklist > li,
+ol.circled > li {
     list-style: none;
 }
 
-ol.circled>li {
-    list-style: none;
-}
-
-ol.circled>li:before {
+ol.circled > li:before {
     position: absolute;
     margin-left: -2.5rem;
     content: attr(data-num-glyph);
@@ -311,7 +328,7 @@ ul.toc-level-1 {
     padding-left: 0px;
 }
 
-ul.toc-level-1>li>a {
+ul.toc-level-1 > li > a {
     font-weight: bold;
 }
 
@@ -323,14 +340,43 @@ a:link,
 .tufte-underline,
 .hover-tufte-underline:hover {
     text-decoration: none;
-    background: -webkit-linear-gradient(#fffff8, #fffff8), -webkit-linear-gradient(#fffff8, #fffff8), -webkit-linear-gradient(currentColor, currentColor);
-    background: linear-gradient(#fffff8, #fffff8), linear-gradient(#fffff8, #fffff8), linear-gradient(currentColor, currentColor);
-    -webkit-background-size: 0.05em 1px, 0.05em 1px, 1px 1px;
-    -moz-background-size: 0.05em 1px, 0.05em 1px, 1px 1px;
-    background-size: 0.05em 1px, 0.05em 1px, 1px 1px;
+    background:
+        -webkit-linear-gradient(#fffff8, #fffff8),
+        -webkit-linear-gradient(#fffff8, #fffff8),
+        -webkit-linear-gradient(currentColor, currentColor);
+    background: linear-gradient(#fffff8, #fffff8),
+        linear-gradient(#fffff8, #fffff8),
+        linear-gradient(currentColor, currentColor);
+    -webkit-background-size:
+        0.05em 1px,
+        0.05em 1px,
+        1px 1px;
+    -moz-background-size:
+        0.05em 1px,
+        0.05em 1px,
+        1px 1px;
+    background-size:
+        0.05em 1px,
+        0.05em 1px,
+        1px 1px;
     background-repeat: no-repeat, no-repeat, repeat-x;
-    text-shadow: 0.03em 0 #fffff8, -0.03em 0 #fffff8, 0 0.03em #fffff8, 0 -0.03em #fffff8, 0.06em 0 #fffff8, -0.06em 0 #fffff8, 0.09em 0 #fffff8, -0.09em 0 #fffff8, 0.12em 0 #fffff8, -0.12em 0 #fffff8, 0.15em 0 #fffff8, -0.15em 0 #fffff8;
-    background-position: 0% 93%, 100% 93%, 0% 93%;
+    text-shadow:
+        0.03em 0 #fffff8,
+        -0.03em 0 #fffff8,
+        0 0.03em #fffff8,
+        0 -0.03em #fffff8,
+        0.06em 0 #fffff8,
+        -0.06em 0 #fffff8,
+        0.09em 0 #fffff8,
+        -0.09em 0 #fffff8,
+        0.12em 0 #fffff8,
+        -0.12em 0 #fffff8,
+        0.15em 0 #fffff8,
+        -0.15em 0 #fffff8;
+    background-position:
+        0% 93%,
+        100% 93%,
+        0% 93%;
 }
 
 a.anchor {
@@ -339,7 +385,7 @@ a.anchor {
     text-decoration: none;
 }
 
-a>code {
+a > code {
     text-transform: none;
 }
 
@@ -353,7 +399,7 @@ div.advice {
     padding: 5px 0px;
 }
 
-div.advice>p {
+div.advice > p {
     width: 100%;
     font-style: italic;
     text-align: center;
@@ -381,15 +427,15 @@ footer {
     float: right;
 }
 
-pre.good>code {
+pre.good > code {
     background-color: #dcedc8;
 }
 
-pre.bad>code {
+pre.bad > code {
     background-color: #ffe6d8;
 }
 
-pre.apl>code {
+pre.apl > code {
     font-family: "APL385 Unicode";
     font-size: 1.5rem;
 }
@@ -435,11 +481,11 @@ body {
         color: #ddd;
     }
 
-    pre.good>code {
-        background-color: rgba(38, 205, 77, 0.3)
+    pre.good > code {
+        background-color: rgba(38, 205, 77, 0.3);
     }
 
-    pre.bad>code {
+    pre.bad > code {
         background-color: rgba(255, 106, 105, 0.15);
     }
 
@@ -550,21 +596,21 @@ p.hanging-quote {
 
 /* Chapter Epigraphs */
 
-div.epigraph>blockquote {
+div.epigraph > blockquote {
     margin-top: 1.5em;
     margin-bottom: 3em;
 }
 
-div.epigraph>blockquote,
-div.epigraph>blockquote>p {
+div.epigraph > blockquote,
+div.epigraph > blockquote > p {
     font-style: italic;
 }
 
-div.epigraph>blockquote>footer {
+div.epigraph > blockquote > footer {
     font-style: normal;
 }
 
-div.epigraph>blockquote>footer>cite {
+div.epigraph > blockquote > footer > cite {
     font-style: italic;
 }
 
@@ -586,19 +632,19 @@ blockquote footer {
     font-variant-numeric: oldstyle-nums;
 }
 
-div.container>p,
-section>p,
-section>div.source-container,
-section>div.advice,
-section>footer,
-section>table {
+div.container > p,
+section > p,
+section > div.source-container,
+section > div.advice,
+section > footer,
+section > table {
     width: 55%;
 }
 
 /* 50 + 5 == 55, to be the same width as paragraph */
-section>dl,
-section>ol,
-section>ul {
+section > dl,
+section > ol,
+section > ul {
     width: 50%;
     -webkit-padding-start: 5%;
 }
@@ -643,7 +689,6 @@ a:visited {
 }
 
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
-
     a:link,
     .tufte-underline,
     .hover-tufte-underline:hover {
@@ -653,17 +698,40 @@ a:visited {
 
 /* Adds dark mode */
 @media (prefers-color-scheme: dark) {
-
     a:link,
     .tufte-underline,
     .hover-tufte-underline:hover {
-        text-shadow: 0.03em 0 #151515, -0.03em 0 #151515, 0 0.03em #151515, 0 -0.03em #151515, 0.06em 0 #151515, -0.06em 0 #151515, 0.09em 0 #151515, -0.09em 0 #151515, 0.12em 0 #151515, -0.12em 0 #151515, 0.15em 0 #151515, -0.15em 0 #151515;
+        text-shadow:
+            0.03em 0 #151515,
+            -0.03em 0 #151515,
+            0 0.03em #151515,
+            0 -0.03em #151515,
+            0.06em 0 #151515,
+            -0.06em 0 #151515,
+            0.09em 0 #151515,
+            -0.09em 0 #151515,
+            0.12em 0 #151515,
+            -0.12em 0 #151515,
+            0.15em 0 #151515,
+            -0.15em 0 #151515;
     }
 }
 
 a:link::selection,
 a:link::-moz-selection {
-    text-shadow: 0.03em 0 #b4d5fe, -0.03em 0 #b4d5fe, 0 0.03em #b4d5fe, 0 -0.03em #b4d5fe, 0.06em 0 #b4d5fe, -0.06em 0 #b4d5fe, 0.09em 0 #b4d5fe, -0.09em 0 #b4d5fe, 0.12em 0 #b4d5fe, -0.12em 0 #b4d5fe, 0.15em 0 #b4d5fe, -0.15em 0 #b4d5fe;
+    text-shadow:
+        0.03em 0 #b4d5fe,
+        -0.03em 0 #b4d5fe,
+        0 0.03em #b4d5fe,
+        0 -0.03em #b4d5fe,
+        0.06em 0 #b4d5fe,
+        -0.06em 0 #b4d5fe,
+        0.09em 0 #b4d5fe,
+        -0.09em 0 #b4d5fe,
+        0.12em 0 #b4d5fe,
+        -0.12em 0 #b4d5fe,
+        0.15em 0 #b4d5fe,
+        -0.15em 0 #b4d5fe;
     background: #b4d5fe;
 }
 
@@ -742,9 +810,9 @@ td {
     text-align: left;
 }
 
-table>thead>tr:last-child>td,
-table>thead>tr:last-child>th,
-table>tbody>tr:last-child>th {
+table > thead > tr:last-child > td,
+table > thead > tr:last-child > th,
+table > tbody > tr:last-child > th {
     padding-bottom: 0.5rem;
     font-variant: all-small-caps;
 }
@@ -771,19 +839,20 @@ table>tbody>tr:last-child>th {
 
 .align-r {
     text-align: right;
-    padding-right: 4em;
+    padding-right: 1em;
 }
 
 .align-l {
     text-align: left;
+    padding-left: 1em;
 }
 
 .align-c {
     text-align: center;
 }
 
-table>tbody>tr:first-child>td,
-table>tbody>tr:first-child>th {
+table > tbody > tr:first-child > td,
+table > tbody > tr:first-child > th {
     padding-top: 0.5rem;
 }
 
@@ -796,8 +865,9 @@ tr.border-bot {
 }
 
 .sans {
-    font-family: "Libertinus Sans", "Gill Sans", "Gill Sans MT", Calibri, sans-serif;
-    letter-spacing: .03em;
+    font-family: "Libertinus Sans", "Gill Sans", "Gill Sans MT", Calibri,
+        sans-serif;
+    letter-spacing: 0.03em;
 }
 
 .fun {
@@ -805,9 +875,9 @@ tr.border-bot {
 }
 
 code,
-pre>code {
-    font-family: 'JetBrains Mono', monospace;
-    font-feature-settings: 'ss02', 'zero';
+pre > code {
+    font-family: "JetBrains Mono", monospace;
+    font-feature-settings: "ss02", "zero";
     font-size: 0.75em;
     line-height: 1.42;
     font-variant-numeric: normal;
@@ -815,28 +885,28 @@ pre>code {
     /* Prevent adjustments of font size after orientation changes in iOS. See https://github.com/edwardtufte/tufte-css/issues/81#issuecomment-261953409 */
 }
 
-.sans>code {
+.sans > code {
     font-size: 0.75em;
 }
 
-.marginnote>code,
-.marginnote>a>code,
-.sidenote>code,
-.sidenote>a>code {
+.marginnote > code,
+.marginnote > a > code,
+.sidenote > code,
+.sidenote > a > code {
     font-size: 0.95rem;
 }
 
-pre>code a>code {
+pre > code a > code {
     font-size: 0.9rem;
 }
 
-pre>code {
+pre > code {
     font-size: 0.9rem;
     overflow-x: auto;
     display: block;
 }
 
-pre.fullwidth>code {
+pre.fullwidth > code {
     width: 90%;
 }
 
@@ -910,24 +980,24 @@ p.svg {
     }
 
     hr,
-    section>p,
-    article>footer,
-    section>div.container,
-    div.container>p,
-    section>div.advice,
-    section>div.source-container,
-    section>footer,
-    section>table {
+    section > p,
+    article > footer,
+    section > div.container,
+    div.container > p,
+    section > div.advice,
+    section > div.source-container,
+    section > footer,
+    section > table {
         width: 100%;
     }
 
-    pre>code {
+    pre > code {
         width: 97%;
     }
 
-    section>dl,
-    section>ol,
-    section>ul {
+    section > dl,
+    section > ol,
+    section > ul {
         width: 90%;
     }
 
@@ -964,8 +1034,8 @@ p.svg {
         text-decoration: underline;
     }
 
-    .margin-toggle:checked+.sidenote,
-    .margin-toggle:checked+.marginnote {
+    .margin-toggle:checked + .sidenote,
+    .margin-toggle:checked + .marginnote {
         display: block;
         float: left;
         left: 1rem;
