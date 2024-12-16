@@ -42,6 +42,7 @@ var (
 	SymDocumentClass   = BuiltinCmd("documentclass", ArgTypeSym)
 	SymIncludeGraphics = BuiltinCmd("includegraphics", ArgTypeSeq)
 	SymDate            = BuiltinCmd("date", ArgTypeSym)
+	SymDetails         = BuiltinCmd("details", ArgTypeSeq, ArgTypeSeq)
 	SymModified        = BuiltinCmd("modified", ArgTypeSym)
 	SymKeyword         = BuiltinCmd("keyword", ArgTypeSym)
 	SymTitle           = BuiltinCmd("title", ArgTypeSeq)
@@ -73,6 +74,13 @@ var (
 	SymTerm            = BuiltinCmd("term", ArgTypeSeq, ArgTypeSeq)
 	SymKbd             = BuiltinCmd("kbd", ArgTypeSeq)
 
+	// Raw MathML support
+	SymMathML  = BuiltinCmd("mathml", ArgTypeSeq)
+	SymMathId  = BuiltinCmd("mi", ArgTypeSym)
+	SymMathNum = BuiltinCmd("mn", ArgTypeSeq)
+	SymMathOp  = BuiltinCmd("mo", ArgTypeSeq)
+	SymMathSup = BuiltinCmd("msup", ArgTypeSeq, ArgTypeSeq)
+
 	// Builtin replacement commands
 	SymLdots        = BuiltinReplacement("ldots", "…")
 	SymCdots        = BuiltinReplacement("cdots", "⋯")
@@ -80,6 +88,7 @@ var (
 	SymCapitalDelta = BuiltinReplacement("Delta", "Δ")
 	SymFracSlash    = BuiltinReplacement("fracslash", "∕")
 	SymTimes        = BuiltinReplacement("times", "×")
+	SymCirc         = BuiltinReplacement("circ", "∘")
 	SymInSet        = BuiltinReplacement("in", "∈")
 	SymNiSet        = BuiltinReplacement("ni", "∋")
 	SymNotInSet     = BuiltinReplacement("notin", "∉")

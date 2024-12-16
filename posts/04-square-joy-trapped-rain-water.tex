@@ -194,7 +194,7 @@ We want to tell the space from the buildings and water pools.
 Let us start by drawing the original problem first.
 We know how to compute maxima: \code{>./ H}.
 Now we need to build a matrix \math{max(H)} rows by \math{length(H)} columns.
-The idiomatic way of doing this is using our old friend \href{https://code.jsoftware.com/wiki/Vocabulary/slash#dyadic}{\code{/} (table)} in a new disguise. 
+The idiomatic way of doing this is using our old friend \href{https://code.jsoftware.com/wiki/Vocabulary/slash#dyadic}{\code{/} (table)} in a new disguise.
 When used as \code{noun1 verb/ noun1}, slash builds a \math{length(noun1)} by \math{length(noun2)} table, where each cell \math{i, j} is filled with the value computed as \math{noun1\[i\] verb noun2\[j\]}.
 
 Let's make a multiplication table to understand how it works.
@@ -292,8 +292,8 @@ We are one step away from turning this matrix into a picture.
 
 \begin{verbatim}[j]
     (pic H) { ucp ' ░█'
-       █    
-   █░░░██░█ 
+       █
+   █░░░██░█
  █░██░██████
 \end{verbatim}
 
@@ -302,6 +302,7 @@ We are one step away from turning this matrix into a picture.
 This verb selects items from the right argument according to the indices from the left argument.
 The effect is that all zeros got replaced with a space, ones---with a watery-looking glyph, and twos---with a solid rectangle.
 
+\label{viewmat}
 Our pseudo-graphics look quite impressive already, but we can do even better.
 \textsc{j} comes with a convenient \href{https://code.jsoftware.com/wiki/Studio/Viewmat}{viewmat} library that can visualize arrays.
 
@@ -402,9 +403,9 @@ It looks especially simple for implicitly defined graphs like our grid.
 Here is how to apply it to our problem:
 
 \begin{itemize}
-  \item 
+  \item
     Start with a grid of distances with the same shape as the input grid, but all the values are infinite.
-  \item 
+  \item
     Compute the next grid of distances by taking the minimum of the four neighboring cells at each point and capping this value below by the bar height at the same position.
     If some cell misses one of the neighbors, replace the neighbor with zero.
   \item Iterate the previous step until the distance grid converges.
@@ -583,7 +584,7 @@ Yes: for each shortest path algorithm, there is an analogous solution for the tw
 For example, the analog of the Bellmann-Ford algorithm involves the following steps:
 \begin{itemize}
   \item Start with an array of the same shape as the input filled with infinities.
-  \item 
+  \item
     For each position, compute the minimum of its left and right neighbors.
     Take the maximum of that value and the height at this position.
   \item Repeat the previous step until convergence.
@@ -604,7 +605,7 @@ Dijkstra gives rise to a very efficient ``two-pointer'' solution:
 \begin{itemize}
   \item Start by placing the left and the right pointers on the boundaries of the input array.
   \item Keep track of the lowest boundary so far.
-  \item 
+  \item
     Always move the pointer that looks at the lowest height.
     The left pointer moves to the right; the right pointer moves to the left.
   \item If one of the two pointers looks at height \emph{M} greater than the lowest boundary, update the lowest boundary to be \emph{M}.
@@ -620,7 +621,7 @@ static inline int int_min(int l, int r) { return l < r ? l : r; }
 
 long trapped_water(int H[], int N) {
   if (N == 0) return 0;
-  
+
   long S = 0;
   for (int L = 0, R = N-1, LowBound = int_min(H[L], H[R]); L < R;) {
     int M = int_min(H[L], H[R]);
@@ -646,4 +647,3 @@ If you are confused and intrigued, I can recommend the following resources:
   \item Listen to the \href{https://arraycast.com/}{Arraycast podcast}.
 \end{itemize}
 \end{document}
-

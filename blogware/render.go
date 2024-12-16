@@ -13,6 +13,8 @@ import (
 	"unicode/utf8"
 )
 
+var MathMLErr = errors.New("MathML operator outside of \\mathml{} context")
+
 // TocEntry models an entry in the Table of Contents.
 type TocEntry struct {
 	Id    string
@@ -190,6 +192,7 @@ const (
 	OrderedListCtx
 	UnorderedListCtx
 	DescriptionListCtx
+	MathMLCtx
 )
 
 type RenderingCtx struct {
@@ -348,6 +351,7 @@ func optsToCSSClasses(opts []sym) string {
 
 func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 	var newRc RenderingCtx
+	newRc.parent = rc.parent
 	switch cmd.name {
 	case SymSection:
 		var anchor, title string
@@ -587,6 +591,61 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			return err
 		}
 		buf.WriteString("</dd>")
+	case SymDetails:
+		fmt.Fprintf(buf, `<details class="%s"><summary>`, optsToCSSClasses(cmd.opts))
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</summary>")
+		if err := renderGenericSeq(&newRc, buf, cmd.args[1]); err != nil {
+			return err
+		}
+		buf.WriteString("</details>")
+	case SymMathML:
+		newRc.parent = MathMLCtx
+		buf.WriteString(`<math class="math">`)
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</math>")
+	case SymMathId:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		var id string
+		if err := cmd.ArgText(0, &id); err != nil {
+			return fmt.Errorf("failed to extract %s identifier: %w", SymbolName(cmd.name), err)
+		}
+		fmt.Fprintf(buf, "<mi>%s</mi>", id)
+	case SymMathNum:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString("<mn>")
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</mn>")
+	case SymMathOp:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString("<mo>")
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</mo>")
+	case SymMathSup:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString("<msup>")
+		for _, arg := range cmd.args {
+			if err := renderGenericSeq(&newRc, buf, arg); err != nil {
+				return err
+			}
+		}
+		buf.WriteString("</msup>")
 
 	default:
 		if value, found := FindReplacment(cmd.name); found {

@@ -5,6 +5,7 @@ DEST ?= site
 help:
 	@echo "Supported targets"
 	@echo "================="
+	@echo "build  - build the blog engine"
 	@echo "serve  - serve the blog content on the PORT"
 	@echo "render - render the website into the DEST directory"
 
@@ -18,4 +19,4 @@ render: build
 
 .PHONY: build
 build:
-	cd blogware; go build; cd ..
+	cd blogware && go build && cd ..
