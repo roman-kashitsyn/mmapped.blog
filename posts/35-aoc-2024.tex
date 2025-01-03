@@ -38,7 +38,7 @@ The second part asks you to count the number of \emph{distinct} paths between on
 
 This puzzle wasn't hard, but it's an interesting example of dynamic programming on a graph.
 I could express both parts with a single algorithm parameterized over the monoid type accumulating answers for each cell.
-In the first part, the monoid is the of all the nines reachable from a cell with the set union operation.
+In the first part, the monoid is the set of all the nines reachable from a cell with the set union operation.
 In the second, it's the additive monoid of integers representing the number of distinct paths leading to nines.
 
 This question is perfect for demonstrating OCaml's \href{https://dev.realworldocaml.org/first-class-modules.html}{first-class modules},
