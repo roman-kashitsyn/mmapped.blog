@@ -3,7 +3,7 @@
 \title{Advent of Code 2024}
 \subtitle{Reflection on puzzles and OCaml.}
 \date{2025-01-02}
-\modified{2025-01-02}
+\modified{2025-01-03}
 
 \keyword{programming}
 \keyword{puzzles}
@@ -41,7 +41,7 @@ I could express both parts with a single algorithm parameterized over the monoid
 In the first part, the monoid is the set of all the nines reachable from a cell with the set union operation.
 In the second, it's the additive monoid of integers representing the number of distinct paths leading to nines.
 
-This question is perfect for demonstrating OCaml's \href{https://dev.realworldocaml.org/first-class-modules.html}{first-class modules},
+This question is perfect for demonstrating OCaml's \href{https://dev.realworldocaml.org/first-class-modules.html}{first-class modules}.
 
 The \code{DpMonoid} module signature describes the interface for types we’ll use for dynamic programming.
 
@@ -75,7 +75,8 @@ let count (map : int array array) (module M : DpMonoid) : int =
     each (fun i j -> if map.(i).(j) == d then
                        Array.iter (fun (dx, dy) ->
                            let x, y = i + dx, j + dy in
-                           if x >= 0 && x < n && y >= 0 && y < n && map.(x).(y) == d+1 then
+                           if x >= 0 && x < n && y >= 0 && y < n
+                              && map.(x).(y) == d+1 then
                              dp.(i).(j) <- M.append dp.(i).(j) dp.(x).(y);
                          ) [|(1, 0); (-1, 0); (0, 1); (0, -1)|]
       )
@@ -338,7 +339,9 @@ The \code{graph} argument describes the next keypad in the chain; the \code{move
 \begin{code}[ocaml]
 let all_paths graph move_cost = 
   let n = Array.length graph.adj in
-  let d4 = Array.init_matrix n dir_count (fun _ _ -> Array.make_matrix n dir_count max_int) in
+  let d4 = Array.init_matrix n dir_count (fun _ _ ->
+               Array.make_matrix n dir_count max_int
+             ) in
   for i = 0 to n-1 do
     for s = 0 to dir_count-1 do
       for e = 0 to dir_count-1 do
@@ -349,7 +352,8 @@ let all_paths graph move_cost =
   Array.iteri (fun u adj ->
       Array.iter (fun (v, move) ->
           for d = 0 to dir_count-1 do
-            d4.(u).(d).(v).(move) <- min d4.(u).(d).(v).(move) (move_cost.(d).(move) + 1);
+            d4.(u).(d).(v).(move) <- min d4.(u).(d).(v).(move)
+                                         (move_cost.(d).(move) + 1);
           done
         ) adj
     ) graph.adj;
@@ -360,10 +364,11 @@ let all_paths graph move_cost =
         for mu = 0 to dir_count-1 do
           for v = 0 to n-1 do
             for mv = 0 to dir_count-1 do
-              if d4.(u).(mu).(k).(mk) != max_int && d4.(k).(mk).(v).(mv) != max_int then
+              if d4.(u).(mu).(k).(mk) != max_int &&
+                 d4.(k).(mk).(v).(mv) != max_int then
                 d4.(u).(mu).(v).(mv) <-
                   min d4.(u).(mu).(v).(mv)
-                    (d4.(u).(mu).(k).(mk) + d4.(k).(mk).(v).(mv));
+                      (d4.(u).(mu).(k).(mk) + d4.(k).(mk).(v).(mv));
             done
           done
         done
@@ -450,6 +455,9 @@ My experience might have been different if I used third-party libraries.
 \item
   There are no convenient multi-dimensional arrays.
   The \code{Bigarray} module supports arrays of primitives of up to sixteen dimensions, but it’s bare-bones and clunky (it has no folds or iterators, for example).
+\item
+  It is slightly annoying to use different indexing syntaxes for various types (\code{a.(i)} for regular arrays, \code{s.\[i\]} for strings, \code{b.\{i\}} for big arrays).
+  I assume this inconsistency helps the compiler with type inference.
 \item
   I wish I could use sum types as array indices (Haskell supports it through the \href{https://hackage.haskell.org/package/base-4.21.0.0/docs/Data-Ix.html}{Ix} typeclass).
   That feature would be handy in the \href{#keypad-conundrum}{Keypad Conundrum} puzzle.
