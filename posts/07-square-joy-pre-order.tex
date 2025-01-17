@@ -290,7 +290,7 @@ We shall deal with this issue in the next section.
 We have two ways to compute the parents: one works for left children (let us call it the \emph{L-algorithm}), and another works for right children (the \emph{R-algorithm}).
 How do we combine these results?
 
-Note that array \code{L} had zeros for all right children. 
+Note that array \code{L} had zeros for all right children.
 Also, note that the L-algorithm produces larger values than the R-algorithm: the L-algorithm looks for \emph{larger} nodes to the left of each position, while the R-algorithm looks for \emph{smaller} nodes.
 So taking the maximum of arrays \math{L} and \math{R} gives us the correct answer.
 
@@ -383,7 +383,6 @@ Note that this code is inherently polymorphic: it does not care about the type o
   \item
     Solve a similar problem: recover a tree from its in-order and post-order traversals.
     Hint: all of the tricks discussed in this article will work after changing the direction.
-  \item Read the previous "square joy" article, \href{/posts/04-square-joy-trapped-rain-water.html}{trapped rainwater}.
   \item Watch Aaron Hsu's talk, \href{https://www.youtube.com/watch?v=hzPd3umu78g}{High-performance Tree Wrangling, the APL way}.
   \item Read Aaron Hsu's dissertation, \href{https://scholarworks.iu.edu/dspace/handle/2022/24749}{A data parallel compiler hosted on GPU}.
     It goes deep into tree representations and conversions between these representations.
