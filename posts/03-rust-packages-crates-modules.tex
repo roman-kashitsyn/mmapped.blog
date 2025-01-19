@@ -60,24 +60,24 @@ to have lots of small packages.
 
 Having few packages with lots of modules has some advantages:
 \begin{itemize}
-  \item 
+  \item
     Adding or removing a module is less work than adding or removing a package.
-  \item 
+  \item
     Modules are more flexible.
     For example, modules in the same crate can form a dependency cycle: module \code{foo} can use definitions from module \code{bar}, which in turn can use definitions from module \code{foo}.
     In contrast, the package dependency graph must be acyclic.
-  \item 
+  \item
     You don't have to modify your \code{Cargo.toml} file every time you rearrange your modules.
 \end{itemize}
 
 In the ideal world where Rust compiles instantly, turning the repository into a massive package with many modules would be the most convenient setup.
 The bitter reality is that Rust takes quite some time to compile, and modules don't help you shorten the compilation time:
 \begin{itemize}
-\item 
+\item
   The basic unit of compilation is a \emph{crate}, not a \emph{module}.
   You must recompile all the modules in a crate even if you change only one.
   The more code you put in a crate, the longer it takes to compile.
-\item 
+\item
   Cargo parallelizes compilations across crates, not within a crate.
   You don't use the full potential of your multi-core CPU if you have a few large packages.
 \end{itemize}
@@ -92,12 +92,12 @@ Packages are less convenient but deliver better compilation speed as the code ba
 
 There are two types of dependency hubs:
 \begin{itemize}
-\item 
+\item
   Packages with lots of dependencies.
   Two examples from the IC codebase are the \code{test-utils} package containing auxiliary code for integration tests
   (proptest strategies, mock and fake component implementations, helper functions, etc.),
   and the \code{replica} package instantiating all the components.
-\item 
+\item
   Packages with lots of \emph{reverse dependencies}.
   Examples from the IC codebase are the \code{types} package containing common type definitions and the \code{interfaces} package specifying component interfaces.
 \end{itemize}
@@ -169,7 +169,7 @@ We only need to replace the exact type with a generic type argument.
 \begin{code}[good]
 trait StateManager {
   type State; //< We turned a specific type into an associated type.
-  
+
   fn get_latest_state(&self) -> State;
 
   fn commit_state(&self, state: State, version: Version);
@@ -219,20 +219,20 @@ Oh well, they aren't, after all.
 
 The usual problems with implicit state dependencies are especially prominent in Rust.
 \begin{itemize}
-\item 
+\item
   Most Rust libraries do not rely on true global variables.
   The usual way to pass an implicit state is to use a \href{https://doc.rust-lang.org/stable/std/macro.thread_local.html}{thread-local} variable, which can become problematic when you spawn a new thread.
   New threads tend to inherit and retain unexpected values of thread locals.
-\item 
+\item
   Cargo runs tests within a test binary in parallel by default.
   The test output might become an intangible mess if you’re not careful with threading loggers through the call stack.
   The problem usually manifests when a background thread needs to access the log.
   Explicitly passing loggers eliminates that problem.
-\item 
+\item
   Testing code relying on an implicit state often becomes hard or impossible in a multi-threaded environment.
   The code recording your metrics is, well, \emph{code}.
   It also deserves to be tested.
-\item 
+\item
   If you use a library relying on implicit state, you can introduce subtle bugs if you depend on incompatible library versions in different packages.
 \end{itemize}
 
@@ -260,7 +260,7 @@ The official documentation of the venerable \href{https://crates.io/crates/slog}
   Using \code{slog_scope} ties the logging data structure to the stacktrace, which is not the same a logical structure of your software.
   Especially libraries should expose full flexibility to their users, and not use implicit logging behaviour.
 
-  Usually \code{Logger} instances fit pretty neatly into data structures in your code representing resources, so it's not that hard to pass them in constructors, and use \code{info!(self.log, ...)} everywhere. 
+  Usually \code{Logger} instances fit pretty neatly into data structures in your code representing resources, so it's not that hard to pass them in constructors, and use \code{info!(self.log, ...)} everywhere.
 }{\href{https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around}{\code{slog} \textsc{faq}}}
 
 By passing state implicitly, you gain temporary convenience but make your code less clear, less testable, and more error-prone.
@@ -554,25 +554,22 @@ My advice is to avoid them when possible.
 In this article, we looked at Rust's code organization tools.
 The key takeaways:
 \begin{itemize}
-  \item 
+  \item
     Understand the difference between modules, crates, and packages.
-  \item 
+  \item
     Rust's module system is convenient, but packing many modules into a single crate degrades the build time.
-  \item 
+  \item
     Factoring the code into many cohesive packages is the most scalable approach.
-  \item 
+  \item
     All implicit state is nasty.
 \end{itemize}
 
 \section{links}{Further reading}
 
 \begin{itemize}
-  \item 
+  \item
     Discuss this article on \href{https://www.reddit.com/r/rust/comments/s818q3/blog_post_rust_at_scale_packages_crates_and/}{r/rust}.
-  \item 
+  \item
     \href{https://github.com/matklad}{Alexey Kladov} wrote a fantastic blog post series on the same topic, \href{https://matklad.github.io/2021/09/05/Rust100k.html}{One Hundred Thousand Lines of Rust}.
-  \item 
-    If you liked this article, consider reading \href{/posts/17-scaling-rust-builds-with-bazel.html}{Scaling Rust builds with Bazel}.
 \end{itemize}
 \end{document}
-

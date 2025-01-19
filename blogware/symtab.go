@@ -73,6 +73,7 @@ var (
 	SymMulticolumn     = BuiltinCmd("multicolumn", ArgTypeNum, ArgTypeAlignSpec, ArgTypeSeq)
 	SymTerm            = BuiltinCmd("term", ArgTypeSeq, ArgTypeSeq)
 	SymKbd             = BuiltinCmd("kbd", ArgTypeSeq)
+	SymNameref         = BuiltinCmd("nameref", ArgTypeSym)
 
 	// Raw MathML support
 	SymMathML  = BuiltinCmd("mathml", ArgTypeSeq)

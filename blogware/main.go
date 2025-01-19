@@ -65,7 +65,7 @@ func renderOne(inputPath string) {
 	if err != nil {
 		log.Fatalf("Failed to parse article table of contents: %v", err)
 	}
-	body, err := article.RenderBody()
+	body, err := article.RenderBody(RefTable{})
 	if err != nil {
 		log.Fatalf("Failed to render article body: %v", err)
 	}

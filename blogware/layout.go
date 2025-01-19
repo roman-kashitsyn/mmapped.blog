@@ -166,7 +166,26 @@ func renderPostAt(i int, articles []Article) (contents []byte, err error) {
 		err = fmt.Errorf("failed to generate ToC: %v", err)
 		return
 	}
-	body, err := article.RenderBody()
+	refTable := make(RefTable)
+	for _, article := range articles {
+		refTable[article.Slug] = Reference{
+			Title: article.Title,
+			URL:   article.URL,
+		}
+	}
+	for _, section := range toc {
+		refTable[section.Id] = Reference{
+			Title: section.Title,
+			URL:   "#" + section.Id,
+		}
+		for _, subsection := range section.Subsections {
+			refTable[subsection.Id] = Reference{
+				Title: subsection.Title,
+				URL:   "#" + subsection.Id,
+			}
+		}
+	}
+	body, err := article.RenderBody(refTable)
 	if err != nil {
 		err = fmt.Errorf("failed to render article body: %v", err)
 		return
@@ -190,6 +209,7 @@ func renderPostAt(i int, articles []Article) (contents []byte, err error) {
 		HNLink:      article.HNLink,
 		Similar:     findSimilarArticles(articles, i),
 		Toc:         toc,
+		RefTable:    refTable,
 		Body:        body,
 		PrevPost:    prevPost,
 		NextPost:    nextPost,
@@ -282,7 +302,7 @@ func renderStanalonePage(url string, htmlPath string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	body, err := article.RenderBody()
+	body, err := article.RenderBody(RefTable{})
 	if err != nil {
 		return nil, err
 	}
@@ -355,7 +375,7 @@ func AllArticles() (articles []Article, err error) {
 		slices.Reverse(names)
 		articles = make([]Article, 0, len(names))
 		for _, name := range names {
-			if path.Ext(name) != ".tex" {
+			if path.Ext(name) != TexExt {
 				continue
 			}
 			article, parseErr := parseArticle(path.Join(articlesPath, name))
@@ -363,6 +383,7 @@ func AllArticles() (articles []Article, err error) {
 				err = parseErr
 				return
 			}
+			article.Slug = name[0 : len(name)-len(TexExt)]
 			article.URL = e.Path + strings.TrimSuffix(name, TexExt) + HTMLExt
 			articles = append(articles, article)
 		}

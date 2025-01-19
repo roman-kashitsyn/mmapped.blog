@@ -12,7 +12,7 @@
 \begin{document}
 \section{introduction}{Introduction}
 
-In the previous article, \href{/posts/09-fungible-tokens-101.html}{Fungible tokens 101}, I introduced the concept of a ledger and various extensions that can help us solve practical problems.
+In the previous article, \nameref{09-fungible-tokens-101}, I introduced the concept of a ledger and various extensions that can help us solve practical problems.
 In this article, we shall analyze a few \emph{payment flows}---protocols built on top of a ledger allowing clients to exchange tokens for a service---in the context of the \href{https://internetcomputer.org}{Internet Computer}.
 
 \section{prerequisites}{Prerequisites}
@@ -41,15 +41,15 @@ Each flow will involve the following participants:
 
 All the payment flows we will analyze have three phases:
 \begin{enumerate}
-  \item 
+  \item
     \emph{The negotiation phase}.
     After I place my order and fill in the shipment details, the shop creates a unique order identifier, \emph{Invoice ID}.
     The \emph{web page} displays the payment details (e.g., as a \textsc{qr} code of the request I need to sign) and instructions on how to proceed with the order.
-  \item 
+  \item
     \emph{The payment phase}.
     I use my \emph{wallet} to execute the transaction as instructed on the \emph{web page}.
     This phase is essentially the same in all flows; only the transaction type varies.
-  \item 
+  \item
     \emph{The notification phase}.
     The shop receives a payment notification for the Invoice ID, validates the payment, and updates the order status.
     The \emph{web page} displays an upbeat message, completing the flow.
@@ -83,11 +83,11 @@ service : {
 
 The flow proceeds as follows:
 \begin{enumerate}
-  \item 
+  \item
     In the negotiation phase, the webpage instructs me to transfer tokens to the shop's \emph{Invoice ID} subaccount and displays a big green ``Done'' button that I need to press after the payment succeeds.
-  \item 
+  \item
     In the payment phase, I use my wallet to execute the \code{transfer(\{ amount = Price, to = Shop, to_subaccount = InvoiceId\})} call on the ledger.
-  \item 
+  \item
     In the notification phase, I click on the ``Done'' button dispatching a notification to the \emph{shop} indicating that I paid the invoice (the webpage can remember the \emph{Invoice ID} on the client side, so I do not have to type it in).
     Upon receiving the notification, the shop attempts to transfer the amount from its \emph{Invoice ID} subaccount to its default account, calling \code{transfer(\{ amount = Price - Fee, from_subaccount = InvoiceID, to = Shop \})} on the ledger.
     If that final transfer succeeds, the order is complete.
@@ -104,11 +104,11 @@ The invoice account flow has a few interesting properties:
 \begin{itemize}
   \item The ledger must process at least two messages: one transfer from me and another from the shop.
   \item Two transfers mean that the ledger charges \emph{two} fees for each flow: one from me and another from the shop.
-  \item 
+  \item
     The ledger needs to remember one additional \code{(principal, subaccount, amount)} tuple for the duration of the flow.
     The tuple occupies at least 70 bytes.
   \item The flow supports unlimited concurrency: I can make multiple payments to the same shop in parallel as long as each payment uses a unique invoice identifier.
-  \item 
+  \item
     The ledger implementation is straightforward: the subaccounts feature is the only requirement for the flow.
 \end{itemize}
 
@@ -161,12 +161,12 @@ service : {
 
 The flow proceeds as follows:
 \begin{enumerate}
-  \item 
+  \item
     In the negotiation phase, the webpage instructs me to approve a transfer to the shop, displaying the shop's account.
     One difference from the \href{#invoice-account}{invoice account} flow is that the shop needs to know my wallet's address on the ledger to make a transfer on my behalf.
     The webpage displays a text field for my account and the familiar ``Done'' button.
   \item In the payment phase, I use my wallet to execute the \code{approve(\{to = Shop, amount = Price\})} call on the ledger.
-  \item 
+  \item
     In the notification phase, I paste my ledger address into the text field and press the button.
     Once the shop receives the notification with my address and the \emph{Invoice ID}, it executes \code{transfer_from(\{ amount = Price; owner = Wallet; to = Shop \})} call on the ledger.
     If that transfer is successful, the order is complete.
@@ -183,14 +183,14 @@ Let us see how this flow compares to the \href{#invoice-account}{invoice account
 \begin{itemize}
   \item The ledger must process at least two messages: approval from the owner and a transfer from the shop.
   \item The ledger charges \emph{two} fees for each payment: one for my approval and another for the shop's transfer.
-  \item 
+  \item
     The ledger needs to remember one additional \code{(principal, principal, amount)} tuple for the duration of the flow.
     The tuple occupies at least 68 bytes.
-  \item 
+  \item
     The flow does not support concurrency: if I execute two payments to the same shop asynchronously, only one of the payments will likely succeed (the exact outcome depends on the message scheduling order).
-  \item 
+  \item
     The ledger needs to maintain a data structure to track allowances, adding complexity to the implementation.
-  \item 
+  \item
     I still have the tokens on my account if the shop never gets the notification due to a bug or a networking issue.
 \end{itemize}
 
@@ -230,7 +230,7 @@ The flow proceeds as follows:
 \begin{enumerate}
   \item In the negotiation phase, the webpage displays the payment details and starts polling the shop for payment confirmation.
   \item In the payment phase, I use my wallet to execute the \code{transfer_notify(\{to = Shop, amount = Price, memo = InvoiceID\})} call on the ledger.
-  \item 
+  \item
     Once the transfer succeeds, the ledger notifies the shop about the payment, providing the amount and the \code{memo} containing the \emph{Invoice ID}.
     The shop consumes the notification and changes the order status.
     The next time the webpage polls the shop, the shop replies with a confirmation, and I see a positive message.
@@ -246,18 +246,18 @@ The flow proceeds as follows:
 Let us check how this flow compares to the previous ones:
 \begin{itemize}
   \item The ledger must process at least two messages: a transfer from the owner and a notification to the shop.
-  \item 
+  \item
     The ledger charges a combined fee for my transfer and notification.
     Whether the ledger charges two fees or gives a discount depends on the implementation.
     Let us assume that the ledger charges 1½ fees.
-  \item 
+  \item
     The ledger needs to hold a notification in memory until the flow completes.
     The notification must contain at least the payer principal, the memo (up to 32 bytes), and the amount, which amounts to at least 70 bytes per flow.
   \item The flow support unlimited concurrency.
-  \item 
+  \item
     The notification feature adds a lot of complexity to the ledger implementation.
     The ledger might need to deal with unresponsive destinations and implement a retry policy for delivering notifications.
-  \item 
+  \item
     The ledger sends the notification on-chain, making it very likely that the shop will receive the notification.
     Still, there is a possibility that the notification will not get through if the destination is overloaded.
 \end{itemize}
@@ -300,10 +300,10 @@ service : {
 The flow proceeds as follows:
 \begin{enumerate}
   \item In the negotiation phase, the webpage displays the payment details, a text field for the transaction identifier, and a big green ``Done'' button.
-  \item 
+  \item
     In the payment phase, I use my wallet to execute the \code{transfer(\{to = Shop, amount = Price, memo = InvoiceID\})} call on the ledger.
     If the transfer is successful, the transaction receipt contains a unique transaction identifier.
-  \item 
+  \item
     I paste the transaction identifier into the text field and press the green button.
     Once the shop receives the notification with the transaction identifier, it fetches the transaction from the ledger and validates the amount and the memo.
     If the validation passes, the order is complete.
@@ -318,15 +318,15 @@ The flow proceeds as follows:
 
 \begin{itemize}
   \item The ledger must process at least two messages: a \code{transfer} from me and a \code{fetch} request from the shop.
-  \item 
+  \item
     The ledger charges one fee for my transfer.
     The transaction details are usually publicly available and require no access fee.
   \item The ledger does not need to store any additional information for the payment flow.
   \item The flow support unlimited concurrency.
-  \item 
+  \item
     Transaction access interfaces are handy and ubiquitous.
     Little additional complexity is usually required to enable the flow.
-  \item 
+  \item
     The failure cases are very similar to the \href{#invoice-account}{invoice-account} flow, except that there is no easy way to monitor outstanding invoices.
     One possible recovery is constructing an index of all the ledger transactions and scanning for transfers matching the open orders.
 \end{itemize}

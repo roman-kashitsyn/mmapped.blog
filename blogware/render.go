@@ -27,6 +27,7 @@ type TocSection struct {
 }
 
 type Article struct {
+	Slug       string
 	Title      string
 	Subtitle   string
 	CreatedAt  time.Time
@@ -37,6 +38,13 @@ type Article struct {
 	RedditLink string
 	HNLink     string
 }
+
+type Reference struct {
+	Title string
+	URL   string
+}
+
+type RefTable = map[string]Reference
 
 type PostListRenderContext struct {
 	Title    string
@@ -60,6 +68,7 @@ type PostRenderContext struct {
 	RedditLink  string
 	HNLink      string
 	Toc         []TocSection
+	RefTable    RefTable
 	Body        template.HTML
 	Similar     []Article
 	PrevPost    *Article
@@ -172,10 +181,11 @@ func ArticleMetadata(ast []Node) (article Article, err error) {
 	return
 }
 
-func (article *Article) RenderBody() (html template.HTML, err error) {
+func (article *Article) RenderBody(refTable RefTable) (html template.HTML, err error) {
 	var buf strings.Builder
 	var rc RenderingCtx
 	rc.parent = RootCtx
+	rc.refTable = refTable
 	if err = renderGenericSeq(&rc, &buf, article.Document.body); err != nil {
 		return
 	}
@@ -196,7 +206,8 @@ const (
 )
 
 type RenderingCtx struct {
-	parent ParentContext
+	refTable RefTable
+	parent   ParentContext
 	// How many items we have rendered in the list context.
 	listCounter    int
 	sectionCounter int
@@ -352,6 +363,7 @@ func optsToCSSClasses(opts []sym) string {
 func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 	var newRc RenderingCtx
 	newRc.parent = rc.parent
+	newRc.refTable = rc.refTable
 	switch cmd.name {
 	case SymSection:
 		var anchor, title string
@@ -646,6 +658,18 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			}
 		}
 		buf.WriteString("</msup>")
+	case SymNameref:
+		var id string
+		if err := cmd.ArgText(0, &id); err != nil {
+			return fmt.Errorf("failed to extract %s identifier: %w", SymbolName(cmd.name), err)
+		}
+		ref, found := rc.refTable[id]
+		if !found {
+			return fmt.Errorf("Unresolved name reference: %s", id)
+		}
+		fmt.Fprintf(buf, `<a href="%s">`, ref.URL)
+		renderText(&newRc, buf, ref.Title)
+		buf.WriteString("</a>")
 
 	default:
 		if value, found := FindReplacment(cmd.name); found {
@@ -672,7 +696,8 @@ func renderBlockquote(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 
 func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 	newRc := RenderingCtx{
-		parent: GenericCtx,
+		parent:   GenericCtx,
+		refTable: rc.refTable,
 	}
 	switch env.name {
 	case SymAbstract:
