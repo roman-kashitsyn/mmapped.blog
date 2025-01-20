@@ -269,6 +269,10 @@ figure.medium-size svg {
     width: 50%;
 }
 
+.center {
+    text-align: center;
+}
+
 figure.medium-size img {
     width: 50%;
 }
