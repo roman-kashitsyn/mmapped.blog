@@ -889,6 +889,21 @@ pre > code {
     /* Prevent adjustments of font size after orientation changes in iOS. See https://github.com/edwardtufte/tufte-css/issues/81#issuecomment-261953409 */
 }
 
+pre.linenumbers > code > span.line:before {
+    content: counter(line);
+    display: inline-block;
+    width: 3ch;
+    padding-right: 0.5ch;
+    margin-right: 1ch;
+    text-align: right;
+    opacity: 0.35;
+    border-right: 1px solid;
+}
+
+pre.linenumbers > code > span.line {
+    counter-increment: line;
+}
+
 .sans > code {
     font-size: 0.75em;
 }

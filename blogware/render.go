@@ -212,6 +212,7 @@ type RenderingCtx struct {
 	listCounter    int
 	sectionCounter int
 	pendingPara    bool
+	codeLineStart  bool
 }
 
 func cmdClosesParagraph(cmd sym) bool {
@@ -225,6 +226,7 @@ func cmdClosesParagraph(cmd sym) bool {
 
 func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error {
 	for _, n := range seq {
+		handleCodeLineStart(rc, buf)
 		switch v := n.(type) {
 		case Text:
 			renderText(rc, buf, v.body)
@@ -238,6 +240,7 @@ func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error 
 		case Env:
 			if err := renderGenericEnv(rc, buf, v); err != nil {
 				return err
+
 			}
 		case Table:
 			if err := renderTable(rc, buf, v); err != nil {
@@ -259,9 +262,17 @@ func renderTitle(title string) string {
 	return buf.String()
 }
 
+func handleCodeLineStart(rc *RenderingCtx, buf *strings.Builder) {
+	if rc.parent == CodeCtx && rc.codeLineStart {
+		buf.WriteString("<span class='line'>")
+		rc.codeLineStart = false
+	}
+}
+
 func renderCodeText(rc *RenderingCtx, buf *strings.Builder, text string) {
 	i, n := 0, len(text)
 	for i < n {
+		handleCodeLineStart(rc, buf)
 		c, size := utf8.DecodeRuneInString(text[i:])
 		switch c {
 		case '&':
@@ -270,6 +281,9 @@ func renderCodeText(rc *RenderingCtx, buf *strings.Builder, text string) {
 			buf.WriteString("&lt;")
 		case '>':
 			buf.WriteString("&gt;")
+		case '\n':
+			buf.WriteString("</span>\n")
+			rc.codeLineStart = true
 		default:
 			buf.WriteRune(c)
 		}
@@ -741,6 +755,7 @@ func renderGenericEnv(rc *RenderingCtx, buf *strings.Builder, env Env) error {
 	case SymCode:
 		// TODO: extra newlines at the beginning/end
 		newRc.parent = CodeCtx
+		newRc.codeLineStart = true
 		fmt.Fprintf(buf, `<div class="source-container"><pre class="source %s"><code>`, optsToCSSClasses(env.opts))
 		if err := renderGenericSeq(&newRc, buf, env.body); err != nil {
 			return err
