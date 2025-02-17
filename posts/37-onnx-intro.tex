@@ -1,0 +1,592 @@
+\documentclass{article}
+
+\title{ONNX introduction}
+\subtitle{A gentle introduction to the Open Neural Network eXchange format.}
+\date{2025-02-17}
+\modified{2025-02-17}
+
+\begin{document}
+
+\section*
+
+The machine learning ecosystem is a zoo of competing frameworks.
+Each framework offers its custom model representation format, sometimes more than one:
+\begin{enumerate}
+\item
+\href{https://pytorch.org/}{Pytorch} represents models using Python code that you can download from the \href{https://huggingface.co/models}{Hugging Face model repository}.
+This format is flexible, but it is a disaster from the security point of view because it allows for arbitrary code execution.
+\item
+\href{https://www.tensorflow.org/}{TensorFlow} supports multiple formats, including \href{https://www.tensorflow.org/guide/saved_model}{SavedModel}.
+The latest version is the \href{https://www.tensorflow.org/guide/keras/serialization_and_saving}{Keras} model format, which is a \textsc{zip}-file with the model components and metadata.
+TensorFlow formats are underspecified, implementation-defined, and \href{https://github.com/tensorflow/tensorflow/blob/master/SECURITY.md}{generally insecure}.
+\end{enumerate}
+
+\textsc{onnx} is an open format for representing machine learning models;
+it aims to unify the ecosystem.
+It doesn't support advanced use cases, such as model training checkpoints,
+but it is simple, secure (no arbitrary code execution), and easy to build on.
+
+This article is an introduction to the \textsc{onnx} file format
+I wish I had when embarked on my \textsc{ml} model transformation journey at \href{https://www.gensyn.ai/}{Gensyn}.
+
+\section{anatomy}{The anatomy of an ONNX model}
+
+The primary way to create an \textsc{onnx} file is to export it from a more popular model format,
+such as Pytorch (using the \href{https://pytorch.org/docs/stable/onnx.html}{\code{torch.onnx}} module)
+or TensorFlow (using third-party packages, such as \href{https://github.com/onnx/tensorflow-onnx}{\code{tf2onnx}}).
+
+Conceptually, an \textsc{onnx} file describes a \emph{model}
+containing a computation \emph{graph}.
+The model acts as a program;
+it establishes the context through imports and helper function definitions.
+The primary graph is the \code{main} function;
+it defines a \href{https://en.wikipedia.org/wiki/Pure_function}{pure function} that maps model inputs to outputs.
+
+This description is abstract, so let's get practical and inspect the \href{https://onnx.ai/onnx/repo-docs/Syntax.html}{textual representation} of a tiny perceptron model.
+
+\begin{figure}
+\marginnote{mn-tiny-perceptron}{
+  The textual representation of a tiny perceptron model.
+}
+\begin{code}[linenumbers]
+<
+    ir_version: 7,
+    opset_import: ["" : 21]
+>
+
+G (float[N, 3] X) => (float[N, 2] Out)
+<
+    float[3, 4] W1 = {
+        0.01, 0.02, 0.03, 0.04,
+        0.05, 0.06, 0.07, 0.08,
+        0.09, 0.10, 0.11, 0.12
+    },
+    float[4, 2] W2 = {
+        0.11, 0.12,
+        0.13, 0.14,
+        0.15, 0.16,
+        0.17, 0.18
+    },
+    float[4] B1 = { 0.001, 0.002, 0.003, 0.004 },
+    float[2] B2 = { 0.01, 0.02 }
+>
+{
+    Y1 = \href{https://onnx.ai/onnx/operators/onnx__Gemm.html}{Gemm}(X, W1, B1)
+    Y2 = \href{https://onnx.ai/onnx/operators/onnx__Relu.html}{Relu}(Y1)
+    Z = \href{https://onnx.ai/onnx/operators/onnx__Gemm.html}{Gemm}(Y2, W2, B2)
+    Out = \href{https://onnx.ai/onnx/operators/onnx__Sigmoid.html}{Sigmoid}(Z)
+}
+\end{code}
+\end{figure}
+
+\begin{itemize}
+\item
+    Lines 1--4 specify \href{https://onnx.ai/onnx/repo-docs/IR.html#models}{model attributes}:
+    the \textsc{onnx} format version and the versions of \href{https://onnx.ai/onnx/repo-docs/IR.html#operator-sets}{operator sets} (\emph{opsets}) this model uses.
+    Refer to the \nameref{custom-operators} section for an explanation of the opset concept.
+\item
+    Line 6 defines the primary model graph named \code{G}.
+    The graph takes one input named \code{X} (an \math{N \times  3} matrix of floats, where \math{N} is deduced from the input shape)
+    and produces one output named \code{Out} (an \math{N \times  2} matrix of floats).
+\item
+    Lines 7--21 define the graph \emph{initializers} corresponding to the model weights.
+    When you train an \textsc{onnx} model, you optimize the initializer values.
+\item
+    Lines 22--27 define the graph body, where each line (except for curly brackets) is an operator application.
+    Each operator is a pure function mapping zero or more inputs to one or more outputs.
+\end{itemize}
+
+An \textsc{onnx} file is a model encoded as a \href{https://protobuf.dev/}{Protocol Buffers} message.
+It's insightful to inspect this low-level representation of our example model.
+
+\begin{figure}
+\marginnote{mn-perceptron-raw}{
+  A Protocol Buffers representation of a tiny \textsc{onnx} model.
+  Ellipses in initializers do not belong to the message; they indicate omitted data entries.
+}
+\begin{code}
+ir_version: 7
+opset_import {
+  domain: ""
+  version: 21
+}
+graph {
+  name: "G"
+  input {
+    name: "X"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim { dim_param: "N" }
+          dim { dim_value: 3 }
+        }
+      }
+    }
+  }
+  output {
+    name: "Out"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim { dim_param: "N" }
+          dim { dim_value: 2 }
+        }
+      }
+    }
+  }
+  initializer {
+    name: "W1"
+    dims: 3
+    dims: 4
+    data_type: 1
+    float_data: 0.01
+    \ldots
+  }
+  initializer {
+    name: "W2"
+    dims: 4
+    dims: 2
+    data_type: 1
+    float_data: 0.11
+    \ldots
+  }
+  initializer {
+    name: "B1"
+    dims: 4
+    data_type: 1
+    float_data: 0.001
+    \ldots
+  }
+  initializer {
+    name: "B2"
+    dims: 2
+    data_type: 1
+    float_data: 0.01
+    \ldots
+  }
+  node {
+    input: "X"
+    input: "W1"
+    input: "B1"
+    output: "Y1"
+    op_type: "Gemm"
+    domain: ""
+  }
+  node {
+    input: "Y1"
+    output: "Y2"
+    op_type: "Relu"
+    domain: ""
+  }
+  node {
+    input: "Y2"
+    input: "W2"
+    input: "B2"
+    output: "Z"
+    op_type: "Gemm"
+    domain: ""
+  }
+  node {
+    input: "Z"
+    output: "Out"
+    op_type: "Sigmoid"
+    domain: ""
+  }
+  value_info {
+    name: "Y1"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim { dim_param: "N" }
+          dim { dim_value: 4 }
+        }
+      }
+    }
+  }
+  value_info {
+    name: "Y2"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim { dim_param: "N" }
+          dim { dim_value: 4 }
+        }
+      }
+    }
+  }
+  value_info {
+    name: "Z"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim { dim_param: "N" }
+          dim { dim_value: 2 }
+        }
+      }
+    }
+  }
+}
+\end{code}
+\end{figure}
+
+In this low-level representation, the graph has the following components:
+\begin{itemize}
+\item A list of \emph{inputs} that the caller must provide to compute the outputs.
+\item A list of \emph{outputs} that the graph computes.
+\item A list of \emph{initializers} specifying the model weights.
+\item A list of \emph{nodes} sorted \href{https://en.wikipedia.org/wiki/Topological_sorting}{topologically}: a node can refer only to the graph inputs, initializers, and values that preceding nodes produce.
+    Nodes refer to their inputs and outputs by names.
+    Nodes might also have names, but all the nodes in our examples are unnamed.
+\item A list of \code{value\_info} entries providing types for intermediate values.
+\end{itemize}
+
+Graph inputs, outputs, and initializers must have explicit types (in the example, these are float tensors of various shapes);
+internal values might not have the corresponding \code{value\_info} entries.
+
+\section{external-data}{External data}
+
+Since Protocol Buffers \href{https://protobuf.dev/programming-guides/proto-limits/#total}{restrict the file size to two gigabytes}, \textsc{onnx} alone cannot encode large models\sidenote{sn-llama-size}{
+    For example, \href{https://huggingface.co/meta-llama/Llama-3.1-8B}{Llama 3.1 \textsc{8b}} needs at least 16 gigabytes to encode its model weights using the \href{https://en.wikipedia.org/wiki/Bfloat16_floating-point_format}{\textsc{bf16}} type.
+}.
+To address this problem, \textsc{onnx} allows storing any tensor, such as an initializer or an operator attribute, in external files.
+
+An external data reference specifies the location of the tensor file relative to the model file and the offset and the length within the file\sidenote{sn-offset-length}{
+  The \code{offset} and the \code{length} fields are optional.
+  Missing offset means ``from the beginning of the file,'' missing length---``until the end of the file.''
+}.
+The tensor is assumed to be in the flat row-major, little-endian format.
+
+Let's make our tiny perceptron model larger and move its weight into a separate file.
+
+\begin{figure}
+\marginnote{mn-perceptron-external-tensors}{
+  A perceptron model that stores its weights in an external file.
+  The \code{location} path is relative to the model file.
+}
+\begin{code}[linenumbers]
+<
+    ir_version: 7,
+    opset_import: ["" : 21]
+>
+
+G (float[N, 64] X) => (float[N, 10] Out)
+<
+    float[64, 1024] W1 = [
+        "location": "weights.bin", "offset": "0", "length": "262144"
+    ],
+    float[1024, 10] W2 = [
+        "location": "weights.bin", "offset": "262144", "length": "40960"
+    ],
+    float[1024] B1 = [
+        "location": "weights.bin", "offset": "303104", "length": "4096"
+    ],
+    float[10] B2 = [
+        "location": "weights.bin", "offset": "307200", "length": "40"
+    ]
+>
+{
+    Y1 = \href{https://onnx.ai/onnx/operators/onnx__Gemm.html}{Gemm}(X, W1, B1)
+    Y2 = \href{https://onnx.ai/onnx/operators/onnx__Relu.html}{Relu}(Y1)
+    Z = \href{https://onnx.ai/onnx/operators/onnx__Gemm.html}{Gemm}(Y2, W2, B2)
+    Out = \href{https://onnx.ai/onnx/operators/onnx__Sigmoid.html}{Sigmoid}(Z)
+}
+\end{code}
+\end{figure}
+
+The textual syntax for external tensors desugars into a protobuf message
+with the \href{https://github.com/onnx/onnx/blob/0277a1f62550c0b9edc3e1016a50a42dc4c73cf1/onnx/onnx.proto3#L653}{\code{data_location}} field set to \code{EXTERNAL},
+and repeated \href{https://github.com/onnx/onnx/blob/0277a1f62550c0b9edc3e1016a50a42dc4c73cf1/onnx/onnx.proto3#L642}{\code{external_data}} fields indicating the data location.
+
+\begin{figure}
+\marginnote{mn-initializer}{
+  An example of an initializer message that refers to external data.
+}
+\begin{code}
+initializer {
+  name: "W2"
+  dims: 1024
+  dims: 10
+  data_type: 1
+  external_data {
+    key: "location"
+    value: "weights.bin"
+  }
+  external_data {
+    key: "offset"
+    value: "262144"
+  }
+  external_data {
+    key: "length"
+    value: "40960"
+  }
+  data_location: EXTERNAL
+}
+\end{code}
+\end{figure}
+
+The external data feature explains why most \textsc{onnx} tools accept a path to the model file:
+they might need to access external tensors,
+and tensor locations are always relative to the model path.
+
+The \href{https://onnx.ai/onnx/api/external_data_helper.html}{\code{onnx.external_data_helper}} Python module provides helpful utilities for dealing with external data.
+
+\section{custom-operators}{Custom operators}
+
+\textsc{onnx} allows the model to define custom operators, also called \emph{functions}.
+The specification calls operator namespaces \emph{domains}
+and groups operators into \href{https://onnx.ai/onnx/repo-docs/Versioning.html#operator-sets}{operator sets} (\emph{opsets}).
+An opset is a versioned snapshot of operators from the same domain.
+
+We know enough terminology now to understand the \code{opset_import} line at the top of our \textsc{onnx} programs.
+It pins the exact operator semantics within the model graph.
+
+The textual syntax for custom operators is almost identical to that of a graph definition.
+Custom operator definitions must appear after the primary model graph
+and have an attribute section defining their domain and dependencies.
+
+The following example demonstrates a model that defines a custom operator doubling its input.
+
+\begin{figure}
+\marginnote{mn-double-example}{
+  An \textsc{onnx} model that doubles its input using a custom operator.
+}
+\begin{code}[linenumbers]
+<
+    ir_version: 7,
+    opset_import: ["" : 21, "com.example" : 1]
+>
+
+G (float[N] X) => (float[N] Out)
+{
+    Out = com.example.Double(X)
+}
+
+<
+    domain: "com.example",
+    opset_import: ["": 21]
+>
+Double (float[N] X) => (float[N] Out) {
+    Out = \href{https://onnx.ai/onnx/operators/onnx__Add.html}{Add}(X, X)
+}
+\end{code}
+\end{figure}
+
+\begin{itemize}
+\item
+Line 3 imports two operator sets: the standard set and the custom set we define later in the program.
+\item
+Lines 11--17 define a custom operator that doubles its input.
+Note the difference between lines 1--4 that set the top-level model attributes
+and lines 11--14 that set attributes for the function that follows.
+The operator attributes specify its domain and the opsets required for the implementation.
+\end{itemize}
+
+Nodes might have \emph{attributes} (values or subgraphs) that modify their behavior.
+Custom operators can also define attributes.
+
+The following examples introduce a custom \code{Root} operator that computes the \href{https://en.wikipedia.org/wiki/Nth_root}{n-th root} of its argument.
+
+\begin{figure}
+\marginnote{mn-onnx-root-example}{
+    An \textsc{onnx} program that defines a custom \code{Root} operator with a single attribute, the root index.
+}
+\begin{code}[linenumbers]
+<
+    ir_version: 7,
+    opset_import: ["" : 21, "com.example" : 1]
+>
+
+G (float[N] X) => (float[N] Out) {
+    Out = com.example.Root<nth = 2>(X)
+}
+
+<
+    domain: "com.example",
+    opset_import: ["": 21]
+>
+Root <nth: int = 2> (float[N] X) => (float[N] Out) {
+    One = \href{https://onnx.ai/onnx/operators/onnx__Constant.html}{Constant}<value_float = 1.0>()
+    Nth = \href{https://onnx.ai/onnx/operators/onnx__Constant.html}{Constant}<value_int = @nth>()
+    NthFloat = \href{https://onnx.ai/onnx/operators/onnx__Cast.html}{Cast}<to = 1>(Nth)
+    E = \href{https://onnx.ai/onnx/operators/onnx__Div.html}{Div}(One, NthFloat)
+    Out = \href{https://onnx.ai/onnx/operators/onnx__Pow.html}{Pow}(X, E)
+}
+\end{code}
+\end{figure}
+
+\begin{itemize}
+\item
+  Line 7 invokes our custom operator and explicitly specifies the \code{nth} attribute value.
+\item
+  Line 14 defines the \code{Root} operator with an attribute section.
+\item
+  Line 16 converts an attribute value into a constant graph node.
+  The following line casts the integer value into a floating-point number.
+\end{itemize}
+
+\section{subgraphs}{Subgraphs}
+
+\textsc{onnx} supports branching and looping using \emph{nested graphs} as operator attributes.
+For example, the \code{If} operator accepts a single formal input---the condition---%
+and two required attributes specifying the computation
+that must happen in ``then'' and ``else'' branches.
+Nested graphs can reference values from the outer scope.
+
+There is no better way to demonstrate control flow than to solve \href{https://en.wikipedia.org/wiki/Fizz_buzz}{FizzBuzz} in \textsc{onnx}.
+
+\begin{code}[linenumbers]
+<
+    ir_version: 7,
+    opset_import: ["" : 21]
+>
+
+G (int64 Limit) => (string[N] Out) {
+    Zero = \href{https://onnx.ai/onnx/operators/onnx__Constant.html}{Constant}<value_int = 0>()
+    One = \href{https://onnx.ai/onnx/operators/onnx__Constant.html}{Constant}<value_int = 1>()
+    Three = \href{https://onnx.ai/onnx/operators/onnx__Constant.html}{Constant}<value_int = 3>()
+    Five = \href{https://onnx.ai/onnx/operators/onnx__Constant.html}{Constant}<value_int = 5>()
+    Fifteen = \href{https://onnx.ai/onnx/operators/onnx__Constant.html}{Constant}<value_int = 15>()
+    Cond = \href{https://onnx.ai/onnx/operators/onnx__Cast.html}{Cast}<to = 9>(One)
+
+    Out = \href{https://onnx.ai/onnx/operators/onnx__Loop.html}{Loop} (Limit, Cond) <body = Body (int64 I, bool C) => (bool OutC, string Item) {
+        X = \href{https://onnx.ai/onnx/operators/onnx__Add.html}{Add}(I, One)
+        OutC = \href{https://onnx.ai/onnx/operators/onnx__Identity.html}{Identity}(C)
+
+        M15 = \href{https://onnx.ai/onnx/operators/onnx__Mod.html}{Mod}(X, Fifteen)
+        Z15 = \href{https://onnx.ai/onnx/operators/onnx__Equal.html}{Equal}(M15, Zero)
+        Item = \href{https://onnx.ai/onnx/operators/onnx__If.html}{If} (Z15) <
+            then_branch = FizzBuzz () => (string R) {
+                R = \href{https://onnx.ai/onnx/operators/onnx__Constant.html}{Constant}<value_string = "fizzbuzz">()
+            },
+            else_branch = Other () => (string R) {
+                M3 = \href{https://onnx.ai/onnx/operators/onnx__Mod.html}{Mod}(X, Three)
+                Z3 = \href{https://onnx.ai/onnx/operators/onnx__Equal.html}{Equal}(M3, Zero)
+                R = \href{https://onnx.ai/onnx/operators/onnx__If.html}{If} (Z3) <
+                    then_branch = Fizz () => (string R) {
+                        R = \href{https://onnx.ai/onnx/operators/onnx__Constant.html}{Constant}<value_string = "fizz">()
+                    },
+                    else_branch = Other () => (string R) {
+                        M5 = \href{https://onnx.ai/onnx/operators/onnx__Mod.html}{Mod}(X, Five)
+                        Z5 = \href{https://onnx.ai/onnx/operators/onnx__Equal.html}{Equal}(M5, Zero)
+                        R = \href{https://onnx.ai/onnx/operators/onnx__If.html}{If} (Z5) <
+                            then_branch = Buzz () => (string R) {
+                                R = \href{https://onnx.ai/onnx/operators/onnx__Constant.html}{Constant}<value_string = "buzz">()
+                            },
+                            else_branch = Other => (string R) {
+                                R = \href{https://onnx.ai/onnx/operators/onnx__Cast.html}{Cast}<to = 8>(X)
+                            }
+                        >
+                    }
+                >
+            }
+        >
+    }>
+}
+\end{code}
+
+\begin{itemize}
+\item
+  The textual representation doesn't support raw literals as operator arguments,
+  so explicitly declare all the constants we'll use in lines 7--12.
+  Constant nodes have no inputs and one output, the value they wrap.
+  The magic constant \code{9} on line 12 is the \href{https://github.com/onnx/onnx/blob/0277a1f62550c0b9edc3e1016a50a42dc4c73cf1/onnx/onnx.proto3#L515}{boolean type id}.
+\item
+  \textsc{onnx} graphs express pure computation, so all operators must produce a value to be useful.
+  Thus, \textsc{onnx} control structures resemble functional programming primitives, such as \href{https://hackage.haskell.org/package/base-4.21.0.0/docs/Data-List.html#v:unfoldr}{\code{unfoldr}}.
+
+  The \code{Loop} operator accepts multiple arguments:
+  the maximum number of iterations,
+  the exit condition (the loop won't start if that value is \code{false}),
+  and a sequence of internal loop variables (we don't use any in this example).
+  The \code{body} graph attribute specifies the variable transformation at each step.
+
+  The body transforms current iteration number, stop condition, and internal variables
+  into the next exit condition (for early termination), the next values of internal variables, and an output value.
+  The \code{Loop} operator accumulates all the output values into an output tensor.
+  It returns the final values of intermediate variables and the accumulated outputs.
+
+\item
+  Our loop body graph is a sequence of nested \href{https://onnx.ai/onnx/operators/onnx__If.html}{\code{If}} operator calls.
+  An \code{If} operator accepts a boolean condition value and two graph attributes: \code{then_branch} and \code{else_branch}.
+  Our conditions check whether the input divides by 15, 5, and 3 and falls back to converting the number to string on line 39
+  (\href{https://github.com/onnx/onnx/blob/0277a1f62550c0b9edc3e1016a50a42dc4c73cf1/onnx/onnx.proto3#L514}{type id 8} corresponds to the string type).
+  Note how nested graphs can freely access values from their lexical scope.
+\end{itemize}
+
+\section{running-onnx-programs}{Appendix: running ONNX programs}
+
+You can use the following Python code snippet to parse and play with the textual format
+(the \href{https://docs.astral.sh/uv/guides/scripts/#running-scripts}{uv tool} makes it easy: \code{uv run --no-project script.py}).
+
+\begin{figure}
+\marginnote{mn-onnx-text-python-snippet}{
+  A snippet of Python code that parses \textsc{onnx} textual syntax and runs the model.
+  The model source is in bold.
+}
+\begin{code}[python]
+\emph{# /// script
+# dependencies = \[
+#   "onnx~=1.17",
+#   "onnxruntime~=1.18",
+# \]
+# ///}
+import tempfile
+
+import numpy as np
+import numpy.typing as npt
+import onnx
+import onnx.external_data_helper
+import onnx.parser
+import onnxruntime as ort
+
+
+def parse_onnx(text: str) -> onnx.ModelProto:
+    model = onnx.parser.parse_model(text)
+    onnx.checker.check_model(model)
+    return onnx.shape_inference.infer_shapes(model, check_type=True)
+
+
+def run_onnx(
+    model: onnx.ModelProto, inputs: dict[str, npt.NDArray], outputs: list[str]
+) -> dict[str, npt.NDArray]:
+    onnx.external_data_helper.load_external_data_for_model(model, ".")
+    with tempfile.NamedTemporaryFile() as model_file:
+        onnx.save_model(model, model_file.name)
+        runtime = ort.InferenceSession(model_file.name)
+        return runtime.run(outputs, inputs)
+
+
+print(
+    run_onnx(
+        parse_onnx("""\b{
+    <ir_version: 7, opset_import: \["": 21\]>
+    Square (float\[N\] X) => (float\[N\] Out) \{
+        Out = Mul(X, X)
+    \}
+    }"""),
+        inputs={"X": np.array([1.0, 2.0, 3.0], dtype=np.float32)},
+        outputs=["Out"],
+    )
+)
+\end{code}
+\end{figure}
+
+\section{resources}{Resources}
+\begin{itemize}
+\item \href{https://onnx.ai/onnx/intro/index.html}{The official \textsc{onnx} introduction.}
+\item \href{https://onnx.ai/onnx/repo-docs/IR.html}{The \textsc{onnx ir} specification.}
+\item \href{https://onnx.ai/onnx/repo-docs/Syntax.html}{\textsc{onnx} textual syntax.}
+\item \href{https://github.com/onnx/onnx/blob/9fb11e344a7721b2eed1f3e26bf9312f168a79a0/onnx/test/cpp/parser_test.cc}{Tests for the textual syntax parser.}
+\item \href{https://netron.app/}{The Netron \textsc{onnx} graph visualizer.}
+\end{itemize}
+
+% deleted
+%
+% One way to construct graphs programmatically is to use the \href{https://onnx.ai/onnx/api/helper.html#onnx.helper.make_node}{\code{onnx.helper}} \textsc{api}.
+%
+\end{document}
