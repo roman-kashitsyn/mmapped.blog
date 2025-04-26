@@ -1,0 +1,180 @@
+\documentclass{article}
+
+\title{Three degrees of validity}
+\subtitle{What does valid configuration share with facts and theorems?}
+\date{2025-04-26}
+\modified{2025-04-26}
+
+\begin{document}
+
+\section*
+
+This article presents a view of system configuration as a program for an embedded interpreter.
+This view leads to three logical processing stages: parsing, analysis, and execution.
+As the configuration moves through that pipeline, our confidence in its validity increases.
+
+\section{configurations-as-programs}{Configurations as programs}
+
+All configuration files are programs for an interpreter embedded in a larger system.
+These programs encode the system initialization steps or supply data for them.
+The most widely used configuration formats are declarative (\href{https://www.w3.org/XML/}{\textsc{xml}},
+\href{https://www.json.org/json-en.html}{\textsc{json}},
+\href{https://yaml.org/}{\textsc{yaml}},
+\href{https://toml.io/en/}{\textsc{toml}}),
+but some systems implement functional (\href{https://research.tue.nl/en/studentTheses/gcl-viewer}{Google’s GCL},
+\href{https://dhall-lang.org/#}{Dhall},
+\href{https://nix.dev/manual/nix/2.24/language/index.html}{nix},
+\href{https://github.com/bazelbuild/starlark}{Starlark})
+or imperative (\href{https://en.wikipedia.org/wiki/Vim_(text_editor)#Vim_script}{VimL},
+\href{https://en.wikipedia.org/wiki/Emacs_Lisp}{Emacs Lisp})
+configurations.
+The configuration interpreter is rarely a specific module;
+more often, it's a cross-cutting concern spanning the initialization logic of other system components.
+
+In a typical interpreter, a program goes through three conceptual stages:
+\begin{enumerate}
+\item \emph{Parsing.}
+  The interpreter recognizes the program as belonging to the language it understands, extracting a syntax tree from the input.
+  The \textsc{xml} standard calls documents passing this stage \href{https://www.w3.org/TR/REC-xml/#sec-well-formed}{\emph{well-formed}}.
+\item \emph{Static analysis.}
+  The interpreter executes the program symbolically and detects internal inconsistencies.
+  In configuration terms, this step matches the parsed configuration object against a schema.
+  The \textsc{xml} standard calls documents passing this stage \href{https://www.w3.org/TR/REC-xml/#dt-valid}{\emph{valid}}.
+\item \emph{Execution.}
+  The interpreter runs the program.
+  In configuration terms, this stage usually requires the interpreter to interact with its environment (bind sockets, connect to databases, etc) to initialize the system components.
+  We'll call configurations that initialize the system correctly \emph{applicable}.
+\end{enumerate}
+
+\begin{figure}[grayscale-diagram]
+\marginnote{mn-pipline}{
+  System configuration is a program for an embedded interpreter.
+  Our confidence in its validity increases as it moves through the interpretation stages.
+}
+\includegraphics{/images/40-pipeline.svg}
+\end{figure}
+
+
+The stages are conceptual because interpreters can transition between them freely.
+They can parse a document section, validate it, execute the corresponding effects, and proceed to parse the next section.
+
+Configuration systems that support external references\sidenote{sn-config-includes}{
+  For example, Dhall supports \href{https://docs.dhall-lang.org/tutorials/Language-Tour.html#url-imports}{including the contents of an arbitrary \textsc{url}} into the document,
+  \textsc{xml} supports this feature through \href{https://www.w3.org/TR/xinclude-11/}{XInclude specification} and
+  \href{https://www.w3.org/TR/REC-xml/#sec-entity-decl}{ENTITY declarations},
+  and nix supports \href{https://nix.dev/manual/nix/2.28/language/builtins.html#builtins-import}{import expressions} and
+  \href{https://nix.dev/manual/nix/2.28/language/builtins.html#builtins-readFile}{raw file inclusion} and provides a
+  \href{https://ryantm.github.io/nixpkgs/builders/fetchers/}{collection of fetchers} for various external resources.
+} rely on interleaving the parsing stage with the effects of reading external files.
+These effects are benign and usually confined to the parser, so this feature doesn’t invalidate the conceptual model.
+
+\section{example}{An example}
+
+Let’s consider an example: a TOML configuration file of a typical backend service that connects to a database and starts an HTTP server.
+
+\begin{code}[toml]
+db_url = "postgres://user:password@host:5432/dbname"
+http_port = 8080
+\end{code}
+
+TOML’s top-level data structure is a hash table, so the parsing stage outputs a table with two entries.
+
+\begin{code}
+Table({
+  "db_url": String("postgres://user:password@host:5432/dbname"),
+  "http_port": Integer(8080),
+})
+\end{code}
+
+The TOML parser doesn't understand the field semantics.
+It would just as happily decode a configuration with the field values swapped.
+
+\begin{code}
+Table({
+  "db_url": Integer(8080),
+  "http_port": String("postgres://user:password@host:5432/dbname")
+})
+\end{code}
+
+The static analysis phase ensures the configuration object has the expected shape:
+The \code{db_url} value must be a valid URL,
+the \code{http_port} value must be an integer between 0 and 65535,
+and the table must contain no other keys.
+In Rust, the \href{https://serde.rs}{serde} library fuses parsing and static analysis by leveraging Rust's type system as its schema language.
+
+\begin{code}[rust]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Config {
+    db_url: url::Url,
+    http_port: u16,
+}
+
+#[test]
+fn parse() {
+    let _config: Config = toml::from_str(r#"
+db_url = "postgres://user:password@host:5432/dbname"
+http_port = 8080
+"#).unwrap();
+}
+\end{code}
+
+The execution phase creates and binds a socket and opens a database connection.
+For these steps to succeed, the following assumptions must hold:
+\begin{itemize}
+\item The \textsc{url} points to a running service that understands the Postgres protocol and accepts the credentials.
+\item No other process on the system uses the port.
+\end{itemize}
+
+The impossibility of checking such assumptions without system calls draws the line between validity and applicability:
+Validation treats the configuration as a self-contained mathematical object and relies only on rules independent of the world state,
+while checking applicability might cause side effects.
+Applicability, unlike validity, is a fleeting property:
+it holds only on a specific machine and at a particular time.
+
+\section{practical-implications}{Practical implications}
+
+The primary benefit of the three-stage view is its nomenclature,
+especially its distinction between validity and applicability.
+
+Configuration-heavy programs can benefit from making the three stages more explicit.
+Localizing validation in a pure function enables a trivial implementation of the \code{--dry-run} feature
+that validates the configuration without side effects.
+
+Most systems I worked with extracted the execution step in an initialization routine
+that instantiated and assembled the system components.
+However, complex software targeting non-expert users can benefit from a debugging execution routine
+that detects applicability issues without causing irreversible side effects.
+Internal Google tools often offer the \code{--diagnose_me} feature
+that examines external dependencies and reports whether they function correctly.
+The tool output can help users fix their environment or serve as a basis for bug reports.
+
+\section{facts-and-theorems}{Appendix: facts and theorems}
+
+The three-stage lens also parallels our treatment of natural languages and logic:
+Sentences and propositions can be invalid in at least three ways.
+
+When we process a statement in a natural language,
+we must first recognize it as a grammatical construct,
+then assign a meaning to it\sidenote{sn-jabberwocky}{
+The \href{https://en.wikipedia.org/wiki/Jabberwocky}{Jabberwocky} poem provides examples of  grammatically correct but meaningless sentences,
+such as ``all mimsy were the borogoves.''
+The sentence structure implies that every \emph{borogove} in a group had the property of being \emph{mimsy}.
+Since we lack this statement's meaning, we couldn't know whether it was true even if we had witnessed the scene.
+},
+and finally evaluate its correctness by engaging with the world or using our experience.
+
+Interaction with the world distinguishes plausible statements from facts.
+For example, checking that ``all swans are white'' requires examining every swan or finding a pigmented one.
+Furthermore, many facts are transient: it might be that all swans used to be white until a mutation occurred,
+or they might all become white in the future if the pigmented ones become extinct.
+
+Mathematical statements go through the same three-step process:
+we (1) recognize a sequence of tokens as a formula,
+(2) recognize it as a proposition by understanding its meaning,
+and (3) search for its proof to promote it to a theorem.
+The third step is again the most laborious, but it doesn't require interacting with the world since the mathematical universe is independent of reality.
+Proving theorems feels deeply satisfying because it uncovers eternal truths.
+The world can't take them away.
+
+\end{document}
