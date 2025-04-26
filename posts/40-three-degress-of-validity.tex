@@ -122,7 +122,7 @@ http_port = 8080
 The execution phase creates and binds a socket and opens a database connection.
 For these steps to succeed, the following assumptions must hold:
 \begin{itemize}
-\item The connection string points to a running service that understands the Postgres protocol and accepts the credentials.
+\item The \textsc{url} points to a running service that understands the Postgres protocol and accepts the credentials.
 \item No other process on the system uses the port.
 \end{itemize}
 
@@ -135,15 +135,15 @@ it holds only on a specific machine and at a particular time.
 \section{practical-implications}{Practical implications}
 
 The primary benefit of the three-stage view is its nomenclature,
-especially its distinction between valid and applicable configurations.
+especially its distinction between validity and applicability.
 
 Configuration-heavy programs can benefit from making the three stages more explicit.
-Localizing the validation step in a single pure function enables a trivial implementation of the \code{--dry-run} feature
-that validates the system configuration without side effects.
+Localizing validation in a pure function enables a trivial implementation of the \code{--dry-run} feature
+that validates the configuration without side effects.
 
 Most systems I worked with extracted the execution step in an initialization routine
 that instantiated and assembled the system components.
-However, complex software targeting non-expert users can benefit from a separate execution-level checker
+However, complex software targeting non-expert users can benefit from a debugging execution routine
 that detects applicability issues without causing irreversible side effects.
 Internal Google tools often offer the \code{--diagnose_me} feature
 that examines external dependencies and reports whether they function correctly.
@@ -160,7 +160,7 @@ then assign a meaning to it\sidenote{sn-jabberwocky}{
 The \href{https://en.wikipedia.org/wiki/Jabberwocky}{Jabberwocky} poem provides examples of  grammatically correct but meaningless sentences,
 such as ``all mimsy were the borogoves.''
 The sentence structure implies that every \emph{borogove} in a group had the property of being \emph{mimsy}.
-Unfortunately, we couldn't tell whether this observation was true even if we had witnessed it because we lack its meaning.
+Since we lack this statement's meaning, we couldn't know whether it was true even if we had witnessed the scene.
 },
 and finally evaluate its correctness by engaging with the world or using our experience.
 
