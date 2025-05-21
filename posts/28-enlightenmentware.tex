@@ -179,7 +179,7 @@ Instead of consuming tasty treats with the rest of the passengers, I was lying i
 Most algorithm libraries require you to commit to a specific data representation, making integrating them into an existing project prohibitively expensive.
 That's especially true for graph algorithms: The vertices and edges are usually implicitly defined and deeply embedded into other data structures, so it's easier to re-implement the algorithm than to use a generic library.
 
-The \href{https://www.boost.io/libraries/graph/}{Boost.Graph} library solves this problem elegantly using \href{https://en.wikipedia.org/wiki/Alexander_Stepanov}{Alex Stepanov}'s ideas on generic programming.
+The \href{https://www.boost.org/library/latest/graph/}{Boost.Graph} library solves this problem elegantly using \href{https://en.wikipedia.org/wiki/Alexander_Stepanov}{Alex Stepanov}'s ideas on generic programming.
 It uses a bag of tricks (type traits, property maps, visitors) to implement graph algorithms that can work with any graph representation you throw at them, given that you provide an adapter telling the library how to view your data structures as a graph.
 
 Even though I never had a chance to use the library in practice\sidenote{sn-boost-graph-use}{
