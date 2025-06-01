@@ -1,0 +1,468 @@
+\documentclass{article}
+
+\title{Box combinators}
+\subtitle{The most visual way to print a table.}
+\date{2025-06-01}
+\modified{2025-06-01}
+\keyword{programming}
+
+\begin{document}
+
+\section*
+
+\epigraph{
+  A combinator is a function which builds program fragments from program fragments.
+}{John Hughes, ``\href{https://www.sciencedirect.com/science/article/pii/S0167642399000234}{Generalising monads to arrows}''}
+
+In functional programming,
+\emph{combinator libraries} refer to a design style that emphasizes bottom-up program construction.
+Such libraries define a few core data types
+and provide \emph{constructors}---functions that create initial objects---%
+and \emph{combinators}---functions that build larger objects from smaller pieces.
+
+Combinators enable the programmer to use intuitive visual and spatial reasoning
+that's vastly more powerful than linear language processing.
+As a result, solving problems with combinators feels like playing with \textsc{lego} pieces.
+
+This article describes a combinator library that deals with two-dimensional blocks of \textsc{ascii} characters.
+I'll use \href{https://ocaml.org/}{OCaml} to demonstrate the idea\sidenote{sn-functional-language}{Functional languages are a perfect medium for combinator libraries.},
+but you won't have trouble translating it to any modern language.
+Box combinators are my go-to tool when I need to visualize data programmatically for debugging or exploration.
+
+\section{text-boxes}{Text boxes}
+
+I stumbled on the idea of box combinators around 2012 while reading chapter 10 of ``\href{https://www.goodreads.com/book/show/5680904-programming-in-scala}{Programming in Scala}'', 2nd edition.
+The chapter demonstrates how to use Scala's object-oriented features to build a module for rendering rectangular text boxes (the authors called them \emph{elements}).
+This section describes the underlying idea without the object-oriented fluff.
+
+The primary type in our library is the \emph{box}: a two-dimensional array of \textsc{ascii} characters\sidenote{sn-ascii}{
+  Single-byte characters aren't a fundamental restriction;
+  we could also arrange Unicode glyphs in a grid.
+}.
+A box has a \href{#ref-height}{\code{height}} (the number of rows) and a \href{#ref-width}{\code{width}} (the number of columns).
+There are two primary ways to construct a box:
+\href{#ref-of-string}{\code{of_string}} wraps a string into a unit-height grid\sidenote{sn-multiline}{
+  Handling multiline strings is an exercise for the reader.
+} and \href{#ref-fill}{\code{fill}} fills a box of specified dimensions with a character.
+The \href{#ref-space}{\code{space}} and \href{#ref-of-char}{\code{of_char}} constructors are special cases of \code{fill}.
+An \href{#ref-empty}{\code{empty}} box has zero dimensions and acts as a neutral element; combining it with other boxes has no effect.
+
+\begin{figure}
+\marginnote{mn-box-constructors}{
+  Primitive box constructors.
+}
+\begin{code}[text,center]
+                            +-------------+
+\href{#ref-of-string}{of_string} "Hello, World!" = |Hello, World!|
+                            +-------------+
+
+               +----+
+               |aaaa|
+\href{#ref-fill}{fill} 'a' 3 4 = |aaaa|
+               |aaaa|
+               +----+
+
+            +--+
+            |  |
+\href{#ref-space}{space} 3 2 = |  |
+            |  |
+            +--+
+
+              +-+
+\href{#ref-of-char}{of_char} 'a' = |a|
+              +-+
+
+\href{#ref-empty}{empty} = ++
+        ++
+\end{code}
+\end{figure}
+
+Things get interesting when we start combining the primitives.
+We can compose two boxes in at least two ways:
+by stacking them horizontally (placing the first box \href{#ref-beside}{\code{beside}} the second)
+or vertically (placing the first box \href{#ref-above}{\code{above}} the second).
+
+\begin{figure}
+\marginnote{mn-box-combinators}{
+  Box combinators \href{#ref-beside}{\code{beside}} and \href{#ref-above}{\code{above}} stack boxes horizontally and vertically.
+}
+\begin{code}[text,center]
++--+        +--+   +----+
+|aa|        |bb|   |aabb|
+|aa| \href{#ref-beside}{beside} |bb| = |aabb|
+|aa|        |bb|   |aabb|
++--+        +--+   +----+
+
+                    +--+
++--+         +--+   |aa|
+|aa|         |bb|   |aa|
+|aa|  \href{#ref-above}{above}  |bb| = |aa|
+|aa|         |bb|   |bb|
++--+         +--+   |bb|
+                    |bb|
+                    +--+
+\end{code}
+\end{figure}
+
+For the composite box to have well-defined height and width, the arguments must have compatible dimensions:
+vertically stacked boxes must have the same width, and horizontally stacked boxes must have the same height.
+
+We solve this issue by padding the smaller box with extra space:
+we \href{#ref-widen}{\code{widen}} it for vertical composition
+and \href{#ref-heighten}{\code{heighten}} it for horizontal composition.
+We can add the padding before, after, or around the smaller box.
+Since none of the options is inherently superior, we provide all three, using central alignment as the default.
+
+\begin{figure}
+\begin{code}[text,center]
+        +---+   +-------+
+\href{#ref-widen}{widen} 7 |aaa| = |  aaa  |
+        +---+   +-------+
+
+                 +-+
+           +-+   | |
+\href{#ref-heighten}{heighten} 3 |b| = |b|
+           +-+   | |
+                 +-+
+
++---+              +----+
+|aaa|        +-+   |aaa |
+|aaa| \href{#ref-beside}{beside} |b| = |aaab|
+|aaa|        +-+   |aaa |
++---+              +----+
+
++---+         +-+   +---+
+|aaa|  \href{#ref-above}{above}  |b| = |aaa|
++---+         +-+   | b |
+                    +---+
+\end{code}
+\end{figure}
+
+The \href{#ref-hconcat}{\code{hconcat}} (\emph{concatenate horizontally}) and \href{#ref-vconcat}{\code{vconcat}} (\emph{concatenate vertically})
+stack an array of boxes (\href{#ref-beside}{\code{beside}} and \href{#ref-above}{\code{above}} compose exactly two boxes).
+The \href{#ref-grid}{\code{grid}} function takes a \textsc{2-d} array of boxes,
+combines each row horizontally,
+and then combines the rows vertically.
+
+\begin{figure}
+\marginnote{mn-box-combinators}{
+  Box combinators operating on arrays of boxes.
+}
+\begin{code}[text,center]
+           +-+  +-+  +-+      +---+
+\href{#ref-hconcat}{hconcat} [| |a|; |b|; |c| |] = |abc|
+           +-+  +-+  +-+      +---+
+
+                              +-+
+           +-+  +-+  +-+      |a|
+\href{#ref-vconcat}{vconcat} [| |a|; |b|; |c| |] = |b|
+           +-+  +-+  +-+      |c|
+                              +-+
+
+           +-+  +-+        +-+  +-+         +--+
+\href{#ref-grid}{grid} [| [| |a|; |b| |]; [| |c|; |d| |] |] = |ab|
+           +-+  +-+        +-+  +-+         |cd|
+                                            +--+
+\end{code}
+\end{figure}
+
+\section{examples}{Examples}
+\subsection{sierpinski-triangle}{Sierpinski triangle}
+
+Box combinators are a powerful tool for playing with fractals.
+Rendering a \href{https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle}{Sierpinski triangle} requires only a few lines of code.
+
+\begin{figure}
+\marginnote{mn-sierpinski-code}{
+A program drawing a Sierpinski triangle of order \code{n}.
+}
+\begin{code}[ocaml]
+\b{let rec} sierpinski n =
+    if n == 0 then Box.of_char '*'
+    else let s = sierpinski (n - 1) in
+         Box.above s (Box.hconcat [| s; Box.of_char ' '; s |])
+\end{code}
+\end{figure}
+
+\begin{figure}
+\marginnote{mn-sierpinski-rendered}{
+A Sierpinski triangle rendered using box combinators.
+}
+\begin{code}[text]
+\$ sierpinski 5 |> Box.print_box
+
+                               *
+                              * *
+                             *   *
+                            * * * *
+                           *       *
+                          * *     * *
+                         *   *   *   *
+                        * * * * * * * *
+                       *               *
+                      * *             * *
+                     *   *           *   *
+                    * * * *         * * * *
+                   *       *       *       *
+                  * *     * *     * *     * *
+                 *   *   *   *   *   *   *   *
+                * * * * * * * * * * * * * * * *
+               *                               *
+              * *                             * *
+             *   *                           *   *
+            * * * *                         * * * *
+           *       *                       *       *
+          * *     * *                     * *     * *
+         *   *   *   *                   *   *   *   *
+        * * * * * * * *                 * * * * * * * *
+       *               *               *               *
+      * *             * *             * *             * *
+     *   *           *   *           *   *           *   *
+    * * * *         * * * *         * * * *         * * * *
+   *       *       *       *       *       *       *       *
+  * *     * *     * *     * *     * *     * *     * *     * *
+ *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+\end{code}
+\end{figure}
+
+\subsection{spiral}{Spiral}
+
+The following snippet is a modified version of the spiral renderer from section 10.15 of ``\href{https://www.goodreads.com/book/show/5680904-programming-in-scala}{Programming in Scala}.''
+
+\begin{figure}
+\marginnote{mn-spiral-code}{
+  A program drawing a spiral with \code{n} turns.
+}
+\begin{code}[ocaml]
+\b{let rec} spiral n =
+    let open Box in
+    if n <= 0
+    then of_char '+'
+    else let s = spiral (n - 1) in
+         let h, w = dimensions s in
+         let vbar = fill '|' h 1 in
+         grid [| [| of_string "| +"; fill '-' 1 w; of_char '+' |]
+               ; [| vbar; of_char ' '; s; of_char ' '; vbar |]
+               ; [| of_char '+'; fill '-' 1 (w+2); of_char '+' |] |]
+\end{code}
+\end{figure}
+
+\begin{code}[text]
+\$ spiral 4 |> Box.print_box
+
+| +-------------+
+| | +---------+ |
+| | | +-----+ | |
+| | | | +-+ | | |
+| | | | + | | | |
+| | | +---+ | | |
+| | +-------+ | |
+| +-----------+ |
++---------------+
+\end{code}
+
+\subsection{table}{Data table}
+
+Playing with fractals is fun, but it won't pay our bills.
+Business loves tables, and box combinators are a powerful tool for rendering them.
+Let's display an array of book metadata in a human-friendly way.
+
+\begin{code}[ocaml]
+\b{type} book = { title : string;
+              author : string;
+              rating : int;
+              price : float }
+
+\b{let} books = [| { title = "Waiting for Good Dough";
+                 author = "Samuel Biscuit";
+                 rating = 4;
+                 price = 23.86 };
+               { title = "The Bun Also Rises";
+                 author = "Ernest Hemingwaffle";
+                 rating = 5;
+                 price = 9.86 };
+               { title = "Yeast of Eden";
+                 author = "John Sconebeck";
+                 rating = 2;
+                 price = 6.00 };
+               { title = "One Hundred Years of Solid Food";
+                 author = "G. Gordita Marquez";
+                 rating = 4;
+                 price = 17.00 }
+             |]
+\end{code}
+
+The \href{#ref-make-table}{\code{make_table}} function transforms records into a table in three steps:
+\begin{enumerate}
+\item Convert each field into a text box and stack related fields vertically, aligning them according to their data type (lines 6--9).
+\item Place a column header above each of the resulting columns (lines 11--15).
+\item Put vertical bars around the titled column boxes (line 17).
+\end{enumerate}
+
+\begin{figure}
+\marginnote{mn-make-table}{
+  The \code{make_table} function renders a book metadata array as an \textsc{ascii} table.
+}
+\begin{code}[ocaml,linenumbers]
+\b{let} make_table t =\label{ref-make-table}
+    let open Box in
+    let make_column f align =
+        Array.map (fun b -> f b |> of_string) t |> vconcat ~align in
+    let cols = [|
+        ("Title",  make_column (fun b -> b.title) `Left);
+        ("Author", make_column (fun b -> b.author) `Left);
+        ("Rating", make_column (fun b -> String.make (b.rating) '*') `Left);
+        ("Price",  make_column (fun b -> Printf.sprintf "\%.2f" b.price) `Right);
+    |] in
+    let titled = Array.map (fun (h, column) ->
+        let header = of_string h in
+        let hbar = fill '-' 1 (max (width header) (width column) + 2)
+        in vconcat [| header; hbar; column |]
+    ) cols in
+    let vbar = fill '|' (height titled.(0)) 1 in
+    Array.fold_left (fun acc col -> hconcat [| acc; col; vbar |]) vbar titled
+\end{code}
+\end{figure}
+
+Rendering the book metadata results in a neat \textsc{ascii} table.
+
+\begin{figure}
+\marginnote{mn-rendered-table}{
+  Rendered book metadata array.
+}
+\begin{code}[text]
+\$ make_table books |> Box.print_box
+
+|              Title              |       Author        | Rating | Price |
+|---------------------------------|---------------------|--------|-------|
+| Waiting for Good Dough          | Samuel Biscuit      | ****   | 23.86 |
+| The Bun Also Rises              | Ernest Hemingwaffle | *****  |  9.86 |
+| Yeast of Eden                   | John Sconebeck      | **     |  6.00 |
+| One Hundred Years of Solid Food | G. Gordita Marquez  | ****   | 17.00 |
+\end{code}
+\end{figure}
+
+\section{closing-words}{Closing words}
+
+If you found box combinators interesting and want to play with them:
+\begin{itemize}
+\item Implement them in your preferred language.
+\item Use them to visualize complex data.
+If you have no good ideas, \href{https://wiki.dlang.org/Component_programming_with_ranges#Case_Study:_Formatting_a_Calendar}{formatting a calendar}
+will stretch your box-welding skills.
+\item
+Study their graphical counterparts that appear in both
+``\href{https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-15.html#%25_sec_2.2.4}{Structure and Interpretation of Computer Programs}''
+(section 2.2.4)
+and ``\href{https://www.goodreads.com/book/show/53001511-algebra-driven-design}{Algebra-Driven Design}'' by Sandy Maguire
+(chapter 2).
+\end{itemize}
+
+\section{appendix-box-module}{Appendix: the Box module}
+
+This text box implementation is not the most efficient since combining boxes in a loop has quadratic complexity.
+A more sophisticated design would combine boxes lazily, delaying concatenations until the last moment or avoiding them entirely.
+However, the simple approach is good enough for data that fits on a screen.
+
+\begin{figure}
+\marginnote{mn-box-module}{
+A simple implementation of the box combinator library.
+This code belongs in the \code{box.ml} file.
+}
+
+\begin{code}[ocaml]
+type t = string array
+
+let height b = Array.length b\label{ref-height}
+
+let width b = if Array.length b == 0 then 0 else String.length b.(0)\label{ref-width}
+
+\emph{(** Returns the box height and width. *)}
+let dimensions b = height b, width b
+
+\emph{(** Prints box b to the standard output. *)}
+let print_box b = Array.iter print_endline b\label{ref-print-box}
+
+\emph{(** Creates a box large enough to hold string s. *)}
+let of_string s = [| s |]\label{ref-of-string}
+
+\emph{(** Creates an h\times w box filled with character c. *)}
+let fill c h w = Array.make h (String.make w c)\label{ref-fill}
+
+\emph{(** Creates a 1\times 1 box containing character c. *)}
+let of_char c = fill c 1 1\label{ref-of-char}
+
+\emph{(** Creates an h\times w box filled with spaces. *)}
+let space h w = fill ' ' h w\label{ref-space}
+
+\emph{(** An empty box. *)}
+let empty = space 0 0\label{ref-empty}
+
+\emph{(** The vertical alignment type. *)}
+type vertical   = [ `Top  | `Center | `Bottom ]
+
+\emph{(** The horizontal alignment type. *)}
+type horizontal = [ `Left | `Center | `Right  ]
+
+\emph{(** Stack box l to the left of box r. *)}
+\b{let rec} beside ?(align:vertical = `Center) l r =\label{ref-beside}
+    if width l == 0 then r else if width r == 0 then l
+    else let hl = heighten ~align (height r) l in
+         let hr = heighten ~align (height l) r in
+         Array.map2 String.cat hl hr
+
+\emph{(** Stack box t above of box b. *)}
+\b{and} above ?(align:horizontal = `Center) t b =\label{ref-above}
+    if height t == 0 then b else if height b == 0 then t
+    else let wt = widen ~align (width b) t in
+         let wb = widen ~align (width t) b in
+         Array.append wt wb
+
+\emph{(** Makes box b at least w units wide. *)}
+\b{and} widen ?(align:horizontal = `Center) w b =\label{ref-widen}
+    if width b >= w then b
+    else let bh, bw = height b, width b in
+         let pw = w - bw in
+         match align with
+         | `Left   -> beside b (space bh pw)
+         | `Right  -> beside (space bh pw) b
+         | `Center -> hconcat
+                      [| space bh (pw/2); b; space bh (pw - pw/2) |]
+
+\emph{(** Makes box b at least h units high. *)}
+\b{and} heighten ?(align:vertical = `Center) b h =\label{ref-heighten}
+    if height b >= h then b
+    else let bh, bw = height b, width b in
+         let ph = h - bh in
+         match align with
+         | `Top    -> above b (space ph bw)
+         | `Bottom -> above (space ph bw) b
+         | `Center -> vconcat [| space (ph/2) bw
+                               ; b
+                               ; space (ph - ph/2) bw |]
+
+\emph{(** Stacks an array of boxes horizontally. *)}
+\b{and} hconcat ?(align:vertical = `Center) boxes =\label{ref-hconcat}
+    Array.fold_left (beside ~align) empty boxes
+
+\emph{(** Stacks an array of boxes vertically. *)}
+\b{and} vconcat ?(align:horizontal = `Center) boxes =\label{ref-vconcat}
+    Array.fold_left (above ~align) empty boxes
+
+\emph{(** Arranges a 2-D array of boxes. *)}
+\b{let} grid g = Array.map hconcat g |> vconcat\label{ref-grid}
+
+\emph{(** Draws an ASCII art frame around box b. *)}
+\b{let} framed b =
+    let h, w = dimensions b in
+    let vbar = fill '|' h 1 in
+    let hbar = fill '-' 1 w in
+    let corner = of_char '+' in
+    grid [| [| corner; hbar; corner |]
+          ; [| vbar;   b;    vbar   |]
+          ; [| corner; hbar; corner |] |]
+\end{code}
+\end{figure}
+
+\end{document}
