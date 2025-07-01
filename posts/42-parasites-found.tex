@@ -1,0 +1,198 @@
+\documentclass{article}
+
+\title{Parasites Found}
+\subtitle{Fighting mediocrity with generative AI.}
+\date{2025-07-01}
+\modified{2025-07-01}
+
+\begin{document}
+
+\section{parasitic-ai}{Parasitic AI}
+
+Freya Holmér, a designer, game developer, and educator, refers to generative AI as ``parasitic cancer.''
+In her \href{https://youtu.be/-opBifFfsMY?si=5SZIgOB76GTq0hBu}{video lament},
+she shares her frustration with search engines as she attempts to learn about the \textsc{glb} file format,
+finding only useless AI-generated promotional material.
+Her issue with AI is not its energy costs, the lack of attribution, or even mediocre output.
+She mourns the loss of human touch.
+
+I share Freya’s frustration: the internet is filled with sterile, bloated, faceless AI-generated pages.
+However, we should separate a tool from its usage.
+People have already employed technology to amplify noise before.
+Since the early days of the internet, spammers hijacked email for advertising and con artistry.
+Spam filters eventually caught up, so now the majority of noise and distraction in our lives comes from our coworkers, not spammers.
+Search engines will adapt or perish.
+
+Ultimately, what do we lose if AI becomes so proficient at producing content and explanations that it surpasses the capabilities of human authors?
+What if AI could generate correct, personalized, and engaging educational material that builds on the knowledge you already have and uses metaphors that resonate with you?
+Would Freya still be unhappy if the search engine answered her question with a detailed and precise \textsc{glb} specification and suggested correct code for parsing it?
+I doubt it.
+So it must be the mediocrity of AI's output that bothers her after all.
+
+Generative AI degrades quality when people employ it to pursue shallow productivity metrics.
+With the right mindset, we can wield it to eliminate obstacles, increase our satisfaction, and improve the overall quality of our output.
+If generative AI is a parasite, it might be coming from an \href{https://en.wikipedia.org/wiki/Parasites_Lost}{old egg salad sandwich}.
+
+\section{get-better-with-llms}{Get better with LLMs}
+\subsection{personal-howard}{Personal Howard}
+\epigraph{
+  Howard thought the computer should be adapted to the individual and not the other way around.
+  One size fits one.
+  The programs he wrote for me were molded like clay to my requirements
+}{John McPhee, Draft No. 4: On the Writing Process, p. 36.}
+
+In ``Draft No. 4,'' John McPhee, a pioneer of creative non-fiction, writes about his friend,
+Howard J. Strauss, who worked for \textsc{nasa} on the Apollo program and later became a manager of academic outreach in Princeton.
+Howard wrote tailor-made software that automated routine parts of John's writing process.
+
+\epigraph{
+  When I met him in 1984, the first thing he said to me was ``Tell me what you do.''
+  He listened to the whole process from pocket notebooks to coded slices of paper \[...\]
+  Howard wrote programs to run with Kedit in imitation of the way I had gone about things for two and a half decades.
+  He wrote Structur. He wrote Alpha. He wrote mini-macros galore.
+}{McPhee, John. Draft No. 4: On the Writing Process, p. 36.}
+
+Many can benefit from automating boring routines, but few have such wonderful friends as Howard.
+Even software engineers, who are in the best position to help themselves, rarely muster the energy and time to automate repetitive tasks.
+Their reservations are well-founded: they \href{https://xkcd.com/1319/}{know all too well} that these side projects tend to spin out of control.
+
+In 2004, aspiring writer Keith Blount became frustrated with his writing workflow,
+which involved piles of index cards and Word documents,
+and created an app to streamline his writing method.
+
+\epigraph{
+You might say it was the ultimate procrastination project: I decided I needed to build my own writing tool before I could finish my writing.
+}{Keith Blount, \href{https://syntopikon.substack.com/p/an-interview-with-keith-blount}{2022 Interview}}
+
+His side project grew into \href{https://www.literatureandlatte.com/scrivener/overview}{Scrivener},
+a writing tool that \href{https://podcast.scrivenerapp.com/}{won the affection of many writers}.
+However, the last time I checked, Keith still hadn't finished his novel\sidenote{keith-novel}{
+  I don't imply that I see Keith's case as a failure: as a happy Scrivener user, I'm glad he found his new vocation.
+}.
+
+With a sufficiently advanced AI, everyone will have a personal Howard eager to build bespoke tools,
+hopefully without falling into rabbit holes, so we could be more like John and less like Keith.
+
+\subsection{dead-code}{Dead code prevention}
+
+\epigraph{
+I also must confess to a strong bias against the fashion for reusable code. To me, re-editable code is much, much better than an untouchable black box or toolkit.
+}{Donald Knuth, \href{https://www.informit.com/articles/article.aspx?p=1193856}{Interview with Andrew Binstock}}
+
+Over the years, I learnt to appreciate Knuth's view on re-editable code.
+Tweaking the code in front of you is always an order of magnitude easier (both for you and your AI agent) than changing a third-party library
+or coercing a framework into meeting your needs.
+Want to add custom logs, metrics, or integrate distributed tracing?
+Good luck threading those across library boundaries.
+With re-editable code, such requests are warm-up tasks, not herculean efforts.
+
+Libraries bring much more code into your project than you need.
+Just look at your \code{cargo tree} or the contents of your \code{node_modules} directory.
+How much of this cruft is directly related to the problem you’re solving?
+Your compiler might eliminate all that dead code, but you can do an even better job by not introducing it in the first place.
+
+\epigraph{A tidy place is not the one being cleaned but the one where nobody litters.}{A Russian proverb, taken to extreme in Japan.}
+
+\textsc{dry} purists are likely struck speechless in anguish at this point.
+Everyone knows that rolling out a custom solution is expensive!
+You need to write and maintain all this code! And think about all the security vulnerabilities!
+
+Well, maybe that's not that much code after all, since we aren't trying to solve everyone's problem, just ours.
+A good generative AI can alleviate the cost of typing the code.
+Security-wise, eliminating dependencies cuts supply chain attack vectors.
+
+Edward Yang, a research engineer at Facebook, caught glimpses of this future while working on the \href{https://github.com/ezyang/scubaduck}{ScubaDuck} project.
+He used OpenAI Codex to generate bespoke data visualization and iteratively refined it.
+
+\epigraph{
+  My general take after this was that JS chart libraries are going to become obsolete: it's much easier to vibe code a bespoke implementation and then customize the heck out of it.
+}{\href{https://blog.ezyang.com/2025/06/vibe-coding-case-study-scubaduck/}{Vibe coding case study: ScubaDuck}}
+
+Of course, libraries aren’t going away completely.
+For example, \href{https://security.stackexchange.com/questions/18197/why-shouldnt-we-roll-our-own#18198}{I’m not yet ready} to use an LLM-generated implementation of TLS\sidenote{f-star-verified}{Unless it’s verified through \href{https://fstar-lang.org/}{\textsc{f}*}.},
+although I wish OpenSSL weren’t such a pain to work with.
+However, a thoughtful use of generative AI can make the re-editable code alternative more attractive.
+
+\subsection{code-reviews}{Code reviews with less frustration}
+\epigraph{
+  Rewriting is the essence of writing well: it’s where the game is won or lost.
+}{
+  Zinsser, William. On Writing Well, 30th Anniversary Edition, p. 83.
+}
+
+Many programmers shared their experiences of stumbling upon a gnarly piece of code and questioning its author's sanity,
+only to discover that they had written it a few years ago.
+These observations prompt me to question my professional growth, as I stopped having such experiences early in my career.
+I made plenty of suboptimal architectural decisions, for sure, but my tactical-level code execution rarely raises my eyebrows when I revisit it.
+
+I attribute this peculiarity to my obsession with revising and understanding.
+I rarely leave my first working code draft as is: I keep rewriting it until I understand it deeply and strip it of all inessentials.
+Tinkering with working code—finding and exploiting patterns—is my favorite part of programming.
+I later learnt that writers approach their craft in the same way.
+
+\epigraph{
+  The way to do a piece of writing is three or four times over, never once. For me, the hardest part comes first, getting something—anything—out in front of me.
+}{McPhee, John. Draft No. 4: On the Writing Process, p. 159}
+
+Unfortunately, our blindness to our own faults is genuinely remarkable.
+I first experienced this phenomenon at music school.
+Playing an instrument distorted my perception of time and sound: my brain portrayed the music I played as much more rhythmic and expressive than it was.
+As a result, a fellow musician who heard my piece for the first time could easily spot simple ways to improve my performance.
+Furthermore, recording myself and playing back the record could give me the same outcome.
+\href{https://youtu.be/CwebNT9AMiA?si=_2BljVfI_ArgxRrF}{Barenboim’s masterclass on Beethoven's Sonata No. 16}, played by David Kadouch, provides a beautiful example.
+David plays brilliantly, but the \href{https://youtu.be/CwebNT9AMiA?si=bUYR5Vswf-44dpik&t=480}{first} remark by Maestro Barenboim concerns the steadiness of his tempo,
+something a beginner or even a soulless metronome could spot.
+
+\epigraph{
+in every activity I've participated in where it's possible to get a rough percentile ranking, people who are 95\%-ile constantly make mistakes that seem like they should be easy to observe and correct.
+}{Dan Luu, \href{https://danluu.com/p95-skill/}{95\%-ile isn't that good}}
+
+No matter how experienced and diligent I am, and how much time I spent polishing my code, a colleague glancing over it will find a few improvements.
+Unfortunately, \href{https://www.michaelagreiler.com/wp-content/uploads/2019/03/Code-Reviewing-in-the-Trenches-Understanding-Challenges-Best-Practices-and-Tool-Needs.pdf}{code reviews come with a significant cost}:
+they are time-consuming and frustrating for everyone involved.
+The reviewer must understand the change’s purpose and switch context, and the author interrupts the shipping flow.
+Pair programming solves most of these issues, but I never saw it practiced in the wild, and it becomes increasingly more complicated in distributed teams.
+Any technology that can reduce the number of review round-trips and context switches in a code review is a win.
+
+Luckily, an AI buddy is always ready to review your code.
+Even if it suggests only half of the improvements that your homo sapiens colleague would catch, it saves you a great deal of waiting and context switching.
+Furthermore, LLM can serve as an expert that your team lacks:
+You can ask it to inspect your code from the perspective of an expert Rust programmer with experience in WebAssembly, a proficient Swift developer for iOS, or even \href{https://en.wikipedia.org/wiki/Jeff_Dean}{Jeff Dean} himself\sidenote{dean-number}{
+  Unfortunately, such a review won't increase your Dean number,
+  a humorous internal Google employee metric mimicking \href{https://en.wikipedia.org/wiki/Erd%C5%91s_number}{Paul Erdős} and \href{https://en.wikipedia.org/wiki/Six_Degrees_of_Kevin_Bacon}{Kevin Bacon} numbers.
+  If a colleague reviewed your code, and Jeff Dean reviewed your colleague’s code, your Dean number is two.
+}.
+
+Generative AI is not a complete substitute for your colleagues' code reviewers,
+but it can make the process more efficient and less frustrating.
+And it's available even when you work solo.
+
+\section{will-llm-replace-programmers}{Will LLMs replace programmers?}
+
+My colleagues often ask me for my opinion on the future of our profession.
+I believe now is the best time in history to be a highly skilled software engineer with a strong understanding of fundamentals.
+
+Firstly, current LLM architectures are remarkably inefficient at learning compared to humans.
+Humans can derive deep concepts from a handful of examples,
+while LLMs need billions.
+Working with niche languages and environments and building novel systems
+will remain a human prerogative for quite some time.
+
+Secondly, software serves a dual purpose: it instructs the computer on how to do what we want,
+and it unambiguously communicates to other people what we want the computer to do.
+In software engineering, the second aspect is disproportionately more important.
+We can employ English as a shortcut to generate first drafts of computer programs,
+but we still need to be proficient in formal languages to understand and evolve our systems collaboratively.
+You cannot control what you don't understand.
+
+Thirdly, historically, every advancement in programmers' productivity has created more jobs in the industry
+and freed up experts to work on more interesting problems.
+People still write assembly, but they don’t solve mundane tasks in it.
+The code we'll need to write in formal languages will be progressively more interesting and creative.
+
+Finally, automation never eliminates craftsmanship; it just raises the expectations.
+Music recording technology didn't eliminate classical musicians, but raised the entry bar very high.
+Industrialization didn't eliminate artisans.
+AI won’t replace the human touch.
+
+\end{document}
