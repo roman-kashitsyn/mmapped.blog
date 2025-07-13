@@ -243,7 +243,7 @@ func (s *stream) ScanNumber() (text Text, err error) {
 }
 
 func (s *stream) ScanAlignSpec() (text Text, err error) {
-	return s.scanFunc("number", func(c rune) bool {
+	return s.scanFunc("align spec", func(c rune) bool {
 		switch c {
 		case 'c', 'r', 'l', '|', ' ':
 			return true

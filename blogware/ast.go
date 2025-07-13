@@ -35,6 +35,16 @@ func (c *Cmd) ArgText(i int, dst *string) error {
 	}
 }
 
+func (c *Cmd) HasOpt(opt string) (found bool) {
+	sym := Symbol(opt)
+	for _, c := range c.opts {
+		if c == sym {
+			found = true
+		}
+	}
+	return
+}
+
 func (c *Cmd) ArgNum(i int, dst *int) error {
 	var value string
 	if err := c.ArgText(i, &value); err != nil {

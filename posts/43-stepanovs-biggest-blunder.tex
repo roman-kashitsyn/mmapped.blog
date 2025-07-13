@@ -1,0 +1,334 @@
+\documentclass{article}
+\title{Stepanov's biggest blunder}
+\subtitle{How STL algorithms parallel the fundamental theorem of calculus.}
+\date{2025-07-13}
+\modified{2025-07-13}
+\keyword{programming}
+\keyword{math}
+
+\begin{document}
+
+\section{adjacent-difference}{The curious case of adjacent difference}
+
+If you have ever tried using the \href{http://www.en.cppreference.com/w/cpp/algorithm/adjacent_difference.html}{\code{std::adjacent\_difference}} algorithm in \textsc{c++},
+I'm sure it left you puzzled.
+As the name suggests, this algorithm computes differences between adjacent elements of the input sequence,
+but it does one more thing: it copies the first element of the input sequence into the output sequence unmodified.
+The following example demonstrates how to apply the algorithm to delta-compress a \href{https://en.wikipedia.org/wiki/Inverted_index}{postings list} of document identifiers that contain a search term
+(the example is contrived since Google \href{https://static.googleusercontent.com/media/research.google.com/en//people/jeff/WSDM09-keynote.pdf}{developed} much more sophisticated posting list compression techniques).
+
+\begin{figure}
+\marginnote{mn-diff-posings}{
+  Delta-compressing a posting list using the \code{std::adjacent\_difference} algorithm.
+  The compressed version might require less memory when encoded using \href{https://en.wikipedia.org/wiki/Variable-length_quantity}{variable-length integers}.
+}
+\begin{code}[good,cpp]
+#include <iostream>
+#include <numeric>
+#include <vector>
+
+// prints:
+// 12586 426 548 110 566
+int main() {
+    // Sorted list of documents containing a word.
+    std::vector<int> postings{{12586, 13012, 13560, 13670, 14236}};
+    std::vector<int> compressed(postings.size());
+    std::adjacent_difference(
+        postings.cbegin(),
+        postings.cend(),
+        compressed.begin()
+    );
+    for (auto n : compressed) std::cout << n << " ";
+    std::cout << std::endl;
+}
+\end{code}
+\end{figure}
+
+This extra copy makes the algorithm less generic and practical,
+since a difference of two values of an arbitrary type \mathml{\mi{T}} is likely to have a different type.
+For example, the difference between two timestamps is not a timestamp but a duration;
+and subtracting two unsigned integers might require a signed integer.
+The following example illustrates this limitation: the code attempts to compute durations between timestamps in a container, but the compiler rejects it.
+
+\begin{figure}
+\marginnote{mn-diff-timestamps}{
+  Attempting to compute \code{std::adjacent\_difference} over a vector of timestamps leads to a compiler error.
+}
+\begin{code}[bad,cpp]
+#include <chrono>
+#include <numeric>
+#include <vector>
+
+int main() {
+    using clock = std::chrono::steady_clock;
+    auto start = clock::now();
+    std::vector<clock::time_point> timestamps{
+        start,
+        start + std::chrono::seconds(5),
+        start + std::chrono::seconds(15)
+    };
+    std::vector<clock::duration> durations;
+    std::adjacent_difference(
+        timestamps.cbegin(),
+        timestamps.cend(),
+        std::back_inserter(durations)
+    );
+}
+\end{code}
+\end{figure}
+
+Why did Alex Stepanov design \code{adjacent\_difference} in such a way?
+Was it a mistake?
+No, it was a deliberate design choice; the original \href{https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html#1}{\textsc{sgi stl} documentation} provides the reasoning behind it:
+\epigraph{
+  The reason it is useful to store the value of the first element, as well as simply storing the differences, is that this provides enough information to reconstruct the input range.
+  In particular, if addition and subtraction have the usual arithmetic definitions, then \href{https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html}{\code{adjacent\_difference}} and \href{https://www.jmeiners.com/sgi-stl-docs/partial_sum.html}{\code{partial\_sum}} are inverses of each other.
+}{\href{https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html#1}{\textsc{sgi stl} documentation}}
+
+\code{std::adjacent\_difference} and \href{http://www.en.cppreference.com/w/cpp/algorithm/partial_sum.html}{\code{std::partial\_sum}} are inverses:
+computing partial sums over the adjacent differences of a sequence yields that sequence, and vice versa.
+
+\begin{figure}
+\marginnote{mn-inverses}{
+  \code{std::partial\_sum} undoes the effects of \code{std::adjacent\_difference}, and vice versa.
+  In this and other sequence examples, each line transforms the line above it.
+}
+\begin{code}
+           sequence   1  1  2  3  5
+adjacent\_difference   1  0  1  1  2
+        partial\_sum   1  1  2  3  5
+\end{code}
+\end{figure}
+
+This symmetry has a beautiful connection to the fundamental theorem of calculus,
+and it helped me understand both the algorithms and the theorem more intuitively.
+The following section explores this connection in detail.
+
+\section{three-problems-of-calculus}{Three central problems of calculus}
+
+According to Steven Strogatz\sidenote{sn-strogatz}{
+  Steven Strogatz, ``\href{https://www.goodreads.com/book/show/40796176-infinite-powers}{Infinite Powers}'', p. 144
+}, calculus has three central problems:
+\begin{enumerate}
+\item given a curve, find its slope everywhere (the forward problem),
+\item given a curve’s slope everywhere, find the curve (the backward problem),
+\item given a curve, find an area under it (the area problem).
+\end{enumerate}
+
+The fundamental theorem of calculus connects all three problems
+and states that the area under a slope of a curve on an interval
+is the difference of the curve height evaluated at the ends of this interval:
+
+\mathml[block]{
+    \mrow{
+        \munderover{\mo{\int}}{\mi{a}}{\mi{b}}
+        \msup{\mi{f}}{\mo{'}}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}
+        \mo{\itimes}
+        \mi{d}\mi{x}
+        \mo{=}
+        \mi{f}\mo{\applyFun}\mo*{(}\mi{b}\mo*{)}
+        \mo{-}
+        \mi{f}\mo{\applyFun}\mo*{(}\mi{a}\mo*{)}
+    }
+}
+
+Calculus deals with continuous curves, but we will tackle these problems through the lens of discrete value sequences.
+We'll view a sequence \mathml{\mi{f}} as a function over natural numbers
+and denote the discrete derivative of \mathml{\mi{f}} as \mathml{\msub{\mi{D}}{\mi{f}}}
+and its antiderivative as \mathml{\msub{\mi{S}}{\mi{f}}}, where
+
+\mathml[block]{
+  \mtable{r c l}{
+    \mtr{
+      \mtd{\msub{\mi{D}}{\mi{f}}\mo*{(}\mi{i}\mo*{)}}
+      \mtd{\mo{=}}
+      \mtd{
+        \mi{f}\mo*{(}\mi{i}\mo{+}\mn{1}\mo*{)}
+        \mo{-}
+        \mi{f}\mo*{(}\mi{i}\mo*{)}
+      }
+    }
+    \mtr{
+      \mtd{\msub{\mi{S}}{\mi{f}}\mo*{(}\mi{i}\mo*{)}}
+      \mtd{\mo{=}}
+      \mtd{
+        \munderover{\mo{\sum}}{\mrow{\mi{k}\mo{=}\mn{0}}}{\mi{i}}
+        \mi{f}\mo*{(}\mi{k}\mo*{)}
+      }
+    }
+  }
+}
+
+\mathml{\msub{\mi{D}}{\mi{f}}} corresponds to differences between adjacent elements in the source sequence,
+and \mathml{\msub{\mi{S}}{\mi{f}}} corresponds to partial sums.
+The discrete variant of the fundamental theorem becomes:
+
+\mathml[block]{
+  \mrow{
+    \munderover{\mo{\sum}}{\mrow{\mi{i}\mo{=}\mi{k}}}{\mi{n}}
+    \msub{\mi{D}}{\mi{f}}\mo{\applyFun}\mo*{(}\mi{i}\mo*{)}\mo{=}
+    \mi{f}\mo{\applyFun}\mo*{(}\mi{n}\mo*{)}
+    \mo{-}
+    \mi{f}\mo{\applyFun}\mo*{(}\mi{k}\mo{-}\mn{1}\mo*{)}
+  }
+}
+
+\label{off-by-one}
+This formula has an off-by-one issue:
+if \mathml{\mrow{\mi{k}\mo{=}\mn{0}}},
+we have to access the minus first element, so, for convenience,
+we define \mathml{\mrow{\mi{f}\mo{\applyFun}\mo*{(}\mo{-}\mn{1}\mo*{)}\mo{=}\mn{0}}}.
+
+I like how Kyne Santos explained this result:
+
+\epigraph{
+imagine you're hiking up a mountain, going from point A to point B, and you want to find out the overall change in elevation.
+So let's say that point A, the starting point, is 500 meters above sea level.
+In the first hour, you ascend 100 meters.
+In the second hour, you descend 50 meters, and in the third and final hour you ascend 200 meters to arrive at point B, which is 750 meters above sea level.
+The question is, what's the overall change in elevation? Well, there's two ways to go about it.
+You can find the final elevation, which is 750 meters, and just subtract the starting elevation, which was 500 and the difference between 750 and 500 is 250 meters.
+Or you can add up the little changes along the way.
+So in the first hour, we climbed 100 meters, and then we descended 50, and then we climbed another 200 so 100 minus 50 plus 200 is 250 meters.
+And these two approaches represent the two sides of the equation in the fundamental theorem of calculus.
+}{Kyne Santos, \href{https://kpknudson.com/my-favorite-theorem/2025/5/15/episode-95-kyne-santos}{episode 95} of the \href{https://kpknudson.com/my-favorite-theorem}{My Favorite Theorem} podcast}
+
+\subsection{problem-slopes}{Finding slopes with adjacent differences}
+
+The slope between two discrete values is their difference,
+so taking the difference between neighboring points of a sequence solves the forward problem,
+yielding \mathml{\mi{N}\mo{-}\mn{1}} slopes for a sequence of \mathml{\mi{N}} elements.
+
+\begin{code}
+sequence  1  3  5  7  9
+  slopes  2  2  2  2
+\end{code}
+
+This operation loses information:
+we cannot recover the original sequence from its slopes.
+In calculus, taking a derivative is also a lossy operation since functions
+\mathml{\mi{f}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}}
+and
+\mathml{\mi{g}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}\mo{=}\mi{f}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}\mo*{+}\mi{c}}
+(where \mathml{\mi{c}} is an arbitrary constant) have the same derivative
+\mathml{\msup{\mi{f}}{\mo{'}}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}}.
+
+\subsection{problem-recovering}{Recovering the original with partial sums}
+
+The backward problem is the most interesting of the three.
+Since the sequence of slopes had one less item than the source sequence,
+there is not enough information to recover the latter.
+We know the changes between points,
+but not the first value to apply the changes to.
+Once we know it, we can compute the rest using partial sums.
+
+\begin{code}
+  slopes       2    2    2    2
+sequence  C  C+2  C+4  C+6  C+8
+\end{code}
+
+The lossiness of differentiation is the reason for introducing an \href{https://en.wikipedia.org/wiki/Constant_of_integration}{arbitrary constant} \mathml{\mi{C}}
+when computing an indefinite integral in calculus:
+\mathml{\mo{\int}\msup{\mi{f}}{\mo{'}}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}\mo{\itimes}\mi{d}\mi{x} \mo{=} \mi{f}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)} \mo{+} \mi{C}}.
+In the discrete case, this constant corresponds to the first value in the original sequence;
+that's why \code{std::adjacent\_difference} preserves the first element in its output.
+
+\subsection{problem-areas}{Finding areas with partial sums}
+
+The ``area'' of a sequence is the sum of its elements.
+The sequence of partial sums solves this problem
+because it allows us to sum the items on any subinterval of the original sequence in a single step:
+% $\sum_{i=k}^n f(i) = S_f(n) - S_f(k - 1)$
+\mathml{
+  \munderover{\mo{\sum}}{\mrow{\mn{i}\mo{=}\mi{k}}}{\mi{n}}
+  \mi{f}\mo{\applyFun}\mo*{(}\mi{i}\mo*{)}
+  \mo{=}
+  \msub{\mn{S}}{\mn{f}}\mo{\applyFun}\mo*{(}\mi{n}\mo*{)}
+  \mo{-}
+  \msub{\mn{S}}{\mn{f}}\mo{\applyFun}\mo*{(}\mi{k}\mo{-}\mn{1}\mo*{)}
+}
+(as I \href{#off-by-one}{previously mentioned}, we define
+% S_f(-1)
+\mathml{\msub{\mn{S}}{\mn{f}}\mo{\applyFun}\mo*{(}\mn{-1}\mo*{)}}
+to be zero).
+
+\begin{code}
+    sequence  1   3   5   7   9
+partial sums  1   4   9  16  25
+\end{code}
+
+Partial sums don't introduce or lose any information.
+We can always recover the original sequence using the \textsc{stl} definition of adjacent differences:
+
+\begin{code}
+     sequence  1   3   5   7   9
+ partial sums  1   4   9  16  25
+adjacent diff  1   3   5   7   9
+\end{code}
+
+\section{symmetry-vs-pragmatism}{Symmetry vs pragmatism}
+
+The connection between \code{std::partial\_sums} and \code{std::adjacent\_difference} is aesthetically pleasing,
+but I find the design of the latter algorithm unfortunate:
+
+\begin{enumerate}
+\item
+  \code{std::adjacent\_difference} is significantly less generic than its lossy version
+  (i.e., a version that doesn't copy the first element) would be,
+  as it forces the output element type to match the input element type.
+  The few times I needed to compute pairwise differences,
+  the semantics of \code{std::adjacent\_difference} stood in the way,
+  and I ended up writing a custom loop.
+  \href{https://stackoverflow.com/questions/8267806/implicit-transformation-while-calling-stdadjacent-difference}{I'm not alone.}
+  Luckily, the \href{https://en.cppreference.com/w/cpp/ranges/adjacent_transform_view.html}{\code{pairwise_transform}} adapter from \textsc{c++23} doesn't make the extra copy.
+
+\item
+  Derivatives in calculus are lossy,
+  so the definition of \code{std::adjacent\_difference} doesn't exactly correspond to a derivative.
+  Forcing the symmetry between discrete algorithms breaks the symmetry with their continuous counterparts.
+\end{enumerate}
+
+I disagree with Stepanov's design choice,
+but I'm glad it made me question his intentions and find these hidden connections.
+\textsc{api} design is hard,
+especially when you try to express novel ideas,
+such as efficient generic programming,
+in a new programming language,
+as \textsc{c++} was at the time.
+Just like \href{https://en.wikipedia.org/wiki/Cosmological_constant}{Einstein's cosmological constant},
+Stepanov's extra copy turned out to be useful after all.
+
+\section{appendinx-detals-in-q}{Appendix: deltas in q}
+
+Just like \code{std::adjacent\_difference},
+the \href{https://code.kx.com/q/ref/deltas/}{\code{deltas}} function from the \href{https://code.kx.com/q/learn/startingkdb/language/}{\code{q}} programming language preserves the first item of its input:
+
+\begin{code}[q]
+deltas 1 4 9 16
+1 3 5 7
+\end{code}
+
+However, the \code{deltas} function operates slightly differently from its \textsc{c++} cousin:
+Instead of copying the first item verbatim,
+it prepends a seed value of zero to the sequence before computing pairwise differences.
+
+\begin{code}
+deltas 1 4 9 16 == (1 - 0) (4 - 1) (9 - 4) (16 - 9) == 1 3 5 7
+\end{code}
+
+\code{q} defines \code{deltas} in terms of a more general \href{https://code.kx.com/q/ref/maps/#each-prior}{Each Prior} operator as \code{-':}.
+This direct form picks the seed based on the operation (zero for subtraction, one for multiplication, etc.)
+and allows the caller to override the default through its left argument.
+
+\begin{code}[q]
+(*':) 2 3 4  / 1 is the identity for *.
+2 6 12
+
+1950 -': 1952 1954 1960 / Use 1950 as the seed instead of zero.
+2 2 6
+\end{code}
+
+This design preserves symmetry with partial \href{https://code.kx.com/q/ref/sum/#sums}{\code{sums}}
+but avoids the type mismatch between the input and output sequences, achieving both elegance and pragmatism.
+
+\end{document}
