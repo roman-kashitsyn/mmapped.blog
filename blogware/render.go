@@ -269,6 +269,24 @@ func handleCodeLineStart(rc *RenderingCtx, buf *strings.Builder) {
 	}
 }
 
+func renderMathText(rc *RenderingCtx, buf *strings.Builder, text string) {
+	i, n := 0, len(text)
+	for i < n {
+		c, size := utf8.DecodeRuneInString(text[i:])
+		switch c {
+		case '&':
+			buf.WriteString("&amp;")
+		case '<':
+			buf.WriteString("&lt;")
+		case '>':
+			buf.WriteString("&gt;")
+		default:
+			buf.WriteRune(c)
+		}
+		i += size
+	}
+}
+
 func renderCodeText(rc *RenderingCtx, buf *strings.Builder, text string) {
 	i, n := 0, len(text)
 	for i < n {
@@ -299,6 +317,10 @@ func handlePendingPara(rc *RenderingCtx, buf *strings.Builder) {
 }
 
 func renderText(rc *RenderingCtx, buf *strings.Builder, text string) {
+	if rc.parent == MathMLCtx {
+		renderMathText(rc, buf, text)
+		return
+	}
 	if rc.parent == CodeCtx {
 		renderCodeText(rc, buf, text)
 		return
@@ -629,7 +651,11 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 		buf.WriteString("</details>")
 	case SymMathML:
 		newRc.parent = MathMLCtx
-		buf.WriteString(`<math class="math">`)
+		var extraAttributes string
+		if cmd.HasOpt("block") {
+			extraAttributes += ` display="block"`
+		}
+		fmt.Fprintf(buf, `<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"%s>`, extraAttributes)
 		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
 			return err
 		}
@@ -661,6 +687,61 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			return err
 		}
 		buf.WriteString("</mo>")
+	case SymMathOpStar:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString(`<mo stretchy="false">`)
+		if err := renderGenericSeq(&newRc, buf, cmd.args[0]); err != nil {
+			return err
+		}
+		buf.WriteString("</mo>")
+	case SymMathTable:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		var colSpec []ColSpec
+		if err := cmd.ArgAlignSpec(0, &colSpec); err != nil {
+			return err
+		}
+		align := ""
+		for _, entry := range colSpec {
+			switch entry {
+			case ColSpecLeft:
+				align += "left "
+			case ColSpecRight:
+				align += "right "
+			case ColSpecCenter:
+				align += "center "
+			}
+		}
+		fmt.Fprintf(buf, `<mtable columnalign="%s">`, align)
+		if err := renderGenericSeq(&newRc, buf, cmd.args[1]); err != nil {
+			return err
+		}
+		buf.WriteString("</mtable>")
+	case SymMathTableRow:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString("<mtr>")
+		for _, arg := range cmd.args {
+			if err := renderGenericSeq(&newRc, buf, arg); err != nil {
+				return err
+			}
+		}
+		buf.WriteString("</mtr>")
+	case SymMathTableCell:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString("<mtd>")
+		for _, arg := range cmd.args {
+			if err := renderGenericSeq(&newRc, buf, arg); err != nil {
+				return err
+			}
+		}
+		buf.WriteString("</mtd>")
 	case SymMathSup:
 		if rc.parent != MathMLCtx {
 			return MathMLErr
@@ -672,6 +753,50 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			}
 		}
 		buf.WriteString("</msup>")
+	case SymMathSub:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString("<msub>")
+		for _, arg := range cmd.args {
+			if err := renderGenericSeq(&newRc, buf, arg); err != nil {
+				return err
+			}
+		}
+		buf.WriteString("</msub>")
+	case SymMathSubSup:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString("<msubsup>")
+		for _, arg := range cmd.args {
+			if err := renderGenericSeq(&newRc, buf, arg); err != nil {
+				return err
+			}
+		}
+		buf.WriteString("</msubsup>")
+	case SymMathUnderOver:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString("<munderover>")
+		for _, arg := range cmd.args {
+			if err := renderGenericSeq(&newRc, buf, arg); err != nil {
+				return err
+			}
+		}
+		buf.WriteString("</munderover>")
+	case SymMathRow:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString("<mrow>")
+		for _, arg := range cmd.args {
+			if err := renderGenericSeq(&newRc, buf, arg); err != nil {
+				return err
+			}
+		}
+		buf.WriteString("</mrow>")
 	case SymNameref:
 		var id string
 		if err := cmd.ArgText(0, &id); err != nil {
