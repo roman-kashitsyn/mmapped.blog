@@ -83,6 +83,7 @@ var (
 	SymMathOpStar    = BuiltinCmd("mo*", ArgTypeSeq)
 	SymMathSup       = BuiltinCmd("msup", ArgTypeSeq, ArgTypeSeq)
 	SymMathSub       = BuiltinCmd("msub", ArgTypeSeq, ArgTypeSeq)
+	SymMathText      = BuiltinCmd("mtext", ArgTypeSeq)
 	SymMathRow       = BuiltinCmd("mrow", ArgTypeSeq)
 	SymMathTable     = BuiltinCmd("mtable", ArgTypeAlignSpec, ArgTypeSeq)
 	SymMathTableRow  = BuiltinCmd("mtr", ArgTypeSeq)

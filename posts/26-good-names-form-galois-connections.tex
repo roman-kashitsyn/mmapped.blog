@@ -14,9 +14,12 @@
 \section*
 
 \epigraph{
-    You can know the name of that bird in all the languages of the world, but when you're finished, you'll know absolutely nothing whatever about the bird.
-    You'll only know about humans in different places, and what they call the bird.
-    So let's look at the bird and see what it's doing---that's what counts. 
+  You can know the name of that bird in all the languages of the world,
+  but when you're finished,
+  you'll know absolutely nothing whatever about the bird.
+  You'll only know about humans in different places,
+  and what they call the bird.
+  So let's look at the bird and see what it's doing---that's what counts.
 }{Richard Feynman, ``What Do You Care What Other People Think?''}
 
 I recently read a chapter on naming things in ``\href{https://www.goodreads.com/book/show/57196550-the-programmer-s-brain}{The Programmer's Brain}'' by Felienne Hermans.
@@ -31,7 +34,8 @@ The book provides a few recommendations on how to create good names\sidenote{mn-
   There are many books with naming heuristics ranging from classics such as ``\href{https://www.goodreads.com/book/show/4845.Code_Complete}{Code Complete}'' by Steve McConnell and ``\href{https://www.goodreads.com/book/show/3735293-clean-code}{Clean Code}'' by Robert C. Martin
   to more recent ``\href{https://www.goodreads.com/book/show/123009242-naming-things}{Naming things.}'' by Tom Benner.
 }, but it left me unsatisfied.
-I felt that I already knew \emph{how} to choose good names, but I wanted to have a good mathematical model for what good names \emph{are}.
+I felt that I already knew \emph{how} to choose good names,
+but I wanted to have a good mathematical model for what good names \emph{are}.
 This article is the result of my exploration.
 
 \section{objects-concepts-expressions}{Objects, concepts, and expressions}
@@ -51,28 +55,34 @@ Even soulless and speechless neural networks seem to recognize concepts (such as
 The Concept came after the Thing.
 
 Unfortunately, concepts are internal to the mind holding them.
-Until we figure out how to make \href{https://en.wikipedia.org/wiki/Telepathy}{telepathy} work, we must use some encoding to communicate concepts between minds.
+Until we figure out how to make \href{https://en.wikipedia.org/wiki/Telepathy}{telepathy} work,
+we must use some encoding to communicate concepts between minds.
 That's where the Word comes into the picture.
 Words are arbitrary symbols representing concepts.
 
 I'll borrow terminology from \href{https://link.springer.com/book/10.1007/978-94-007-1736-7}{Tretise on Intuitionistic Type Theory} and use
-\emph{object} to refer to things existing in the world (we won't need them much, though),
+\emph{object} to refer to things existing in the world
+(we won't need them much, though),
 \emph{concept} to refer to mental representations of these objects,
 and \emph{expression} to refer to words or sentences used to communicate concepts.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-object-concept-expression}{
-    The relationship between an object (fluffy the cat), a concept (the idea of a cat in mind), and its expression (the word ``cat'').
+    The relationship between an object (fluffy the cat),
+    a concept (the idea of a cat in mind),
+    and its expression (the word ``cat'').
   }
   \includegraphics{/images/26-object-concept-expression.svg}
 \end{figure}
 
 \section{maps-of-meaning}{Maps of meaning}
 
-The distinction between objects, concepts, and expressions is almost as old as Western philosophy.
+The distinction between objects,
+concepts, and expressions is almost as old as Western philosophy.
 Unfortunately, it misses one crucial point: concepts and their expressions don't map one-to-one.
-Most concepts have multiple expressions; most words map to several concepts (any dictionary is living proof).
-For example, consuming food can be labeled as ``eating'' or ``dining''.
+Most concepts have multiple expressions;
+most words map to several concepts (any dictionary is living proof).
+For example, consuming food can be labeled as ``eating'' or ``dining.''
 And the word ``go'' can refer to walking or a board game.
 More precisely, expressions and concepts form a \href{https://en.wikipedia.org/wiki/Binary_relation}{binary relation}.
 
@@ -84,11 +94,17 @@ More precisely, expressions and concepts form a \href{https://en.wikipedia.org/w
 \end{figure}
 
 We must add another ingredient to the picture to tackle the problem of names: the \emph{context}.
-Context refers to all the other things that influence the interpretation of an expression: surrounding words in the sentence, the task the reader is trying to accomplish, and the reader's culture and background.
+Context refers to all the other things that influence the interpretation of an expression:
+surrounding words in the sentence,
+the task the reader is trying to accomplish,
+and the reader's culture and background.
 The amount of information in the context is vast as it includes the strengths of all the neuron connections in the reader's brain.
 
-The mismatch of the writer's and the reader's context, generally known as \href{https://en.wikipedia.org/wiki/Curse_of_knowledge}{the curse of knowledge}, is one of the reasons why writing is so hard.
-The writer must imagine being in the reader's shoes when structuring the material, deciding which metaphors to use, and expressing herself.
+The mismatch of the writer's and the reader's context,
+generally known as \href{https://en.wikipedia.org/wiki/Curse_of_knowledge}{the curse of knowledge},
+is one of the reasons why writing is so hard.
+The writer must imagine being in the reader's shoes when structuring the material,
+deciding which metaphors to use, and expressing herself.
 The narrower the reader's profile, the better job a writer can do.
 That explains why there is no one perfect book for every subject.
 The reader's identity is no less important than the book's contents.
@@ -96,36 +112,57 @@ The reader's identity is no less important than the book's contents.
 \begin{figure}[grayscale-diagram,medium-size]
   \marginnote{mn-life-is-sad-without-cat}{
     Four people with different backgrounds interpreting one phrase in various ways.
-    A cat lover thinks of fluffy the cat, a construction worker thinks of the \href{https://www.cat.com/en_US/company.html}{Caterpillar} company, a mathematician thinks of the \href{https://en.wikipedia.org/wiki/Category_of_small_categories}{\math{Cat} category}, and a programmer thinks of the \href{https://www.man7.org/linux/man-pages/man1/cat.1.html}{\code{cat} command-line tool}.
+    A cat lover thinks of fluffy the cat,
+    a construction worker thinks of the \href{https://www.cat.com/en_US/company.html}{Caterpillar} company,
+    a mathematician thinks of the \href{https://en.wikipedia.org/wiki/Category_of_small_categories}{\math{Cat} category},
+    and a programmer thinks of the \href{https://www.man7.org/linux/man-pages/man1/cat.1.html}{\code{cat} command-line tool}.
   }
   \includegraphics{/images/26-life-is-sad-without-cat.svg}
 \end{figure}
 
 The context turns the many-to-many relation between concepts and words into two maps.
-The first map, \math{encode : Concept \rightarrow  Expression}, defines how the author picks words to communicate the concept.
-The second map, \math{decode : Expression \rightarrow  Concept}, defines how readers interpret these words.
+The first map,
+\mathml{
+  \mtext{encode}\mo{:}\mtext{Concept}\mo{\rightarrow}\mtext{Expression}
+},
+defines how the author picks words to communicate the concept.
+The second map,
+\mathml{
+  \mtext{decode}\mo{:}\mtext{Expression}\mo{\rightarrow}\mtext{Concept}},
+defines how readers interpret these words.
 
 \section{channel}{Names as communication channels}
 
 No matter where you go, you usually find that \href{https://en.wikipedia.org/wiki/Claude_Shannon}{Claude Shannon} was there and solved your problem fundamentally and elegantly.
 Your only solace is that sometimes, his solution was not \href{https://en.wikipedia.org/wiki/Constructive_proof}{constructive}.
 
-In information theory, a channel is a theoretical construction that allows sending messages through time and space.
-A channel takes messages from a set \math{X} as inputs and produces messages from a set \math{Y} as outputs.
-Channels are \emph{noisy}: they distort the messages passing them; that's why the channel's input and output sets might differ.
-We represent the noise mathematically by using \href{https://en.wikipedia.org/wiki/Conditional_probability}{conditional probabilities}: \math{p(y | x)} is the probability of receiving message \math{y} if the sender sent message \math{x}.
+In information theory,
+a channel is a theoretical construction that allows sending messages through time and space.
+A channel takes messages from a set \mathml{\mi{X}} as inputs and produces messages from a set \mathml{\mi{Y}} as outputs.
+Channels are \emph{noisy}:
+they distort the messages passing them;
+that's why the channel's input and output sets might differ.
+We represent the noise mathematically by using \href{https://en.wikipedia.org/wiki/Conditional_probability}{conditional probabilities}:
+\mathml{\mi{p}\mo*{(}\mi{y}\mo{|}\mi{x}\mo*{)}}
+is the probability of receiving message \mathml{\mi{y}} if the sender sent message \mathml{\mi{x}}.
 
-When you think of a channel, you probably imagine a cable transmitting electrical signals or how the space around you buzzes with electromagnetic waves.
+When you think of a channel,
+you probably imagine a cable transmitting electrical signals or how the space around you buzzes with electromagnetic waves.
 Channels, however, take many forms.
-Any storage device, such as a hard drive, a notebook, or the brain's memory system, is a channel transmitting messages through time.
+Any storage device,
+such as a hard drive, a notebook, or the brain's memory system,
+is a channel transmitting messages through time.
 
 We can view words as communication channels passing concepts from one mind to another through time.
-As we saw in the \href{#maps-of-meaning}{Maps of meaning} section, these channels are fundamentally noisy: the output concept might differ from the sender's input depending on the word choice and the receiver's context.
+As we saw in the \href{#maps-of-meaning}{Maps of meaning} section,
+these channels are fundamentally noisy:
+the output concept might differ from the sender's input depending on the word choice and the receiver's context.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-channel}{
     Words are noisy channels transmitting concepts across minds.
-    For example, when readers see the word ``index'', they can think of a pointer into an array instead of the \href{https://en.wikipedia.org/wiki/Inverted_index}{inverted index} concept the author sent.
+    For example, when readers see the word ``index'',
+    they can think of a pointer into an array instead of the \href{https://en.wikipedia.org/wiki/Inverted_index}{inverted index} concept the author sent.
   }
   \includegraphics{/images/26-index-channel.svg}
 \end{figure}
@@ -133,10 +170,22 @@ As we saw in the \href{#maps-of-meaning}{Maps of meaning} section, these channel
 One fundamental characteristic of a channel is how much its output resembles the input.
 \href{https://en.wikipedia.org/wiki/Mutual_information}{Mutual information} is the value quantifying this resemblance mathematically.
 
-This view gives us the criteria for a good name: it's the channel maximizing mutual information.
-In the following formula, \math{C\sub{s}} is the sender's concept, \math{C\sub{r}} is the receiver's concept, \math{E} is the set of all possible concept expressions, and \math{I(C\sub{r}; C\sub{s})} is the mutual information computed for expression \math{e}.
+This view gives us the criteria for a good name:
+it's the channel maximizing mutual information.
+In the following formula,
+\mathml{\msub{\mi{C}}{\mi{s}}} is the sender's concept,
+\mathml{\msub{\mi{C}}{\mi{r}}} is the receiver's concept,
+\mathml{\mi{E}} is the set of all possible concept expressions,
+and
+\mathml{\mi{I}\mo*{(}\msub{\mi{C}}{\mi{r}}\mo*{;}\msub{\mi{C}}{\mi{s}}\mo*{)}}
+is the mutual information computed for expression \mathml{\mi{e}}.
 
-\math{best\_name(C\sub{s}) = argmax\sub{ e \in  E} I(C\sub{r}; C\sub{s}) }
+\mathml[block]{
+  \mtext{best\_name}\mo{\applyFun}\mrow{\mo*{(}\msub{\mi{C}}{\mi{s}}\mo*{)}}
+  \mo{=}
+  \msub{\mtext{argmax}}{\mrow{\mi{e}\mo{\in}\mi{E}}}\mo{\applyFun}
+  \mi{I}\mo*{(}\msub{\mi{C}}{\mi{r}}\mo{;}\msub{\mi{C}}{\mi{s}}\mo*{)}
+}
 
 The channel interpretation of names is quantitative but not particularly satisfying because it involves probabilities that are hard to compute.
 Furthermore, the only way to know you've found a good expression for your concept is to compare it with all other expressions.
@@ -151,49 +200,108 @@ Could we find a more elegant way to capture the essence of a good name?
 We already know that \math{encode} and \math{decode} are not perfect inverses of each other.
 The next best thing we can hope for is that these maps form a relaxed version of inversion: a Galois connection.
 
-\href{https://en.wikipedia.org/wiki/Galois_connection}{Galois connection} is a mathematical concept capturing a relationship between four objects: two partially ordered sets \math{A} and \math{B} and two monotonic maps \math{F} and \math{G} between these sets.
-\href{https://en.wikipedia.org/wiki/Partially_ordered_set#Partial_orders}{Partial order} means that we can compare some elements of each set using the \math{\leq} operation that satisfies a few natural laws (\href{https://en.wikipedia.org/wiki/Reflexive_relation}{reflexivity}, \href{https://en.wikipedia.org/wiki/Antisymmetric_relation}{antisymmetry}, and \href{https://en.wikipedia.org/wiki/Transitive_relation}{transitivity}).
+\href{https://en.wikipedia.org/wiki/Galois_connection}{Galois connection}
+is a mathematical concept capturing a relationship between four objects:
+two partially ordered sets \mathml{\mi{A}} and \mathml{\mi{B}}
+and two monotonic maps \mathml{\mi{F}} and \mathml{\mi{G}} between these sets.
+\href{https://en.wikipedia.org/wiki/Partially_ordered_set#Partial_orders}{Partial order}
+means that we can compare some elements of each set using the \mathml{\mo{\leq}} operation that satisfies a few natural laws
+(\href{https://en.wikipedia.org/wiki/Reflexive_relation}{reflexivity},
+\href{https://en.wikipedia.org/wiki/Antisymmetric_relation}{antisymmetry},
+and \href{https://en.wikipedia.org/wiki/Transitive_relation}{transitivity}).
 Not all elements must be comparable.
-A function \math{F} is monotonic if it preserves relative order: if \math{x \leq  y}, then \math{F(x) \leq  F(y)}.
+A function \mathml{\mi{F}} is monotonic if it preserves relative order:
+if \mathml{\mi{x}\mo{\leq}\mi{y}},
+then \mathml{
+  \mi{F}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}
+  \mo{\leq}
+  \mi{F}\mo{\applyFun}\mo*{(}\mi{y}\mo*{)}
+}.
 
-Functions \math{F: A \rightarrow  B} and \math{G: B \rightarrow  A} form a Galois connection if they satisfy the following relation:
-\math{F(a) \leq  b \iff  a \leq  G(b)} for all \math{a \in  A} and \math{b \in  B}.
+Functions
+\mathml{\mi{F}\mo{:}\mi{A}\mo{\rightarrow}\mi{B}}
+and
+\mathml{\mi{G}\mo{:}\mi{B}\mo{\rightarrow}\mi{A}}
+form a Galois connection if they satisfy the following relation:
+\mathml{
+  \mi{F}\mo{\applyFun}\mo*{(}\mi{a}\mo*{)}
+  \mo{\leq}\mi{b}
+  \mo{\iff}
+  \mi{a}\mo{\leq}\mi{G}\mo{\applyFun}\mo*{(}\mi{b}\mo*{)}
+}
+for all
+\mathml{\mi{a}\mo{\in}\mi{A}}
+and
+\mathml{\mi{b}\mo{\in}\mi{B}}.
 
 \begin{figure}[grayscale-diagram,medium-size]
   \marginnote{mn-galois-connection}{
-    A Galois connection between functions \math{F} and \math{G}.
+    A Galois connection between functions \mathml{\mi{F}} and \mathml{\mi{G}}.
   }
   \includegraphics{/images/26-galois-connection.svg}
 \end{figure}
 
-This definition is abstract and took me a while to appreciate, so let's apply it to the problem of good names step by step.
+This definition is abstract and took me a while to appreciate,
+so let's apply it to the problem of good names step by step.
 We start with the sets in question and their orderings.
 
-Our first set is the set of expressions \math{E}.
-For expressions \math{e\sub{1}, e\sub{2} \in  E}, we say that \math{e\sub{1} \leq  e\sub{2}} if \math{e\sub{1}} at least as expressive as \math{e\sub{2}} \emph{given the reader context}.
+Our first set is the set of expressions \mathml{\mi{E}}.
+For expressions
+\mathml{\msub{\mi{e}}{\mn{1}}\mo{,}\msub{\mi{e}}{\mn{2}}\mo{\in}\mi{E}},
+we say that
+\mathml{\msub{\mi{e}}{\mn{1}}\mo{\leq}\msub{\mi{e}}{\mn{2}}}
+if \mathml{\msub{\mi{e}}{\mn{1}}} is at least as expressive as
+\mathml{\msub{\mi{e}}{\mn{2}}} \emph{given the reader context}.
 If the expressions are equally expressive, we define the shorter element as smaller.
-The reader context is a crucial component of the \math{\leq} operator.
-For example, ``cat'' is more expressive than ``felis catus'' in a regular conversation, but it might be the other way around in a scientific paper.
-This paragraph doesn't do a good job at defining expression ordering, but it's \textsc{ok}: the whole point of the Galois connection is to make expression comparison precise through its connection with better-defined objects.
+The reader context is a crucial component of the \mathml{\mo{\leq}} operator.
+For example, ``cat'' is more expressive than ``felis catus'' in a regular conversation,
+but it might be the other way around in a scientific paper.
+This paragraph doesn't do a good job at defining expression ordering,
+but it's \textsc{ok}:
+the whole point of the Galois connection is to make expression comparison precise through its connection with better-defined objects.
 
-Our second set is the set of concepts \math{C}.
-If we have concepts \math{c\sub{1}, c\sub{2} \in  C}, we say that \math{c\sub{1} \leq  c\sub{2}} if \math{c\sub{1}} is at least as specific as \math{c\sub{2}}.
-For example, \math{cat \leq  animal}: since every cat is an animal, there are at least as many animals as cats.
-The idea of being more or less ``specific'' part might sound handwavy to you, but we can make it precise using methods of \href{https://en.wikipedia.org/wiki/Formal_concept_analysis}{formal concept analysis}.
+Our second set is the set of concepts \mathml{\mi{C}}.
+If we have concepts
+\mathml{\msub{\mi{c}}{\mn{1}}\mo{,}\msub{\mi{c}}{\mn{2}}\mo{\in}\mi{C}},
+we say that
+\mathml{\msub{\mi{c}}{\mn{1}}\mo{\leq}\msub{\mi{c}}{\mn{2}}}
+if \mathml{\msub{\mi{c}}{\mn{1}}}
+is at least as specific as \mathml{\msub{\mi{c}}{\mn{2}}}.
+For example, \mathml{\mtext{cat}\mo{\leq}\mtext{animal}}:
+since every cat is an animal,
+there are at least as many animals as cats.
+The idea of being more or less ``specific'' part might sound handwavy to you,
+but we can make it precise using methods of \href{https://en.wikipedia.org/wiki/Formal_concept_analysis}{formal concept analysis}.
 
-The functions forming the Galois connection are the concept decoding function \math{decode : E \rightarrow  C} and the concept encoding function \math{encode : C \rightarrow  E}.
-These functions are monotone because \math{encode} maps more specific concepts to more expressive names, and \math{decode} maps more expressive names to more specific concepts.
-The connection becomes \math{decode(e) \leq  c \iff  e \leq  encode(c)}.
+The functions forming the Galois connection are the concept decoding function
+\mathml{\mtext{decode}\mo{:}\mi{E}\mo{\rightarrow}\mi{C}}
+and the concept encoding function
+\mathml{\mtext{encode}\mo{:}\mi{C}\mo{\rightarrow}\mi{E}}.
+These functions are monotone because \math{encode} maps more specific concepts to more expressive names,
+and \math{decode} maps more expressive names to more specific concepts.
+The connection becomes
+\mathml{
+  \mtext{decode}\mo{\applyFun}\mrow{\mo*{(}\mi{e}\mo*{)}}\mo{\leq}\mi{c}
+  \mo{\iff}
+  \mi{e}\mo{\leq}\mtext{encode}\mo{\applyFun}\mrow{\mo*{(}\mi{c}\mo*{)}}
+}.
 
-Even the specialized equivalence looks unintuitive, so let's see how it holds with an example.
-Imagine we want to name a variable holding the amount of \textsc{usd} in a bank account (that's our concept \math{c}).
+Even the specialized equivalence looks unintuitive,
+so let's see how it holds with an example.
+Imagine we want to name a variable holding the amount of \textsc{usd} in a bank account
+(that's our concept \mathml{\mi{c}}).
 Would \math{value} be an appropriate variable name?
 
-Let's see what our connection tells us: \math{decode(value)} is a vague concept, less specific than the bank account balance.
-Hence, \math{decode(value) > c}, so \math{value} is not a good name.
+Let's see what our connection tells us:
+\mathml{\mtext{decode}\mo*{(}\mtext{value}\mo*{)}}
+is a vague concept,
+less specific than the bank account balance.
+Hence,
+\mathml{\mtext{decode}\mo*{(}\mtext{value}\mo*{)}\mo{>}\mi{c}},
+so \math{value} is not a good name.
 I would prefer \math{usd\_balance}, which decodes to a more specific concept.
 
-But wait, wouldn't \math{bank_account_usd_balance} be an even better name?
+But wait, wouldn't \math{bank\_account\_usd\_balance} be an even better name?
 It depends on the context!
 A shorter name is preferable if the reader knows that we are dealing with bank accounts in a piece of code.
 At least, that's how I defined the expression ordering; your mileage may vary.

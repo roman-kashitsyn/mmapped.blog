@@ -786,6 +786,17 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			}
 		}
 		buf.WriteString("</munderover>")
+	case SymMathText:
+		if rc.parent != MathMLCtx {
+			return MathMLErr
+		}
+		buf.WriteString("<mtext>")
+		for _, arg := range cmd.args {
+			if err := renderGenericSeq(&newRc, buf, arg); err != nil {
+				return err
+			}
+		}
+		buf.WriteString("</mtext>")
 	case SymMathRow:
 		if rc.parent != MathMLCtx {
 			return MathMLErr
