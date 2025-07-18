@@ -107,6 +107,50 @@ type Location struct {
 	SourceLine string
 }
 
+type NamedLocation struct {
+	// Name describes the location.
+	Name string
+	// Location specifies the position within the source file.
+	Location Location
+}
+
+type ParsingError struct {
+	// Source is the path to the source file.
+	Source string
+	// Location is the location at which the error occurred.
+	Location Location
+	// Message is the error message.
+	Message string
+	// RelatedLocations contains locations related to the error.
+	RelatedLocations []NamedLocation
+}
+
+func TryAddLocation(err error, name string, loc Location) error {
+	parsingErr, ok := err.(*ParsingError)
+	if ok {
+		parsingErr.RelatedLocations = append(parsingErr.RelatedLocations, NamedLocation{Name: name, Location: loc})
+	}
+	return err
+}
+
+func renderLocation(buf *strings.Builder, loc Location) {
+	fmt.Fprintf(buf, "%5d | %s\n", loc.Line, loc.SourceLine)
+	caret := strings.Repeat(" ", loc.Column-1) + "^"
+	fmt.Fprintf(buf, "        %s\n", caret)
+}
+
+func (e *ParsingError) Error() string {
+	var buf strings.Builder
+	fmt.Fprintf(&buf, "%s:%d:%d: %s\n", e.Source, e.Location.Line, e.Location.Column, e.Message)
+	buf.WriteString("Location:\n")
+	renderLocation(&buf, e.Location)
+	for _, related := range e.RelatedLocations {
+		fmt.Fprintf(&buf, "%s:\n", related.Name)
+		renderLocation(&buf, related.Location)
+	}
+	return buf.String()
+}
+
 func StreamFromFile(path string) (*stream, error) {
 	s := &stream{pos: 0, source: path}
 	inputBytes, err := os.ReadFile(path)
@@ -171,11 +215,11 @@ func (s *stream) Errorf(msg string, a ...any) error {
 }
 
 func (s *stream) ErrorfAt(pos int, msg string, a ...any) error {
-	loc := s.locate(pos)
-	formattedMsg := fmt.Sprintf(msg, a...)
-	caret := strings.Repeat(" ", loc.Column-1) + "^"
-
-	return fmt.Errorf("%s:%d:%d %s\n%5d | %s\n        %s", s.source, loc.Line, loc.Column, formattedMsg, loc.Line, loc.SourceLine, caret)
+	return &ParsingError{
+		Source:   s.source,
+		Location: s.locate(pos),
+		Message:  fmt.Sprintf(msg, a...),
+	}
 }
 
 // Rest returns the rest of the input as a string.
@@ -184,12 +228,13 @@ func (s *stream) Rest() string {
 }
 
 func (s *stream) Expect(exp TokenKind) error {
+	pos := s.pos
 	var t token
 	if err := s.NextToken(&t); err != nil {
 		return err
 	}
 	if t.kind != exp {
-		return s.Errorf("expected token kind %v, got %v", exp, t.kind)
+		return s.ErrorfAt(pos, "expected token kind %v, got %v", exp, t.kind)
 	}
 	return nil
 }
@@ -264,11 +309,11 @@ func (s *stream) scanFunc(shape string, acceptFunc func(rune) bool, validateFunc
 		i = len(str)
 	}
 	if i < 1 {
-		err = s.Errorf("expected a token of shape %s", shape)
+		err = s.ErrorfAt(pos, "expected a token of shape %s", shape)
 		return
 	}
-	if err = validateFunc(str[:i]); err != nil {
-		err = s.Errorf("token is not a valid %s: %v", shape, err)
+	if validationErr := validateFunc(str[:i]); validationErr != nil {
+		err = s.ErrorfAt(pos, "token is not a valid %s: %v", shape, validationErr)
 	}
 	text = Text{pos: pos, body: str[:i]}
 	s.Skip(i)
@@ -331,6 +376,7 @@ func (s *stream) FindVerbatimEnd() (body string, err error) {
 
 func (s *stream) NextToken(tok *token) error {
 	for !s.IsEmpty() {
+		pos := s.pos
 		str := s.Rest()
 		i := strings.IndexFunc(str, isSpecial)
 		if i == -1 || i > 0 {
@@ -404,7 +450,7 @@ func (s *stream) NextToken(tok *token) error {
 			s.Skip(n - len(str) - 1)
 			continue
 		default:
-			return s.Errorf("NextToken(): unexpected rune %v (%s)", c1, string(c1))
+			return s.ErrorfAt(pos, "NextToken(): unexpected rune %v (%s)", c1, string(c1))
 		}
 	}
 	return io.EOF

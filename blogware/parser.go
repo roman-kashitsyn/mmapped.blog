@@ -80,11 +80,12 @@ func parseOptions(s *stream) (opts []sym, err error) {
 
 func parseArg(s *stream, typ ArgType) (body []Node, err error) {
 	var t token
+	pos := s.pos
 	if err = s.NextToken(&t); err != nil {
 		return
 	}
 	if t.kind != TokLBrace {
-		err = s.Errorf("Expected a {, got %v", t)
+		err = s.ErrorfAt(pos, "Expected a {, got %v", t)
 	}
 	switch typ {
 	case ArgTypeSeq:
@@ -188,15 +189,14 @@ func parseEnvEnd(s *stream, beginSym sym, beginPos int) error {
 		return err
 	}
 	if endSym != beginSym {
-		beginLoc, endLoc := s.locate(beginPos), s.locate(endPos)
-		return s.ErrorfAt(
+		err := s.ErrorfAt(
 			endPos,
-			"\\end{%s} at %d:%d doesn't match the \\begin{%s} at %d:%d",
+			"\\end{%s} doesn't match \\begin{%s}",
 			SymbolName(endSym),
-			endLoc.Line, endLoc.Column,
 			SymbolName(beginSym),
-			beginLoc.Line, beginLoc.Column,
 		)
+		TryAddLocation(err, "Environment begin", s.locate(beginPos))
+		return err
 	}
 	return nil
 }
