@@ -44,7 +44,7 @@ func parseArticle(path string) (article Article, err error) {
 
 	seq, err := ParseSequence(stream)
 	if err != nil {
-		err = fmt.Errorf("failed to parse the document: %w", err)
+		err = fmt.Errorf("failed to parse the document:\n%w", err)
 		return
 	}
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"unicode"
 )
@@ -168,7 +167,7 @@ func ParseCmd(s *stream, name sym, pos int) (cmd Cmd, err error) {
 	for i := 0; i < arity; i++ {
 		arg, argErr := parseArg(s, CmdArgType(name, i))
 		if argErr != nil {
-			err = fmt.Errorf("%s:%d: failed to parse arg %d of command %s: %v", s.source, pos, i, SymbolName(name), argErr)
+			err = s.ErrorfAt(pos, "failed to parse arg %d of command %s: %v", i, SymbolName(name), argErr)
 			return
 		}
 		Push(&args, arg)
@@ -189,7 +188,15 @@ func parseEnvEnd(s *stream, beginSym sym, beginPos int) error {
 		return err
 	}
 	if endSym != beginSym {
-		return s.Errorf("\\end{%s} at %d doesn't match the \\begin{%s} at %d", SymbolName(beginSym), beginPos, SymbolName(endSym), endPos)
+		beginLoc, endLoc := s.locate(beginPos), s.locate(endPos)
+		return s.ErrorfAt(
+			endPos,
+			"\\end{%s} at %d:%d doesn't match the \\begin{%s} at %d:%d",
+			SymbolName(endSym),
+			endLoc.Line, endLoc.Column,
+			SymbolName(beginSym),
+			beginLoc.Line, beginLoc.Column,
+		)
 	}
 	return nil
 }
@@ -233,6 +240,7 @@ func ParseEnv(s *stream, name sym, pos int) (env Env, err error) {
 	}
 loop:
 	for !s.IsEmpty() {
+		tokPos := s.pos
 		t, err = ParseTextBlocks(s, &body)
 		if err != nil {
 			return
@@ -268,7 +276,7 @@ loop:
 			if name == SymCode {
 				Push(&body, Node(Text{pos: s.pos - 1, body: t.body}))
 			} else {
-				err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
+				err = s.ErrorfAt(tokPos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 				break loop
 			}
 		case TokInlineMath:
@@ -279,7 +287,7 @@ loop:
 			}
 			Push(&body, mnode)
 		default:
-			err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
+			err = s.ErrorfAt(tokPos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 			break loop
 		}
 	}
@@ -424,18 +432,18 @@ loop:
 				Push(&cell.body, node)
 			}
 		case TokLBrace, TokRBrace, TokLBracket, TokRBracket:
-			err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
+			err = s.ErrorfAt(tokPos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 			break loop
 		case TokAmp:
 			Push(&row.cells, cell)
 			if cellCount >= len(spec) {
-				err = s.Errorf("too many cells in row %d: expected %d, got %d", len(rows)+1, len(spec), cellCount+1)
+				err = s.ErrorfAt(tokPos, "too many cells in row %d: expected %d, got %d", len(rows)+1, len(spec), cellCount+1)
 				return
 			}
 			cell = Cell{pos: s.pos, colspan: 1, alignSpec: spec[cellCount]}
 			cellCount += 1
 		default:
-			err = s.Errorf("unexpected token %s while parsing %s", &t, SymbolName(name))
+			err = s.ErrorfAt(tokPos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 			break loop
 		}
 	}
@@ -498,6 +506,7 @@ func parseEnvOrCommand(s *stream, cmd sym) (node Node, err error) {
 func ParseSequence(s *stream) (body []Node, err error) {
 	var t token
 	for !s.IsEmpty() {
+		tokPos := s.pos
 		t, err = ParseTextBlocks(s, &body)
 		if err != nil {
 			return
@@ -513,7 +522,7 @@ func ParseSequence(s *stream) (body []Node, err error) {
 			}
 			Push(&body, node)
 		} else {
-			err = s.Errorf("unexpected token: %s while parsing top-level document", &t)
+			err = s.ErrorfAt(tokPos, "unexpected token: %s while parsing top-level document", &t)
 			return
 		}
 	}

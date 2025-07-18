@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -87,9 +88,23 @@ func (t *token) String() string {
 }
 
 type stream struct {
+	// source is the path to the source file.
 	source string
-	input  string
-	pos    int
+	// input is the source's content.
+	input string
+	// pos is the current position in the input string.
+	pos int
+	// lineEnds is a slice of indices where each line ends.
+	lineEnds []int
+}
+
+type Location struct {
+	// Line is 1-based line number.
+	Line int
+	// Column is 1-based column number.
+	Column int
+	// SourceLine is the line of the source file at the corresponding line number.
+	SourceLine string
 }
 
 func StreamFromFile(path string) (*stream, error) {
@@ -99,7 +114,48 @@ func StreamFromFile(path string) (*stream, error) {
 		return s, err
 	}
 	s.input = string(inputBytes)
+	s.lineEnds = lineEnds(s.input)
 	return s, nil
+}
+
+func lineEnds(input string) (output []int) {
+	for i, c := range input {
+		if c == '\n' {
+			output = append(output, i)
+		}
+	}
+	return
+}
+
+func (s *stream) locate(pos int) (loc Location) {
+	n := len(s.lineEnds)
+	lineStart := 0
+	if n == 0 {
+		loc.Line = 1
+		loc.SourceLine = s.source
+	} else {
+		loc.Line = 1 + sort.Search(n, func(i int) bool {
+			return s.lineEnds[i] > pos
+		})
+		if loc.Line > 1 {
+			lineStart = s.lineEnds[loc.Line-2] + 1
+		}
+		if loc.Line < n {
+			end := s.lineEnds[loc.Line-1]
+			loc.SourceLine = s.input[lineStart:end]
+		} else {
+			loc.SourceLine = s.input[lineStart:]
+		}
+	}
+	loc.Column = 1
+	// Decode one rune at a time to find the column number.
+	for offset, _ := range loc.SourceLine {
+		if lineStart+offset >= pos {
+			loc.Column = offset + 1
+			break
+		}
+	}
+	return
 }
 
 func (s *stream) IsEmpty() bool {
@@ -107,7 +163,7 @@ func (s *stream) IsEmpty() bool {
 }
 
 func (s *stream) Error(msg string) error {
-	return fmt.Errorf("%s:%d %s", s.source, s.pos, msg)
+	return s.ErrorfAt(s.pos, msg)
 }
 
 func (s *stream) Errorf(msg string, a ...any) error {
@@ -115,7 +171,11 @@ func (s *stream) Errorf(msg string, a ...any) error {
 }
 
 func (s *stream) ErrorfAt(pos int, msg string, a ...any) error {
-	return fmt.Errorf("%s:%d %s", s.source, pos, fmt.Sprintf(msg, a...))
+	loc := s.locate(pos)
+	formattedMsg := fmt.Sprintf(msg, a...)
+	caret := strings.Repeat(" ", loc.Column-1) + "^"
+
+	return fmt.Errorf("%s:%d:%d %s\n%5d | %s\n        %s", s.source, loc.Line, loc.Column, formattedMsg, loc.Line, loc.SourceLine, caret)
 }
 
 // Rest returns the rest of the input as a string.
@@ -344,7 +404,7 @@ func (s *stream) NextToken(tok *token) error {
 			s.Skip(n - len(str) - 1)
 			continue
 		default:
-			return fmt.Errorf("%s:%d: NextToken(): unexpected rune %v (%s)", s.source, s.pos, c1, string(c1))
+			return s.Errorf("NextToken(): unexpected rune %v (%s)", c1, string(c1))
 		}
 	}
 	return io.EOF
@@ -441,7 +501,7 @@ func (s *stream) NextMathToken(tok *mathToken) error {
 				s.Skip(n)
 				return nil
 			}
-			return fmt.Errorf("NextMathToken(): unexpected rune %v (%s)", c1, string(c1))
+			return s.Errorf("NextMathToken(): unexpected rune %v (%s)", c1, string(c1))
 		}
 	}
 	return io.EOF
