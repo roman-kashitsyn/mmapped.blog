@@ -10,7 +10,7 @@ func Push[T any](stack *[]T, item T) {
 }
 
 func IsValidSymbol(s string) bool {
-	return !strings.ContainsFunc(s, func(c rune) bool { return !IsSymbolic(c) })
+	return len(s) > 0 && !strings.ContainsFunc(s, func(c rune) bool { return !IsSymbolic(c) })
 }
 
 func IsSymbolic(c rune) bool {
