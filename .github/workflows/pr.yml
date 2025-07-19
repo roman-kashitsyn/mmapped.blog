@@ -6,12 +6,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Setup Go ${{ matrix.go-version }}
-      uses: actions/setup-go@v4
-      with:
-        go-version: 1.21.x
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.23.x
 
-    - run: make render DEST=site
+      - name: Run Go tests
+        run: make test
 
+      - name: Run Go lint
+        run: make lint
+
+      - name: Render the site
+        run: make render DEST=site

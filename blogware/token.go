@@ -33,6 +33,28 @@ type token struct {
 	body string
 }
 
+func (t *token) String() string {
+	switch t.kind {
+	case TokLBrace:
+		return "{"
+	case TokRBrace:
+		return "}"
+	case TokLBracket:
+		return "["
+	case TokRBracket:
+		return "]"
+	case TokAmp:
+		return "&"
+	case TokText:
+		return fmt.Sprintf("Text(%s)", t.body)
+	case TokControl:
+		return fmt.Sprintf("Control(\\%s)", SymbolName(t.name))
+	case TokInlineMath:
+		return "$"
+	}
+	return "Unknown"
+}
+
 type MathTokenKind int
 
 const (
@@ -65,23 +87,25 @@ type mathToken struct {
 	body string
 }
 
-func (t *token) String() string {
+func (t *mathToken) String() string {
 	switch t.kind {
-	case TokLBrace:
-		return "{"
-	case TokRBrace:
-		return "}"
-	case TokLBracket:
-		return "["
-	case TokRBracket:
-		return "]"
-	case TokAmp:
-		return "&"
-	case TokText:
-		return fmt.Sprintf("Text(%s)", t.body)
-	case TokControl:
+	case MathTokSym:
+		return fmt.Sprintf("Sym(%s)", t.body)
+	case MathTokNum:
+		return fmt.Sprintf("Num(%s)", t.body)
+	case MathTokControl:
 		return fmt.Sprintf("Control(\\%s)", SymbolName(t.name))
-	case TokInlineMath:
+	case MathTokOp:
+		return fmt.Sprintf("Op(%s)", t.body)
+	case MathTokSup:
+		return "^"
+	case MathTokSub:
+		return "_"
+	case MathTokGroupStart:
+		return "{"
+	case MathTokGroupEnd:
+		return "}"
+	case MathEndInlineMath:
 		return "$"
 	}
 	return "Unknown"
@@ -151,6 +175,7 @@ func (e *ParsingError) Error() string {
 	return buf.String()
 }
 
+// StreamFromFile reads a file and creates a stream from it.
 func StreamFromFile(path string) (*stream, error) {
 	s := &stream{pos: 0, source: path}
 	inputBytes, err := os.ReadFile(path)
@@ -160,6 +185,16 @@ func StreamFromFile(path string) (*stream, error) {
 	s.input = string(inputBytes)
 	s.lineEnds = lineEnds(s.input)
 	return s, nil
+}
+
+// StreamFromString creates a stream from a string.
+func StreamFromString(input string) *stream {
+	return &stream{
+		pos:      0,
+		input:    input,
+		lineEnds: lineEnds(input),
+		source:   "<unknown>",
+	}
 }
 
 func lineEnds(input string) (output []int) {
@@ -175,29 +210,36 @@ func (s *stream) locate(pos int) (loc Location) {
 	n := len(s.lineEnds)
 	lineStart := 0
 	if n == 0 {
+		// No newlines in input
 		loc.Line = 1
-		loc.SourceLine = s.source
+		loc.SourceLine = s.input
 	} else {
+		// Find which line the position is on
 		loc.Line = 1 + sort.Search(n, func(i int) bool {
-			return s.lineEnds[i] > pos
+			return s.lineEnds[i] >= pos
 		})
 		if loc.Line > 1 {
 			lineStart = s.lineEnds[loc.Line-2] + 1
 		}
-		if loc.Line < n {
+		// Extract the source line
+		if loc.Line <= n {
 			end := s.lineEnds[loc.Line-1]
 			loc.SourceLine = s.input[lineStart:end]
 		} else {
 			loc.SourceLine = s.input[lineStart:]
 		}
 	}
+
+	// Calculate column by counting runes from line start to position
 	loc.Column = 1
-	// Decode one rune at a time to find the column number.
-	for offset, _ := range loc.SourceLine {
-		if lineStart+offset >= pos {
-			loc.Column = offset + 1
-			break
-		}
+	lineEnd := lineStart + len(loc.SourceLine)
+	if pos > lineEnd {
+		pos = lineEnd
+	}
+	for i := lineStart; i < pos; {
+		_, size := utf8.DecodeRuneInString(s.input[i:])
+		loc.Column++
+		i += size
 	}
 	return
 }

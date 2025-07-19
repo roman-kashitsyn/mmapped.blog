@@ -1,5 +1,6 @@
 blogware/blogware
 .vscode/
+.idea/
 index.html
 about.html
 posts.html

@@ -17,6 +17,14 @@ serve: build
 render: build
 	./blogware/blogware -output $(DEST)
 
+.PHONY: test
+test:
+	cd blogware && go test ./... && cd ..
+
+.PHONY: lint
+lint:
+	cd blogware && gofmt -l . && go vet && cd ..
+
 .PHONY: build
 build:
 	cd blogware && go build && cd ..
