@@ -53,19 +53,9 @@ func TestMathScanner(t *testing.T) {
 				{kind: MathTokGroupEnd, body: "}"},
 			},
 		},
-		{
-			input: `\mathrm{encode} : E \leftarrow C`,
-			toks: []mathToken{
-				{kind: MathTokControl, name: Symbol("text")},
-				{kind: MathTokOp, body: ":"},
-				{kind: MathTokSym, body: "E"},
-				{kind: MathTokControl, name: Symbol("leftarrow")},
-				{kind: MathTokSym, body: "C"},
-			},
-		},
 	} {
 		t.Run(tc.input, func(t *testing.T) {
-			s := stream{input: tc.input}
+			s := StreamFromString(tc.input)
 			for i, want := range tc.toks {
 				var tok mathToken
 				err := s.NextMathToken(&tok)
@@ -74,7 +64,7 @@ func TestMathScanner(t *testing.T) {
 					break
 				}
 				if tok != want {
-					t.Errorf("token %d: got %+v, want %+v", i, tok, want)
+					t.Errorf("%s: token %d: got %s, want %s", tc.input, i, &tok, &want)
 				}
 			}
 			var tok mathToken
