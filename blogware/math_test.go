@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"testing"
 )
 
@@ -13,44 +12,44 @@ func TestMathScanner(t *testing.T) {
 		{
 			input: "1 + 20",
 			toks: []mathToken{
-				{kind: MathTokNum, body: "1"},
-				{kind: MathTokOp, body: "+"},
-				{kind: MathTokNum, body: "20"},
+				{pos: 0, kind: MathTokNum, body: "1"},
+				{pos: 2, kind: MathTokOp, body: "+"},
+				{pos: 4, kind: MathTokNum, body: "20"},
 			},
 		},
 		{
 			input: "E = mc^2",
 			toks: []mathToken{
-				{kind: MathTokSym, body: "E"},
-				{kind: MathTokOp, body: "="},
-				{kind: MathTokSym, body: "m"},
-				{kind: MathTokSym, body: "c"},
-				{kind: MathTokSup, body: "^"},
-				{kind: MathTokNum, body: "2"},
+				{pos: 0, kind: MathTokSym, body: "E"},
+				{pos: 2, kind: MathTokOp, body: "="},
+				{pos: 4, kind: MathTokSym, body: "m"},
+				{pos: 5, kind: MathTokSym, body: "c"},
+				{pos: 6, kind: MathTokSup, body: "^"},
+				{pos: 7, kind: MathTokNum, body: "2"},
 			},
 		},
 		{
 			input: `\argmax`,
 			toks: []mathToken{
-				{kind: MathTokControl, name: Symbol("argmax")},
+				{pos: 0, kind: MathTokControl, name: Symbol("argmax")},
 			},
 		},
 		{
 			input: `\forall c_1, c_2 \in \mathbb{C}`,
 			toks: []mathToken{
-				{kind: MathTokControl, name: Symbol("forall")},
-				{kind: MathTokSym, body: "c"},
-				{kind: MathTokSub, body: "_"},
-				{kind: MathTokNum, body: "1"},
-				{kind: MathTokOp, body: ","},
-				{kind: MathTokSym, body: "c"},
-				{kind: MathTokSub, body: "_"},
-				{kind: MathTokNum, body: "2"},
-				{kind: MathTokControl, name: Symbol("in")},
-				{kind: MathTokControl, name: Symbol("mathbb")},
-				{kind: MathTokGroupStart, body: "{"},
-				{kind: MathTokSym, body: "C"},
-				{kind: MathTokGroupEnd, body: "}"},
+				{pos: 0, kind: MathTokControl, name: Symbol("forall")},
+				{pos: 8, kind: MathTokSym, body: "c"},
+				{pos: 9, kind: MathTokSub, body: "_"},
+				{pos: 10, kind: MathTokNum, body: "1"},
+				{pos: 11, kind: MathTokOp, body: ","},
+				{pos: 13, kind: MathTokSym, body: "c"},
+				{pos: 14, kind: MathTokSub, body: "_"},
+				{pos: 15, kind: MathTokNum, body: "2"},
+				{pos: 17, kind: MathTokControl, name: Symbol("in")},
+				{pos: 21, kind: MathTokControl, name: Symbol("mathbb")},
+				{pos: 28, kind: MathTokGroupStart, body: "{"},
+				{pos: 29, kind: MathTokSym, body: "C"},
+				{pos: 30, kind: MathTokGroupEnd, body: "}"},
 			},
 		},
 	} {
@@ -64,11 +63,11 @@ func TestMathScanner(t *testing.T) {
 					break
 				}
 				if tok != want {
-					t.Errorf("%s: token %d: got %s, want %s", tc.input, i, &tok, &want)
+					t.Errorf("%s: token %d: got %+v, want %+v", tc.input, i, tok, want)
 				}
 			}
 			var tok mathToken
-			if s.NextMathToken(&tok) != io.EOF {
+			if s.NextMathToken(&tok) == nil {
 				t.Errorf("expected EOF, got %+v", tok)
 			}
 		})

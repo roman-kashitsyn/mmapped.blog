@@ -79,6 +79,8 @@ const (
 )
 
 type mathToken struct {
+	// pos is the position of the token in the source file.
+	pos  int
 	kind MathTokenKind
 	// name is the command symbol if kind == MathTokControl
 	name sym
@@ -488,6 +490,10 @@ func (s *stream) NextToken(tok *token) error {
 					return nil
 				}
 			}
+		case '$':
+			tok.kind = TokInlineMath
+			tok.body = "$"
+			return nil
 		case '%':
 			// Comment start: skip until the end of the line
 			n := len(str)
@@ -503,6 +509,7 @@ func (s *stream) NextToken(tok *token) error {
 
 func (s *stream) NextMathToken(tok *mathToken) error {
 	for !s.IsEmpty() {
+		tok.pos = s.pos
 		str := s.Rest()
 		c1, size1 := utf8.DecodeRuneInString(str)
 		s.Skip(size1)
@@ -530,7 +537,7 @@ func (s *stream) NextMathToken(tok *mathToken) error {
 			tok.kind = MathEndInlineMath
 			tok.body = "$"
 			return nil
-		case '-', '+', '&', '=', ',', '[', ']', '|':
+		case '-', '+', '&', '=', ',', '[', ']', '|', '(', ')':
 			tok.kind = MathTokOp
 			tok.body = string(c1)
 			return nil
@@ -595,7 +602,7 @@ func (s *stream) NextMathToken(tok *mathToken) error {
 			return s.Errorf("NextMathToken(): unexpected rune %v (%s)", c1, string(c1))
 		}
 	}
-	return io.EOF
+	return s.Errorf("unepxected end of input while parsing math")
 }
 
 func skipLine(s string) string {

@@ -203,6 +203,7 @@ const (
 	UnorderedListCtx
 	DescriptionListCtx
 	MathMLCtx
+	MathCtx
 )
 
 type RenderingCtx struct {
@@ -240,7 +241,6 @@ func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error 
 		case Env:
 			if err := renderGenericEnv(rc, buf, v); err != nil {
 				return err
-
 			}
 		case Table:
 			if err := renderTable(rc, buf, v); err != nil {
@@ -248,6 +248,11 @@ func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error 
 			}
 		case Group:
 			if err := renderGenericSeq(rc, buf, v.nodes); err != nil {
+				return err
+			}
+		case MathNode:
+			handlePendingPara(rc, buf)
+			if err := renderMath(rc, buf, v); err != nil {
 				return err
 			}
 		default:
@@ -258,6 +263,80 @@ func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error 
 	if rc.parent == RootCtx && rc.sectionCounter > 0 {
 		// Explicitly close the last section
 		buf.WriteString("</section>")
+	}
+	return nil
+}
+
+func renderMath(rc *RenderingCtx, buf *strings.Builder, v MathNode) error {
+	fmt.Fprintf(buf, `<math xmlns="http://www.w3.org/1998/Math/MathML" class="math">`)
+	for _, child := range v.mlist {
+		if err := renderMathSubnode(rc, buf, child); err != nil {
+			return err
+		}
+	}
+	buf.WriteString("</math>")
+	return nil
+}
+
+func renderMathSubnode(rc *RenderingCtx, buf *strings.Builder, n MathSubnode) error {
+	switch n := n.(type) {
+	case MathNode:
+		buf.WriteString("<mrow>")
+		for _, child := range n.mlist {
+			if err := renderMathSubnode(rc, buf, child); err != nil {
+				return err
+			}
+		}
+		buf.WriteString("</mrow>")
+	case MathOp:
+		buf.WriteString("<mo>")
+		buf.WriteString(n.op)
+		buf.WriteString("</mo>")
+	case MathText:
+		buf.WriteString("<mi>")
+		renderMathText(rc, buf, n.contents)
+		buf.WriteString("</mi>")
+	case MathNum:
+		buf.WriteString("<mn>")
+		buf.WriteString(n.num)
+		buf.WriteString("</mn>")
+	case MathTerm:
+		if n.subscript == nil && n.supscript == nil {
+			return renderMathSubnode(rc, buf, n.nucleus)
+		} else if n.subscript != nil && n.supscript != nil {
+			buf.WriteString("<msubsup>")
+			if err := renderMathSubnode(rc, buf, n.nucleus); err != nil {
+				return err
+			}
+			if err := renderMathSubnode(rc, buf, n.subscript); err != nil {
+				return err
+			}
+			if err := renderMathSubnode(rc, buf, n.supscript); err != nil {
+				return err
+			}
+			buf.WriteString("</msubsup>")
+		} else if n.subscript != nil {
+			buf.WriteString("<msub>")
+			if err := renderMathSubnode(rc, buf, n.nucleus); err != nil {
+				return err
+			}
+			if err := renderMathSubnode(rc, buf, n.subscript); err != nil {
+				return err
+			}
+			buf.WriteString("</msub>")
+		} else if n.supscript != nil {
+			buf.WriteString("<msup>")
+			if err := renderMathSubnode(rc, buf, n.nucleus); err != nil {
+				return err
+			}
+			if err := renderMathSubnode(rc, buf, n.supscript); err != nil {
+				return err
+			}
+			buf.WriteString("</msup>")
+		}
+	default:
+		err := fmt.Errorf("unsupported math node type %T", n)
+		return err
 	}
 	return nil
 }

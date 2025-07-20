@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestGroupParsing(t *testing.T) {
+func TestParsing(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -97,6 +97,44 @@ func TestGroupParsing(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:  "simple math formula",
+			input: "$E = mc^2$",
+			expected: []Node{
+				MathNode{
+					pos: 0,
+					mlist: []MathSubnode{
+						MathText{contents: "E"},
+						MathOp{op: "="},
+						MathText{contents: "m"},
+						MathTerm{
+							pos:       6,
+							nucleus:   MathText{contents: "c"},
+							supscript: MathNum{num: "2"},
+						},
+					},
+				},
+			},
+		},
+		/*
+			{
+				name:  "subscript and superscript",
+				input: "$m_i^j$",
+				expected: []Node{
+					MathNode{
+						pos: 0,
+						mlist: []MathSubnode{
+							MathTerm{
+								pos:       1,
+								nucleus:   MathText{contents: "m"},
+								supscript: MathText{contents: "j"},
+								subscript: MathText{contents: "i"},
+							},
+						},
+					},
+				},
+			},
+		*/
 	}
 
 	for _, tt := range tests {

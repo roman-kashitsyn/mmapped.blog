@@ -226,31 +226,44 @@ func (t Table) String() string {
 }
 
 // MathNode represents a parsed math expression.
+// See “TeX the Program”, p. 280 (#680, Data structures for math mode.).
 type MathNode struct {
-	mlist []MathNode
+	pos   int
+	mlist []MathSubnode
 }
 
 func (n MathNode) String() string {
 	return fmt.Sprintf("MathNode { mlist: %+v }", n.mlist)
 }
 
+type MathSubnode any
+
 // MathTerm represents a term with optional super- and subscripts.
 type MathTerm struct {
-	necleus, subscript, supscript MathNode
-}
-
-// MathSqrt represents a square root of an expression.
-type MathSqrt struct {
-	contents MathNode
+	pos       int
+	nucleus   MathSubnode
+	subscript MathSubnode
+	supscript MathSubnode
 }
 
 // MathFrac represents a fraction.
 type MathFrac struct {
-	thickness  string
-	nom, denom MathNode
+	nom   MathSubnode
+	denom MathSubnode
+}
+
+// MathOp represents an operation in math mode.
+type MathOp struct {
+	op string
+}
+
+// MathNum represents a number in math mode.
+type MathNum struct {
+	num string
 }
 
 // MathText represents arbitrary text that should be rendered by itself.
+// It corresponds to math identifiers.
 type MathText struct {
-	contents []Node
+	contents string
 }

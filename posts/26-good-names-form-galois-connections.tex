@@ -138,13 +138,13 @@ Your only solace is that sometimes, his solution was not \href{https://en.wikipe
 
 In information theory,
 a channel is a theoretical construction that allows sending messages through time and space.
-A channel takes messages from a set \mathml{\mi{X}} as inputs and produces messages from a set \mathml{\mi{Y}} as outputs.
+A channel takes messages from a set $X$ as inputs and produces messages from a set $Y$ as outputs.
 Channels are \emph{noisy}:
 they distort the messages passing them;
 that's why the channel's input and output sets might differ.
 We represent the noise mathematically by using \href{https://en.wikipedia.org/wiki/Conditional_probability}{conditional probabilities}:
 \mathml{\mi{p}\mo*{(}\mi{y}\mo{|}\mi{x}\mo*{)}}
-is the probability of receiving message \mathml{\mi{y}} if the sender sent message \mathml{\mi{x}}.
+is the probability of receiving message $y$ if the sender sent message $x$.
 
 When you think of a channel,
 you probably imagine a cable transmitting electrical signals or how the space around you buzzes with electromagnetic waves.
@@ -173,12 +173,12 @@ One fundamental characteristic of a channel is how much its output resembles the
 This view gives us the criteria for a good name:
 it's the channel maximizing mutual information.
 In the following formula,
-\mathml{\msub{\mi{C}}{\mi{s}}} is the sender's concept,
-\mathml{\msub{\mi{C}}{\mi{r}}} is the receiver's concept,
-\mathml{\mi{E}} is the set of all possible concept expressions,
+$C_s$ is the sender's concept,
+$C_r$ is the receiver's concept,
+$E$ is the set of all possible concept expressions,
 and
 \mathml{\mi{I}\mo*{(}\msub{\mi{C}}{\mi{r}}\mo*{;}\msub{\mi{C}}{\mi{s}}\mo*{)}}
-is the mutual information computed for expression \mathml{\mi{e}}.
+is the mutual information computed for expression $e$.
 
 \mathml[block]{
   \mtext{best\_name}\mo{\applyFun}\mrow{\mo*{(}\msub{\mi{C}}{\mi{s}}\mo*{)}}
@@ -260,7 +260,7 @@ This paragraph doesn't do a good job at defining expression ordering,
 but it's \textsc{ok}:
 the whole point of the Galois connection is to make expression comparison precise through its connection with better-defined objects.
 
-Our second set is the set of concepts \mathml{\mi{C}}.
+Our second set is the set of concepts $C$.
 If we have concepts
 \mathml{\msub{\mi{c}}{\mn{1}}\mo{,}\msub{\mi{c}}{\mn{2}}\mo{\in}\mi{C}},
 we say that

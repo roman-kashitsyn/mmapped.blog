@@ -230,10 +230,6 @@ func ParseVerbatim(s *stream, name sym, opts []sym, pos int) (env Env, err error
 	return
 }
 
-func ParseMath(s *stream) (node Node, err error) {
-	return nil, s.Error("inline math not implemented yet")
-}
-
 func ParseEnv(s *stream, name sym, pos int) (env Env, err error) {
 	var body []Node
 	var t token
@@ -303,12 +299,12 @@ loop:
 				break loop
 			}
 		case TokInlineMath:
-			mnode, parseErr := ParseMath(s)
+			mnode, parseErr := ParseMath(t, s)
 			if parseErr != nil {
 				err = parseErr
 				return
 			}
-			Push(&body, mnode)
+			Push(&body, Node(mnode))
 		default:
 			err = s.ErrorfAt(t.pos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 			break loop
@@ -534,6 +530,131 @@ func parseEnvOrCommand(pos int, s *stream, cmd sym) (node Node, err error) {
 	}
 }
 
+func simplifyTerm(term MathTerm) MathSubnode {
+	if term.subscript == nil && term.supscript == nil {
+		return term.nucleus
+	}
+	return term
+}
+
+func appendTerm(nodes []MathSubnode, term MathTerm) []MathSubnode {
+	if term.nucleus != nil {
+		return append(nodes, simplifyTerm(term))
+	}
+	return nodes
+}
+
+// parseMathTerm parses a math term starting with the specified math token.
+// It leaves the first untouched math token in the tok argument.
+func parseMathTerm(tok *mathToken, s *stream, end MathTokenKind) (term MathTerm, err error) {
+	term.pos = tok.pos
+	switch tok.kind {
+	case MathTokNum:
+		term.nucleus = MathNum{num: tok.body}
+	case MathTokSym:
+		term.nucleus = MathText{contents: tok.body}
+	case MathTokOp:
+		term.nucleus = MathOp{op: tok.body}
+	case MathTokGroupStart:
+		err = s.NextMathToken(tok)
+		if err != nil {
+			return
+		}
+		mterm, merr := parseMathTerm(tok, s, MathTokGroupEnd)
+		if merr != nil {
+			err = merr
+			return
+		}
+		term.nucleus = mterm
+	default:
+		if tok.kind == end {
+			return
+		}
+		err = s.Error("unexpected math token")
+		return
+	}
+	for tok.kind != end {
+		err = s.NextMathToken(tok)
+		if err != nil {
+			return
+		}
+		if tok.kind == end {
+			break
+		}
+		var subterm MathTerm
+		switch tok.kind {
+		case MathTokSub:
+			if term.subscript != nil {
+				err = s.ErrorfAt(tok.pos, "unexpected second subscript")
+				return
+			}
+			err = s.NextMathToken(tok)
+			if err != nil {
+				return
+			}
+			subterm, err = parseMathTerm(tok, s, end)
+			if err != nil {
+				return
+			}
+			term.subscript = simplifyTerm(subterm)
+		case MathTokSup:
+			if term.supscript != nil {
+				err = s.ErrorfAt(tok.pos, "unexpected second superscript")
+				return
+			}
+			err = s.NextMathToken(tok)
+			if err != nil {
+				return
+			}
+			subterm, err = parseMathTerm(tok, s, end)
+			if err != nil {
+				return
+			}
+			term.supscript = simplifyTerm(subterm)
+		default:
+			return
+		}
+	}
+	return
+}
+
+func ParseMath(t token, s *stream) (node MathNode, err error) {
+	// TODO: handle negative numbers, e.g., f(-1), should render as mi{f}\mo{(}\mn{-1}\mo{)}
+	// TODO: detect stretchy operators somehow.
+	if t.kind != TokInlineMath {
+		err = s.Error("internal error: math parsing should start with a math token")
+		return
+	}
+	node.pos = t.pos
+	var mtok mathToken
+	err = s.NextMathToken(&mtok)
+	if err != nil {
+		return
+	}
+	for mtok.kind != MathEndInlineMath {
+		var mterm MathTerm
+		switch mtok.kind {
+		case MathEndInlineMath:
+			return
+		case MathTokGroupStart:
+			mterm, err = parseMathTerm(&mtok, s, MathTokGroupEnd)
+			if err != nil {
+				return
+			}
+		case MathTokGroupEnd:
+			err = s.ErrorfAt(mtok.pos, "unbalanced group")
+			return
+		default:
+			mterm, err = parseMathTerm(&mtok, s, MathEndInlineMath)
+			if err != nil {
+				return
+			}
+		}
+		node.mlist = appendTerm(node.mlist, mterm)
+	}
+	return
+}
+
 func ParseSequence(s *stream) (body []Node, err error) {
 	var t token
 	for !s.IsEmpty() {
@@ -559,6 +680,13 @@ func ParseSequence(s *stream) (body []Node, err error) {
 			}
 			group := Group{pos: tokPos, nodes: groupNodes}
 			Push(&body, Node(group))
+		case TokInlineMath:
+			node, mathErr := ParseMath(t, s)
+			if mathErr != nil {
+				err = mathErr
+				return
+			}
+			Push(&body, Node(node))
 		case TokText:
 			if s.IsEmpty() {
 				// The last token parsed was a text token,
