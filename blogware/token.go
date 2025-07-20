@@ -26,6 +26,8 @@ const (
 )
 
 type token struct {
+	// pos is the position of the token in the input.
+	pos  int
 	kind TokenKind
 	// name is the command symbol if kind == TokControl
 	name sym
@@ -419,6 +421,7 @@ func (s *stream) FindVerbatimEnd() (body string, err error) {
 func (s *stream) NextToken(tok *token) error {
 	for !s.IsEmpty() {
 		pos := s.pos
+		tok.pos = pos
 		str := s.Rest()
 		i := strings.IndexFunc(str, isSpecial)
 		if i == -1 || i > 0 {

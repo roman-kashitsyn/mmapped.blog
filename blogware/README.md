@@ -10,7 +10,7 @@ The document body consists of regular text, environments, and commands.
 Environments have the following syntax:
 
 ```tex
-\begin{envname}[options]{args}
+\begin{envname}[options]
   content
 \end{envname}
 ```
@@ -87,7 +87,10 @@ Unlike in standard LaTeX, sections require both a label and title:
 - **`\newline`** - Line break
 - **`\numspace`** - Numeric space
 - **`\hrule`** - Horizontal rule
-- **`\dingbat{symbol : Sym}`** - 
+- **`\dingbat{symbol : Sym}`** - A dingbat symbol; supported symbols:
+  - `heavy-ballot-x`
+  - `heavy-check`
+  - `lower-right-pensil`.
 
 ## Lists
 
