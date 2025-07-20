@@ -246,6 +246,13 @@ func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error 
 			if err := renderTable(rc, buf, v); err != nil {
 				return err
 			}
+		case Group:
+			if err := renderGenericSeq(rc, buf, v.nodes); err != nil {
+				return err
+			}
+		default:
+			err := fmt.Errorf("unknown node type %T", n)
+			return err
 		}
 	}
 	if rc.parent == RootCtx && rc.sectionCounter > 0 {

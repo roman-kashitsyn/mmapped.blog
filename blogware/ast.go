@@ -11,6 +11,7 @@ type Node interface {
 	String() string
 }
 
+// Cmd represents a command node (\cmd[opts]{arg}...).
 type Cmd struct {
 	pos  int
 	name sym
@@ -116,7 +117,7 @@ func (c *Cmd) Name() string {
 
 func (c Cmd) String() string {
 	var buf strings.Builder
-	fmt.Fprintf(&buf, "Cmd { name: %s, opts: [", SymbolName(c.name))
+	fmt.Fprintf(&buf, "Cmd { pos: %d, name: %s, opts: [", c.pos, SymbolName(c.name))
 	for _, opt := range c.opts {
 		fmt.Fprintf(&buf, "%s, ", SymbolName(opt))
 	}
@@ -128,6 +129,7 @@ func (c Cmd) String() string {
 	return buf.String()
 }
 
+// Env represents an environment node (\begin{env}[opts]...\end{env}).
 type Env struct {
 	beginPos int
 	endPos   int
@@ -163,6 +165,22 @@ func (t Text) String() string {
 	return fmt.Sprintf("Text { pos: %d, body: %s }", t.pos, t.body)
 }
 
+// Group represents an arbitrary sequence of nodes.
+type Group struct {
+	pos   int
+	nodes []Node
+}
+
+func (g Group) String() string {
+	var buf strings.Builder
+	fmt.Fprintf(&buf, "Group { pos: %d, nodes: [", g.pos)
+	for _, node := range g.nodes {
+		fmt.Fprintf(&buf, "%s, ", node)
+	}
+	buf.WriteString("]}")
+	return buf.String()
+}
+
 type ColSpec int
 
 const (
@@ -179,6 +197,7 @@ const (
 	BorderBottom RowBorder = 2
 )
 
+// Cell represents a cell within a table row.
 type Cell struct {
 	pos       int
 	alignSpec ColSpec
@@ -186,11 +205,13 @@ type Cell struct {
 	body      []Node
 }
 
+// Row represents a row within a table.
 type Row struct {
 	borders RowBorder
 	cells   []Cell
 }
 
+// Table represents a table node (\begin{tabular}[opts]{spec}...\end{tabular}).
 type Table struct {
 	name     sym
 	beginPos int

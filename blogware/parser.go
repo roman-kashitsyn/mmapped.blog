@@ -79,13 +79,20 @@ func parseOptions(s *stream) (opts []sym, err error) {
 }
 
 func parseArg(s *stream, typ ArgType) (body []Node, err error) {
+	return parseArgWithBrace(s, typ, false)
+}
+
+func parseArgWithBrace(s *stream, typ ArgType, braceConsumed bool) (body []Node, err error) {
 	var t token
 	pos := s.pos
-	if err = s.NextToken(&t); err != nil {
-		return
-	}
-	if t.kind != TokLBrace {
-		err = s.ErrorfAt(pos, "Expected a {, got %v", t)
+	if !braceConsumed {
+		if err = s.NextToken(&t); err != nil {
+			return
+		}
+		if t.kind != TokLBrace {
+			err = s.ErrorfAt(pos, "Expected a {, got %v", t)
+			return
+		}
 	}
 	switch typ {
 	case ArgTypeSeq:
@@ -95,20 +102,24 @@ func parseArg(s *stream, typ ArgType) (body []Node, err error) {
 			if err != nil {
 				return
 			}
-			if s.IsEmpty() {
-				err = s.Error("unexpected end of input, expected a closing brace")
-				return
-			}
 			switch t.kind {
 			case TokRBrace:
 				break loop
 			case TokControl:
-				node, parseErr := parseEnvOrCommand(s, t.name)
+				node, parseErr := parseEnvOrCommand(t.pos, s, t.name)
 				if parseErr != nil {
 					err = parseErr
 					return
 				}
 				Push(&body, node)
+			case TokLBrace:
+				groupNodes, groupErr := parseArgWithBrace(s, ArgTypeSeq, true)
+				if groupErr != nil {
+					err = groupErr
+					return
+				}
+				group := Group{pos: t.pos, nodes: groupNodes}
+				Push(&body, Node(group))
 			default:
 				err = s.Errorf("unexpected token %v while parsing arguments", t)
 				break loop
@@ -240,7 +251,6 @@ func ParseEnv(s *stream, name sym, pos int) (env Env, err error) {
 	}
 loop:
 	for !s.IsEmpty() {
-		tokPos := s.pos
 		t, err = ParseTextBlocks(s, &body)
 		if err != nil {
 			return
@@ -266,17 +276,30 @@ loop:
 				}
 				break loop
 			}
-			node, parseErr := parseEnvOrCommand(s, t.name)
+			node, parseErr := parseEnvOrCommand(t.pos, s, t.name)
 			if parseErr != nil {
 				err = parseErr
 				return
 			}
 			Push(&body, node)
-		case TokLBrace, TokRBrace, TokLBracket, TokRBracket, TokAmp:
+		case TokLBrace:
 			if name == SymCode {
-				Push(&body, Node(Text{pos: s.pos - 1, body: t.body}))
+				Push(&body, Node(Text{pos: t.pos, body: t.body}))
 			} else {
-				err = s.ErrorfAt(tokPos, "unexpected token %s while parsing %s", &t, SymbolName(name))
+				// Parse the group content (brace already consumed)
+				groupNodes, groupErr := parseArgWithBrace(s, ArgTypeSeq, true)
+				if groupErr != nil {
+					err = groupErr
+					return
+				}
+				group := Group{pos: t.pos, nodes: groupNodes}
+				Push(&body, Node(group))
+			}
+		case TokRBrace, TokLBracket, TokRBracket, TokAmp:
+			if name == SymCode {
+				Push(&body, Node(Text{pos: t.pos, body: t.body}))
+			} else {
+				err = s.ErrorfAt(t.pos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 				break loop
 			}
 		case TokInlineMath:
@@ -287,7 +310,7 @@ loop:
 			}
 			Push(&body, mnode)
 		default:
-			err = s.ErrorfAt(tokPos, "unexpected token %s while parsing %s", &t, SymbolName(name))
+			err = s.ErrorfAt(t.pos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 			break loop
 		}
 	}
@@ -391,14 +414,14 @@ loop:
 				}
 				break loop
 			case SymHRule:
-				_, parseErr := parseEnvOrCommand(s, t.name)
+				_, parseErr := parseEnvOrCommand(t.pos, s, t.name)
 				if parseErr != nil {
 					err = parseErr
 					return
 				}
 				row.borders = BorderTop
 			case SymMulticolumn:
-				c, parseErr := parseEnvOrCommand(s, t.name)
+				c, parseErr := parseEnvOrCommand(t.pos, s, t.name)
 				if parseErr != nil {
 					err = parseErr
 					return
@@ -424,14 +447,23 @@ loop:
 				cellCount += numColumns - 1
 				Push(&row.cells, Cell{colspan: numColumns, pos: cmd.pos, alignSpec: alignSpec[0], body: body})
 			default:
-				node, parseErr := parseEnvOrCommand(s, t.name)
+				node, parseErr := parseEnvOrCommand(t.pos, s, t.name)
 				if parseErr != nil {
 					err = parseErr
 					return
 				}
 				Push(&cell.body, node)
 			}
-		case TokLBrace, TokRBrace, TokLBracket, TokRBracket:
+		case TokLBrace:
+			// Parse the group content (brace already consumed)
+			groupNodes, groupErr := parseArgWithBrace(s, ArgTypeSeq, true)
+			if groupErr != nil {
+				err = groupErr
+				return
+			}
+			group := Group{pos: tokPos, nodes: groupNodes}
+			Push(&cell.body, Node(group))
+		case TokRBrace, TokLBracket, TokRBracket:
 			err = s.ErrorfAt(tokPos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 			break loop
 		case TokAmp:
@@ -465,8 +497,7 @@ func ParseTextBlocks(s *stream, body *[]Node) (t token, err error) {
 	return
 }
 
-func parseEnvOrCommand(s *stream, cmd sym) (node Node, err error) {
-	p := s.pos
+func parseEnvOrCommand(pos int, s *stream, cmd sym) (node Node, err error) {
 	// Found the beginning of an environment.
 	switch cmd {
 	case SymBegin:
@@ -476,7 +507,7 @@ func parseEnvOrCommand(s *stream, cmd sym) (node Node, err error) {
 			return
 		}
 		if beginSym == SymTabular || beginSym == SymTabularS {
-			tab, tabErr := ParseTable(s, beginSym, p)
+			tab, tabErr := ParseTable(s, beginSym, pos)
 			if tabErr != nil {
 				err = tabErr
 				return
@@ -484,7 +515,7 @@ func parseEnvOrCommand(s *stream, cmd sym) (node Node, err error) {
 			node = tab
 			return
 		}
-		env, envErr := ParseEnv(s, beginSym, p)
+		env, envErr := ParseEnv(s, beginSym, pos)
 		if envErr != nil {
 			err = envErr
 			return
@@ -494,7 +525,7 @@ func parseEnvOrCommand(s *stream, cmd sym) (node Node, err error) {
 		err = s.Error("unbalanced \\end command")
 		return
 	default:
-		cmd, cmdErr := ParseCmd(s, cmd, p)
+		cmd, cmdErr := ParseCmd(s, cmd, pos)
 		if cmdErr != nil {
 			err = cmdErr
 			return
@@ -511,17 +542,31 @@ func ParseSequence(s *stream) (body []Node, err error) {
 		if err != nil {
 			return
 		}
-		if s.IsEmpty() {
-			break
-		}
-		if t.kind == TokControl {
-			node, parseErr := parseEnvOrCommand(s, t.name)
+		switch t.kind {
+		case TokControl:
+			node, parseErr := parseEnvOrCommand(t.pos, s, t.name)
 			if parseErr != nil {
 				err = parseErr
 				return
 			}
 			Push(&body, node)
-		} else {
+		case TokLBrace:
+			// Parse the group content (brace already consumed)
+			groupNodes, groupErr := parseArgWithBrace(s, ArgTypeSeq, true)
+			if groupErr != nil {
+				err = groupErr
+				return
+			}
+			group := Group{pos: tokPos, nodes: groupNodes}
+			Push(&body, Node(group))
+		case TokText:
+			if s.IsEmpty() {
+				// The last token parsed was a text token,
+				// and there are no more tokens to parse.
+				return
+			}
+			fallthrough
+		default:
 			err = s.ErrorfAt(tokPos, "unexpected token: %s while parsing top-level document", &t)
 			return
 		}
