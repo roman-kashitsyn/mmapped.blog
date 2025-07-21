@@ -96,6 +96,7 @@ var (
 	SymCdots          = BuiltinReplacement("cdots", "⋯")
 	SymDelta          = BuiltinReplacement("delta", "δ")
 	SymCapitalDelta   = BuiltinReplacement("Delta", "Δ")
+	SymPi             = BuiltinReplacement("pi", "π")
 	SymFracSlash      = BuiltinReplacement("fracslash", "∕")
 	SymTimes          = BuiltinReplacement("times", "×")
 	SymInvisibleTimes = BuiltinReplacement("itimes", "&InvisibleTimes;")

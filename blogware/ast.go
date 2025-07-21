@@ -252,9 +252,16 @@ type MathFrac struct {
 	denom MathSubnode
 }
 
+type MathCmd struct {
+	pos  int
+	cmd  sym
+	args []MathSubnode
+}
+
 // MathOp represents an operation in math mode.
 type MathOp struct {
-	op string
+	op       string
+	stretchy bool
 }
 
 // MathNum represents a number in math mode.

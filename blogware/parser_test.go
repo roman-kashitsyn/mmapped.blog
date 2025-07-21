@@ -116,25 +116,68 @@ func TestParsing(t *testing.T) {
 				},
 			},
 		},
-		/*
-			{
-				name:  "subscript and superscript",
-				input: "$m_i^j$",
-				expected: []Node{
-					MathNode{
-						pos: 0,
-						mlist: []MathSubnode{
-							MathTerm{
-								pos:       1,
-								nucleus:   MathText{contents: "m"},
-								supscript: MathText{contents: "j"},
-								subscript: MathText{contents: "i"},
-							},
+		{
+			name:  "subscript then superscript",
+			input: "$m_i^j$",
+			expected: []Node{
+				MathNode{
+					pos: 0,
+					mlist: []MathSubnode{
+						MathTerm{
+							pos:       1,
+							nucleus:   MathText{contents: "m"},
+							supscript: MathText{contents: "j"},
+							subscript: MathText{contents: "i"},
 						},
 					},
 				},
 			},
-		*/
+		},
+		{
+			name:  "superscript then subscript",
+			input: "$m^j_i$",
+			expected: []Node{
+				MathNode{
+					pos: 0,
+					mlist: []MathSubnode{
+						MathTerm{
+							pos:       1,
+							nucleus:   MathText{contents: "m"},
+							supscript: MathText{contents: "j"},
+							subscript: MathText{contents: "i"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "eulers formula",
+			input: `$e^{i\pi}=-1$`,
+			expected: []Node{
+				MathNode{
+					pos: 0,
+					mlist: []MathSubnode{
+						MathTerm{
+							pos:     1,
+							nucleus: MathText{contents: "e"},
+							supscript: MathNode{
+								pos: 3,
+								mlist: []MathSubnode{
+									MathText{contents: "i"},
+									MathCmd{
+										pos: 5,
+										cmd: SymPi,
+									},
+								},
+							},
+						},
+						MathOp{op: "="},
+						MathOp{op: "-"}, // TODO: merge -1 into a single number
+						MathNum{num: "1"},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

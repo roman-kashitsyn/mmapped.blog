@@ -546,7 +546,7 @@ func appendTerm(nodes []MathSubnode, term MathTerm) []MathSubnode {
 
 // parseMathTerm parses a math term starting with the specified math token.
 // It leaves the first untouched math token in the tok argument.
-func parseMathTerm(tok *mathToken, s *stream, end MathTokenKind) (term MathTerm, err error) {
+func parseMathTerm(tok *mathToken, s *stream, subsup bool, end MathTokenKind) (term MathTerm, err error) {
 	term.pos = tok.pos
 	switch tok.kind {
 	case MathTokNum:
@@ -556,21 +556,31 @@ func parseMathTerm(tok *mathToken, s *stream, end MathTokenKind) (term MathTerm,
 	case MathTokOp:
 		term.nucleus = MathOp{op: tok.body}
 	case MathTokGroupStart:
+		tokPos := tok.pos
 		err = s.NextMathToken(tok)
 		if err != nil {
 			return
 		}
-		mterm, merr := parseMathTerm(tok, s, MathTokGroupEnd)
+		mterm, merr := parseMList(tok, s, MathTokGroupEnd)
 		if merr != nil {
 			err = merr
 			return
 		}
+		mterm.pos = tokPos
 		term.nucleus = mterm
+	case MathTokControl:
+		term.nucleus = MathCmd{
+			pos: tok.pos,
+			cmd: tok.name,
+		}
 	default:
 		if tok.kind == end {
 			return
 		}
-		err = s.Error("unexpected math token")
+		err = s.ErrorfAt(tok.pos, "unexpected math token: %+v", tok)
+		return
+	}
+	if !subsup {
 		return
 	}
 	for tok.kind != end {
@@ -592,7 +602,7 @@ func parseMathTerm(tok *mathToken, s *stream, end MathTokenKind) (term MathTerm,
 			if err != nil {
 				return
 			}
-			subterm, err = parseMathTerm(tok, s, end)
+			subterm, err = parseMathTerm(tok, s, false, end)
 			if err != nil {
 				return
 			}
@@ -606,7 +616,7 @@ func parseMathTerm(tok *mathToken, s *stream, end MathTokenKind) (term MathTerm,
 			if err != nil {
 				return
 			}
-			subterm, err = parseMathTerm(tok, s, end)
+			subterm, err = parseMathTerm(tok, s, false, end)
 			if err != nil {
 				return
 			}
@@ -618,40 +628,47 @@ func parseMathTerm(tok *mathToken, s *stream, end MathTokenKind) (term MathTerm,
 	return
 }
 
-func ParseMath(t token, s *stream) (node MathNode, err error) {
-	// TODO: handle negative numbers, e.g., f(-1), should render as mi{f}\mo{(}\mn{-1}\mo{)}
-	// TODO: detect stretchy operators somehow.
-	if t.kind != TokInlineMath {
-		err = s.Error("internal error: math parsing should start with a math token")
-		return
-	}
-	node.pos = t.pos
-	var mtok mathToken
-	err = s.NextMathToken(&mtok)
-	if err != nil {
-		return
-	}
-	for mtok.kind != MathEndInlineMath {
+func parseMList(tok *mathToken, s *stream, end MathTokenKind) (node MathNode, err error) {
+	node.pos = tok.pos
+	for tok.kind != end {
 		var mterm MathTerm
-		switch mtok.kind {
+		switch tok.kind {
 		case MathEndInlineMath:
 			return
 		case MathTokGroupStart:
-			mterm, err = parseMathTerm(&mtok, s, MathTokGroupEnd)
+			mterm, err = parseMathTerm(tok, s, true, MathTokGroupEnd)
 			if err != nil {
 				return
 			}
 		case MathTokGroupEnd:
-			err = s.ErrorfAt(mtok.pos, "unbalanced group")
+			if end == MathTokGroupEnd {
+				return
+			}
+			err = s.ErrorfAt(tok.pos, "unbalanced group")
 			return
 		default:
-			mterm, err = parseMathTerm(&mtok, s, MathEndInlineMath)
+			mterm, err = parseMathTerm(tok, s, true, end)
 			if err != nil {
 				return
 			}
 		}
 		node.mlist = appendTerm(node.mlist, mterm)
 	}
+	return
+}
+
+func ParseMath(t token, s *stream) (node MathNode, err error) {
+	// TODO: handle negative numbers, e.g., f(-1), should render as mi{f}\mo{(}\mn{-1}\mo{)}
+	//     ^ IDEA: write \num{-1} explicitly (as in https://ctan.org/pkg/siunitx package).
+	// TODO: detect stretchy operators somehow.
+	//     ^ IDEA: use '\left(' and '\right)' for stretchy operators.
+	var mtok mathToken
+	err = s.NextMathToken(&mtok)
+	if err != nil {
+		return
+	}
+	node, err = parseMList(&mtok, s, MathEndInlineMath)
+	node.pos = t.pos
 	return
 }
 
