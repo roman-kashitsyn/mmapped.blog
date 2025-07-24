@@ -194,7 +194,7 @@ let rec quine cpu prog i =
 
 let brute_force () =
   Seq.ints 0 |> Seq.filter (fun v -> quine {cpu with a = v} prog 0)
-  |> Seq.uncons |> Option.get |> fst |> print_int	
+  |> Seq.uncons |> Option.get |> fst |> print_int
 \end{code}
 
 I had to find a solution that makes more assumptions about the program,
@@ -337,7 +337,7 @@ The \code{graph} argument describes the next keypad in the chain; the \code{move
     Six nested loops look intimidating, but it's the price we pay for two-dimensional vertices.
   }
 \begin{code}[ocaml]
-let all_paths graph move_cost = 
+let all_paths graph move_cost =
   let n = Array.length graph.adj in
   let d4 = Array.init_matrix n dir_count (fun _ _ ->
                Array.make_matrix n dir_count max_int
@@ -394,7 +394,7 @@ let complexity costs codes =
   Array.map (fun code ->
       code_cost costs code * int_of_string (String.sub code 0 3)
     ) codes
-  |> Array.fold_left (+) 0 
+  |> Array.fold_left (+) 0
 
 let () =
   let codes = Arg.read_arg "21-input.txt" in
@@ -406,7 +406,7 @@ let () =
   let costs3 = all_paths numpad costs2 in
   complexity costs3 codes |> Printf.printf "\%d\\n";
 
-  (* part 2 *)  
+  (* part 2 *)
   let costs25 = power (all_paths dirpad) 25 costs0 in
   let final_cost = all_paths numpad costs25 in
   complexity final_cost codes |> Printf.printf "\%d\\n";
@@ -456,7 +456,7 @@ My experience might have been different if I used third-party libraries.
   There are no convenient multi-dimensional arrays.
   The \code{Bigarray} module supports arrays of primitives of up to sixteen dimensions, but it’s bare-bones and clunky (it has no folds or iterators, for example).
 \item
-  It is slightly annoying to use different indexing syntaxes for various types (\code{a.(i)} for regular arrays, \code{s.\[i\]} for strings, \code{b.\{i\}} for big arrays).
+  It is slightly annoying to use different indexing syntaxes for various types (\code{a.(i)} for regular arrays, \code{s.[i]} for strings, \code{b.\{i\}} for big arrays).
   I assume this inconsistency helps the compiler with type inference.
 \item
   I wish I could use sum types as array indices (Haskell supports it through the \href{https://hackage.haskell.org/package/base-4.21.0.0/docs/Data-Ix.html}{Ix} typeclass).

@@ -148,26 +148,26 @@ This procedure speeds up scratchpad construction and reduces memory pressure.
 
 Detecting touched and dirtied memory pages is another challenging aspect of orthogonal persistence.
 The system compiles actor's WebAssembly modules to native code.
-How do you know which pages arbitrary code touched? 
+How do you know which pages arbitrary code touched?
 There are multiple approaches to this problem:
 \begin{itemize}
-  \item 
+  \item
     Compare the full memory before and after execution.
     This approach is easy to implement and works on all platforms, but it performs poorly on sizable memories and does not give us accessed pages.
-  \item 
+  \item
     Instrument the WebAssembly module before compiling it to native code.
     For example, we could add a system call before all \code{load} and \code{store} instructions to mark the corresponding pages as accessed or dirtied.
     This approach works on all platforms but can slow down execution by an order of magnitude.
-  \item 
+  \item
     Use memory protection and signal handlers to detect memory reads and writes at runtime.
     This approach works well on \textsc{unix} platforms and is reasonably efficient.
     We shall discuss this approach in more detail shortly.
-  \item 
+  \item
     Implement a custom filesystem backend as a \href{https://en.wikipedia.org/wiki/Filesystem_in_Userspace}{\textsc{fuse}} library, then \href{https://man7.org/linux/man-pages/man2/mmap.2.html}{memory-map} actor memory as a virtual file.
     The operating system will call into our library when the actor code reads from or writes to the memory-mapped file, allowing us to perform the required bookkeeping.
     This approach works great on platforms that support \textsc{fuse} (Linux and macOS), but it has some administrative disadvantages.
     For example, the replica will need priveledged access to be able to mount a virtual filesystem.
-  \item 
+  \item
     Use Linux \href{https://man7.org/linux/man-pages/man1/pmap.1.html}{pmap} utility to extract \href{https://techtalk.intersec.com/2013/07/memory-part-2-understanding-process-memory/#pmap-detailed-mapping}{memory access statistics} right after the message execution.
     This approach is very efficient, but it does not always produce deterministic results.
 \end{itemize}
@@ -233,21 +233,21 @@ To keep the example simple, let us assume that the array starts at page zero, an
 Before the execution begins, the entire memory has protection flags \code{PROT_NONE}.
 As the actor executes the \code{replace} function, the following events occur:
 \begin{enumerate}
-  \item 
-    The actor accesses \code{array\[0\]}.
+  \item
+    The actor accesses \code{array[0]}.
     Since the corresponding memory page is read-protected, the load instruction generates a \code{SIGSEGV} signal.
     The system invokes the signal handler that marks the page as touched and sets the memory protection to \code{PROT_READ}.
     The context switches back to the actor code, which can now repeat the read operation successfully.
-  \item 
-    The actor accesses array elements \code{array\[1\]} through \code{array\[1023\]}\sidenote{sn-4096-1024}{A 4096-byte memory page can fit 1024 32-bit integers.} without interruption.
-  \item 
-    The actor accesses \code{array\[1024\]}.
+  \item
+    The actor accesses array elements \code{array[1]} through \code{array[1023]}\sidenote{sn-4096-1024}{A 4096-byte memory page can fit 1024 32-bit integers.} without interruption.
+  \item
+    The actor accesses \code{array[1024]}.
     This element lives on the next page, which is still read-protected.
     The system behaves just as in step \circled{1}.
-  \item 
-    The actor accesses elements \code{array\[1025\]} through \code{array\[2000\]} without interruption.
-  \item 
-    The actor writes to \code{array\[2000\]}.
+  \item
+    The actor accesses elements \code{array[1025]} through \code{array[2000]} without interruption.
+  \item
+    The actor writes to \code{array[2000]}.
     The corresponding memory page is write-protected, so the store instruction generates a \code{SIGSEGV} signal.
     The context switches to the signal handler.
     The signal handler marks the page as dirty and removes the write protection by settings the protection flags to \code{PROT_READ | PROT_WRITE}.
@@ -264,14 +264,14 @@ As the actor executes the \code{replace} function, the following events occur:
 
 The signal handler approach is quite efficient in practice, and we can optimize it further:
 \begin{itemize}
-  \item 
+  \item
     Instead of constructing the full actor memory in advance, we can populate it lazily when the actor first touches it.
     This optimization works best for fragmented memories with lots of page deltas.
-  \item 
+  \item
     Sequential memory access is a pervasive pattern worth optimizing.
     We can remove read protection from multiple consequent pages at once, removing the need to switch the execution context to the signal handler for each page.
     This optimization makes the mechanism less precise but can significantly improve execution speed.
-  \item 
+  \item
     We can speculatively remove write protection from multiple consequent pages to speed up sequential writes.
     We can later compare the contents of dirtied pages with the snapshot to validate our speculation.
 \end{itemize}
@@ -286,13 +286,13 @@ At first sight, it might seem safe to swap the WebAssembly module of an actor wi
 Unfortunately, this seldom works in practice.
 
 \begin{itemize}
-  \item 
+  \item
     The actor code expects a specific memory layout; changing data type definitions affects the layout.
     The new version of the code will not be able to make sense of the old memory.
-  \item 
+  \item
     The memory might contain pointers to functions.
     Changing the code might invalidate these pointers.
-  \item 
+  \item
     The code might have other expectations about the data besides the memory layout.
     For example, the new version of the code might use a different hash function for hash tables.
     Hash table lookups might start returning invalid results after the code swap.
@@ -305,8 +305,8 @@ For example, an actor could use the default memory (the memory with index zero) 
 The actor could use other memories as long-term storage with a stable (ideally, language-independent) data layout.
 The system would wipe out the transient memory during the upgrade but persist the long-term\sidenote{short-term-storage}{
   Andreas also proposed short-term memories with a lifetime of a single message execution.
-  Such memories open up attractive optimization opportunities, but we did not have enough pressure to implement them. 
-} storage. 
+  Such memories open up attractive optimization opportunities, but we did not have enough pressure to implement them.
+} storage.
 
 Since the IC needed to support upgrades before the multi-memory proposal was implemented, the runtime emulates one extra memory via the \href{https://smartcontracts.org/docs/interface-spec/index.html#system-api-stable-memory}{stable memory \textsc{api}}.
 This \textsc{api} intentionally mimics WebAssembly \href{https://webassembly.github.io/bulk-memory-operations/core/exec/instructions.html#memory-instructions}{memory instructions} to facilitate future migration to multi-memory modules.
@@ -331,4 +331,3 @@ In case you want to read the code that implements ideas from this article, here 
   \item The \href{https://github.com/dfinity/ic/blob/3633026472367a413912bf797490c9336ba762f5/rs/memory_tracker/src/lib.rs#L358}{naive} and the \href{https://github.com/dfinity/ic/blob/3633026472367a413912bf797490c9336ba762f5/rs/memory_tracker/src/lib.rs#L499}{optimized} signal handlers.
 \end{itemize}
 \end{document}
-

@@ -531,10 +531,10 @@ You can use the following Python code snippet to parse and play with the textual
 }
 \begin{code}[python]
 \emph{# /// script
-# dependencies = \[
+# dependencies = [
 #   "onnx~=1.17",
 #   "onnxruntime~=1.18",
-# \]
+# ]
 # ///}
 import tempfile
 
@@ -565,8 +565,8 @@ def run_onnx(
 print(
     run_onnx(
         parse_onnx("""\b{
-    <ir_version: 7, opset_import: \["": 21\]>
-    Square (float\[N\] X) => (float\[N\] Out) \{
+    <ir_version: 7, opset_import: ["": 21]>
+    Square (float[N] X) => (float[N] Out) \{
         Out = Mul(X, X)
     \}
     }"""),

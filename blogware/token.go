@@ -23,6 +23,8 @@ const (
 	TokAmp
 	TokControl
 	TokInlineMath
+	TokDisplayMath
+	TokEndDisplayMath
 )
 
 type token struct {
@@ -53,6 +55,10 @@ func (t *token) String() string {
 		return fmt.Sprintf("Control(\\%s)", SymbolName(t.name))
 	case TokInlineMath:
 		return "$"
+	case TokDisplayMath:
+		return "\\["
+	case TokEndDisplayMath:
+		return "\\]"
 	}
 	return "Unknown"
 }
@@ -76,6 +82,8 @@ const (
 	MathTokGroupEnd
 	// MathEndInlineMath is the end of an inline math environment ($).
 	MathEndInlineMath
+	// MathEndDisplayMath is the end of a display math environment (\]).
+	MathEndDisplayMath
 )
 
 type mathToken struct {
@@ -465,8 +473,18 @@ func (s *stream) NextToken(tok *token) error {
 			str = str[size1:]
 			c2, size2 := utf8.DecodeRuneInString(str)
 			switch c2 {
-			case '%', '\\', '&', '#', '_', '{', '}', '[', ']', '$':
+			case '%', '\\', '&', '#', '_', '{', '}', '$':
 				tok.kind = TokText
+				tok.body = string(c2)
+				s.Skip(size2)
+				return nil
+			case '[':
+				tok.kind = TokDisplayMath
+				tok.body = string(c2)
+				s.Skip(size2)
+				return nil
+			case ']':
+				tok.kind = TokEndDisplayMath
 				tok.body = string(c2)
 				s.Skip(size2)
 				return nil
@@ -548,6 +566,11 @@ func (s *stream) NextMathToken(tok *mathToken) error {
 			case '%', '{', '}', '\\', '^', '_':
 				tok.kind = MathTokOp
 				tok.body = string(c2)
+				s.Skip(size2)
+				return nil
+			case ']':
+				tok.kind = MathEndDisplayMath
+				tok.body = "\\]"
 				s.Skip(size2)
 				return nil
 			default:

@@ -15,7 +15,7 @@ func IsValidSymbol(s string) bool {
 
 func IsSymbolic(c rune) bool {
 	switch c {
-	case '*', '-', '.', '_':
+	case '*', '-', '.':
 		return true
 	default:
 		return unicode.IsLetter(c) || unicode.IsDigit(c)
@@ -120,8 +120,18 @@ func parseArgWithBrace(s *stream, typ ArgType, braceConsumed bool) (body []Node,
 				}
 				group := Group{pos: t.pos, nodes: groupNodes}
 				Push(&body, Node(group))
+			case TokInlineMath, TokDisplayMath:
+				mathNode, mathErr := ParseMath(t, s)
+				if mathErr != nil {
+					err = mathErr
+					return
+				}
+				Push(&body, Node(mathNode))
+			case TokLBracket, TokRBracket:
+				// Brackets are just brackets unless we're parsing options.
+				Push(&body, Node(Text{body: t.body}))
 			default:
-				err = s.Errorf("unexpected token %v while parsing arguments", t)
+				err = s.ErrorfAt(t.pos, "unexpected token %s while parsing arguments", &t)
 				break loop
 			}
 		}
@@ -298,7 +308,7 @@ loop:
 				err = s.ErrorfAt(t.pos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 				break loop
 			}
-		case TokInlineMath:
+		case TokInlineMath, TokDisplayMath:
 			mnode, parseErr := ParseMath(t, s)
 			if parseErr != nil {
 				err = parseErr
@@ -662,13 +672,26 @@ func ParseMath(t token, s *stream) (node MathNode, err error) {
 	//     ^ IDEA: write \num{-1} explicitly (as in https://ctan.org/pkg/siunitx package).
 	// TODO: detect stretchy operators somehow.
 	//     ^ IDEA: use '\left(' and '\right)' for stretchy operators.
+	var endTokKind MathTokenKind
+	display := false
+	switch t.kind {
+	case TokDisplayMath:
+		endTokKind = MathEndDisplayMath
+		display = true
+	case TokInlineMath:
+		endTokKind = MathEndInlineMath
+	default:
+		err = s.ErrorfAt(t.pos, "internal error: unexpected token in parse math: %s", &t)
+		return
+	}
 	var mtok mathToken
 	err = s.NextMathToken(&mtok)
 	if err != nil {
 		return
 	}
-	node, err = parseMList(&mtok, s, MathEndInlineMath)
+	node, err = parseMList(&mtok, s, endTokKind)
 	node.pos = t.pos
+	node.display = display
 	return
 }
 
@@ -697,13 +720,15 @@ func ParseSequence(s *stream) (body []Node, err error) {
 			}
 			group := Group{pos: tokPos, nodes: groupNodes}
 			Push(&body, Node(group))
-		case TokInlineMath:
+		case TokInlineMath, TokDisplayMath:
 			node, mathErr := ParseMath(t, s)
 			if mathErr != nil {
 				err = mathErr
 				return
 			}
 			Push(&body, Node(node))
+		case TokLBracket, TokRBracket:
+			Push(&body, Node(Text{body: t.body}))
 		case TokText:
 			if s.IsEmpty() {
 				// The last token parsed was a text token,

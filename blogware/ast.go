@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -228,8 +229,13 @@ func (t Table) String() string {
 // MathNode represents a parsed math expression.
 // See “TeX the Program”, p. 280 (#680, Data structures for math mode.).
 type MathNode struct {
-	pos   int
+	// pos is the position of the math node in the input.
+	pos int
+	// mlist is the list of math subnodes.
 	mlist []MathSubnode
+	// display indicates whether this formula should occupy a separate paragraph.
+	// See https://www.overleaf.com/learn/latex/Mathematical_expressions for more details.
+	display bool
 }
 
 func (n MathNode) String() string {
@@ -273,4 +279,19 @@ type MathNum struct {
 // It corresponds to math identifiers.
 type MathText struct {
 	contents string
+}
+
+// mathHashOneOf returns true if the nucleus of the given subnode contains one of the specified commands.
+func mathHasOneOf(n MathSubnode, cmds []sym) bool {
+	switch v := n.(type) {
+	case MathCmd:
+		return slices.Contains(cmds, v.cmd)
+	case MathNode:
+		for _, subnode := range v.mlist {
+			if mathHasOneOf(subnode, cmds) {
+				return true
+			}
+		}
+	}
+	return false
 }

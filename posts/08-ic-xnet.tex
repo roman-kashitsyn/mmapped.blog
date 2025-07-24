@@ -132,7 +132,7 @@ Subnet \math{X} gets a prefix of \math{Y}'s stream and the header, allowing \mat
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-signals}{
     Two subnets, \math{X} and \math{Y}, communicating over the XNet protocol.
-    In previous communications, subnet \math{Y} consumed messages \math{\[0,10)} from \math{X}'s stream and has recently received messages \math{10} and \math{11}.
+    In previous communications, subnet \math{Y} consumed messages \math{[0,10)} from \math{X}'s stream and has recently received messages \math{10} and \math{11}.
     Now, subnet \math{X} receives a prefix of \math{Y}'s stream and the matching header and removes messages \math{10} and \math{11} from its stream because \math{Y} will not need them anymore.
     \math{X} also includes signals for the newly received messages into the \math{X → Y} stream header and removes an obsolete signal for message \math{Y\sub{1}} it consumed before.
   }

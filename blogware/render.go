@@ -15,6 +15,18 @@ import (
 
 var MathMLErr = errors.New("MathML operator outside of \\mathml{} context")
 
+// bigOps is a list of symbols that require munder/mover tags for rendering.
+var bigOps = []sym{SymSum, SymProd, SymInt, SymLim}
+
+var subSupTags = map[uint8]string{
+	0b010: "msub",
+	0b001: "msup",
+	0b011: "msubsup",
+	0b110: "munder",
+	0b101: "mover",
+	0b111: "munderover",
+}
+
 // TocEntry models an entry in the Table of Contents.
 type TocEntry struct {
 	Id    string
@@ -252,8 +264,15 @@ func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error 
 			}
 		case MathNode:
 			handlePendingPara(rc, buf)
-			if err := renderMath(rc, buf, v); err != nil {
-				return err
+			// Allow embedding TeX formulas in MathML
+			if rc.parent == MathMLCtx {
+				if err := renderMathSubnode(rc, buf, v); err != nil {
+					return err
+				}
+			} else {
+				if err := renderMath(rc, buf, v); err != nil {
+					return err
+				}
 			}
 		default:
 			err := fmt.Errorf("unknown node type %T", n)
@@ -268,7 +287,11 @@ func renderGenericSeq(rc *RenderingCtx, buf *strings.Builder, seq []Node) error 
 }
 
 func renderMath(rc *RenderingCtx, buf *strings.Builder, v MathNode) error {
-	fmt.Fprintf(buf, `<math xmlns="http://www.w3.org/1998/Math/MathML" class="math">`)
+	extra := ""
+	if v.display {
+		extra = ` display="block"`
+	}
+	fmt.Fprintf(buf, `<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"%s>`, extra)
 	for _, child := range v.mlist {
 		if err := renderMathSubnode(rc, buf, child); err != nil {
 			return err
@@ -289,7 +312,11 @@ func renderMathSubnode(rc *RenderingCtx, buf *strings.Builder, n MathSubnode) er
 		}
 		buf.WriteString("</mrow>")
 	case MathOp:
-		buf.WriteString("<mo>")
+		if !n.stretchy {
+			buf.WriteString(`<mo stretchy="false">`)
+		} else {
+			buf.WriteString("<mo>")
+		}
 		buf.WriteString(n.op)
 		buf.WriteString("</mo>")
 	case MathText:
@@ -300,40 +327,38 @@ func renderMathSubnode(rc *RenderingCtx, buf *strings.Builder, n MathSubnode) er
 		buf.WriteString("<mn>")
 		buf.WriteString(n.num)
 		buf.WriteString("</mn>")
+	case MathCmd:
+		buf.WriteString("<mo>")
+		if value, found := FindReplacment(n.cmd); found {
+			buf.WriteString(value)
+		} else {
+			return fmt.Errorf("unsupported math command at %d: %s", n.pos, SymbolName(n.cmd))
+		}
+		buf.WriteString("</mo>")
 	case MathTerm:
 		if n.subscript == nil && n.supscript == nil {
 			return renderMathSubnode(rc, buf, n.nucleus)
-		} else if n.subscript != nil && n.supscript != nil {
-			buf.WriteString("<msubsup>")
-			if err := renderMathSubnode(rc, buf, n.nucleus); err != nil {
-				return err
-			}
-			if err := renderMathSubnode(rc, buf, n.subscript); err != nil {
-				return err
-			}
-			if err := renderMathSubnode(rc, buf, n.supscript); err != nil {
-				return err
-			}
-			buf.WriteString("</msubsup>")
-		} else if n.subscript != nil {
-			buf.WriteString("<msub>")
-			if err := renderMathSubnode(rc, buf, n.nucleus); err != nil {
-				return err
-			}
-			if err := renderMathSubnode(rc, buf, n.subscript); err != nil {
-				return err
-			}
-			buf.WriteString("</msub>")
-		} else if n.supscript != nil {
-			buf.WriteString("<msup>")
-			if err := renderMathSubnode(rc, buf, n.nucleus); err != nil {
-				return err
-			}
-			if err := renderMathSubnode(rc, buf, n.supscript); err != nil {
-				return err
-			}
-			buf.WriteString("</msup>")
 		}
+		var index uint8
+		if mathHasOneOf(n.nucleus, bigOps) {
+			index |= 1 << 2
+		}
+		if n.subscript != nil {
+			index |= 1 << 1
+		}
+		if n.supscript != nil {
+			index |= 1
+		}
+		tag := subSupTags[index]
+		fmt.Fprintf(buf, "<%s>", tag)
+		for _, child := range []MathSubnode{n.nucleus, n.subscript, n.supscript} {
+			if child != nil {
+				if err := renderMathSubnode(rc, buf, child); err != nil {
+					return err
+				}
+			}
+		}
+		fmt.Fprintf(buf, "</%s>", tag)
 	default:
 		err := fmt.Errorf("unsupported math node type %T", n)
 		return err

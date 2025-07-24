@@ -172,7 +172,7 @@ impl State {
 \end{code}
 
 The \code{self.x += 1} statement appears multiple times.
-Why not extract it into a method\ldots 
+Why not extract it into a method\ldots
 
 \begin{code}[bad]
 impl State {
@@ -260,7 +260,7 @@ Also, without copying the bytes, we cannot safely coerce \code{\&Vec<u8>} to \co
 
 \begin{code}[rust]
 fn complex_function(bytes: &Vec<u8>) {
-  // \ldots  a lot of code \ldots 
+  // \ldots  a lot of code \ldots
 
   println!("{}", &Hex(bytes));        // That does not work.
   println!("{}", Hex(bytes.clone())); // That works but is slow.
@@ -300,7 +300,7 @@ pub struct \href{https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f8
     export_names: Vec<&'a str>,
 }
 
-\ldots 
+\ldots
 
 \emph{/// A variant of `GlobalSpec` with owned strings throughout.}
 \emph{/// This type is useful when directly building up a value to be serialized.}
@@ -385,7 +385,7 @@ match x {
 \end{code}
 
 First, we can't match a vector, only on a slice.
-Luckily, the compiler suggests an easy fix: we must replace \code{x} with \code{x\[..\]} in the \code{match} expression.
+Luckily, the compiler suggests an easy fix: we must replace \code{x} with \code{x[..]} in the \code{match} expression.
 Let us give it a try.
 
 \begin{code}[bad]
