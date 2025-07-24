@@ -45,7 +45,7 @@ int main() {
 \end{figure}
 
 This extra copy makes the algorithm less generic and practical,
-since a difference of two values of an arbitrary type \mathml{\mi{T}} is likely to have a different type.
+since a difference of two values of an arbitrary type $T$ is likely to have a different type.
 For example, the difference between two timestamps is not a timestamp but a duration;
 and subtracting two unsigned integers might require a signed integer.
 The following example illustrates this limitation: the code attempts to compute durations between timestamps in a container, but the compiler rejects it.
@@ -119,65 +119,39 @@ The fundamental theorem of calculus connects all three problems
 and states that the area under a slope of a curve on an interval
 is the difference of the curve height evaluated at the ends of this interval:
 
-\mathml[block]{
-    \mrow{
-        \munderover{\mo{\int}}{\mi{a}}{\mi{b}}
-        \msup{\mi{f}}{\mo{'}}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}
-        \mo{\itimes}
-        \mi{d}\mi{x}
-        \mo{=}
-        \mi{f}\mo{\applyFun}\mo*{(}\mi{b}\mo*{)}
-        \mo{-}
-        \mi{f}\mo{\applyFun}\mo*{(}\mi{a}\mo*{)}
-    }
-}
+\[\int_a^b f^{\prime}(x) dx = f(b) - f(a)\]
 
 Calculus deals with continuous curves, but we will tackle these problems through the lens of discrete value sequences.
-We'll view a sequence \mathml{\mi{f}} as a function over natural numbers
-and denote the discrete derivative of \mathml{\mi{f}} as \mathml{\msub{\mi{D}}{\mi{f}}}
-and its antiderivative as \mathml{\msub{\mi{S}}{\mi{f}}}, where
+We'll view a sequence $f$ as a function over natural number
+and denote the discrete derivative of $f$ as $D_f$.
+and its antiderivative as $S_f$, where
 
 \mathml[block]{
   \mtable{r c l}{
     \mtr{
-      \mtd{\msub{\mi{D}}{\mi{f}}\mo*{(}\mi{i}\mo*{)}}
-      \mtd{\mo{=}}
-      \mtd{
-        \mi{f}\mo*{(}\mi{i}\mo{+}\mn{1}\mo*{)}
-        \mo{-}
-        \mi{f}\mo*{(}\mi{i}\mo*{)}
-      }
+      \mtd{$D_f(i)$}
+      \mtd{$=$}
+      \mtd{$f(i+1) - f(i)$}
     }
     \mtr{
-      \mtd{\msub{\mi{S}}{\mi{f}}\mo*{(}\mi{i}\mo*{)}}
-      \mtd{\mo{=}}
-      \mtd{
-        \munderover{\mo{\sum}}{\mrow{\mi{k}\mo{=}\mn{0}}}{\mi{i}}
-        \mi{f}\mo*{(}\mi{k}\mo*{)}
-      }
+      \mtd{$S_f(i)$}
+      \mtd{$=$}
+      \mtd{$\sum_{k=0}^i f(k)$}
     }
   }
 }
 
-\mathml{\msub{\mi{D}}{\mi{f}}} corresponds to differences between adjacent elements in the source sequence,
-and \mathml{\msub{\mi{S}}{\mi{f}}} corresponds to partial sums.
+$D_f$ corresponds to differences between adjacent elements in the source sequence,
+and $S_f$ corresponds to partial sums.
 The discrete variant of the fundamental theorem becomes:
 
-\mathml[block]{
-  \mrow{
-    \munderover{\mo{\sum}}{\mrow{\mi{i}\mo{=}\mi{k}}}{\mi{n}}
-    \msub{\mi{D}}{\mi{f}}\mo{\applyFun}\mo*{(}\mi{i}\mo*{)}\mo{=}
-    \mi{f}\mo{\applyFun}\mo*{(}\mi{n}\mo*{)}
-    \mo{-}
-    \mi{f}\mo{\applyFun}\mo*{(}\mi{k}\mo{-}\mn{1}\mo*{)}
-  }
-}
+\[ \sum_{i=k}^n D_f(i) = f(n) - f(k-1) \]
 
 \label{off-by-one}
 This formula has an off-by-one issue:
-if \mathml{\mrow{\mi{k}\mo{=}\mn{0}}},
+if $k = 0$,
 we have to access the minus first element, so, for convenience,
-we define \mathml{\mrow{\mi{f}\mo{\applyFun}\mo*{(}\mo{-}\mn{1}\mo*{)}\mo{=}\mn{0}}}.
+we define $f(-1) = 0$.
 
 I like how Kyne Santos explained this result:
 
@@ -197,7 +171,7 @@ And these two approaches represent the two sides of the equation in the fundamen
 
 The slope between two discrete values is their difference,
 so taking the difference between neighboring points of a sequence solves the forward problem,
-yielding \mathml{\mi{N}\mo{-}\mn{1}} slopes for a sequence of \mathml{\mi{N}} elements.
+yielding $N-1$ slopes for a sequence of $N$ elements.
 
 \begin{code}
 sequence  1  3  5  7  9
@@ -207,11 +181,8 @@ sequence  1  3  5  7  9
 This operation loses information:
 we cannot recover the original sequence from its slopes.
 In calculus, taking a derivative is also a lossy operation since functions
-\mathml{\mi{f}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}}
-and
-\mathml{\mi{g}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}\mo{=}\mi{f}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}\mo*{+}\mi{c}}
-(where \mathml{\mi{c}} is an arbitrary constant) have the same derivative
-\mathml{\msup{\mi{f}}{\mo{'}}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}}.
+$f(x)$ and $g(x) = f(x) + c$
+(where $c$ is an arbitrary constant) have the same derivative $f^\prime(x)$.
 
 \subsection{problem-recovering}{Recovering the original with partial sums}
 
@@ -227,9 +198,9 @@ Once we know it, we can compute the rest using partial sums.
 sequence  C  C+2  C+4  C+6  C+8
 \end{code}
 
-The lossiness of differentiation is the reason for introducing an \href{https://en.wikipedia.org/wiki/Constant_of_integration}{arbitrary constant} \mathml{\mi{C}}
+The lossiness of differentiation is the reason for introducing an \href{https://en.wikipedia.org/wiki/Constant_of_integration}{arbitrary constant} $C$
 when computing an indefinite integral in calculus:
-\mathml{\mo{\int}\msup{\mi{f}}{\mo{'}}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}\mo{\itimes}\mi{d}\mi{x} \mo{=} \mi{f}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)} \mo{+} \mi{C}}.
+$\int f^\prime(x) dx = f(x) + C$
 In the discrete case, this constant corresponds to the first value in the original sequence;
 that's why \code{std::adjacent\_difference} preserves the first element in its output.
 
@@ -238,19 +209,8 @@ that's why \code{std::adjacent\_difference} preserves the first element in its o
 The ``area'' of a sequence is the sum of its elements.
 The sequence of partial sums solves this problem
 because it allows us to sum the items on any subinterval of the original sequence in a single step:
-% $\sum_{i=k}^n f(i) = S_f(n) - S_f(k - 1)$
-\mathml{
-  \munderover{\mo{\sum}}{\mrow{\mn{i}\mo{=}\mi{k}}}{\mi{n}}
-  \mi{f}\mo{\applyFun}\mo*{(}\mi{i}\mo*{)}
-  \mo{=}
-  \msub{\mn{S}}{\mn{f}}\mo{\applyFun}\mo*{(}\mi{n}\mo*{)}
-  \mo{-}
-  \msub{\mn{S}}{\mn{f}}\mo{\applyFun}\mo*{(}\mi{k}\mo{-}\mn{1}\mo*{)}
-}
-(as I \href{#off-by-one}{previously mentioned}, we define
-% S_f(-1)
-\mathml{\msub{\mn{S}}{\mn{f}}\mo{\applyFun}\mo*{(}\mn{-1}\mo*{)}}
-to be zero).
+$\sum_{i=k}^n f(i) = S_f(n) - S_f(k - 1)$
+(as I \href{#off-by-one}{previously mentioned}, we define $S_f(-1)$ to be zero).
 
 \begin{code}
     sequence  1   3   5   7   9

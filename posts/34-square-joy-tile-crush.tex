@@ -163,7 +163,7 @@ In the second pass, we traverse the array backward and replace each item with th
 \end{code}
 
 The \href{https://code.jsoftware.com/wiki/Vocabulary/fcap}{fold} operator is a convenient tool to implement the first scan.
-We will use its version that accepts three arguments: the initial accumulator value (\code{0}), the reduce function (\code{x * (x + y)}), and the post-processing step (the identity function, \href{https://code.jsoftware.com/wiki/Vocabulary/squarert}{same} \code{\]}).
+We will use its version that accepts three arguments: the initial accumulator value (\code{0}), the reduce function (\code{x * (x + y)}), and the post-processing step (the identity function, \href{https://code.jsoftware.com/wiki/Vocabulary/squarert}{same} \code{]}).
 
 \begin{code}[j]
    S =. 0 ] F:. {{x*x+y}} R=4

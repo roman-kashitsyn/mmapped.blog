@@ -463,7 +463,7 @@ type T1 = vec T0;
 \end{code}
 \end{figure}
 
-Let's encode a fork with two children equivalent to \code{Tree::Forest(vec!\[Tree::Leaf(1), Tree::Leaf(2)\])} Rust expression using the \href{https://github.com/dfinity/candid/tree/f7166f47d895e411a74de1eba4b347ac75f5fd26/tools/didc}{didc} tool.
+Let's encode a fork with two children equivalent to \code{Tree::Forest(vec![Tree::Leaf(1), Tree::Leaf(2)])} Rust expression using the \href{https://github.com/dfinity/candid/tree/f7166f47d895e411a74de1eba4b347ac75f5fd26/tools/didc}{didc} tool.
 
 \begin{figure}
 \marginnote{mn-encode-command}{
@@ -504,7 +504,7 @@ Type table ⎢ \href{https://github.com/dfinity/candid/blob/master/spec/Candid.m
            ⎢ ec ⎥
            ⎢ 0f ⎦
            ⎢ 01 ] field #1 type: see entry #1
-           ⎢ 6d ] entry #1: vec type         
+           ⎢ 6d ] entry #1: vec type
            ⎣ 00 ] vec item type: entry #0
 
     Types  ⎡ 01 ] number of tuple elements (1)

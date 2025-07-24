@@ -63,8 +63,8 @@ If we knew that, summing contributions of levels above each bar would give us th
 
 So, let's focus on the bar at an arbitrary index \math{i}.
 What would stop the water from flowing out?
-Another bar that is higher than \math{H\[i\]}.
-Furthermore, we need bars higher than \math{H\[i\]} on \emph{both} sides of \math{i} for the water to stay.
+Another bar that is higher than \math{H[i]}.
+Furthermore, we need bars higher than \math{H[i]} on \emph{both} sides of \math{i} for the water to stay.
 So, the water level at index \math{i} is determined by the minimum of the highest bars on the left and right.
 
 Computing the highest bar to the left and to the right for each index is not efficient: we would need to make \math{O(N\sup{2})} steps.
@@ -195,7 +195,7 @@ Let us start by drawing the original problem first.
 We know how to compute maxima: \code{>./ H}.
 Now we need to build a matrix \math{max(H)} rows by \math{length(H)} columns.
 The idiomatic way of doing this is using our old friend \href{https://code.jsoftware.com/wiki/Vocabulary/slash#dyadic}{\code{/} (table)} in a new disguise.
-When used as \code{noun1 verb/ noun1}, slash builds a \math{length(noun1)} by \math{length(noun2)} table, where each cell \math{i, j} is filled with the value computed as \math{noun1\[i\] verb noun2\[j\]}.
+When used as \code{noun1 verb/ noun1}, slash builds a \math{length(noun1)} by \math{length(noun2)} table, where each cell \math{i, j} is filled with the value computed as \math{noun1[i] verb noun2[j]}.
 
 Let's make a multiplication table to understand how it works.
 We'll also need \href{https://code.jsoftware.com/wiki/Vocabulary/idot}{\code{i.} (integers)}, the function that takes an integer and makes an arithmetic progression of the specified length starting at zero.

@@ -41,7 +41,7 @@ thread_local! {
 Let us look at other options you might find in the wild and see what is wrong with them.
 
 \begin{enumerate}
-\item 
+\item
 \begin{code}[bad]
 let state = ic_cdk::storage::get_mut<MyState>;
 \end{code}
@@ -50,7 +50,7 @@ The Rust CDK used to provide a \href{https://docs.rs/ic-cdk/0.3.2/ic_cdk/storage
 The interface lets you obtain multiple non-exclusive mutable references to the same object, breaking language guarantees.
 The CDK team \href{https://github.com/dfinity/cdk-rs/blob/c7aaaddaaf5e39c90a51035f87be68a0215c8c10/src/ic-cdk/CHANGELOG.md#changed-2}{removed} the storage API in version 0.5.0.
 
-\item 
+\item
 \begin{code}[bad]
 static mut STATE: Option<State> = None;
 \end{code}
@@ -58,7 +58,7 @@ static mut STATE: Option<State> = None;
 Plain old global variables.
 This approach forces you to write boilerplate code to access the global state and suffers from the same safety issues as legacy \code{storage} API.
 
-\item 
+\item
 \begin{code}[bad]
 lazy_static! {
     static STATE: RwLock<MyState> = RwLock::new(MyState::new());
@@ -92,11 +92,11 @@ fn register_friend(uid: UserId, friend: User) -> Result<UserId, Error> {
 The example shows a function that uses the storage API, but plain old mutable globals cause the same issue.
 \begin{enumerate}
 \item We get a mutable reference pointing into our data structure.
-\item 
+\item
   We call a function that modifies the data structure.
   This call might have invalidated the reference we obtained in step \circled{1}.
   The reference could now be pointing to garbage or into the middle of another valid object.
-\item 
+\item
   We use the original mutable reference to modify the object, potentially corrupting the heap.
 \end{enumerate}
 
@@ -115,7 +115,7 @@ This approach has a few benefits:
 
 \begin{itemize}
  \item Testing becomes easier because most of your code does not touch the globals.
- \item 
+ \item
    You can see global state usage patterns at a glance.
    For example, you can quickly validate that the canister persists all the stable data across upgrades.
 \end{itemize}
@@ -131,10 +131,10 @@ thread_local! {
 
 I borrowed \href{https://sdk.dfinity.org/docs/language-guide/upgrades.html#_declaring_stable_variables}{Motoko terminology} here:
 \begin{enumerate}
-  \item 
+  \item
     The system preserves \emph{stable} variables across upgrades.
     For example, a user database should probably be stable.
-  \item 
+  \item
     The system discards \emph{flexible} variables on code upgrades.
     For example, you can make a cache flexible if it is not crucial for your canister.
 \end{enumerate}
@@ -183,10 +183,10 @@ async fn update_avatar(user_id: UserId, \b{pic: ByteBuf} \circled{1} ) {
 
 \begin{enumerate}
 \item The method receives a byte buffer with an avatar picture.
-\item 
+\item
   The method issues a call to the storage canister.
   The call allocates a future on the heap, capturing the byte buffer.
-\item  
+\item
   If the call fails, the canister panics.
   The system rolls back the canister state to the snapshot it created right before the callback invocation.
   From the canister's point of view, it still waits for the reply and keeps the future and the buffer on the heap.
@@ -298,11 +298,11 @@ service {
 The Candid package provides tools to help you keep your implementation and the public interface in sync:
 
 \begin{enumerate}
-\item 
+\item
   Annotate your canister methods with the \href{https://docs.rs/candid/0.8.2/candid/attr.candid_method.html}{\code{candid_method}} macro.
-\item 
+\item
   Use the \href{https://docs.rs/candid/0.8.2/candid/macro.export_service.html}{\code{export_service}} macro to extract your canister's effective Candid interface.
-\item 
+\item
   Call the \href{https://docs.rs/candid/0.8.2/candid/utils/fn.service_compatible.html}{\code{service_compatible}} function to check whether the effective interface is a subtype of the interface from the .did file.
 \end{enumerate}
 
@@ -444,7 +444,7 @@ async fn transfer(from: Account, to: Account, amount: Nat) -> Result<TxId, Error
 
 \href{https://github.com/dfinity/candid}{Candid} is the standard interface definition language on the IC.
 The Rust implementation of Candid relies on a popular \href{https://serde.rs/}{serde} framework and inherits all of serde's quirks.
-One such quirk is the inefficient encoding of byte arrays (\code{Vec<u8>} and \code{\[u8\]}) in most serialization formats.
+One such quirk is the inefficient encoding of byte arrays (\code{Vec<u8>} and \code{[u8]}) in most serialization formats.
 Due to Rust \href{https://rust-lang.github.io/rfcs/1210-impl-specialization.html}{limitations}, serde cannot treat byte arrays specially and encodes each byte as a separate element in a generic array, increasing the number of instructions required to encode or decode the message (often by a factor of ten or more).
 
 The \code{HttpResponse} from the canister http protocol is a good example.
@@ -655,7 +655,7 @@ Setting \code{codegen-units = 1} in the cargo release profile shrinks the counte
 
 By default, the Rust compiler emits debugging information allowing tools to link back WebAssembly instructions to source-level constructs such as function names.
 This information spans several \href{https://webassembly.github.io/spec/core/binary/modules.html#custom-section}{custom WebAssembly sections} that the Rust compiler attaches to the module.
-Currently, there is no use for debugging information on the IC. 
+Currently, there is no use for debugging information on the IC.
 You can safely remove unused sections using the \href{https://github.com/dfinity/ic-wasm}{\code{ic-wasm}} tool.
 
 \begin{verbatim}[shell]
@@ -744,10 +744,10 @@ Read the \href{https://smartcontracts.org/docs/developers-guide/tutorials/reprod
 Let me remind you how upgrades work:
 \begin{enumerate}
 \item The system calls the \code{pre_upgrade} hook if your canister defines it.
-\item 
+\item
   The system discards canister memory and instantiates the new version of your module.
   The system preserves stable memory and makes it available to the next version.
-\item 
+\item
   The system calls the \code{post_upgrade} hook on the newly created instance if your canister defines it.
   The system does not execute the \code{init} function.
 \end{enumerate}
@@ -824,15 +824,15 @@ This way, you might not need the \code{pre_upgrade} hook, and your \code{post_up
 
 There are a few downsides to this approach, however:
 \begin{itemize}
-\item 
+\item
   Organizing the flat address space of stable storage into a data structure is challenging, especially if your state consists of several interlinked data structures.
   The \href{https://github.com/dfinity/stable-structures}{ic-stable-structures} and \href{https://github.com/seniorjoinu/ic-stable-memory}{ic-stable-memory} packages attempt to alleviate the pain.
-\item 
+\item
   Changing the layout of your data might be infeasible.
   It will simply be too much work for a canister to complete the data migration in one go.
   Imagine writing a program that reformats an eight-gigabyte disk from \textsc{fat32} to \textsc{ntfs} without losing any data.
   By the way, that program must complete in under 5 seconds.
-\item 
+\item
   You must think carefully about the backward compatibility of your data structures.
   The latest version of your canister might have to read data that the version installed a few months ago wrote.
 \end{itemize}
@@ -852,7 +852,7 @@ Canisters are not unique in this regard.
 Let us look at two specific approaches you can take.
 
 \begin{enumerate}
-\item 
+\item
   Expose a query call returning a data structure containing metrics.
   If you do not want to make the metrics public, you can reject queries based on the caller's principal.
   The main benefit of this approach is that the response is highly structured and easy to parse.
@@ -874,7 +874,7 @@ fn metrics() -> MyMetrics {
   }
 }
 \end{code}
-\item 
+\item
 
   Expose the metrics in a format that your monitoring system can slurp through the canister HTTP gateway.
   For example, we use Prometheus for monitoring, so our canisters dump metrics in \href{https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format}{Prometheus text-based exposition format}.
@@ -924,4 +924,3 @@ The following are some of the heavily used Rust canisters for inspiration:
 2021-10-25 & The first version. \\
 \end{tabular*}
 \end{document}
-

@@ -21,7 +21,7 @@ Using custom application-specific types instead of raw integers or strings is a 
 The following quote from one of my favorite books on software design illustrates this point:
 
 \blockquote{
-  It took six months, but I eventually found and fixed the bug. \[\ldots\]
+  It took six months, but I eventually found and fixed the bug. [\ldots]
   At one point in the code there was a \code{block} variable containing a logical block number, but it was accidentally used in a context where a physical block number was needed.
 }{John Ousterhout, ``A Philosophy of Software Design'', Chapter 14, ``Choosing names''}
 
@@ -191,7 +191,7 @@ trait VectorSpace {
 
   \emph{/// Returns the additive inverse of the value.}
   fn neg(self) -> Self;
-  
+
   \emph{/// Adds two vectors.}
   fn add(self, other: Self) -> Self;
 

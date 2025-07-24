@@ -15,7 +15,7 @@ func IsValidSymbol(s string) bool {
 
 func IsSymbolic(c rune) bool {
 	switch c {
-	case '*', '-', '.', '_':
+	case '*', '-', '.':
 		return true
 	default:
 		return unicode.IsLetter(c) || unicode.IsDigit(c)
@@ -120,8 +120,18 @@ func parseArgWithBrace(s *stream, typ ArgType, braceConsumed bool) (body []Node,
 				}
 				group := Group{pos: t.pos, nodes: groupNodes}
 				Push(&body, Node(group))
+			case TokInlineMath, TokDisplayMath:
+				mathNode, mathErr := ParseMath(t, s)
+				if mathErr != nil {
+					err = mathErr
+					return
+				}
+				Push(&body, Node(mathNode))
+			case TokLBracket, TokRBracket:
+				// Brackets are just brackets unless we're parsing options.
+				Push(&body, Node(Text{body: t.body}))
 			default:
-				err = s.Errorf("unexpected token %v while parsing arguments", t)
+				err = s.ErrorfAt(t.pos, "unexpected token %s while parsing arguments", &t)
 				break loop
 			}
 		}
@@ -230,10 +240,6 @@ func ParseVerbatim(s *stream, name sym, opts []sym, pos int) (env Env, err error
 	return
 }
 
-func ParseMath(s *stream) (node Node, err error) {
-	return nil, s.Error("inline math not implemented yet")
-}
-
 func ParseEnv(s *stream, name sym, pos int) (env Env, err error) {
 	var body []Node
 	var t token
@@ -302,13 +308,13 @@ loop:
 				err = s.ErrorfAt(t.pos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 				break loop
 			}
-		case TokInlineMath:
-			mnode, parseErr := ParseMath(s)
+		case TokInlineMath, TokDisplayMath:
+			mnode, parseErr := ParseMath(t, s)
 			if parseErr != nil {
 				err = parseErr
 				return
 			}
-			Push(&body, mnode)
+			Push(&body, Node(mnode))
 		default:
 			err = s.ErrorfAt(t.pos, "unexpected token %s while parsing %s", &t, SymbolName(name))
 			break loop
@@ -534,6 +540,161 @@ func parseEnvOrCommand(pos int, s *stream, cmd sym) (node Node, err error) {
 	}
 }
 
+func simplifyTerm(term MathTerm) MathSubnode {
+	if term.subscript == nil && term.supscript == nil {
+		return term.nucleus
+	}
+	return term
+}
+
+func appendTerm(nodes []MathSubnode, term MathTerm) []MathSubnode {
+	if term.nucleus != nil {
+		return append(nodes, simplifyTerm(term))
+	}
+	return nodes
+}
+
+// parseMathTerm parses a math term starting with the specified math token.
+// It leaves the first untouched math token in the tok argument.
+func parseMathTerm(tok *mathToken, s *stream, subsup bool, end MathTokenKind) (term MathTerm, err error) {
+	term.pos = tok.pos
+	switch tok.kind {
+	case MathTokNum:
+		term.nucleus = MathNum{num: tok.body}
+	case MathTokSym:
+		term.nucleus = MathText{contents: tok.body}
+	case MathTokOp:
+		term.nucleus = MathOp{op: tok.body}
+	case MathTokGroupStart:
+		tokPos := tok.pos
+		err = s.NextMathToken(tok)
+		if err != nil {
+			return
+		}
+		mterm, merr := parseMList(tok, s, MathTokGroupEnd)
+		if merr != nil {
+			err = merr
+			return
+		}
+		mterm.pos = tokPos
+		term.nucleus = mterm
+	case MathTokControl:
+		term.nucleus = MathCmd{
+			pos: tok.pos,
+			cmd: tok.name,
+		}
+	default:
+		if tok.kind == end {
+			return
+		}
+		err = s.ErrorfAt(tok.pos, "unexpected math token: %+v", tok)
+		return
+	}
+	if !subsup {
+		return
+	}
+	for tok.kind != end {
+		err = s.NextMathToken(tok)
+		if err != nil {
+			return
+		}
+		if tok.kind == end {
+			break
+		}
+		var subterm MathTerm
+		switch tok.kind {
+		case MathTokSub:
+			if term.subscript != nil {
+				err = s.ErrorfAt(tok.pos, "unexpected second subscript")
+				return
+			}
+			err = s.NextMathToken(tok)
+			if err != nil {
+				return
+			}
+			subterm, err = parseMathTerm(tok, s, false, end)
+			if err != nil {
+				return
+			}
+			term.subscript = simplifyTerm(subterm)
+		case MathTokSup:
+			if term.supscript != nil {
+				err = s.ErrorfAt(tok.pos, "unexpected second superscript")
+				return
+			}
+			err = s.NextMathToken(tok)
+			if err != nil {
+				return
+			}
+			subterm, err = parseMathTerm(tok, s, false, end)
+			if err != nil {
+				return
+			}
+			term.supscript = simplifyTerm(subterm)
+		default:
+			return
+		}
+	}
+	return
+}
+
+func parseMList(tok *mathToken, s *stream, end MathTokenKind) (node MathNode, err error) {
+	node.pos = tok.pos
+	for tok.kind != end {
+		var mterm MathTerm
+		switch tok.kind {
+		case MathEndInlineMath:
+			return
+		case MathTokGroupStart:
+			mterm, err = parseMathTerm(tok, s, true, MathTokGroupEnd)
+			if err != nil {
+				return
+			}
+		case MathTokGroupEnd:
+			if end == MathTokGroupEnd {
+				return
+			}
+			err = s.ErrorfAt(tok.pos, "unbalanced group")
+			return
+		default:
+			mterm, err = parseMathTerm(tok, s, true, end)
+			if err != nil {
+				return
+			}
+		}
+		node.mlist = appendTerm(node.mlist, mterm)
+	}
+	return
+}
+
+func ParseMath(t token, s *stream) (node MathNode, err error) {
+	// TODO: handle negative numbers, e.g., f(-1), should render as mi{f}\mo{(}\mn{-1}\mo{)}
+	//     ^ IDEA: write \num{-1} explicitly (as in https://ctan.org/pkg/siunitx package).
+	// TODO: detect stretchy operators somehow.
+	//     ^ IDEA: use '\left(' and '\right)' for stretchy operators.
+	var endTokKind MathTokenKind
+	display := false
+	switch t.kind {
+	case TokDisplayMath:
+		endTokKind = MathEndDisplayMath
+		display = true
+	case TokInlineMath:
+		endTokKind = MathEndInlineMath
+	default:
+		err = s.ErrorfAt(t.pos, "internal error: unexpected token in parse math: %s", &t)
+		return
+	}
+	var mtok mathToken
+	err = s.NextMathToken(&mtok)
+	if err != nil {
+		return
+	}
+	node, err = parseMList(&mtok, s, endTokKind)
+	node.pos = t.pos
+	node.display = display
+	return
+}
+
 func ParseSequence(s *stream) (body []Node, err error) {
 	var t token
 	for !s.IsEmpty() {
@@ -559,6 +720,15 @@ func ParseSequence(s *stream) (body []Node, err error) {
 			}
 			group := Group{pos: tokPos, nodes: groupNodes}
 			Push(&body, Node(group))
+		case TokInlineMath, TokDisplayMath:
+			node, mathErr := ParseMath(t, s)
+			if mathErr != nil {
+				err = mathErr
+				return
+			}
+			Push(&body, Node(node))
+		case TokLBracket, TokRBracket:
+			Push(&body, Node(Text{body: t.body}))
 		case TokText:
 			if s.IsEmpty() {
 				// The last token parsed was a text token,

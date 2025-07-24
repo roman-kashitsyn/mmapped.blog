@@ -136,7 +136,7 @@ fn test_frobnicate_on_mondays() {
 
 \subsection{avoid-panics}{Reserve panics for bugs in your code}
 \epigraph{
-  The \code{panic!} macro is used to construct errors that represent a bug that has been detected in your program. 
+  The \code{panic!} macro is used to construct errors that represent a bug that has been detected in your program.
 }{The Rust Standard Library, \href{https://doc.rust-lang.org/std/macro.panic.html#when-to-use-panic-vs-result}{When to use \code{panic!} vs \code{Result}}.}
 
 The primary purpose of \href{https://doc.rust-lang.org/std/macro.panic.html}{\code{panics}} in Rust is to indicate bugs in your program.
@@ -154,7 +154,7 @@ Use the type system to guide them.
 /// \b{# Panics}
 ///
 /// This function panics if
-/// * the `n` argument is greater than \[MAX_FROB_INPUT\].
+/// * the `n` argument is greater than [`MAX_FROB_INPUT`].
 /// * you call it on Monday.}
 pub fn frobnicate(n: u64) -> String { /* \ldots  */ }
 \end{code}

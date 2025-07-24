@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -226,31 +227,71 @@ func (t Table) String() string {
 }
 
 // MathNode represents a parsed math expression.
+// See “TeX the Program”, p. 280 (#680, Data structures for math mode.).
 type MathNode struct {
-	mlist []MathNode
+	// pos is the position of the math node in the input.
+	pos int
+	// mlist is the list of math subnodes.
+	mlist []MathSubnode
+	// display indicates whether this formula should occupy a separate paragraph.
+	// See https://www.overleaf.com/learn/latex/Mathematical_expressions for more details.
+	display bool
 }
 
 func (n MathNode) String() string {
 	return fmt.Sprintf("MathNode { mlist: %+v }", n.mlist)
 }
 
+type MathSubnode any
+
 // MathTerm represents a term with optional super- and subscripts.
 type MathTerm struct {
-	necleus, subscript, supscript MathNode
-}
-
-// MathSqrt represents a square root of an expression.
-type MathSqrt struct {
-	contents MathNode
+	pos       int
+	nucleus   MathSubnode
+	subscript MathSubnode
+	supscript MathSubnode
 }
 
 // MathFrac represents a fraction.
 type MathFrac struct {
-	thickness  string
-	nom, denom MathNode
+	nom   MathSubnode
+	denom MathSubnode
+}
+
+type MathCmd struct {
+	pos  int
+	cmd  sym
+	args []MathSubnode
+}
+
+// MathOp represents an operation in math mode.
+type MathOp struct {
+	op       string
+	stretchy bool
+}
+
+// MathNum represents a number in math mode.
+type MathNum struct {
+	num string
 }
 
 // MathText represents arbitrary text that should be rendered by itself.
+// It corresponds to math identifiers.
 type MathText struct {
-	contents []Node
+	contents string
+}
+
+// mathHashOneOf returns true if the nucleus of the given subnode contains one of the specified commands.
+func mathHasOneOf(n MathSubnode, cmds []sym) bool {
+	switch v := n.(type) {
+	case MathCmd:
+		return slices.Contains(cmds, v.cmd)
+	case MathNode:
+		for _, subnode := range v.mlist {
+			if mathHasOneOf(subnode, cmds) {
+				return true
+			}
+		}
+	}
+	return false
 }

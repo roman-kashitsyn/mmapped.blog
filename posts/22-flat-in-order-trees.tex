@@ -275,7 +275,7 @@ There is also a non-iterative way to find the parent in a left-perfect tree.
 Notice that the \code{PBT_Parent} function can return a value outside the array only if the input node is either the root node or a right child\sidenote{sn-parent-right-proof}{
 Proof: if the node is a left child, then it's a root of a perfect binary tree (by definition of left-perfect trees), and its parent resides to its right within the array bounds (by construction of in-order trees).
 }.
-Furthermore, if node \code{i} is a right child, its parent is always the node preceding \code{i}-th most-left leaf. 
+Furthermore, if node \code{i} is a right child, its parent is always the node preceding \code{i}-th most-left leaf.
 Thus, we can attempt to compute the parent using \code{PBT_Parent} first and adjust the result if it falls out of bounds.
 
 \begin{code}[c]
@@ -442,7 +442,7 @@ It does the same for the right bound, summing all unaccounted \emph{left} subtre
 \end{figure}
 
 \begin{code}[c]
-\emph{// Computes the sum of the sequence items in the index interval \[l, r\].}
+\emph{// Computes the sum of the sequence items in the index interval [l, r].}
 value_t ST_Sum(const size_t l, const size_t r) {
     assert(r * 2 < G_NumNodes);
     assert(l <= r);
