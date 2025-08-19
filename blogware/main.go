@@ -70,16 +70,17 @@ func renderOne(inputPath string) {
 		log.Fatalf("Failed to render article body: %v", err)
 	}
 	ctx := PostRenderContext{
-		Title:      article.Title,
-		CreatedAt:  article.CreatedAt,
-		ModifiedAt: article.ModifiedAt,
-		Keywords:   article.Keywords,
-		URL:        article.URL,
-		RedditLink: article.RedditLink,
-		Toc:        toc,
-		Body:       body,
-		PrevPost:   nil,
-		NextPost:   nil,
+		Title:        article.Title,
+		CreatedAt:    article.CreatedAt,
+		ModifiedAt:   article.ModifiedAt,
+		Keywords:     article.Keywords,
+		URL:          article.URL,
+		RedditLink:   article.RedditLink,
+		LobstersLink: article.LobstersLink,
+		Toc:          toc,
+		Body:         body,
+		PrevPost:     nil,
+		NextPost:     nil,
 	}
 	tmpl, err := getTemplate("post")
 	if err != nil {

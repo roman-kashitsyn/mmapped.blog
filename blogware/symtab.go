@@ -39,6 +39,7 @@ var (
 	SymHref            = BuiltinCmd("href", ArgTypeURL, ArgTypeSeq)
 	SymReddit          = BuiltinCmd("reddit", ArgTypeURL)
 	SymHackernews      = BuiltinCmd("hackernews", ArgTypeURL)
+	SymLobsters        = BuiltinCmd("lobsters", ArgTypeURL)
 	SymDocumentClass   = BuiltinCmd("documentclass", ArgTypeSym)
 	SymIncludeGraphics = BuiltinCmd("includegraphics", ArgTypeSeq)
 	SymDate            = BuiltinCmd("date", ArgTypeSym)

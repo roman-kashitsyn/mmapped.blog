@@ -14,6 +14,11 @@
     <img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit" />
   </a>
   {{- end -}}
+  {{ if .LobstersLink }}
+  <a class="icon-link" href="{{ .LobstersLink }}" title="Discuss on Lobste.rs" rel="nofollow" target="_blank">
+    <img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters" />
+  </a>
+  {{- end -}}
   </span>
 </span>
 {{- end -}}
