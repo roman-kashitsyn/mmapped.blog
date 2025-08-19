@@ -39,16 +39,17 @@ type TocSection struct {
 }
 
 type Article struct {
-	Slug       string
-	Title      string
-	Subtitle   string
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	Keywords   []string
-	Document   Env
-	URL        string
-	RedditLink string
-	HNLink     string
+	Slug         string
+	Title        string
+	Subtitle     string
+	CreatedAt    time.Time
+	ModifiedAt   time.Time
+	Keywords     []string
+	Document     Env
+	URL          string
+	RedditLink   string
+	HNLink       string
+	LobstersLink string
 }
 
 type Reference struct {
@@ -70,21 +71,22 @@ type PageRenderContext struct {
 }
 
 type PostRenderContext struct {
-	AbsoluteURL string
-	Title       string
-	Subtitle    string
-	CreatedAt   time.Time
-	ModifiedAt  time.Time
-	Keywords    []string
-	URL         string
-	RedditLink  string
-	HNLink      string
-	Toc         []TocSection
-	RefTable    RefTable
-	Body        template.HTML
-	Similar     []Article
-	PrevPost    *Article
-	NextPost    *Article
+	AbsoluteURL  string
+	Title        string
+	Subtitle     string
+	CreatedAt    time.Time
+	ModifiedAt   time.Time
+	Keywords     []string
+	URL          string
+	RedditLink   string
+	HNLink       string
+	LobstersLink string
+	Toc          []TocSection
+	RefTable     RefTable
+	Body         template.HTML
+	Similar      []Article
+	PrevPost     *Article
+	NextPost     *Article
 }
 
 func (a *Article) Toc() (sections []TocSection, err error) {
@@ -177,6 +179,12 @@ func ArticleMetadata(ast []Node) (article Article, err error) {
 					return
 				}
 				article.HNLink = url
+			case SymLobsters:
+				var url string
+				if err = v.ArgText(0, &url); err != nil {
+					return
+				}
+				article.LobstersLink = url
 			}
 		case Env:
 			switch v.name {

@@ -198,21 +198,22 @@ func renderPostAt(i int, articles []Article) (contents []byte, err error) {
 		nextPost = &articles[i+1]
 	}
 	ctx := PostRenderContext{
-		AbsoluteURL: rootURL + article.URL,
-		Title:       article.Title,
-		Subtitle:    article.Subtitle,
-		CreatedAt:   article.CreatedAt,
-		ModifiedAt:  article.ModifiedAt,
-		Keywords:    article.Keywords,
-		URL:         article.URL,
-		RedditLink:  article.RedditLink,
-		HNLink:      article.HNLink,
-		Similar:     findSimilarArticles(articles, i),
-		Toc:         toc,
-		RefTable:    refTable,
-		Body:        body,
-		PrevPost:    prevPost,
-		NextPost:    nextPost,
+		AbsoluteURL:  rootURL + article.URL,
+		Title:        article.Title,
+		Subtitle:     article.Subtitle,
+		CreatedAt:    article.CreatedAt,
+		ModifiedAt:   article.ModifiedAt,
+		Keywords:     article.Keywords,
+		URL:          article.URL,
+		RedditLink:   article.RedditLink,
+		HNLink:       article.HNLink,
+		LobstersLink: article.LobstersLink,
+		Similar:      findSimilarArticles(articles, i),
+		Toc:          toc,
+		RefTable:     refTable,
+		Body:         body,
+		PrevPost:     prevPost,
+		NextPost:     nextPost,
 	}
 	tmpl, err := getTemplate("post")
 	if err != nil {

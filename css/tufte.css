@@ -184,6 +184,10 @@ a.icon-link:visited {
     width: 16px;
 }
 
+.lobsters-icon {
+    background-color: #880000;
+}
+
 .post-attrs {
     font-size: 1rem;
     font-variant-numeric: normal;
