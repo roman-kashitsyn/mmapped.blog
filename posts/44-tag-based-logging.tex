@@ -1,0 +1,235 @@
+\documentclass{article}
+\title{Tag-based logging}
+\subtitle{#tags #logs}
+\date{2025-08-19}
+\modified{2025-08-19}
+\keyword{programming}
+
+\begin{document}
+
+\section*
+
+\epigraph{
+  The problem we are facing is that the logs have devolved into noise
+}{@Achilles, \href{https://stackoverflow.com/questions/2000323/noisy-logging-problem}{StackOverflow Question #2000323}}
+
+In every large project I worked on, logging looked like a lost battle.
+The raw logs contained so much data that developers gave up on reading them.
+Instead, they dumped the logs into an indexing system (such as \href{https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/logs/}{Grafana})
+and constructed elaborate queries to find the information they needed.
+This setup created a split between local and production environments,
+making local development painful.
+
+Our logging model has barely evolved in decades---it's time for a change.
+This article proposes an alternative approach to logging that could alleviate the pain.
+
+\section{the-context-problem}{The context problem}
+
+Log levels become progressively awkward as software gets more complex.
+Firstly, the guidelines on how loud a log entry should be are contradictory, with different developers having widely different opinions on the matter.
+\href{https://blog.codinghorror.com/the-problem-with-logging/}{Plenty}
+\href{https://ntietz.com/blog/the-only-two-log-levels-you-need-are-info-and-error/}{of}
+\href{https://www.reddit.com/r/golang/comments/yxiyt3/rethinking_logging_levels}{anecdotes}
+and a broader analysis by Eduardo Mendes and Fabio Petrillo echo my experience:
+
+\blockquote{
+  We observed a lack of precision in the definitions of log severity levels.
+  For example, there are severity levels in library definitions without distinguishing specific purposes
+  or only characterized by adjectives and superlatives.
+  This lack of precision can cause a misunderstanding of severity levels and hinder logging practices.
+}{
+  Eduardo Mendes, Fabio Petrillo, ``\href{https://arxiv.org/pdf/2109.01192}{Log severity levels matter: A multivocal mapping}''
+}
+
+Furthermore, log levels ignore context: information that seems irrelevant in one context becomes critical in another.
+For example, blockchain nodes usually have two operating modes:
+local testing mode (think \href{https://getfoundry.sh/anvil/overview/}{\code{anvil}})
+and consensus mode (think \href{https://geth.ethereum.org/}{\code{geth}}).
+When you run a node in development mode,
+you want to see all events resulting from your actions:
+
+\begin{code}
+2025-07-26 12:00:00.123 |  warn | transaction rejected
+    txid:   0x03b3ea998e6017dcf998261346e2a1412dd4c1883bc02432585af565ab29d7a3
+    from:   0x03E8482c2BbF8247361b1D6000f138d9f9CA9CD7
+      to:   0x999999cf1046e68e36E1aA2E0E07105eDDD1f08E
+    value:  23000000
+    reason: insufficient funds (balance: 1000000)
+
+2025-07-26 12:00:01.235 |  info | transaction accepted
+    txid: 0xc09a6e6a271a70c1853112929eb662e864008bb8a1fc9a4145c2ca817f28e9a1
+    from: 0x03E8482c2BbF8247361b1D6000f138d9f9CA9CD7
+      to: 0xc0ffee254729296a45a3885639AC7E10F9d54979
+    args: 0x...
+
+2025-07-26 12:00:02.002 |  warn | transaction failed
+    txid:   0xc09a6e6a271a70c1853112929eb662e864008bb8a1fc9a4145c2ca817f28e9a1
+    gas:    126_350
+    reason: PreconditionFailed
+\end{code}
+
+Enabling such detailed logs in production would overwhelm the server.
+A warning for a transaction submitter is a trace for a node operator.
+
+Many more contexts exist in practice.
+For example, as an owner of a specific system component,
+I may want to inspect its performance-related traces.
+Even advanced logging systems that can tune levels per component can't efficiently select only performance-related messages.
+Enabling all component logs is ineffective since it would distort the measurements.
+Ideally, the logging system should print only the messages I care about.
+
+\section{tag-based-logging}{Tag-based logging}
+
+The solution is simple: instead of grading events on a linear scale,
+annotate them with arbitrary \emph{tags} like hashtags on social media.
+
+\begin{code}
+event!(#db, #perf, duration => duration, query = "fetch_transaction");
+\cdots
+event!(#user, txid => txid, ..., "transaction rejected");
+\cdots
+event!(#system, error => db_error, "database is corrupted");
+\cdots
+event!(#rpc, #perf, duration => duration, endpoint => "sendTransaction");
+\end{code}
+
+To select the events appropriate for our context, we construct a \emph{query},
+a logical formula matching the event tags.
+
+\begin{tabular}{ll}
+Events we want to see & The query \\
+Only events triggered by user actions & \code{#user} \\
+All performance-related events & \code{#perf} \\
+Database performance events & \code{#perf and #db} \\
+Database or RPC-related events & \code{#db or #rpc} \\
+Non-database performance events & \code{#perf and not #db} \\
+\end{tabular}
+
+This approach is strictly more powerful than the traditional logging scheme,
+since log levels are a special case of tagging.
+For example, the query for messages at the \code{info} level and higher would be \code{#info or #warning or #error}.
+
+It is tempting to go further and support full \href{https://grafana.com/docs/loki/latest/query/log_queries/}{LogQL} in queries
+and allow matching on arbitrary field values.
+However, restricting the query language to statically-defined tags enables optimizations: The logging library can check queries without fully evaluating log records, making tag queries nearly as efficient as level comparisons\sidenote{sn-tracing-meta-optimization}{
+  Rust’s `tracing` library uses a similar optimization:
+  It relies on static event metadata to filter out uninteresting events,
+  see \href{https://docs.rs/tracing/0.1.41/tracing/trait.Subscriber.html#tymethod.enabled}{\code{Subscriber::enabled}}.
+}.
+LogQL is essential for investigating existing logs,
+but too flexible for efficiently selecting \emph{what} to log.
+
+Tag-based logging has a theoretical foundation---\href{https://en.wikipedia.org/wiki/Formal_concept_analysis}{formal concept analysis}.
+Tags correspond to \emph{attributes},
+queries---to \emph{concepts},
+and applying a query---to finding \emph{objects} modelling the concept.
+Traditional log levels form a very boring concept lattice.
+
+\section{tracing}{Querying logs with tracing}
+
+Fortunately, we don't need to migrate entire infrastructures to new logging libraries:
+Rust's excellent \href{https://crates.io/crates/tracing}{\code{tracing}} package is powerful enough to support a limited version of tags.
+
+One piece of data we can use as a tag is the \code{target} attribute
+that \code{tracing} attaches to every event.
+It defaults to the current package name,
+but the programmer can override it to be almost any string\sidenote{sn-target}{
+  I believe that overriding the default target is a must if you're serious about your logs.
+  Logs are a crucial application interface, and tying the target to your code structure can invalidate someone's log configurations if you decide to move the code around, which happened to me a few times.
+}.
+
+\begin{code}[rust]
+tracing::debug!(target: "db", query = "fetch_transaction");
+\end{code}
+
+
+The environment variable controlling the logging (\code{RUST_LOG} by default) can serve as a primary mechanism for querying events.
+\href{https://docs.rs/env_logger/latest/env_logger/#enabling-logging}{Traditionally},
+Rust logging frameworks supported only the \code{[target][=][level][,...]} directives in the variable values,
+limiting our query language to logical disjunctions with at most one tag per event
+(for example, \code{#db or #rpc} becomes \code{db=debug,rpc=debug}).
+
+Luckily, \code{tracing}'s \href{https://docs.rs/tracing-subscriber/0.3.19/tracing_subscriber/filter/struct.EnvFilter.html}{\code{EnvFilter}} supports a richer set of directives that can also select field names:
+\code{target[span{field=value}]=level}.
+This scheme suggests using event fields as tags:
+
+\begin{code}
+tracing::debug!(db=1, perf=1, ?duration, query = "fetch_transaction");
+\end{code}
+
+To construct a tag filter using this scheme,
+we convert logical disjunctions into separate directives (\code{#a or #b} becomes \code{[\{a\}]=debug,[\{b\}]=debug})
+and conjunctions into composite filters (\code{#a and #b} becomes \code{[\{a\}\{b\}]=debug}).
+This scheme doesn't support negation (in other words, we cannot query events lacking a specific field) and thus our query language isn't \href{https://en.wikipedia.org/wiki/Functional_completeness}{functionally complete},
+but it is good enough for most use cases.
+
+\begin{tabular}{ll}
+Tag query & RUST_LOG value \\
+\code{#user} & \code{[\{user\}]=debug} \\
+\code{#db and #perf} & \code{[\{db\}\{perf\}]=debug} \\
+\code{#db or #rpc} & \code{[\{db\}]=debug,[\{rpc\}]=debug} \\
+\code{#perf} & \code{[\{perf\}]=debug} \\
+\code{(#db or #rpc) and #perf} & \code{[\{db\}\{perf\}]=debug,[\{rpc\}\{perf\}]=debug} \\
+\end{tabular}
+
+\code{EnvFilter} optimizes directives that don't refer to field values,
+since these names are part of the static callsite metadata.
+I wrote a tiny program to benchmark event filters
+and couldn't detect any measurable difference in performance between queries based on target names and field names. 
+
+We can mix both schemes, treating the \code{target} attribute as the primary tag,
+and other field-tags as secondary.
+This mixed approach complicates the query mapping a bit
+(for example, we might have to write \code{db[\{perf\}]=debug} instead of \code{[\{db\}\{perf\}]=debug})
+and forces the person configuring the logs to understand the distinction between primary and secondary tags.
+However, it also works better with third-party libraries that rely on traditional log levels.
+Furthermore, querying events with a single tag looks more natural if the tag is encoded as the event target.
+In the end, the exact mapping scheme likely makes no difference as long as you apply it consistently.
+
+If using \code{EnvFilter} is not an option,
+the hierarchical nature of target matching offers an alternative solution.
+Directive \code{db=debug} matches any target that starts with \code{db}, such as \code{db::perf}.
+So using up to two tags per event and ordering them consistently enables logical conjunctions in our query language.
+This approach can't query secondary tags alone---%
+we must query either the primary tag only or both primary and secondary
+(for example, we can query \code{#db and #perf}, but not \code{#perf}).
+
+\begin{code}[rust]
+debug!(target: "user", txid, ..., "transaction rejected");
+debug!(target: "rpc::perf", ?duration, endpoint = "sendTransaction");
+debug!(target: "db::perf", ?duration, query = "fetch_transaction");
+\end{code}
+
+\begin{tabular}{ll}
+Tag query & RUST_LOG value \\
+\code{#user} & \code{user=debug} \\
+\code{#db and #perf} & \code{db::perf=debug} \\
+\code{#db or #rpc} & \code{db=debug,rpc=debug} \\
+\code{#perf} & n/a \\
+\code{(#db or #rpc) and #perf} & \code{db::perf=debug,rpc::perf=debug} \\
+\end{tabular}
+
+Finally, we still need to decide what to do with \code{tracing}'s log levels.
+We can't ignore them since the library forces us to pick a level for each entry.
+I suggest using three log levels:
+
+\begin{itemize}
+\item Use \code{info} for one-time information useful in any context,
+  such as an \textsc{http} server reporting its listening port.
+\item Use the \code{error} level to report unrecoverable errors.
+\item Use the \code{debug} level and tags for all other messages.
+\end{itemize}
+
+\section{non-linear-future}{Toward a non-linear future}
+
+Linear log levels aren't the only reason logs became unwieldy, but they're a major contributor.
+The tag-based logging model offers an alternative that requires ingenuity to fit into existing frameworks,
+but \code{tracing} is powerful enough to get most of its benefits.
+
+I started applying principles of tag-based logging in a large system and already feel the difference:
+Finding the information I need became much easier.
+Unsurprisingly, most of the benefits come not from sophisticated queries,
+but from basic hygiene that the model imposes,
+such as consistent use of log targets across components.
+
+\end{document}

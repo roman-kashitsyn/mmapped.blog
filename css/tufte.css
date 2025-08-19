@@ -825,6 +825,11 @@ table > tbody > tr:last-child > th {
     font-variant: all-small-caps;
 }
 
+.table-2 td,
+.table-2 th {
+    width: 50%;
+}
+
 .table-3 td,
 .table-3 th {
     width: 33%;
