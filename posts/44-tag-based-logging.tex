@@ -41,8 +41,8 @@ and a broader analysis by Eduardo Mendes and Fabio Petrillo echo my experience:
   Eduardo Mendes, Fabio Petrillo, ``\href{https://arxiv.org/pdf/2109.01192}{Log severity levels matter: A multivocal mapping}''
 }
 
-Furthermore, log levels ignore context: information that seems unimportant in one situation becomes critical in another.
-For example, blockchain nodes usually have at least two operating modes:
+Furthermore, log levels ignore context: information that seems irrelevant in one context becomes critical in another.
+For example, blockchain nodes usually have two operating modes:
 local testing mode (think \href{https://getfoundry.sh/anvil/overview/}{\code{anvil}})
 and consensus mode (think \href{https://geth.ethereum.org/}{\code{geth}}).
 When you run a node in development mode,
@@ -128,7 +128,7 @@ Traditional log levels form a very boring concept lattice.
 \section{tracing}{Querying logs with tracing}
 
 Fortunately, we don't need to migrate entire infrastructures to new logging libraries:
-Rust's excellent \href{https://crates.io/crates/tracing}{\code{tracing}} package is powerful enough to support a limited version of tag-based logging.
+Rust's excellent \href{https://crates.io/crates/tracing}{\code{tracing}} package is powerful enough to support a limited version of tags.
 
 One piece of data we can use as a tag is the \code{target} attribute
 that \code{tracing} attaches to every event.
@@ -161,7 +161,7 @@ To construct a tag filter using this scheme,
 we convert logical disjunctions into separate directives (\code{#a or #b} becomes \code{[\{a\}]=debug,[\{b\}]=debug})
 and conjunctions into composite filters (\code{#a and #b} becomes \code{[\{a\}\{b\}]=debug}).
 This scheme doesn't support negation (in other words, we cannot query events lacking a specific field) and thus our query language isn't \href{https://en.wikipedia.org/wiki/Functional_completeness}{functionally complete},
-but it is good enough for most use cases I can think of.
+but it is good enough for most use cases.
 
 \begin{tabular}{ll}
 Tag query & RUST_LOG value \\
@@ -210,8 +210,8 @@ Tag query & RUST_LOG value \\
 \end{tabular}
 
 Finally, we still need to decide what to do with \code{tracing}'s log levels.
-We can't ignore them completely since the library forces us to pick a level for each entry.
-I suggest using three logging levels:
+We can't ignore them since the library forces us to pick a level for each entry.
+I suggest using three log levels:
 
 \begin{itemize}
 \item Use \code{info} for one-time information useful in any context,
@@ -223,8 +223,8 @@ I suggest using three logging levels:
 \section{non-linear-future}{Toward a non-linear future}
 
 Linear log levels aren't the only reason logs became unwieldy, but they're a major contributor.
-The tag-based logging model offers an alternative that might require ingenuity to fit into existing frameworks,
-but at least \code{tracing} is powerful enough to get most of its benefits.
+The tag-based logging model offers an alternative that requires ingenuity to fit into existing frameworks,
+but \code{tracing} is powerful enough to get most of its benefits.
 
 I started applying principles of tag-based logging in a large system and already feel the difference:
 Finding the information I need became much easier.
