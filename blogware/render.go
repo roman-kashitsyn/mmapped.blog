@@ -702,8 +702,9 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			buf.WriteString("</p>")
 		case ".png":
 			fmt.Fprintf(buf, `<img class="%s" src="data:image/png;base64,%s">`, optsToCSSClasses(cmd.opts), encoded)
+		case ".webp":
+			fmt.Fprintf(buf, `<img class="%s" src="data:image/webp;base64,%s">`, optsToCSSClasses(cmd.opts), encoded)
 		case ".jpg", ".jpeg":
-			encoded := base64.StdEncoding.EncodeToString(contents)
 			fmt.Fprintf(buf, `<img class="%s" src="data:image/jpeg;base64,%s">`, optsToCSSClasses(cmd.opts), encoded)
 		default:
 			return fmt.Errorf("unsupported image type: %s", dst)

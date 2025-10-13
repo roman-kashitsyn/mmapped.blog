@@ -277,6 +277,18 @@ figure.medium-size svg {
     text-align: center;
 }
 
+figure.left p {
+    text-align: left;
+}
+
+.right {
+    text-align: right;
+}
+
+figure.p25 img {
+    width: 25%;
+}
+
 figure.medium-size img {
     width: 50%;
 }
