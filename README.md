@@ -4,7 +4,7 @@ This repository contains the complete source of my blog hosted at https://mmappe
 
 # Build instructions
 
-You’ll need [Go](https://go.dev/) and [Make](https://www.gnu.org/software/make/) installed to build the website.
+You’ll need [Make](https://www.gnu.org/software/make/) to build the website.
 Execute the following commands in the repository root:
 
 ```shell
