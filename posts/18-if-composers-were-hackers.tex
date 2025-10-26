@@ -3,62 +3,64 @@
 \title{If composers were hackers}
 \subtitle{What programming language would J.S. Bach use?}
 \date{2023-04-01}
-\modified{2023-04-01}
+\modified{2025-10-26}
 
 \keyword{programming}
-\keyword{personal}
+\keyword{music}
 \keyword{glasperlenspiel}
 
 \begin{document}
 \section{introduction}{Introduction}
 
-Music is my first true love\sidenote{zero-love}{Computer games are my zeroeth true love.}.
+Music is my first true love\sidenote{zero-love}{Computer games are my zeroth true love.}.
 The first time I got my hands on an old untuned guitar, I didn't want to put it down.
 I found a summer job to buy my first instrument and pay for a teacher, and since then, music has been a constant source of joy in my life.
-Picking a degree in computer science at a university over a musical college education was a hard choice for me.
+Picking a degree in computer science over a music college was a tough choice for me.
 
-I can't help but look at the world through my musical obsession.
-There are many deep similarities between music and computing but we won't explore them in this article.
-Instead, I will focus on a silly and subjective question: ``If my favorite composers decided to write some code, which language would they pick?''
+I can't help but look at the world through the lens of my music obsession.
+There are many deep similarities between music and computing,
+but we won't explore them in this article;
+I will instead explore a silly and subjective question:
+``If my favorite composers decided to write some code, which language would they pick?''
 
-\section{bach}{Johan Sebastian Bach}
+\section{bach}{Johann Sebastian Bach}
 
-\href{https://en.wikipedia.org/wiki/Johann_Sebastian_Bach}{Johan Sebastian Bach} is the most talented and prolific musician in history.
-
-Bach would love the \href{https://en.wikipedia.org/wiki/APL_(programming_language)}{APL} programming language:
+\href{https://en.wikipedia.org/wiki/Johann_Sebastian_Bach}{Johann Sebastian Bach} is arguably the most talented and prolific musician in history.
+He would love the \href{https://en.wikipedia.org/wiki/APL_(programming_language)}{\textsc{apl}} programming language:
 
 \begin{itemize}
   \item
-    Like a well-written APL program, Bach's music is \emph{dense}.
+    Bach's music is \emph{terse} like a well-written \textsc{apl} program.
     He achieves immense expressive power with a few well-chosen constructs.
   \item
-    In his lifetime, Bach was famous not for his compositions, but for his improvisation skills.
-    APL is an excellent fit for live coding because of its interactivity and terseness.
+    In his lifetime, Bach was famous primarily for his improvisation skills.
+    \textsc{apl} is perfect for live coding because of its interactivity and terseness.
   \item
-    Motifs and keys bear deep symbolic and emotional meaning in Bach's music.
-    A twisted motif might mean a crucifixion and a sequence of twelve beats might depict a clock striking midnight.
-    APL assigns ingeniously-chosen symbols to all its primitives.
+    Motifs and keys in Bach's music bear deep symbolic and emotional meaning.
+    For example, a twisted motif might mean a crucifixion
+    and a sequence of twelve beats might depict a clock striking midnight.
+    Bach would appreciate how \textsc{apl} assigns meaning to symbols.
   \item
-    Bach's productivity was phenomenal.
-    For example, he was cranking at least one cantata (about 20 minutes of music) per week for church services on Sundays for over three years, writing over three hundred cantatas.
-    And it wasn't even his primary duty.
-    Tell me about your tight deadlines.
-    The only programmer who can come close to this level of productivity must be an over-caffeinated APL wizard.
+    Bach was phenomenally prolific, cranking at least one cantata (about 20 minutes of music) per week for Sunday church services for over three years,
+    writing over three hundred cantatas in total,
+    and it wasn't even his primary duty.
+    Only a caffeinated \textsc{apl} wizard can match this pace.
   \item
     The \href{https://en.wikipedia.org/wiki/Contents_of_the_Voyager_Golden_Record}{Voyager Golden Record} contains three compositions by Bach.
-    If we wanted to prove to aliens that we know how to compute, APL would be the best choice for writing programs on golden surfaces.
+    If we had to prove to aliens we can compute,
+    \textsc{apl} is \emph{the} language to etch on a golden disk.
 \end{itemize}
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-repr-bach}{
-    Representative Bach's music: \emph{Wachet auf, ruft uns die Stimme}, a deeply moving and masterfully harmonized choral.
+    Representative Bach's music: \emph{Wachet auf, ruft uns die Stimme}, a deeply moving and masterfully harmonized chorale.
   }
   \includegraphics{/images/18-bach-snippet.png}
 \end{figure}
 \begin{figure}
   \marginnote{mn-apl-program}{
-    An APL function computing \math{2\sup{n}} \href{https://en.wikipedia.org/wiki/Gray_code}{Gray codes} for the given number \math{n}.
-    This code comes from \href{https://www.jsoftware.com/papers/50/}{A History of APL in 50 functions} by Roger K.W. Hui.
+    An \textsc{apl} function computing \math{2\sup{n}} \href{https://en.wikipedia.org/wiki/Gray_code}{Gray codes} for the given number \math{n}.
+    This code comes from \href{https://www.jsoftware.com/papers/50/}{A History of \textsc{apl} in 50 functions} by Roger K.W. Hui.
     \href{https://tryapl.org/?clear&q=%7B(0%E2%88%98%2C%20%E2%8D%AA%201%E2%88%98%2C%E2%88%98%E2%8A%96)%E2%8D%A3%E2%8D%B5%E2%8D%89%E2%8D%AA%E2%8D%AC%7D%C2%A8%202%203%204&run}{Try it yourself!}
   }
   \center{
@@ -75,50 +77,52 @@ If you want to learn more about J.S. Bach:
       \href{https://audible.com}{Audible.com} offers subscribers all courses I mention in this article for free or at a meager price.
     } by professor \href{https://robertgreenbergmusic.com/}{Robert Greenberg}.
   \item
-    Read \href{https://www.amazon.com/Johann-Sebastian-Bach-Musician-Paperback-ebook/dp/B002GKGBLE}{Johan Sebastian Bach: The Learned Musician} by Christoph Wolff.
+    Read \href{https://www.amazon.com/Johann-Sebastian-Bach-Musician-Paperback-ebook/dp/B002GKGBLE}{Johann Sebastian Bach: The Learned Musician} by Christoph Wolff.
 \end{itemize}
 
-If you want to learn more about APL:
+If you want to learn more about \textsc{apl}:
 \begin{itemize}
   \item
-    Read \href{https://en.wikipedia.org/wiki/Kenneth_E._Iverson}{Ken Iverson's} ACM Turing Award lecture \href{https://dl.acm.org/doi/10.1145/358896.358899}{Notation as a Tool of Thought}.
-    The \href{https://www.jsoftware.com/papers/}{jsoftware website} hosts this and many other papers on APL.
+    Read \href{https://en.wikipedia.org/wiki/Kenneth_E._Iverson}{Ken Iverson's} \textsc{acm} Turing Award lecture \href{https://dl.acm.org/doi/10.1145/358896.358899}{Notation as a Tool of Thought}.
+    The \href{https://www.jsoftware.com/papers/}{jsoftware website} hosts this and many other papers on \textsc{apl}.
   \item
-    Read \href{http://www.dyalog.com/mastering-dyalog-apl.htm}{Mastering Dyalog APL} book by Bernard Legrand and play with the \href{https://tutorial.dyalog.com/}{Dyalog APL Tutorial}.
+    Read \href{http://www.dyalog.com/mastering-dyalog-apl.htm}{Mastering Dyalog \textsc{apl}} by Bernard Legrand and play with the \href{https://tutorial.dyalog.com/}{Dyalog \textsc{apl} Tutorial}.
   \item
     Listen to the \href{https://arraycast.com/}{ArrayCast} and \href{https://apl.show/}{APL.Show} podcasts.
   \item
-    Watch the \href{https://youtu.be/DsZdfnlh_d0}{Depth-first search in APL} video for inspiration.
+    Watch the \href{https://youtu.be/DsZdfnlh_d0}{Depth-first search in \textsc{apl}} video for inspiration.
   \item
     Consider getting a physical copy of \href{https://www.amazon.com/APL-Interactive-Approach-Leonard-Gilman/dp/0471093041}{APL: An Interactive Approach} book by Leonard Gilman and Allen J. Rose.
-    The content is pretty dated, but this book is one of the most engaging books on programming I've ever read.
+    The content is pretty dated, but it's one of the most engaging books on programming I've read.
 \end{itemize}
 
 \section{mozart}{Wolfgang Amadeus Mozart}
 
-\href{https://en.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart}{Mozart}'s musical genius was so bright and incomprehensible that mysteries and myths still surround his life.
+\href{https://en.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart}{Mozart}'s musical genius was so bright and enigmatic that mysteries and myths still surround his life.
 
-Mozart would prefer the \href{https://www.scheme.org/}{Scheme} programming language.
+Mozart pairs well with the \href{https://www.scheme.org/}{Scheme} programming language.
 \begin{itemize}
   \item
-    Mozart's music reflects the values of \href{https://en.wikipedia.org/wiki/Age_of_Enlightenment}{the age of enlightenment} and appeals to everyone.
-    It's clean and beautifully constructed.
-    Scheme is so simple that a few pages can introduce most of the language.
-    Before the recent switch to Python, MIT professors used Scheme for \href{https://www.youtube.com/watch?v=-J_xL4IGhJA&list=PLE18841CABEA24090}{introductory Computer Science classes}.
+    Mozart's music reflects the values of \href{https://en.wikipedia.org/wiki/Age_of_Enlightenment}{the age of enlightenment}:
+    it's clear and beautifully constructed.
+    Scheme is just as simple and elegant: An introduction to the language fits in a few pages.
   \item
-    Mozart wrote music in all genres of his time (though he loved theater and opera the most).
-    Scheme is a programmable programming language; it is flexible enough to be helpful in any domain.
-    See \href{https://racket-lang.org/}{Racket} and "The Little X" books in the \href{#mozart-scheme-resources}{Resources} section.
+    Mozart mastered all genres of his time.
+    Scheme is a programmable programming language;
+    it is versatile enough to be helpful in any domain.
+    And just like opera had a special place in Mozart's heart,
+    programming language research sparks Scheme hackers' joy.
 \end{itemize}
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-repr-mozart}{
-    Representative Mozart's music: \href{https://www.youtube.com/watch?v=0rnJu1rlm90}{Piano Sonata 5 in G-major}, featuring a joyful melody and with a simple but elegant arrangement.
+    Representative Mozart's music: \href{https://www.youtube.com/watch?v=0rnJu1rlm90}{Piano Sonata 5 in G-major}, featuring a joyful melody with a simple but elegant arrangement.
   }
   \includegraphics{/images/18-mozart-snippet.png}
 \end{figure}
 \begin{figure}
   \marginnote{mn-scheme}{
     Symbolic differentiation in Scheme (\href{https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-16.html#%25_sec_2.3.2}{example 2.3.2} in \href{https://en.wikipedia.org/wiki/Structure_and_Interpretation_of_Computer_Programs}{SICP}).
+    It's just as transparent and easy on the eyes as Mozart's works.
   }
   \begin{code}[scheme]
 (define (deriv exp var)
@@ -159,28 +163,32 @@ If you want to learn more about Scheme:
 
 \section{beethoven}{Ludwig van Beethoven}
 
-\href{https://en.wikipedia.org/wiki/Ludwig_van_Beethoven}{Beethoven} is the most influential composer in history.
-He single-handedly changed the direction of western music and the role of an artist in society.
+\href{https://en.wikipedia.org/wiki/Ludwig_van_Beethoven}{Beethoven} is the most influential composer in history;
+he single-handedly changed the direction of western music and the role of an artist in society.
 
 One of the few languages worthy of Beethoven would be \href{https://www.haskell.org/}{Haskell}:
 \begin{itemize}
   \item
-  Beethoven often constructed his music from the interaction and development of small motifs and rhythms, many of which initially seem trivial.
-  The art of writing good Haskell code is composing programs from small functions, many of which do not do much when considered in isolation (\href{https://hackage.haskell.org/package/base-4.18.0.0/docs/Prelude.html#v:id}{\code{id}} and \href{https://hackage.haskell.org/package/base-4.18.0.0/docs/Data-Function.html#v:fix}{\code{fix}}, for example).
+  Beethoven constructed most of his music from tiny motifs and rhythms, many of which seem dull in isolation.
+  Good Haskell code thrives on composition of small, often trivial functions like \href{https://hackage.haskell.org/package/base-4.18.0.0/docs/Prelude.html#v:id}{\code{id}} and \href{https://hackage.haskell.org/package/base-4.18.0.0/docs/Data-Function.html#v:fix}{\code{fix}}.
   \item
-  Beethoven was constantly evolving his style, pushing the boundary of musical art.
-  He reinvented himself three times during his career, turning his suffering into fuel for a breakthrough.
-  Similarly, the Haskell ecosystem constantly evolves, turning pain points into new beautiful ways to write and think about software.
-  For example, issues with lazy input/output led to the invention of \href{https://wiki.haskell.org/Iteratee_I/O}{iteratees}, and problems with nested record updates led to optics (such as \href{https://www.youtube.com/watch?v=k-QwBL9Dia0}{lenses}) and \href{https://www.cis.upenn.edu/~bcpierce/papers/icmt-2009-slides.pdf}{bidirectional programming}.
+  Beethoven was constantly evolving his style, pushing the boundary of the art.
+  He reinvented himself twice during his career, turning his suffering into fuel for breakthroughs.
+  Similarly, the Haskell ecosystem constantly evolves, turning pain points into novel ways to write and think about software.
+  For example,
+  issues with lazy input/output led to the invention of \href{https://wiki.haskell.org/Iteratee_I/O}{iteratees},
+  and the inconvenience of nested record updates led to \href{https://www.youtube.com/watch?v=k-QwBL9Dia0}{lenses} and \href{https://www.cis.upenn.edu/~bcpierce/papers/icmt-2009-slides.pdf}{bidirectional programming}.
   \item
-  Beethoven turned my musical world upside down: I caught a piano bug after hearing one of his sonatas.
-  Haskell enormously influenced my professional life, forever changing my thoughts about computing.
+  Beethoven turned my musical world upside down:
+  I caught a piano bug after hearing \href{https://en.wikipedia.org/wiki/Piano_Sonata_No._17_(Beethoven)}{The Tempest} sonata finale.
+  Haskell had a matching influence on my professional life,
+  forever changing how I think about computing.
 \end{itemize}
 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-repr-beethoven}{
     Representative Beethoven's music: \href{https://www.youtube.com/watch?v=SrcOcKYQX3c&t=7s}{Sonata op. 13 in C minor}, also known as the Pathétique Sonata.
-    Note the operatic dramatism, the masterful use of piano's sonority, and Beethoven's way of building music landscapes from tiny memorable motifs and rhythms.
+    Note the operatic drama, the masterful use of piano's sonority, and Beethoven's way of building music landscapes from tiny memorable motifs and rhythms.
   }
   \includegraphics{/images/18-beethoven-snippet.png}
 \end{figure}
@@ -219,35 +227,35 @@ If you want to learn more about Beethoven:
   Read \href{https://www.amazon.com/Beethoven-Revised-Maynard-Solomon/dp/0825672686}{Beethoven} by Maynard Solomon.
   \item
   Consider watching the \href{https://www.imdb.com/video/vi2964193561/}{Immortal Beloved} movie.
-  The movie has many factual mistakes, but it's inspiring nevertheless.
+  It's inspiring despite its many factual mistakes.
 \end{itemize}
 
 If you want to learn more about Haskell:
 \begin{itemize}
   \item
-  Read \href{http://www.learnyouahaskell.com/}{Learn You a Haskell for Great Good!} by Miran Lipovača.
-  It's an engaging and illustrated introduction to Haskell.
+  Read \href{http://www.learnyouahaskell.com/}{Learn You a Haskell for Great Good!} by Miran Lipovača,
+  an engaging illustrated introduction to Haskell.
   \item
-  Read \href{https://www.euterpea.com/haskell-school-of-music/}{The Haskell School of Music} by Paul Hudak and Donya Quick.
-  The authors show the best sides of Haskell when they apply it to building a library for music generation.
+  Read \href{https://www.euterpea.com/haskell-school-of-music/}{The Haskell School of Music} by Paul Hudak and Donya Quick;
+  it demonstrates the best sides of Haskell by building a library for music generation.
   \item
-  Check out the \href{https://www.haskell.org/documentation/}{Haskell Documentation} page for more great pointers.
+  Check out the \href{https://www.haskell.org/documentation/}{Haskell documentation} page for more great pointers.
 \end{itemize}
 
 \section{scriabin}{Alexander Nikolayevich Scriabin}
 
-\href{https://en.wikipedia.org/wiki/Alexander_Scriabin}{Scriabin} is a relatively obscure (at least outside of Russia) Russian composer.
-I find his music deeply expressive, emotional, and metaphysical.
-Also, he had the most stylish mustache ever.
+\href{https://en.wikipedia.org/wiki/Alexander_Scriabin}{Scriabin} is a relatively obscure Russian composer
+who wrote deeply expressive, emotional, metaphysical music.
+He also had the most stylish mustache among all composers.
+He would love \href{https://scala-lang.org/}{Scala}:
 
-Scriabin would love \href{https://scala-lang.org/}{Scala}:
 \begin{itemize}
   \item
-  Scriabin dreamed of fusing arts into a synthetic art form he called \href{https://en.wikipedia.org/wiki/Mysterium_(Scriabin)}{Mysterium}.
-  Similarly, Scala aims to be extensible enough to embrace all programming styles and paradigms (functional, object-oriented, actor-based, etc.).
+  Scriabin dreamed of fusing arts into a synthetic form he called \href{https://en.wikipedia.org/wiki/Mysterium_(Scriabin)}{Mysterium}.
+  Similarly, Scala aims to be extensible enough to embrace all programming styles and paradigms, including functional, object-oriented, and actor-based.
   \item
   Scriabin's music feels profound and unfathomable, like the night sky.
-  Looking at Scala code makes me feel the same awe: I admire its structure and elegance, but its inherent complexity makes my head spin.
+  Scala inspires the same awe: I admire its structure and elegance, even as its complexity makes my head spin.
 \end{itemize}
 
 \begin{figure}[grayscale-diagram]
@@ -262,16 +270,22 @@ Scriabin would love \href{https://scala-lang.org/}{Scala}:
   This snippet comes from the \href{https://github.com/scalaz/scalaz#type-class-instance-definition}{\code{scalaz}} library documentation.
 }
 \begin{code}[scala]
-implicit val option: Traverse[Option] with MonadPlus[Option] =
+implicit val \emph{option}: Traverse[Option] with MonadPlus[Option] =
   new Traverse[Option] with MonadPlus[Option] {
-    def point[A](a: => A) = Some(a)
-    def bind[A, B](fa: Option[A])(f: A => Option[B]): Option[B] = fa flatMap f
-    override def map[A, B](fa: Option[A])(f: A => B): Option[B] = fa map f
-    def traverseImpl[F[_], A, B](fa: Option[A])(f: A => F[B])(implicit F: Applicative[F]) =
+    def \emph{point}[A](a: => A) = Some(a)
+
+    def \emph{bind}[A, B](fa: Option[A])(f: A => Option[B]): Option[B] = fa flatMap f
+
+    override def \emph{map}[A, B](fa: Option[A])(f: A => B): Option[B] = fa map f
+
+    def \emph{traverseImpl}[F[_], A, B](fa: Option[A])(f: A => F[B])(implicit F: Applicative[F]) =
       fa map (a => F.map(f(a))(Some(_): Option[B])) getOrElse F.point(None)
-    def empty[A]: Option[A] = None
-    def plus[A](a: Option[A], b: => Option[A]) = a orElse b
-    def foldR[A, B](fa: Option[A], z: B)(f: (A) => (=> B) => B): B = fa match {
+
+    def \emph{empty}[A]: Option[A] = None
+
+    def \emph{plus}[A](a: Option[A], b: => Option[A]) = a orElse b
+
+    def \emph{foldR}[A, B](fa: Option[A], z: B)(f: (A) => (=> B) => B): B = fa match {
       case Some(a) => f(a)(z)
       case None => z
     }
@@ -298,10 +312,11 @@ If you want to learn more about Scala:
 \section{closing}{Closing words}
 
 There are many more great composers and excellent programming languages.
-Matching these is an exercise for the reader.
+Matching these is left as an exercise for the reader\sidenote{sn-php-match}{Bonus points for finding a good match for \textsc{php}.}.
 
-I encourage you to think more often about things and people you like and match them with others.
-For example, \href{https://kpknudson.com/my-favorite-theorem/}{My Favorite Theorem} podcast hosts ask their guests to match their favorite theorems with items and activities in their lives, such as pizza and rock climbing.
-
+I like how hosts of the \href{https://kpknudson.com/my-favorite-theorem/}{My Favorite Theorem} podcast ask their guests to pair theorems with more tangible things and activities,
+such as pizza and rock climbing.
+Try it with the things or people you like, it's fun!
 Enjoy your \href{https://www.youtube.com/watch?v=2G6dd7ikrXs}{favorite things}!
+
 \end{document}
