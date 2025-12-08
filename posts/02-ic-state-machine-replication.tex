@@ -18,22 +18,23 @@ And if you wish to go anywhere you must run twice as fast as that.
 
 \section*
 
-As all blockchains, the Internet Computer relies on \href{https://en.wikipedia.org/wiki/State_machine_replication}{state machine replication} for fault-tolerance.
-Unlike most blockchains,
-it doesn't allow external parties to access or replicate its state.
-This article explains the network's state machine design
-and highlights design choices that make it fast and secure.
+Like all blockchains, the Internet Computer relies on \href{https://en.wikipedia.org/wiki/State_machine_replication}{state machine replication} for fault-tolerance.
+This article highlights its two differences from most blockchains:
+restricted access to the network state
+and support for efficient fault recovery via state checkpoints.
 
 \section{state-machine}{The state machine}
 
 Before we dive into the protocol internals,
-let's define the \href{https://en.wikipedia.org/wiki/Finite-state_machine}{state machine}.
-The nodes participating in the protocol are grouped into \emph{subnets}.
+let's define its \href{https://en.wikipedia.org/wiki/Finite-state_machine}{state machine}.
+The nodes in the protocol are grouped into \emph{subnets}.
 Each subnet runs a separate instance of the consensus protocol,
-and but subnets can still exchange messages\sidenote{sn-xnet-protocol}{
+and subnets can exchange messages\sidenote{sn-xnet-protocol}{
   The \nameref{08-ic-xnet} article explains this exchange protocol in more detail.
 }.
-The purpose of consensus is to order inputs for the state machine.
+Consensus orders inputs for the state machine,
+which executes \emph{canisters}
+(\href{https://webassembly.org/}{WebAssembly} programs).
 
 When formally defined, the state machine has the following components:
 
@@ -47,7 +48,7 @@ When formally defined, the state machine has the following components:
   \emph{state trees} that authenticate the observable state.
 \item
   \emph{State} is the data required to serve canisters:
-  their \href{https://webassembly.org/}{WebAssembly} modules,
+  their WebAssembly modules,
   linear and stable memories, mailboxes,
   and recent execution results.
 \item
@@ -59,7 +60,7 @@ When formally defined, the state machine has the following components:
 \item
   \emph{Output function} merkelizes the state to produce a state tree.
 \item
-  \emph{Initial state} is trivial: no canisters, no messages, and no execution results.
+  The \emph{initial state} is trivial: no canisters, no messages, and no execution results.
 \end{itemize}
 
 \section{state-trees}{State trees}
@@ -67,7 +68,7 @@ When formally defined, the state machine has the following components:
 The replica state is a black box,
 but for the protocol to be useful,
 some pieces of it must be public, including the
-results of user message execution,
+results of ingress message execution,
 canister metadata (such as Wasm module hashes and certified values),
 and messages destined for other subnets.
 
@@ -75,7 +76,7 @@ Accessing the state machine data has two challenges:
 \begin{enumerate}
 \item
   \emph{Authentication:}
-  A client can't trust any single node on the network,
+  A client can't trust any single node,
   so nodes must attest their responses.
 \item
   \emph{Authorization:}
@@ -85,9 +86,7 @@ Accessing the state machine data has two challenges:
 \subsection{stat-auth}{State authentication}
 
 The most straightforward way to authenticate a data structure
-is to represent it as a \href{https://en.wikipedia.org/wiki/Merkle_tree}{merkle tree},
-which requires converting the data into a uniform format,
-such as list or a tree.
+is to represent it as a \href{https://en.wikipedia.org/wiki/Merkle_tree}{Merkle tree} over a uniform data format, such as a list or a tree.
 The Internet Computer uses \href{https://en.wikipedia.org/wiki/Rose_tree}{rose trees}
 with blobs at leaves as its primary data model.
 Rose trees are like \textsc{json} objects
@@ -110,7 +109,7 @@ After each round,
 nodes compute the state tree
 and exchange their signature shares for its root hash.
 The result of this exchange is a threshold signature
-that allows a client to authenticate the data it receives from any node.
+that enables a client to authenticate the data received from any node.
 
 \begin{figure}[grayscale-diagram]
   \marginnote{st-structure}{
@@ -125,7 +124,7 @@ that allows a client to authenticate the data it receives from any node.
 A sequence of textual labels identifies a path in a state tree.
 Clients access the state by enumerating the paths they're interested in.
 
-Let's assume a user sends an ingress message with \textsc{id} \code{1355\ldots 48de}.
+Suppose a user sends an ingress message with \textsc{id} \code{1355\ldots 48de}.
 The system stores its reply in the state tree at path \code{/request_status/1355\ldots 48de/reply}.
 The user connects to a healthy node and calls the \href{https://internetcomputer.org/docs/references/ic-interface-spec#http-read-state}{\code{read_state}} endpoint with that path as an argument.
 Upon receiving the request, the node:
@@ -147,35 +146,35 @@ and has the same root hash as the original state tree,
 so the certificate stays valid.
 
 \begin{figure}[grayscale-diagram]
-\marginnote{responst-structure}{The logical structure of a tree containing a response to an ingress message.}
+\marginnote{response-structure}{The logical structure of a tree containing a response to an ingress message.}
 \includegraphics{/images/02-pruned-state-tree.svg}
 \end{figure}
 
-The only way for a dishonest node to manipulate the caller in this scheme
+The only way for a dishonest node to manipulate the caller
 is to reply with an outdated state view,
-so honest nodes always include into their output the \code{/time} path that
-points to the timestamp of the block that triggered the tree construction.
+so honest nodes always include in their output the \code{/time} path that
+maps to the timestamp of the block that triggered the tree construction.
 
 \section{state-transfer}{State transfer}
 
 \subsection{checkpoints}{Checkpoints}
 
-If a node crashes, it loses its in-memory state and must recover
-before it can participate in the protocol again.
+When a node crashes,
+it loses its in-memory state and must recover before participating again.
 To facilitate recovery,
 nodes periodically write \emph{checkpoints}---serialized states---to disk.
-If a node was offline for a few minutes,
-it catches up by replaying blocks on top of the last checkpoint.
-If it was offline for longer,
-catching up by only replaying blocks would take too long,
+If a node was offline briefly,
+it catches up by replaying blocks from the last checkpoint.
+If it was offline longer,
+replaying blocks alone would take too long,
 so fetching the latest checkpoint from a peer
 becomes a more efficient strategy.
-The same strategy applies when a fresh node joins a subnet.
+The same approach applies when a fresh node joins a subnet.
 
-Most blockchains treat checkpoints as an implementation detail
-and distribute them through a side channel.
-In the Internet Computer, state sync is a part of the core protocol,
-which streamlines node operations.
+Most blockchains treat checkpoints as implementation details
+and distribute them via a side channel.
+In the Internet Computer, state sync is part of the core protocol,
+streamlining node operations.
 
 \begin{figure}[grayscale-diagram]
 \marginnote{sm-components}{
@@ -189,26 +188,27 @@ which streamlines node operations.
 Replicas in a subnet communicate by exchanging \emph{artifacts}
 (ingress messages, blocks, random beacons, state certificates)
 over a \href{https://en.wikipedia.org/wiki/Peer-to-peer}{peer-to-peer protocol}.
-Most artifacts are under a few megabytes,
-but the protocol can fetch arbitrary large blobs by slicing them into chunks.
-State sync uses this machinery to disseminate checkpoints.
+Most artifacts are a few megabytes,
+but the protocol can fetch arbitrarily large blobs by slicing them into chunks.
+State sync uses this machinery to transfer checkpoints.
 
-The peer-to-peer protocol combines \href{https://en.wikipedia.org/wiki/Push_technology}{push model} for metadata and \href{https://en.wikipedia.org/wiki/Pull_technology}{pull model} for data:
+The peer-to-peer protocol combines a \href{https://en.wikipedia.org/wiki/Push_technology}{push model} for metadata and a \href{https://en.wikipedia.org/wiki/Pull_technology}{pull model} for data:
 Nodes advertise their artifacts
 and serve them to interested peers.
 
 Before advertising a checkpoint, a replica computes its \emph{manifest}---%
-the summary of the checkpoint directory similar to the \code{info} section of a \href{https://en.wikipedia.org/wiki/Torrent_file}{\code{.torrent} file}.
+a summary of the checkpoint directory,
+similar to the \code{info} section of a \href{https://en.wikipedia.org/wiki/Torrent_file}{\code{.torrent} file}.
 A manifest consists of two tables:
-the file table describes the file metadata,
-the chunk table---the file contents.
+the file table contains file metadata,
+the chunk table describes the file contents.
 
 \begin{figure}
 \marginnote{mn-manifest-example}{
   A checkpoint manifest example.
   It consists of two tables:
-  the file table describes the file metadata,
-  the chunk table---the contents of these files.
+  the file contains file metadata,
+  the chunk table describes the contents of these files.
 }
 \begin{tabular}{rlrl}
   File & Path & Size & Hash \\
@@ -229,9 +229,9 @@ Chunk & File & Offset & Size & Hash \\
 
 \end{figure}
 
-Replicas use manifests as blueprints for arranging the data on disk
-and validating the chunks they receive.
-A manifest root hash identifies the checkpoint artifact.
+Replicas use manifests as blueprints for organizing the data on disk
+and for validating the chunks they receive.
+A manifest hash identifies the checkpoint as a network artifact.
 
 \begin{figure}[grayscale-diagram]
 \marginnote{checkpoint-advert}{A replica advertising a checkpoint as an artifact.}
@@ -241,11 +241,11 @@ A manifest root hash identifies the checkpoint artifact.
 \subsection{trigger-transfer}{Triggering state transfer}
 
 The signal that a replica is behind comes from the consensus module.
-After every checkpoint, it creates an artifact called \emph{catch-up package}---the bill of materials a replica needs to participate in the protocol,
+After every checkpoint, it creates a \emph{catch-up package}---the bill of materials a replica needs to participate in the protocol,
 including the \href{https://en.wikipedia.org/wiki/Distributed_key_generation}{\textsc{dkg}} summary, the random beacon value,
 and the checkpoint hash.
 
-Let's imagine that a replica crashes after processing nine blocks
+Suppose a replica crashes after processing nine blocks
 and comes back when the network moved on to state 100,
 which happened to be the next scheduled checkpoint.
 Here is how replica components interact to trigger the state transfer:
@@ -282,10 +282,10 @@ here is how State Machine syncs from state 9 to state 100:
   decodes it,
   and ensures that its hash matches $H_100$.
 \item
-  State Machine compares the manifest of local checkpoint 9 and the newly fetched manifest,
-  classifying chunks from the latter as either \emph{locally available} or \emph{missing.}
+  State Machine compares the manifests of checkpoint 9 and 100,
+  classifying chunks as either \emph{locally available} or \emph{missing.}
 \item 
-  It copies all the locally available chunks into their proper positions.
+  It copies locally available chunks into their proper positions.
 \item
   It instructs Transport to fetch all the missing chunks.
   Transport can stream data from several peers concurrently.
@@ -325,7 +325,7 @@ This protocol has major flaws:
 \item
   It pushes most of the work to the healthy node,
   slowing down the subnet.
-  A catching up node has no other useful work to do,
+  A catching-up node has no other useful work,
   so it should bear most costs.
 \item
   It's sequential: 
@@ -338,7 +338,7 @@ This protocol has major flaws:
 
 Another alternative was to represent the entire replica state as a state tree
 and sync these logical trees instead of concrete file system representations.
-This approach would make it easier to specify the protocol exactly
+This approach would make it easier to specify the protocol
 and support syncing between \href{https://en.wikipedia.org/wiki/N-version_programming}{replicas written in different languages},
 but the extra complexity outweighed the benefits.
 
