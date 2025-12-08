@@ -167,8 +167,7 @@ If a node was offline briefly,
 it catches up by replaying blocks from the last checkpoint.
 If it was offline longer,
 replaying blocks alone would take too long,
-so fetching the latest checkpoint from a peer
-becomes a more efficient strategy.
+so fetching the latest checkpoint from a peer is a more efficient strategy.
 The same approach applies when a fresh node joins a subnet.
 
 Most blockchains treat checkpoints as implementation details
@@ -246,15 +245,15 @@ including the \href{https://en.wikipedia.org/wiki/Distributed_key_generation}{\t
 and the checkpoint hash.
 
 Suppose a replica crashes after processing nine blocks
-and comes back when the network moved on to state 100,
-which happened to be the next scheduled checkpoint.
+and comes back when the network moves on to state 100,
+which happens to be the next scheduled checkpoint.
 Here is how replica components interact to trigger the state transfer:
 
 \begin{enumerate}
 \item
   Consensus observes a catch-up package advertisement and fetches its content.
   The package indicates that the latest recoverable state is 100
-  and the its manifest hash is $H_{100}$.
+  and its manifest hash is $H_{100}$.
 \item
   Consensus checks the latest locally available state height (it's nine).
 \item
@@ -271,7 +270,7 @@ Once the state machine knows which state it needs to fetch,
 it doesn't need any instructions from the consensus module;
 it uses the transport module directly.
 Continuing our example,
-here is how State Machine syncs from state 9 to state 100:
+here is how the State Machine syncs from state 9 to 100:
 
 \begin{enumerate}
 \item
@@ -325,8 +324,8 @@ This protocol has major flaws:
 \item
   It pushes most of the work to the healthy node,
   slowing down the subnet.
-  A catching-up node has no other useful work,
-  so it should bear most costs.
+  A catching-up node is idle,
+  so it should bear most of the costs.
 \item
   It's sequential: 
   there is no obvious way to involve more than one sender.
@@ -337,7 +336,7 @@ This protocol has major flaws:
 \end{enumerate}
 
 Another alternative was to represent the entire replica state as a state tree
-and sync these logical trees instead of concrete file system representations.
+and sync these logical trees instead of concrete file-system representations.
 This approach would make it easier to specify the protocol
 and support syncing between \href{https://en.wikipedia.org/wiki/N-version_programming}{replicas written in different languages},
 but the extra complexity outweighed the benefits.
