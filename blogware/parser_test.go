@@ -235,6 +235,31 @@ func TestParsing(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:  "binomial coefficient",
+			input: `$\binom{n}{k}$`,
+			expected: []Node{
+				MathNode{
+					pos: 0,
+					mlist: []MathSubnode{
+						MathCmd{
+							pos: 1,
+							cmd: SymBinom,
+							args: []MathSubnode{
+								MathTerm{
+									pos:     8,
+									nucleus: MathText{contents: "n"},
+								},
+								MathTerm{
+									pos:     11,
+									nucleus: MathText{contents: "k"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -132,7 +132,8 @@ var (
 	SymDescription = BuiltinEnv("description")
 
 	// Builtin math commands
-	SymFrac = BuiltinMathCmd("frac", MathArgExpr, MathArgExpr)
+	SymFrac  = BuiltinMathCmd("frac", MathArgExpr, MathArgExpr)
+	SymBinom = BuiltinMathCmd("binom", MathArgExpr, MathArgExpr)
 
 	mathOpList = []sym{
 		SymInSet,
@@ -198,6 +199,10 @@ func CmdArity(name sym) int {
 
 func CmdArgType(name sym, pos int) ArgType {
 	return cmdArgTypes[name][pos]
+}
+
+func MathCmdArgTypes(name sym) []MathArgType {
+	return mathCmds[name]
 }
 
 func FindReplacment(name sym) (replacement string, found bool) {

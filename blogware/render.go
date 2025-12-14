@@ -336,13 +336,26 @@ func renderMathSubnode(rc *RenderingCtx, buf *strings.Builder, n MathSubnode) er
 		buf.WriteString(n.num)
 		buf.WriteString("</mn>")
 	case MathCmd:
-		buf.WriteString("<mo>")
-		if value, found := FindReplacment(n.cmd); found {
-			buf.WriteString(value)
-		} else {
-			return fmt.Errorf("unsupported math command at %d: %s", n.pos, SymbolName(n.cmd))
+		switch n.cmd {
+		case SymBinom:
+			buf.WriteString(`<mrow><mo>(</mo><mfrac linethickness="0"><mrow>`)
+			if err := renderMathSubnode(rc, buf, n.args[0]); err != nil {
+				return err
+			}
+			buf.WriteString("</mrow><mrow>")
+			if err := renderMathSubnode(rc, buf, n.args[1]); err != nil {
+				return err
+			}
+			buf.WriteString("</mrow></mfrac><mo>)</mo></mrow>")
+		default:
+			buf.WriteString("<mo>")
+			if value, found := FindReplacment(n.cmd); found {
+				buf.WriteString(value)
+			} else {
+				return fmt.Errorf("unsupported math command at %d: %s", n.pos, SymbolName(n.cmd))
+			}
+			buf.WriteString("</mo>")
 		}
-		buf.WriteString("</mo>")
 	case MathTerm:
 		if n.subscript == nil && n.supscript == nil {
 			return renderMathSubnode(rc, buf, n.nucleus)

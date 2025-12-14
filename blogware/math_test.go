@@ -66,6 +66,18 @@ func TestMathScanner(t *testing.T) {
 				{pos: 10, kind: MathTokNum, body: "1"},
 			},
 		},
+		{
+			input: `\binom{n}{k}`,
+			toks: []mathToken{
+				{pos: 0, kind: MathTokControl, name: SymBinom},
+				{pos: 6, kind: MathTokGroupStart, body: "{"},
+				{pos: 7, kind: MathTokSym, body: "n"},
+				{pos: 8, kind: MathTokGroupEnd, body: "}"},
+				{pos: 9, kind: MathTokGroupStart, body: "{"},
+				{pos: 10, kind: MathTokSym, body: "k"},
+				{pos: 11, kind: MathTokGroupEnd, body: "}"},
+			},
+		},
 	} {
 		t.Run(tc.input, func(t *testing.T) {
 			s := StreamFromString(tc.input)

@@ -554,6 +554,27 @@ func appendTerm(nodes []MathSubnode, term MathTerm) []MathSubnode {
 	return nodes
 }
 
+func parseMathArg(tok *mathToken, s *stream, argType MathArgType) (node MathSubnode, err error) {
+	if argType != MathArgExpr {
+		err = s.Errorf("Unsupported math arg argument: %v", argType)
+		return
+	}
+	if err = s.NextMathToken(tok); err != nil {
+		return
+	}
+	if tok.kind != MathTokGroupStart {
+		s.ErrorfAt(tok.pos, "Expected group symbol {")
+	}
+	if err = s.NextMathToken(tok); err != nil {
+		return
+	}
+	term, err := parseMathTerm(tok, s, true, MathTokGroupEnd)
+	if err != nil {
+		return
+	}
+	return term, nil
+}
+
 // parseMathTerm parses a math term starting with the specified math token.
 // It leaves the first untouched math token in the tok argument.
 func parseMathTerm(tok *mathToken, s *stream, subsup bool, end MathTokenKind) (term MathTerm, err error) {
@@ -579,10 +600,21 @@ func parseMathTerm(tok *mathToken, s *stream, subsup bool, end MathTokenKind) (t
 		mterm.pos = tokPos
 		term.nucleus = mterm
 	case MathTokControl:
-		term.nucleus = MathCmd{
+		cmd := MathCmd{
 			pos: tok.pos,
 			cmd: tok.name,
 		}
+		argTypes := MathCmdArgTypes(tok.name)
+		var args []MathSubnode
+		for _, argType := range argTypes {
+			arg, err := parseMathArg(tok, s, argType)
+			if err != nil {
+				return term, err
+			}
+			args = append(args, arg)
+		}
+		cmd.args = args
+		term.nucleus = cmd
 	default:
 		if tok.kind == end {
 			return

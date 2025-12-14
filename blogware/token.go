@@ -293,6 +293,18 @@ func (s *stream) Expect(exp TokenKind) error {
 	return nil
 }
 
+func (s *stream) MathExpect(exp MathTokenKind) error {
+	pos := s.pos
+	var t mathToken
+	if err := s.NextMathToken(&t); err != nil {
+		return err
+	}
+	if t.kind != exp {
+		return s.ErrorfAt(pos, "expected math token kind %v, got %v", exp, t.kind)
+	}
+	return nil
+}
+
 func (s *stream) Consume(t TokenKind) {
 	if err := s.Expect(t); err != nil {
 		panic(err)
