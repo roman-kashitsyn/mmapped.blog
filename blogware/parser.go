@@ -555,24 +555,34 @@ func appendTerm(nodes []MathSubnode, term MathTerm) []MathSubnode {
 }
 
 func parseMathArg(tok *mathToken, s *stream, argType MathArgType) (node MathSubnode, err error) {
-	if argType != MathArgExpr {
+	if tok.kind != MathTokGroupStart {
+		err = s.ErrorfAt(tok.pos, "Internal error in parseMathArg: expected group start")
+	}
+
+	switch argType {
+	case MathArgExpr:
+		term, err := parseMathTerm(tok, s, true, MathTokGroupEnd)
+		if err != nil {
+			return node, err
+		}
+		return term, nil
+	case MathArgSym:
+		text, err := s.ScanSymbol()
+		if err != nil {
+			return node, err
+		}
+		if err = s.NextMathToken(tok); err != nil {
+			return node, err
+		}
+		if tok.kind != MathTokGroupEnd {
+			err = s.ErrorfAt(tok.pos, "Expected group end }")
+		}
+		node = MathOp{op: text.body}
+		return node, err
+	default:
 		err = s.Errorf("Unsupported math arg argument: %v", argType)
 		return
 	}
-	if err = s.NextMathToken(tok); err != nil {
-		return
-	}
-	if tok.kind != MathTokGroupStart {
-		s.ErrorfAt(tok.pos, "Expected group symbol {")
-	}
-	if err = s.NextMathToken(tok); err != nil {
-		return
-	}
-	term, err := parseMathTerm(tok, s, true, MathTokGroupEnd)
-	if err != nil {
-		return
-	}
-	return term, nil
 }
 
 // parseMathTerm parses a math term starting with the specified math token.
@@ -604,16 +614,34 @@ func parseMathTerm(tok *mathToken, s *stream, subsup bool, end MathTokenKind) (t
 			pos: tok.pos,
 			cmd: tok.name,
 		}
-		argTypes := MathCmdArgTypes(tok.name)
-		var args []MathSubnode
-		for _, argType := range argTypes {
-			arg, err := parseMathArg(tok, s, argType)
-			if err != nil {
-				return term, err
+		if tok.name == SymMathLeft || tok.name == SymMathRight {
+			if err = s.NextMathToken(tok); err != nil {
+				return
 			}
-			args = append(args, arg)
+			if tok.kind != MathTokOp {
+				err = s.ErrorfAt(tok.pos, "Expected a bracket, got: %v", tok.kind)
+				return
+			}
+			cmd.args = append(cmd.args, MathOp{op: tok.body, stretchy: true})
+		} else {
+			argTypes := MathCmdArgTypes(tok.name)
+			for _, argType := range argTypes {
+				if err = s.NextMathToken(tok); err != nil {
+					return
+				}
+				if tok.kind != MathTokGroupStart {
+					err = s.ErrorfAt(tok.pos, "Expected group start {")
+					return
+				}
+
+				arg, err := parseMathArg(tok, s, argType)
+				if err != nil {
+					return term, err
+				}
+				cmd.args = append(cmd.args, arg)
+			}
+
 		}
-		cmd.args = args
 		term.nucleus = cmd
 	default:
 		if tok.kind == end {

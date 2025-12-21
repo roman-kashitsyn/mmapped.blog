@@ -237,7 +237,7 @@ func TestParsing(t *testing.T) {
 		},
 		{
 			name:  "binomial coefficient",
-			input: `$\binom{n}{k}$`,
+			input: `$\binom{n-1}{k}$`,
 			expected: []Node{
 				MathNode{
 					pos: 0,
@@ -247,15 +247,49 @@ func TestParsing(t *testing.T) {
 							cmd: SymBinom,
 							args: []MathSubnode{
 								MathTerm{
-									pos:     8,
-									nucleus: MathText{contents: "n"},
+									pos: 7,
+									nucleus: MathNode{
+										pos: 7,
+										mlist: []MathSubnode{
+											MathText{contents: "n"},
+											MathOp{op: "-"},
+											MathNum{num: "1"},
+										},
+									},
 								},
 								MathTerm{
-									pos:     11,
-									nucleus: MathText{contents: "k"},
+									pos: 12,
+									nucleus: MathNode{
+										pos: 12,
+										mlist: []MathSubnode{
+											MathText{contents: "k"},
+										},
+									},
 								},
 							},
 						},
+					},
+				},
+			},
+		},
+		{
+
+			name:  "operatorname max",
+			input: `$\operatorname{max}\left(a, b\right)$`,
+			expected: []Node{
+				MathNode{
+					pos: 0,
+					mlist: []MathSubnode{
+						MathCmd{
+							pos:  1,
+							cmd:  SymOpName,
+							args: []MathSubnode{MathOp{op: "max"}},
+						},
+						MathCmd{pos: 19, cmd: SymMathLeft, args: []MathSubnode{MathOp{op: "(", stretchy: true}}},
+						MathText{contents: "a"},
+						MathOp{op: ","},
+						MathText{contents: "b"},
+						MathCmd{pos: 29, cmd: SymMathRight, args: []MathSubnode{MathOp{op: ")", stretchy: true}}},
 					},
 				},
 			},

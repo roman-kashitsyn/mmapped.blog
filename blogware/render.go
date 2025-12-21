@@ -320,11 +320,13 @@ func renderMathSubnode(rc *RenderingCtx, buf *strings.Builder, n MathSubnode) er
 		}
 		buf.WriteString("</mrow>")
 	case MathOp:
+		stretchy := ""
 		if !n.stretchy {
-			buf.WriteString(`<mo stretchy="false">`)
-		} else {
-			buf.WriteString("<mo>")
+			stretchy = ` stretchy="false"`
 		}
+		buf.WriteString(`<mo`)
+		buf.WriteString(stretchy)
+		buf.WriteString(">")
 		buf.WriteString(n.op)
 		buf.WriteString("</mo>")
 	case MathText:
@@ -347,6 +349,10 @@ func renderMathSubnode(rc *RenderingCtx, buf *strings.Builder, n MathSubnode) er
 				return err
 			}
 			buf.WriteString("</mrow></mfrac><mo>)</mo></mrow>")
+		case SymOpName, SymMathLeft, SymMathRight:
+			if err := renderMathSubnode(rc, buf, n.args[0]); err != nil {
+				return err
+			}
 		default:
 			buf.WriteString("<mo>")
 			if value, found := FindReplacment(n.cmd); found {
@@ -719,6 +725,9 @@ func renderGenericCmd(rc *RenderingCtx, buf *strings.Builder, cmd Cmd) error {
 			fmt.Fprintf(buf, `<img class="%s" src="data:image/webp;base64,%s">`, optsToCSSClasses(cmd.opts), encoded)
 		case ".jpg", ".jpeg":
 			fmt.Fprintf(buf, `<img class="%s" src="data:image/jpeg;base64,%s">`, optsToCSSClasses(cmd.opts), encoded)
+		case ".gif":
+			fmt.Fprintf(buf, `<img class="%s" src="data:image/gif;base64,%s">`, optsToCSSClasses(cmd.opts), encoded)
+
 		default:
 			return fmt.Errorf("unsupported image type: %s", dst)
 		}

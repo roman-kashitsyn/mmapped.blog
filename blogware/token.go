@@ -567,7 +567,7 @@ func (s *stream) NextMathToken(tok *mathToken) error {
 			tok.kind = MathEndInlineMath
 			tok.body = "$"
 			return nil
-		case '-', '+', '&', '=', ',', '[', ']', '|', '(', ')':
+		case '-', '+', '&', '=', ',', ';', '[', ']', '|', '(', ')', '<', '>', ':':
 			tok.kind = MathTokOp
 			tok.body = string(c1)
 			return nil

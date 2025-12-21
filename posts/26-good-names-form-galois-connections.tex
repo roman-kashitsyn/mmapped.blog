@@ -122,13 +122,10 @@ The reader's identity is no less important than the book's contents.
 
 The context turns the many-to-many relation between concepts and words into two maps.
 The first map,
-\mathml{
-  \mtext{encode}\mo{:}\mtext{Concept}\mo{\rightarrow}\mtext{Expression}
-},
+$\operatorname{encode}: \operatorname{Concept} \rightarrow \operatorname{Expression}$,
 defines how the author picks words to communicate the concept.
 The second map,
-\mathml{
-  \mtext{decode}\mo{:}\mtext{Expression}\mo{\rightarrow}\mtext{Concept}},
+$\operatorname{decode}: \operatorname{Expression} \rightarrow \operatorname{Concept}$
 defines how readers interpret these words.
 
 \section{channel}{Names as communication channels}
@@ -143,8 +140,7 @@ Channels are \emph{noisy}:
 they distort the messages passing them;
 that's why the channel's input and output sets might differ.
 We represent the noise mathematically by using \href{https://en.wikipedia.org/wiki/Conditional_probability}{conditional probabilities}:
-\mathml{\mi{p}\mo*{(}\mi{y}\mo{|}\mi{x}\mo*{)}}
-is the probability of receiving message $y$ if the sender sent message $x$.
+$p(y | x)$ is the probability of receiving message $y$ if the sender sent message $x$.
 
 When you think of a channel,
 you probably imagine a cable transmitting electrical signals or how the space around you buzzes with electromagnetic waves.
@@ -176,16 +172,9 @@ In the following formula,
 $C_s$ is the sender's concept,
 $C_r$ is the receiver's concept,
 $E$ is the set of all possible concept expressions,
-and
-\mathml{\mi{I}\mo*{(}\msub{\mi{C}}{\mi{r}}\mo*{;}\msub{\mi{C}}{\mi{s}}\mo*{)}}
-is the mutual information computed for expression $e$.
+and $I(C_r; C_s)$ is the mutual information computed for expression $e$.
 
-\mathml[block]{
-  \mtext{best\_name}\mo{\applyFun}\mrow{\mo*{(}\msub{\mi{C}}{\mi{s}}\mo*{)}}
-  \mo{=}
-  \msub{\mtext{argmax}}{\mrow{\mi{e}\mo{\in}\mi{E}}}\mo{\applyFun}
-  \mi{I}\mo*{(}\msub{\mi{C}}{\mi{r}}\mo{;}\msub{\mi{C}}{\mi{s}}\mo*{)}
-}
+\[\operatorname{best-name}\left(C_s\right) = \operatorname{argmax}_{e \in E}\left\{I\left(C_r; C_s\right)\right\}\]
 
 The channel interpretation of names is quantitative but not particularly satisfying because it involves probabilities that are hard to compute.
 Furthermore, the only way to know you've found a good expression for your concept is to compare it with all other expressions.
@@ -202,41 +191,24 @@ The next best thing we can hope for is that these maps form a relaxed version of
 
 \href{https://en.wikipedia.org/wiki/Galois_connection}{Galois connection}
 is a mathematical concept capturing a relationship between four objects:
-two partially ordered sets \mathml{\mi{A}} and \mathml{\mi{B}}
-and two monotonic maps \mathml{\mi{F}} and \mathml{\mi{G}} between these sets.
+two partially ordered sets $A$ and $B$
+and two monotonic maps $F$ and $G$ between these sets.
 \href{https://en.wikipedia.org/wiki/Partially_ordered_set#Partial_orders}{Partial order}
-means that we can compare some elements of each set using the \mathml{\mo{\leq}} operation that satisfies a few natural laws
+means that we can compare some elements of each set using the $\leq$ operation that satisfies a few natural laws
 (\href{https://en.wikipedia.org/wiki/Reflexive_relation}{reflexivity},
 \href{https://en.wikipedia.org/wiki/Antisymmetric_relation}{antisymmetry},
 and \href{https://en.wikipedia.org/wiki/Transitive_relation}{transitivity}).
 Not all elements must be comparable.
-A function \mathml{\mi{F}} is monotonic if it preserves relative order:
-if \mathml{\mi{x}\mo{\leq}\mi{y}},
-then \mathml{
-  \mi{F}\mo{\applyFun}\mo*{(}\mi{x}\mo*{)}
-  \mo{\leq}
-  \mi{F}\mo{\applyFun}\mo*{(}\mi{y}\mo*{)}
-}.
+A function $F$ is monotonic if it preserves relative order:
+if $x \leq y$, then $F(x) \leq F(y)$.
 
-Functions
-\mathml{\mi{F}\mo{:}\mi{A}\mo{\rightarrow}\mi{B}}
-and
-\mathml{\mi{G}\mo{:}\mi{B}\mo{\rightarrow}\mi{A}}
+Functions $F: A \rightarrow B$ and $G: B \rightarrow A$
 form a Galois connection if they satisfy the following relation:
-\mathml{
-  \mi{F}\mo{\applyFun}\mo*{(}\mi{a}\mo*{)}
-  \mo{\leq}\mi{b}
-  \mo{\iff}
-  \mi{a}\mo{\leq}\mi{G}\mo{\applyFun}\mo*{(}\mi{b}\mo*{)}
-}
-for all
-\mathml{\mi{a}\mo{\in}\mi{A}}
-and
-\mathml{\mi{b}\mo{\in}\mi{B}}.
+$F(a) \leq b \iff a \leq G(b)$ for all $a \in A$ and $b \in B$.
 
 \begin{figure}[grayscale-diagram,medium-size]
   \marginnote{mn-galois-connection}{
-    A Galois connection between functions \mathml{\mi{F}} and \mathml{\mi{G}}.
+    A Galois connection between functions $F$ and $G$.
   }
   \includegraphics{/images/26-galois-connection.svg}
 \end{figure}
@@ -245,15 +217,12 @@ This definition is abstract and took me a while to appreciate,
 so let's apply it to the problem of good names step by step.
 We start with the sets in question and their orderings.
 
-Our first set is the set of expressions \mathml{\mi{E}}.
-For expressions
-\mathml{\msub{\mi{e}}{\mn{1}}\mo{,}\msub{\mi{e}}{\mn{2}}\mo{\in}\mi{E}},
-we say that
-\mathml{\msub{\mi{e}}{\mn{1}}\mo{\leq}\msub{\mi{e}}{\mn{2}}}
-if \mathml{\msub{\mi{e}}{\mn{1}}} is at least as expressive as
-\mathml{\msub{\mi{e}}{\mn{2}}} \emph{given the reader context}.
+Our first set is the set of expressions $E$.
+For expressions $e_1, e_2 \in E$
+we say that $e_1 \leq e_2$
+if $e_1$ is at least as expressive as $e_2$ \emph{given the reader context}.
 If the expressions are equally expressive, we define the shorter element as smaller.
-The reader context is a crucial component of the \mathml{\mo{\leq}} operator.
+The reader context is a crucial component of the $\leq$ operator.
 For example, ``cat'' is more expressive than ``felis catus'' in a regular conversation,
 but it might be the other way around in a scientific paper.
 This paragraph doesn't do a good job at defining expression ordering,
@@ -261,43 +230,35 @@ but it's \textsc{ok}:
 the whole point of the Galois connection is to make expression comparison precise through its connection with better-defined objects.
 
 Our second set is the set of concepts $C$.
-If we have concepts
-\mathml{\msub{\mi{c}}{\mn{1}}\mo{,}\msub{\mi{c}}{\mn{2}}\mo{\in}\mi{C}},
-we say that
-\mathml{\msub{\mi{c}}{\mn{1}}\mo{\leq}\msub{\mi{c}}{\mn{2}}}
-if \mathml{\msub{\mi{c}}{\mn{1}}}
-is at least as specific as \mathml{\msub{\mi{c}}{\mn{2}}}.
-For example, \mathml{\mtext{cat}\mo{\leq}\mtext{animal}}:
+If we have concepts $c_1, c_2 \in C$
+we say that $c_1 \leq c_2$ if $c_1$ is at least as specific as $c_2$.
+For example, ``cat'' \leq  ``animal'':
 since every cat is an animal,
 there are at least as many animals as cats.
 The idea of being more or less ``specific'' part might sound handwavy to you,
 but we can make it precise using methods of \href{https://en.wikipedia.org/wiki/Formal_concept_analysis}{formal concept analysis}.
 
 The functions forming the Galois connection are the concept decoding function
-\mathml{\mtext{decode}\mo{:}\mi{E}\mo{\rightarrow}\mi{C}}
+$\operatorname{decode} : E \rightarrow C$
 and the concept encoding function
-\mathml{\mtext{encode}\mo{:}\mi{C}\mo{\rightarrow}\mi{E}}.
+$\operatorname{encode} : C \rightarrow E$.
 These functions are monotone because \math{encode} maps more specific concepts to more expressive names,
 and \math{decode} maps more expressive names to more specific concepts.
 The connection becomes
-\mathml{
-  \mtext{decode}\mo{\applyFun}\mrow{\mo*{(}\mi{e}\mo*{)}}\mo{\leq}\mi{c}
-  \mo{\iff}
-  \mi{e}\mo{\leq}\mtext{encode}\mo{\applyFun}\mrow{\mo*{(}\mi{c}\mo*{)}}
-}.
+$\operatorname{decode}(e) \leq c \iff e \leq \operatorname{encode}(c)$.
 
 Even the specialized equivalence looks unintuitive,
 so let's see how it holds with an example.
 Imagine we want to name a variable holding the amount of \textsc{usd} in a bank account
-(that's our concept \mathml{\mi{c}}).
+(that's our concept $c$).
 Would \math{value} be an appropriate variable name?
 
 Let's see what our connection tells us:
-\mathml{\mtext{decode}\mo*{(}\mtext{value}\mo*{)}}
+$\operatorname{decode}(\operatorname{value})$
 is a vague concept,
 less specific than the bank account balance.
 Hence,
-\mathml{\mtext{decode}\mo*{(}\mtext{value}\mo*{)}\mo{>}\mi{c}},
+$\operatorname{decode}(\operatorname{value}) > c$
 so \math{value} is not a good name.
 I would prefer \math{usd\_balance}, which decodes to a more specific concept.
 

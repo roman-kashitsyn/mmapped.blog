@@ -16,6 +16,7 @@ const (
 
 const (
 	MathArgExpr MathArgType = iota
+	MathArgSym
 )
 
 var (
@@ -132,8 +133,11 @@ var (
 	SymDescription = BuiltinEnv("description")
 
 	// Builtin math commands
-	SymFrac  = BuiltinMathCmd("frac", MathArgExpr, MathArgExpr)
-	SymBinom = BuiltinMathCmd("binom", MathArgExpr, MathArgExpr)
+	SymFrac      = BuiltinMathCmd("frac", MathArgExpr, MathArgExpr)
+	SymBinom     = BuiltinMathCmd("binom", MathArgExpr, MathArgExpr)
+	SymOpName    = BuiltinMathCmd("operatorname", MathArgSym)
+	SymMathLeft  = BuiltinMathCmd("left")
+	SymMathRight = BuiltinMathCmd("right")
 
 	mathOpList = []sym{
 		SymInSet,
