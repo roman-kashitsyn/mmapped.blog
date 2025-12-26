@@ -103,10 +103,12 @@
 }
 
 @font-face {
-    font-family: "Neo Euler";
+    font-family: "STIX Two Math";
     font-style: normal;
     font-weight: normal;
-    src: url("/fonts/NeoEuler.otf") format("opentype");
+    src:
+        local(STIX Two Math),
+        url("/fonts/STIXTwoMath-Regular.otf") format("opentype");
     font-display: swap;
 }
 
@@ -461,15 +463,15 @@ pre.apl > code {
 }
 
 .math {
-    font-family: "Neo Euler", "Libertinus Serif", et-book, Palatino, serif;
+    font-family: "STIX Two Math", math;
     white-space: nowrap;
     font-variant-numeric: normal;
-    /* To match the x-height of Neo Euler and Libertinus. */
+    /* To match the x-height of STIX font and Libertinus. */
     font-size: 1.3rem;
 }
 
 .marginnote .math {
-    /* To match the x-height of Neo Euler and Libertinus. */
+    /* To match the x-height of STIX font and Libertinus. */
     font-size: 1.03rem;
 }
 

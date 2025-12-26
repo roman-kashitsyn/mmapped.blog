@@ -16,7 +16,7 @@ import (
 var MathMLErr = errors.New("MathML operator outside of \\mathml{} context")
 
 // bigOps is a list of symbols that require munder/mover tags for rendering.
-var bigOps = []sym{SymSum, SymProd, SymInt, SymLim}
+var bigOps = []sym{SymSum, SymProd, SymInt, SymLim, SymOplus}
 
 var subSupTags = map[uint8]string{
 	0b010: "msub",
@@ -349,6 +349,16 @@ func renderMathSubnode(rc *RenderingCtx, buf *strings.Builder, n MathSubnode) er
 				return err
 			}
 			buf.WriteString("</mrow></mfrac><mo>)</mo></mrow>")
+		case SymFrac:
+			buf.WriteString(`<mrow><mfrac><mrow>`)
+			if err := renderMathSubnode(rc, buf, n.args[0]); err != nil {
+				return err
+			}
+			buf.WriteString("</mrow><mrow>")
+			if err := renderMathSubnode(rc, buf, n.args[1]); err != nil {
+				return err
+			}
+			buf.WriteString("</mrow></mfrac></mrow>")
 		case SymOpName, SymMathLeft, SymMathRight:
 			if err := renderMathSubnode(rc, buf, n.args[0]); err != nil {
 				return err
