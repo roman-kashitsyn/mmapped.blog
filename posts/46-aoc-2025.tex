@@ -21,10 +21,10 @@
 Advent of Code 2025 lasted only \href{https://adventofcode.com/2025/about#faq_num_days}{12 days}.
 I liked the shorter format since keeping up with puzzles for over three weeks in previous years was challenging.
 
-This year I solved the puzzles in \href{https://rust-lang.org/}{Rust}
+This year, I solved the puzzles in \href{https://rust-lang.org/}{Rust}
 since I didn't have the capacity to practice a new language.
-Rust is a great fit for Advent of Code:
-the tooling is mature
+Rust is an excellent fit for Advent of Code:
+the tooling is mature,
 and the standard library is rich,
 so I didn't need external dependencies\sidenote{sn-z3-dependency}{
   I used \href{https://crates.io/crates/z3}{\code{z3}} to solve part two of \href{#day-10}{day 10},
@@ -44,7 +44,7 @@ so a brute-force $O(n^2)$ algorithm is fast enough.
 The second part increases $k$ to $12$,
 so a brute-force algorithm needs to check $\binom{100}{12} = 1,050,421,051,106,700$ \href{https://en.wikipedia.org/wiki/Binomial_coefficient}{combinations}.
 Even if it processes a combination in 100 nanoseconds,
-it needs over three years to solve one instance.
+it still requires over three years to solve a single instance.
 
 The shape of this combinatorial explosion is also a clue to the solution.
 Binomial coefficients obey a recurrence relation that can be computed using \href{https://en.wikipedia.org/wiki/Dynamic_programming}{dynamic programming}.
@@ -149,7 +149,7 @@ I like this puzzle because it's a perfect use case for one of my favorite data s
 \href{https://en.wikipedia.org/wiki/Disjoint-set_data_structure}{union-find forest}\sidenote{sn-fenwick-tree}{
   My best-loved data structure is \href{https://en.wikipedia.org/wiki/Fenwick_tree}{Fenwick tree}.
 }.
-This data structure maintains disjoint set partitions and allows merging them efficiently.
+This data structure maintains disjoint set partitions and allows merging them.
 In this problem,
 the set is the collection of points,
 the partitions are connected components,
@@ -264,7 +264,7 @@ fn part1(boxes: &[Point], top\_k: usize) -> usize {
         .filter\_map(|i| (i == uf.find(i)).then\_some(uf.size(i)))
         .collect();
     sizes.sort\_by(|a, b| b.cmp(a));
-    
+
     sizes[0..3].iter().product::<usize>()
 }
 \end{code}
@@ -297,9 +297,9 @@ whose opposite corners coincide with polygon corners.
 In the second part,
 we must restrict our search to rectangles fully contained within the polygon.
 
-My computational geometry skills are poor,
+My computational geometry skills are weak,
 so I struggled with the second part,
-but I also learned much in the process.
+but I also learned a lot in the process.
 
 I used the same driver function for both parts.
 It enumerates all candidate rectangles,
@@ -362,7 +362,7 @@ fn rect\_in\_polygon(a: usize, b: usize, coords: &[Point]) -> bool {
 To check whether a polygon contains a point,
 I used a simplified version of the \href{https://en.wikipedia.org/wiki/Point_in_polygon#Ray_casting_algorithm}{ray casting algorithm}.
 It casts a horizontal ray from the point
-and counts how many polygon edges the ray crosses.
+and counts the number of polygon edges it crosses.
 If this number is odd,
 the point lies within the polygon.
 
@@ -504,9 +504,9 @@ The objective remains minimizing the sum of coefficients $k_i$.
 \[k_1 b_1 + \ldots + k_n b_n = t\]
 
 I tried adapting the graph-search solution
-and explored dynamic programming techniques,
+and exploring dynamic programming techniques,
 but nothing worked.
-The values in the target vector were too large (over 50 on average in my input) for my programs to finish in reasonable time.
+The values in the target vector were too large (over 50 on average in my input) for my programs to finish in a reasonable time.
 
 Like \href{https://www.reddit.com/r/adventofcode/comments/1pivlyh/2025_day_10_every_time_a_problem_looks_remotely/}{many solvers},
 I resorted to the \textsc{smt} solver \href{https://github.com/Z3Prover/z3}{z3}.
@@ -606,7 +606,7 @@ For example, if the target vector is $\left(32, 93, 66, 72, 61\right)$,
 its parity vector is $\left(0, 1, 0, 0, 1\right)$,
 and we need to consider only those combinations of $b_i$
 that yield the same parity when xored.
-Now we deal with boolean variables just like we did in the first part,
+Now we deal with Boolean variables just like we did in the first part,
 but this time we must look at all solutions,
 not only the optimal one.
 
@@ -617,7 +617,7 @@ All instances in my input exhibit near-perfect distribution\sidenote{sn-distribu
   Uniform coverage seems to be the norm.
 }.
 To exploit this reduction,
-precompute parity groups and consult them at every recursion level.
+we precompute parity groups and consult them at every recursion level.
 
 Here is my implementation of \code{u/tenthmascot}'s idea:
 
@@ -718,14 +718,14 @@ fn lights\_min\_presses\_parity(groups: &ParityGroups, target: u64) -> usize {
 \section{day-11}{Day 11: Reactor}
 
 \href{https://adventofcode.com/2025/day/11}{This puzzle} asks us to count paths between two vertices in a \href{https://en.wikipedia.org/wiki/Directed_acyclic_graph}{directed acyclic graph}.
-That's the same problem as \href{#day-07}{day seven} part two,
+That's the same problem as \href{#day-07}{day seven}, part two,
 but this time the graph is general, not grid-embedded.
 On day seven, the grid structure provided a natural topological order.
 Here, we must compute it ourselves.
 
 \begin{code}
 type Graph = Vec<Vec<usize>>;
-  
+
 \emph{/// Returns the vertices of a graph in a topological order.}
 fn toposort(g: &Graph, start: usize) -> Vec<usize> {
     fn go(
@@ -789,7 +789,8 @@ can be non-zero.
 
 \href{https://adventofcode.com/2025/day/12}{This puzzle} asks
 whether a rectangle of given dimensions can fit a set of irregular tiles.
-The problem seemed overwhelmingly complex and the input sizes were large,
+The problem seemed overwhelmingly complex,
+and the input sizes were large,
 so I suspected a trick.
 After all, the final day is often cheesy.
 
@@ -825,8 +826,12 @@ for instance in instances {
     }
 }
 println!("{total}");
-  
 \end{code}
+
+If you want to dig deeper and solve the problem exactly,
+Knuth's \href{https://en.wikipedia.org/wiki/Dancing_links}{dancing links algorithm} seems to be a promising direction to explore.
+
+Happy holidays!
 
 \end{document}
 
