@@ -100,7 +100,7 @@ var (
 	SymCapitalDelta   = BuiltinReplacement("Delta", "Δ")
 	SymPi             = BuiltinReplacement("pi", "π")
 	SymFracSlash      = BuiltinReplacement("fracslash", "∕")
-	SymPrime          = BuiltinReplacement("prime", "'")
+	SymPrime          = BuiltinReplacement("prime", "&prime;")
 	SymTimes          = BuiltinReplacement("times", "×")
 	SymInvisibleTimes = BuiltinReplacement("itimes", "&InvisibleTimes;")
 	SymApplyFunction  = BuiltinReplacement("applyFun", "&ApplyFunction;")
@@ -115,11 +115,15 @@ var (
 	SymLeftArrow      = BuiltinReplacement("leftarrow", "←")
 	SymDLeftArrow     = BuiltinReplacement("Leftarrow", "⇐")
 	SymSum            = BuiltinReplacement("sum", "&sum;")
+	SymOplus          = BuiltinReplacement("oplus", "&oplus;")
 	SymProd           = BuiltinReplacement("prod", "&prod;")
+	SymLog            = BuiltinReplacement("log", "log")
 	SymInt            = BuiltinReplacement("int", "&int;")
 	SymLim            = BuiltinReplacement("lim", "lim")
 	SymLeq            = BuiltinReplacement("leq", "≤")
 	SymIff            = BuiltinReplacement("iff", "⇔")
+	SymForall         = BuiltinReplacement("forall", "&#8704;")
+	SymExists         = BuiltinReplacement("exists", "&#8707;")
 
 	// Builtin environments
 	SymDocument    = BuiltinEnv("document")
@@ -149,8 +153,13 @@ var (
 		SymLeftArrow,
 		SymDLeftArrow,
 		SymSum,
+		SymProd,
+		SymLog,
+		SymOplus,
 		SymLeq,
 		SymIff,
+		SymForall,
+		SymExists,
 	}
 )
 
