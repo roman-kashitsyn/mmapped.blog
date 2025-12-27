@@ -2,8 +2,8 @@
 
 \title{Advent of Code 2025}
 \subtitle{My favorite puzzles from AoC 2025.}
-\date{2025-12-30}
-\modified{2025-12-30}
+\date{2025-12-27}
+\modified{2025-12-27}
 
 \keyword{programming}
 \keyword{puzzles}
@@ -18,18 +18,18 @@
   \includegraphics{/images/46-aoc-2025.webp}
 \end{figure}
 
-Advent of code 2025 lasted only \href{https://adventofcode.com/2025/about#faq_num_days}{12 days}.
-I liked the shorter form since keeping up with the puzzles for over three weeks in the previous years was challenging.
+Advent of Code 2025 lasted only \href{https://adventofcode.com/2025/about#faq_num_days}{12 days}.
+I liked the shorter format since keeping up with puzzles for over three weeks in previous years was challenging.
 
 This year I solved the puzzles in \href{https://rust-lang.org/}{Rust}
 since I didn't have the capacity to practice a new language.
 Rust is a great fit for Advent of Code:
-The tooling is mature
+the tooling is mature
 and the standard library is rich,
 so I didn't need external dependencies\sidenote{sn-z3-dependency}{
   I used \href{https://crates.io/crates/z3}{\code{z3}} to solve part two of \href{#day-10}{day 10},
-  which was rather painful,
-  but then I found \href{#tenthmascot-solution}{a way} to do without it.
+  which was painful,
+  but then I found \href{#tenthmascot-solution}{a way} to solve it without external dependencies.
 }.
 
 This article explains solutions to the puzzles I liked the most.
@@ -39,15 +39,15 @@ This article explains solutions to the puzzles I liked the most.
 \href{https://adventofcode.com/2025/day/3}{This puzzle} asks us to find a string subsequence of length $k$ that has the largest numeric value. For example,
 if $k = 2$ and the input is \code{818181\b{9}1111\b{2}111}, the output is \code{92}.
 
-In the first part part, $k = 2$ and the string length is $n = 100$,
+In the first part, $k = 2$ and the string length is $n = 100$,
 so a brute-force $O(n^2)$ algorithm is fast enough.
-The second part increses $k$ to $12$,
+The second part increases $k$ to $12$,
 so a brute-force algorithm needs to check $\binom{100}{12} = 1,050,421,051,106,700$ \href{https://en.wikipedia.org/wiki/Binomial_coefficient}{combinations}.
 Even if it processes a combination in 100 nanoseconds,
 it needs over three years to solve one instance.
 
-The shape of this combinatorial explosion is also a clue to a solution.
-Binomial coefficients obey a recurrent formula that can be computed using \href{https://en.wikipedia.org/wiki/Dynamic_programming}{dynamic programming}.
+The shape of this combinatorial explosion is also a clue to the solution.
+Binomial coefficients obey a recurrence relation that can be computed using \href{https://en.wikipedia.org/wiki/Dynamic_programming}{dynamic programming}.
 
 \[\binom{n}{k} = \binom{n-1}{k} + \binom{n-1}{k-1}\]
 
@@ -55,11 +55,11 @@ Similarly,
 if we define $B$ to be the input string
 and $M\left[k, i\right]$ to be the maximum numeric value of length $k$
 we can draw from $B\left[0\ldots i\right]$,
-we get the following recurrent formula:
+we get the following recurrence:
 
 \[M\left[k, i\right] = \operatorname{max}\left\{M\left[k, i-1\right], 10 \times M\left[k-1, i-1\right] + B\left[i-1\right]\right\}\]
 
-Together with boundary conditions $M\left[k, 0\right] = 0$ and $M\left[0, i\right] = 0$, the formula translates to the following $O(n \times k)$ solution:
+Together with boundary conditions $M\left[k, 0\right] = 0$ and $M\left[0, i\right] = 0$, this translates to the following $O(n \times k)$ solution:
 
 \begin{figure}
 \begin{code}[rust]
@@ -78,24 +78,24 @@ fn max\_numeric\_subsequence(b: &[u8], max\_k: usize) -> u64 {
 
 \section{day-07}{Day 7: Laboratories}
 
-\href{https://adventofcode.com/2025/day/7}{This puzzle} asks us to simulate the physics of beam propagation.
+\href{https://adventofcode.com/2025/day/7}{This puzzle} asks us to simulate beam propagation.
 The beam starts at the top and splits into two beams each time it reaches a \emph{splitter}.
-The first part asks us to count how many splitters a beam can reach,
-the second part---how many paths the beam can take through the maze.
+The first part asks us to count how many splitters the beam reaches;
+the second part asks how many paths the beam can take through the maze.
 
 \begin{figure}[center]
 \includegraphics{/images/46-day07.gif}
 \end{figure}
 
 My programming career started with physics simulations,
-which is still close to my heart.
-Also, I like how the second part connects to the first part of \href{#day-11}{day 11 puzzle}.
+which remain close to my heart.
+I also like how the second part connects to \href{#day-11}{day 11}.
 
 My solution computes answers to both parts in one grid traversal.
-It treats the grid as a \href{https://en.wikipedia.org/wiki/Directed_acyclic_graph}{direct acyclic graph}
+It treats the grid as a \href{https://en.wikipedia.org/wiki/Directed_acyclic_graph}{directed acyclic graph}
 in which each space is a parent of the space below it,
 and a space above a splitter is a parent of the two spaces on the splitter's sides.
-The number of paths to a space is the sum of the numbers of paths to its parents.
+The number of paths to a space is the sum of paths to its parents.
 
 \begin{figure}
 \begin{code}
@@ -145,17 +145,15 @@ after adding a thousand edges.
 In the second part,
 we must stop at the first edge that makes the graph fully connected.
 
-I like this puzzle
-because it's a perfect use case for one of my favorite data structures:
-\href{https://en.wikipedia.org/wiki/Disjoint-set_data_structure}{Union-find forest}\sidenote{sn-fenwick-tree}{
+I like this puzzle because it's a perfect use case for one of my favorite data structures:
+\href{https://en.wikipedia.org/wiki/Disjoint-set_data_structure}{union-find forest}\sidenote{sn-fenwick-tree}{
   My best-loved data structure is \href{https://en.wikipedia.org/wiki/Fenwick_tree}{Fenwick tree}.
 }.
-This data structure maintains disjoint set partitions
-and allows merging them efficiently.
-In our problem,
+This data structure maintains disjoint set partitions and allows merging them efficiently.
+In this problem,
 the set is the collection of points,
 the partitions are connected components,
-and the merge is adding an edge.
+and merging joins components by adding an edge.
 
 Here is my simple implementation of union-find:
 
@@ -247,10 +245,10 @@ fn sorted\_edges(boxes: &[Point]) -> Vec<(Dist, Node, Node)> {
 \end{code}
 
 In the first part,
-we must compute the sizes of three largest connected components
+we must compute the sizes of the three largest connected components
 after adding \code{top\_k} edges.
-We don't have to traverse the graph at any point
-because the union-find data structure has all the information we need.
+We don't have to traverse the graph
+because union-find already tracks all the information we need.
 
 \begin{code}
 fn part1(boxes: &[Point], top\_k: usize) -> usize {
@@ -272,8 +270,8 @@ fn part1(boxes: &[Point], top\_k: usize) -> usize {
 \end{code}
 
 In the second part,
-we must multiply the x-coordinates in the first edge that makes the graph connected.
-Union-find makes it a child's play.
+we must multiply the x-coordinates of the first edge that makes the graph connected.
+Union-find makes this trivial.
 
 \begin{code}
 fn part2(boxes: &[Point]) -> i64 {
@@ -295,7 +293,7 @@ In \href{https://adventofcode.com/2025/day/9}{this puzzle},
 we work with a \textsc{2d} polygon whose edges are either vertical or horizontal.
 In the first part,
 we must find the largest rectangle
-whose opposite corners coinside with the polygon corners.
+whose opposite corners coincide with polygon corners.
 In the second part,
 we must restrict our search to rectangles fully contained within the polygon.
 
@@ -305,8 +303,8 @@ but I also learned much in the process.
 
 I used the same driver function for both parts.
 It enumerates all candidate rectangles,
-checks that they satisfy the predicate passed as an argument,
-and selects one with the largest area.
+checks that they satisfy a predicate passed as an argument,
+and selects the one with the largest area.
 For the first part,
 the predicate always returns \code{true}.
 For the second part,
@@ -336,14 +334,14 @@ fn largest\_rectangle(
 }
 \end{code}
 
-Now, the juicy part:
+Now the juicy part:
 how do we check whether a polygon contains a rectangle?
-We must check two conditions:
+We must verify two conditions:
 \begin{enumerate}
-\item The polygon contains the rectangle's corners.
-  Since two of them come from the polygon,
-  we need to check only the complementary ones.
-\item None of the rectangle's edges cross a polygon edge.
+\item The polygon contains all the rectangle's corners.
+  Since two corners come from the polygon,
+  we only need to check the other two.
+\item None of the rectangle's edges cross any polygon edge.
 \end{enumerate}
 
 \begin{code}
@@ -393,10 +391,10 @@ fn point\_in\_polygon(p: Point, vertices: &[Point]) -> bool {
 \end{code}
 
 The \code{(y < y1) != (y < y2)} condition is subtle and somewhat cryptic.
-It's equivalent to more wordy \code{y1.min(y2) <= y \&\& y < y1.max(y2)}.
-The inequality is asymmetric (only one bound is inclusive) to ensure
+It's equivalent to the more verbose \code{y1.min(y2) <= y \&\& y < y1.max(y2)}.
+The asymmetric inequality (only one bound is inclusive) ensures
 that the edge is vertical (\code{y1 != y2})
-and that we don't count intersections at polygon corners twice.
+and that we don't double-count intersections at polygon corners.
 
 To test whether two lines cross,
 we check that the x-coordinate of a vertical line lies between the x-coordinates of a horizontal line, and vice versa.
@@ -446,7 +444,7 @@ fn line\_crosses\_polygon(a: Point, b: Point, vertices: &[Point]) -> bool {
 
 \section{day-10}{Day 10: Factory}
 
-\href{https://adventofcode.com/2025/day/10}{This puzzle} is the most elaborate in the entire event.
+\href{https://adventofcode.com/2025/day/10}{This puzzle} is the most elaborate of the entire event.
 I think of it in terms of vectors.
 We start with a set of $n$ $m$-dimensional bit vectors $B = \left\{b_1, \ldots, b_n\right\}$\sidenote{sn-b-buttons}{
   $B$ stands for ``buttons''.
@@ -464,10 +462,10 @@ In other words,
 we must find the smallest subset of vectors $b_i$
 that yields $t$ when \href{https://en.wikipedia.org/wiki/Exclusive_or}{xored}.
 
-My first instinct was to treat this puzzle as the shortest path problem in a state graph.
-The vertices correspond to the current xor sum,
+My first instinct was to treat this as a shortest path problem in a state graph.
+The vertices correspond to current xor sums,
 and edges correspond to vector additions ($\oplus b_i$).
-The search starts at the zero vector and must reach vector $t$.
+The search starts at the zero vector and must reach $t$.
 Since the number of dimensions is small (up to ten),
 I represent vectors as 64-bit integers.
 
@@ -498,23 +496,22 @@ fn lights\_min\_presses(buttons: &[u64], target: u64) -> usize {
 }
 \end{code}
 
-The shape of the second part is the same,
-but now we're dealing with normal addition instead of xor,
+The second part has the same structure,
+but uses normal addition instead of xor,
 and the target vector can contain arbitrary non-negative integers.
-The objective is still to minimize the sum of $k_i$
-that make the equation hold.
+The objective remains minimizing the sum of coefficients $k_i$.
 
 \[k_1 b_1 + \ldots + k_n b_n = t\]
 
-I tried to adapt the graph-search solution
+I tried adapting the graph-search solution
 and explored dynamic programming techniques,
-but my efforts yielded no results.
-The values in the target vector were too large (over 50 on average in my input) for my programs to finish in a reasonable time.
+but nothing worked.
+The values in the target vector were too large (over 50 on average in my input) for my programs to finish in reasonable time.
 
-So like \href{https://www.reddit.com/r/adventofcode/comments/1pivlyh/2025_day_10_every_time_a_problem_looks_remotely/}{many people} struggling with this problem,
-I resorted to using \textsc{smt} solver \href{https://github.com/Z3Prover/z3}{z3}.
-Rust has \href{https://crates.io/crates/z3}{nice bindings} to this library,
-and my code worked correctly the first time it compiled.
+Like \href{https://www.reddit.com/r/adventofcode/comments/1pivlyh/2025_day_10_every_time_a_problem_looks_remotely/}{many solvers},
+I resorted to the \textsc{smt} solver \href{https://github.com/Z3Prover/z3}{z3}.
+Rust has \href{https://crates.io/crates/z3}{nice bindings},
+and my code worked on the first try.
 
 \begin{code}
 fn joltage\_min\_presses\_z3
@@ -578,19 +575,19 @@ Luckily, Reddit user \href{https://www.reddit.com/user/tenthmascot/}{u/tenthmasc
 \href{https://www.reddit.com/r/adventofcode/comments/1pk87hl/2025_day_10_part_2_bifurcate_your_way_to_victory/}{posted an ingenious solution}
 that was fast and didn't require any dependencies.
 
-The solution relies on the following observation:
-If we know that all $k_i$ are even ($k_i = 2 k_i^\prime$),
+The solution relies on this observation:
+if all $k_i$ are even ($k_i = 2 k_i^\prime$),
 then each component in the target vector must also be even.
-So we can halve both $k_i$ and the target
-and get a smaller instance of the same problem,
+We can halve both the coefficients and the target
+to get a smaller instance of the same problem,
 reducing the search space.
 
 \[ \left(2 k_1^\prime \times b_1 + \ldots + 2 k_n^\prime b_n = 2 t^\prime \right) \Rightarrow \left( k_1^\prime b_1 + \ldots + k_n^\prime b_n = t^\prime \right)\]
 
-We can't be sure that all $k_i$ are even.
-But we can make them even by subtracting at most one.
-Which $k_i$ should we subtract one from?
-We don't know, so we try all $2^n$ combinations and pick the outcome that yields the best result!
+We can't be sure all $k_i$ are even,
+but we can make them even by subtracting at most one.
+Which $k_i$ should we decrement?
+We don't know, so we try all $2^n$ combinations and pick the best result!
 
 Unfortunately, testing all combinations every time is still too slow.
 Naive approaches must evaluate around $50^n$ combinations
@@ -598,9 +595,9 @@ Naive approaches must evaluate around $50^n$ combinations
 Our ``clever'' way probes\ldots  $(2^n)^{\log_2 50} = 50^n$ combinations.
 
 Luckily, we can do better:
-we can restrict our search to combinations that agree with the parity of the target components.
+restrict the search to combinations matching the target's parity.
 If an equation holds under normal arithmetic,
-it must also hold under modulo-two arithmetic.
+it must also hold modulo two.
 
 \[ \left( k_1 b_1 + \ldots + k_n b_n = t \right) \Rightarrow  \left( \left(k_1 \oplus 2\right) b_1 \oplus \ldots \oplus \left(k_n \oplus 2\right) b_n = t \oplus 2 \right)\]
 
@@ -614,13 +611,13 @@ but this time we must look at all solutions,
 not only the optimal one.
 
 If combinations of input vectors $b_i$ cover the parity space uniformly,
-we have to evaluate only about $\frac{2^n}{2^m} = 2^{n-m}$ candidates at each step.
-And indeed, all the instances in my input exhibit near perfect distribution\sidenote{sn-distribution}{
-  I wrote a little program that generates random vectors and prints their parity group size distributions.
+we only evaluate about $\frac{2^n}{2^m} = 2^{n-m}$ candidates at each step.
+All instances in my input exhibit near-perfect distribution\sidenote{sn-distribution}{
+  I wrote a program that generates random vectors and prints their parity group size distributions.
   Uniform coverage seems to be the norm.
 }.
-To take advantage of this reduction,
-we can precompute parity groups and consult them at every level of recursion.
+To exploit this reduction,
+precompute parity groups and consult them at every recursion level.
 
 Here is my implementation of \code{u/tenthmascot}'s idea:
 
@@ -703,8 +700,8 @@ fn joltage\_min\_presses
 }
 \end{code}
 
-The idea of parity groups also leads to a simple algorithm for solving the first part:
-Pick the smallest subset in the target parity group.
+Parity groups also yield a simple algorithm for part one:
+pick the smallest subset in the target's parity group.
 
 \begin{code}
 fn lights\_min\_presses\_parity(groups: &ParityGroups, target: u64) -> usize {
@@ -720,12 +717,11 @@ fn lights\_min\_presses\_parity(groups: &ParityGroups, target: u64) -> usize {
 
 \section{day-11}{Day 11: Reactor}
 
-\href{https://adventofcode.com/2025/day/11}{This puzzle} asks us to count paths between two vertices in a \href{https://en.wikipedia.org/wiki/Directed_acyclic_graph}{direct acyclic graph}.
-That's the same problem as the second part of \href{#day-07}{day seven},
-but this time we deal with a general graph.
-On day seven, the graph was embedded into a grid
-and thus had a natural topological sorting.
-This time, we have to compute a topological order ourselves.
+\href{https://adventofcode.com/2025/day/11}{This puzzle} asks us to count paths between two vertices in a \href{https://en.wikipedia.org/wiki/Directed_acyclic_graph}{directed acyclic graph}.
+That's the same problem as \href{#day-07}{day seven} part two,
+but this time the graph is general, not grid-embedded.
+On day seven, the grid structure provided a natural topological order.
+Here, we must compute it ourselves.
 
 \begin{code}
 type Graph = Vec<Vec<usize>>;
@@ -769,11 +765,10 @@ fn count\_paths(g: &Graph, start: usize, end: usize) -> usize {
 \end{code}
 
 In the second part,
-we must compute the number of paths that start at vertex \code{svr},
-end at \code{out}, and pass through vertices
-\code{fft} and \code{dac} (in any order).
-The most straightforward solution is to multiply path counts for segments of composite paths \code{svr -> fft -> dac -> out} and
-\code{svr -> dac -> fft -> out}.
+we must count paths from \code{svr} to \code{out}
+that pass through both \code{fft} and \code{dac} (in any order).
+The straightforward solution multiplies path counts for segments
+\code{svr -> fft -> dac -> out} and \code{svr -> dac -> fft -> out}.
 
 \begin{code}
 let fft\_dac =
@@ -787,31 +782,29 @@ let dac\_fft =
 println!("{}", fft\_dac + dac\_fft);
 \end{code}
 
-Of course, only one of expressions
-\code{count\_paths(\&g, dac, fft)} and \code{count\_paths(\&g, fft, dac)}
-can yield a non-zero value.
+Of course, only one of \code{count\_paths(\&g, dac, fft)} and \code{count\_paths(\&g, fft, dac)}
+can be non-zero.
 
 \section{day-12}{Day 12: Christmas tree farm}
 
-\href{https://adventofcode.com/2025/day/12}{This puzzle} asks us
-whether a rectangle of a given height and width can fit a given set of irregular tiles.
-The problem is so overwhelmingly complex and the input sizes were so large
-that I was sure there must be a trick.
-After all, the last day is often cheesy.
+\href{https://adventofcode.com/2025/day/12}{This puzzle} asks
+whether a rectangle of given dimensions can fit a set of irregular tiles.
+The problem seemed overwhelmingly complex and the input sizes were large,
+so I suspected a trick.
+After all, the final day is often cheesy.
 
-One smoke test to check whether a rectangle can fit a set of tiles
-is to check whether it's area is large enough.
+One smoke test for whether a rectangle can fit a set of tiles
+is checking whether its area is large enough.
 If the rectangle's area is 360 units
-and the set of tiles occupy 365 units,
-the instance is unsolvable.
+and the tiles occupy 365 units,
+the instance is clearly unsolvable.
 
-So I printed area ratios for all problem instances in my input.
+I printed area ratios for all instances in my input.
 They fell into two groups:
-a group with the ratio of <80\%
-and a group with the ratio of >100\%.
+ratios <80\% and ratios >100\%.
 I assumed that if a rectangle \emph{could} fit the tiles,
 it did.
-Thank Santa, this guess gave the right answer.
+Luckily, this guess was correct.
 
 My solution boils down to the following humble heuristic:
 
@@ -836,3 +829,6 @@ println!("{total}");
 \end{code}
 
 \end{document}
+
+
+
