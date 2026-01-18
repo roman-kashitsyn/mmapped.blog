@@ -121,6 +121,7 @@ var (
 	SymInt            = BuiltinReplacement("int", "&int;")
 	SymLim            = BuiltinReplacement("lim", "lim")
 	SymLeq            = BuiltinReplacement("leq", "≤")
+	SymApprox         = BuiltinReplacement("approx", "&approx;")
 	SymIff            = BuiltinReplacement("iff", "⇔")
 	SymForall         = BuiltinReplacement("forall", "&#8704;")
 	SymExists         = BuiltinReplacement("exists", "&#8707;")
