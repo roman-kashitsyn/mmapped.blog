@@ -1,0 +1,374 @@
+\documentclass{article}
+
+\title{Kirk, Scotty, and Spock}
+\subtitle{Vibe-specing from the chair.}
+\date{2026-04-01}
+\modified{2026-04-01}
+
+\keyword{programming}
+\keyword{ai}
+
+\begin{document}
+
+\section*
+
+I love reading code for education, but code reviews are different.
+I've been doing them for over a decade, and I can testify to their virtues, but they just aren’t fun.
+Perusing code is to code reviews as devouring a nerdy magazine article is to ploughing through Terms and Conditions.
+It's all reading in the end, but the latter is somehow less enticing.
+
+The rise of AI has had two effects on code reviews: more code to review, and more subtly broken code.
+The outcome is the same: even less fun.
+This article argues that we can counter both effects if AI agents are to formally prove their work.
+
+\section{good-summaries}{Good summaries}
+
+\epigraph{
+  So he [Grandmaster] is looking at very little and seeing quite a lot.
+}{Josh Waitzkin, ``The Art of Learning''}
+
+Being more efficient at code reviews means doing less work.
+Instead of inspecting each line of a change, we seek a succinct, accurate summary.
+Three commonly used summary types are names, type signatures, and doc comments.
+
+Names are succinct but unreliable.
+A name might tell you everything you need to know or lead you astray.
+Type signatures are succinct and accurate, but most type systems are too limited to restrict implementations sufficiently.
+Doc comments are infinitely expressive and can tell you things you can’t deduce from the code alone,
+but they’re even less reliable than names.
+
+None of these summaries is trustworthy enough to skip reading the implementation details.
+Luckily, there is a better kind of summary: a specification.
+I don't mean that lame \code{SPEC.md} file collecting dust in your repository
+or that design doc of yours that became stale before it got approved---%
+I mean honest-to-god, machine-verifiable logic.
+
+In the vast landscape of machine verification, two tools suggest realistic modes of interaction with agents:
+the \textsc{lean} theorem prover and the \textsc{spark} toolchain\sidenote{f-star}{
+  \href{https://fstar-lang.org/}{F*} also looks promising, but I don't have any experience with it.
+}.
+Both feature a clear interface/implementation separation and mechanisms to ensure they stay in sync.
+
+\href{https://lean-lang.org/}{\textsc{lean}} represents mathematical theorems as types and their proofs as values inhabiting these types.
+Once you know that a proof exists, you never have to look at it.
+You can study it for educational purposes,
+but if \textsc{lean} tells us that the proof has no holes,
+you can treat it as an opaque but reliable building block.
+So if you're reviewing a contribution in \textsc{lean},
+you can focus on the theorem and let the compiler handle all the drudgery\sidenote{assistant-proofs}{
+  My experience with proof assistants is that the proofs aren't human-friendly anyway:
+  it's hard to follow a proof without stepping through it interactively.
+}.
+
+\textsc{spark} ecosystem features a similar abstraction.
+Its module system separates interface files (\code{.ads}) that contain public declarations and contracts
+from implementation files (\code{.adb}) that contain private declarations and function bodies.
+The system ships with a prover (GNATprove) that checks whether implementations match their specifications.
+When the specification is precise enough, and the prover succeeds, the implementation is likely solid enough to run on a spaceship\sidenote{spaceship-code}{
+  Of course, if the code were meant for a spaceship,
+  I would still want to review its every character at least five times,
+  but I would sleep better if the prover also accepted it.
+}.
+
+\section{scotty-and-spock}{Scotty and Spock}
+
+\epigraph{I object to intellect without discipline.}{Spock, ``The Squire of Gothos''}
+
+When ChatGPT became a hit, I treated it as an abomination.
+It combined the worst parts of humans and computers:
+not only was it opaque and unreliable, but it also lacked common sense.
+Computers say ``no'', and they are correct.
+ChatGPT says ``you're absolutely right!'' and lies in your face with the confidence of a K-Pop star.
+
+I became more tolerant with exposure and now treat traditional systems and \textsc{LLM}s as different thinking modes
+(System 2 vs. System 1, in Daniel Kahneman's terms) or different characters.
+A compiler or prover evokes an image of Spock, the Science Officer of the \textsc{uss} Enterprise,
+while \textsc{llm} reminds me of the resourceful (and sometimes drunk) Chief Engineer Scotty.
+Their tandem often can iron out details without bothering you, the captain,
+giving you more time to sit in the chair and plan the next step.
+
+\begin{figure}[grayscale-diagram,medium-size]
+\includegraphics{/images/49-double-feedback-loop.svg}
+\end{figure}
+
+When all three of you are on board,
+the optimal workflow seems to be a double feedback loop.
+A human expresses an intent in natural language;
+an agent derives a specification and an implementation of that intent.
+One loop features the human commenting on the specification until it meets the intent,
+another features a prover commenting on the implementation until it meets the specification.
+Poor Scotty gets caught between two fires, but, being the miracle worker, he always finds his way out.
+
+\section{experiment}{Experiment: binary exponentiation}
+\epigraph{Beware of bugs in the above code; I have only proved it correct, not tried it.}{
+  Donald Knuth, \href{https://staff.fnwi.uva.nl/p.vanemdeboas/knuthnote.pdf}{Notes on the van Emde Boas construction of priority deques}
+}
+
+The \href{https://en.wikipedia.org/wiki/Exponentiation_by_squaring}{binary exponentiation algorithm} has a special place in my heart
+because it helped me grok the power of loop invariants.
+I asked \href{https://claude.com/product/claude-code}{Claude Code} (Opus 4.5 and 4.6) to implement it in \textsc{spark}.
+My understanding of \textsc{spark} is superficial:
+I can read it, but it would take me several hours to produce a verified version.
+Guided by the GNATprove and my Socratic questions,
+Claude did it in about an hour,
+most of the time being blocked on the prover.
+Here is the code it produced, with my annotations\sidenote{blame-claude}{As usual, all the credit is mine, all mistakes are Claude's.}
+
+First, I decided to cheat and specify exponentiation in terms of the built-in power operator \code{**}.
+The \code{fast\_exp.ads} file specifies the interface of the fast exponentiation module.
+Line 9 defines the postcondition of the Fast\_Exp function (line 8):
+it must agree with the power operator.
+
+\begin{figure}
+\begin{code}[linenumbers]
+package Fast\_Exp
+  with SPARK\_Mode => On
+is
+   type Word is mod 2**64;
+
+   \emph{--  Fast exponentiation using binary method (exponentiation by squaring).}
+   \emph{--  Computes Base**Exp in O(log Exp) multiplications.}
+   function Fast\_Power (Base : Word; Exp : Natural) return Word
+     with Post => Fast\_Power'Result = Base ** Exp;
+
+end Fast\_Exp;
+\end{code}
+\end{figure}
+
+The \code{fast\_exp.adb} file implements the \code{Fast\_Power} function (line 13).
+The code is peppered with assertions that serve as intermediate steps to guide the prover.
+\code{Lemma\_Power\_Sq} is a helper ghost procedure
+(Ghost code facilitates proofs and doesn't appear in the executable)
+that suggests a proof by induction for the even-exponent case
+(the prover can handle most of the details, including the base case).
+
+\begin{figure}
+\begin{code}[linenumbers]
+package body Fast\_Exp
+  with SPARK\_Mode => On
+is
+
+   procedure \b{Lemma\_Power\_Sq} (B : Word; E : Natural)
+     with Ghost, Pre => E >= 2 and E mod 2 = 0,
+          Subprogram\_Variant => (Decreases => E),
+          Post => B ** E = (B * B) ** (E / 2)
+   is begin
+      if E > 2 then \b{Lemma\_Power\_Sq} (B, E - 2); end if;
+   end Lemma\_Power\_Sq;
+
+   function \b{Fast\_Power} (Base : Word; Exp : Natural) return Word is
+      Result : Word := 1;
+      B      : Word := Base;
+      E      : Natural := Exp;
+   begin
+      while E > 0 loop
+         pragma Loop\_Invariant (Result * B ** E = Base ** Exp);
+         pragma Loop\_Variant (Decreases => E);
+
+         if E mod 2 = 1 then
+            pragma Assert (B ** E = B * B ** (E - 1));
+            pragma Assert (Result * B ** E = Result * (B * B ** (E - 1)));
+            pragma Assert (Result * (B * B ** (E - 1)) =
+                          (Result * B) * B ** (E - 1));
+            Result := Result * B;
+            E := E - 1;
+         end if;
+
+         exit when E = 0;
+
+         \b{Lemma\_Power\_Sq} (B, E);
+         B := B * B;
+         E := E / 2;
+      end loop;
+
+      return Result;
+   end Fast\_Power;
+
+end Fast\_Exp;
+\end{code}
+\end{figure}
+
+
+In my next prompt,
+I asked Claude to remove the dependency on the built-in operator and derive correctness from first principles.
+The new interface defines the ghost function \code{Power} (line 7)
+that models exponentiation for the \code{Fast\_Power} function (line 14).
+
+\begin{figure}
+\begin{code}[linenumbers]
+package Fast\_Exp
+  with SPARK\_Mode => On
+is
+   type Word is mod 2**64;
+
+   \emph{--  Ghost function for specification: computes base^exp recursively.}
+   function \b{Power} (Base : Word; Exp : Natural) return Word is
+     (if Exp = 0 then 1 else Base * Power (Base, Exp - 1))
+     with Ghost,
+          Subprogram\_Variant => (Decreases => Exp);
+
+   \emph{--  Fast exponentiation using binary method (exponentiation by squaring).}
+   \emph{--  Computes Base^Exp in O(log Exp) multiplications.}
+   function \b{Fast\_Power} (Base : Word; Exp : Natural) return Word
+     with Post => Fast\_Power'Result = Power (Base, Exp);
+
+end Fast\_Exp;
+\end{code}
+\end{figure}
+
+The shape of the module body stayed the same;
+the \code{Lemma\_Power\_Sq} (line 5) procedure got bulkier because the prover needed more help.
+
+\begin{figure}
+\begin{code}[linenumbers]
+package body Fast\_Exp
+  with SPARK\_Mode => On
+is
+
+   procedure \b{Lemma\_Power\_Sq} (B : Word; E : Natural)
+     with Ghost, Pre => E >= 2 and E mod 2 = 0,
+          Subprogram\_Variant => (Decreases => E),
+          Post => Power (B, E) = Power (B * B, E / 2)
+   is
+   begin
+      if E = 2 then
+         pragma Assert (Power (B, 1) = B);
+         pragma Assert (Power (B * B, 1) = B * B);
+      else
+         Lemma\_Power\_Sq (B, E - 2);
+         pragma Assert (Power (B, E - 1) = B * Power (B, E - 2));
+         pragma Assert (Power (B, E) = B * Power (B, E - 1));
+         pragma Assert (B * (B * Power (B, E - 2)) =
+                       (B * B) * Power (B, E - 2));
+         pragma Assert (Power (B, E) = (B * B) * Power (B, E - 2));
+      end if;
+   end Lemma\_Power\_Sq;
+
+   function \b{Fast\_Power} (Base : Word; Exp : Natural) return Word is
+      Result : Word := 1;
+      B      : Word := Base;
+      E      : Natural := Exp;
+   begin
+      while E > 0 loop
+         pragma Loop\_Invariant (Result * Power (B, E) =
+                                Power (Base, Exp));
+         pragma Loop\_Variant (Decreases => E);
+
+         if E mod 2 = 1 then
+            pragma Assert (Power (B, E) = B * Power (B, E - 1));
+            pragma Assert (Result * (B * Power (B, E - 1)) =
+                          (Result * B) * Power (B, E - 1));
+            Result := Result * B;
+            E := E - 1;
+         end if;
+
+         pragma Assert (Result * Power (B, E) = Power (Base, Exp));
+         exit when E = 0;
+
+         Lemma\_Power\_Sq (B, E);
+         B := B * B;
+         E := E / 2;
+      end loop;
+
+      return Result;
+   end Fast\_Power;
+
+ end Fast\_Exp;
+\end{code}
+\end{figure}
+
+Lastly, I asked Claude to generalize the algorithm to work on arbitrary types and operators that model monoids.
+Claude correctly parameterized the package:
+
+\begin{figure}
+\begin{code}[linenumbers]
+generic
+   type T is private;
+   Identity : T;
+   with function "*" (Left, Right : T) return T;
+package Fast\_Exp
+  with SPARK\_Mode => On
+is
+   procedure \b{Axiom\_Assoc} (A, B, C : T) with
+     Ghost, Import, Always\_Terminates, Global => null,
+     Post => A * (B * C) = (A * B) * C;
+
+   procedure \b{Axiom\_Id\_Right} (A : T) with
+     Ghost, Import, Always\_Terminates, Global => null,
+     Post => A * Identity = A;
+
+   procedure \b{Axiom\_Id\_Left} (A : T) with
+     Ghost, Import, Always\_Terminates, Global => null,
+     Post => Identity * A = A;
+
+   function \b{Power} (Base : T; Exp : Natural) return T is
+     (if Exp = 0 then Identity else Base * Power (Base, Exp - 1))
+     with Ghost,
+          Subprogram\_Variant => (Decreases => Exp);
+
+   function \b{Fast\_Power} (Base : T; Exp : Natural) return T
+     with Post => Fast\_Power'Result = Power (Base, Exp);
+end Fast\_Exp;
+\end{code}
+\end{figure}
+
+The corresponding body is close to the previous iteration, so I won't show it here.
+The prover can't analyze generic code;
+it works only with specific instances.
+Claude checked the code by specializing the module for integer arithmetic.
+
+\begin{figure}
+\begin{code}[linenumbers]
+with Fast\_Exp;
+
+package Mod64\_Fast\_Exp
+  with SPARK\_Mode => On
+is
+   type Word is mod 2**64;
+
+   package Inst is new Fast\_Exp
+     (T => Word, Identity => 1, "*" => "*");
+
+end Mod64\_Fast\_Exp;
+\end{code}
+\end{figure}
+
+Overall, Claude impressed me despite requiring more guidance and time than I expected.
+For example, the body of its first attempt contained over 130 lines of code,
+way too much to prove an algorithm that fits on a business card.
+Claude started from scratch after I questioned it, adding only what was needed to help the prover.
+This strategy cut the implementation size to 50 lines.
+Another problem was that Claude tried to shift work to the prover early in the session and raised the prover limits too high,
+so every invocation took several minutes.
+Claude dialed down the settings after I pointed it out,
+which significantly sped up progress.
+
+I consider the experiment a success: the package interface constitutes about 25\% of the code
+(about 10\% if counting the test code I omitted) and summarizes it perfectly.
+During a code review,
+I can only read the specification and approve the rest after a quick glance to ensure the agent didn't cheat.
+
+
+\section{conclusion}{Conclusion}
+
+\epigraph{
+  Ain't technology grand---solving problems we never should have had in the first place?
+}{Gerald M. Weinberg, ``Weinberg on Writing''}
+
+Agents are drowning humans in subtly broken code,
+but they can also alleviate the problems they created if we require them to provide machine-verifiable proofs.
+\textsc{lean} and \textsc{spark}, though unlikely to become mainstream,
+serve as models for future verified toolchains
+that should feature a clear separation between the interface and the implementation (so that people know where to look)
+and easy-to-use, fast provers (so that agents can iterate quickly).
+Consumer-grade models can handle propositional logic,
+but mainstream tooling and developer education lag behind.
+
+Researchers (e.g., \href{https://www.julian.ac/blog/2025/11/13/alphaproof-paper/}{AlphaProof}),
+mathematicians (most notably, \href{https://youtu.be/cyyR7j2ChCI?si=NslhiTzusR4E10K_}{Terence Tao}),
+and startups (e.g., \href{https://harmonic.fun/}{Harmonic} with their \href{https://aristotle.harmonic.fun/}{Aristotle} system) already use the human + \textsc{llm} + \textsc{lean} combo to solve math problems.
+Crossing the bridge from the pure world of math to the greasy real-world engineering is a challenge,
+but I can't wait for the mainstream to catch up and make my code reviews fun.
+I miss you, Mr. Spock.
+
+\end{document}
