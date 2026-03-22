@@ -610,6 +610,8 @@ p {
     margin-bottom: 1.4rem;
     padding-right: 0;
     vertical-align: baseline;
+    hyphens: auto;
+    text-wrap: pretty;
 }
 
 p.hanging-quote {
