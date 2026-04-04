@@ -364,7 +364,7 @@ The new design offers several of improvements:
     The \code{InvalidEncoding} constructor hides the details of the decoding library we use.
     We can now replace \code{serde_cbor} without breaking other people's code.
   \item
-    We replaced generic crypto errors with two specific cases: \code{TxidMismatch} and \code{SignatureVerificationFailed}.
+    We replaced generic crypto errors with two specific cases: \code{MalformedPublicKey} and \code{SignatureVerificationFailed}.
     Our fellow programmer has more context to make rational decisions: the \code{MalformedPublicKey} case indicates that the user supplied the wrong key.
     The \code{SignatureVerificationFailed} case can indicate that the peer tampered with the data, so we should try connecting to another peer.
 \end{enumerate}
