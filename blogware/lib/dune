@@ -1,0 +1,5 @@
+(library
+ (name blogware)
+ (wrapped true)
+ (libraries unix)
+ (flags (:standard -w +a-4-40..42-44-45-48-58-60-66-67-69-70)))

@@ -1,9 +1,6 @@
-blogware/blogware
-.vscode/
-.idea/
-index.html
-about.html
-posts.html
-posts/*.html
-feed.xml
-go/
+_build/
+opam/
+_site/
+_opam/
+*.install
+.merlin
