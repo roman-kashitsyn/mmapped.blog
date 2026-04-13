@@ -6,16 +6,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
+      - name: Cache local opam state
+        uses: actions/cache@v4
+        with:
+          path: |
+            opam/2.3.0/root
+            opam/2.3.0/local-switch
+          key: ${{ runner.os }}-opam-${{ hashFiles('Makefile', 'blogware/dune-project') }}
 
       - name: Install dependencies
         run: make deps
 
-      - name: Run Go tests
+      - name: Run tests
         run: make test
-
-      - name: Run Go lint
-        run: make lint
 
       - name: Render the site
         run: make render DEST=site
