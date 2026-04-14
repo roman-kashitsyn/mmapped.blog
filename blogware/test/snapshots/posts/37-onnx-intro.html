@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="programming"><meta name="description" content="A gentle introduction to the Open Neural Network eXchange format."><title>ONNX introduction</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/37-onnx-intro.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/37-onnx-intro.html">ONNX introduction</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2025-02-17</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2025-02-17</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#anatomy">The anatomy of an ONNX model</a></li><li class="toc toc-level-1"><a href="#external-data">External data</a></li><li class="toc toc-level-1"><a href="#custom-operators">Custom operators</a></li><li class="toc toc-level-1"><a href="#subgraphs">Subgraphs</a></li><li class="toc toc-level-1"><a href="#running-onnx-programs">Appendix: running ONNX programs</a></li><li class="toc toc-level-1"><a href="#resources">Resources</a></li></ul><hr>
+
+<section><p>The machine learning ecosystem is a zoo of competing frameworks.
+Each framework offers its custom model representation format, sometimes more than one:
+</p>
+<ol class="circled"><li data-num-glyph="①"><a href="https://pytorch.org/">Pytorch</a> represents models using Python code that you can download from the <a href="https://huggingface.co/models">Hugging Face model repository</a>.
+This format is flexible, but it is a disaster from the security point of view because it allows for arbitrary code execution.
+</li><li data-num-glyph="②"><a href="https://www.tensorflow.org/">TensorFlow</a> supports multiple formats, including <a href="https://www.tensorflow.org/guide/saved_model">SavedModel</a>.
+The latest version is the <a href="https://www.tensorflow.org/guide/keras/serialization_and_saving">Keras</a> model format, which is a <span class="smallcaps">zip</span>-file with the model components and metadata.
+TensorFlow formats are underspecified, implementation-defined, and <a href="https://github.com/tensorflow/tensorflow/blob/master/SECURITY.md">generally insecure</a>.
+</li></ol>
+<p><span class="smallcaps">onnx</span> is an open format for representing machine learning models;
+it aims to unify the ecosystem.
+It doesn’t support advanced use cases, such as model training checkpoints,
+but it is simple, secure (no arbitrary code execution), and easy to build on.</p>
+<p>This article is an introduction to the <span class="smallcaps">onnx</span> file format
+I wish I had when embarked on my <span class="smallcaps">ml</span> model transformation journey at <a href="https://www.gensyn.ai/">Gensyn</a>.</p>
+</section>
+<section><h2 id="anatomy"><a href="#anatomy">The anatomy of an ONNX model</a></h2>
+<p>The primary way to create an <span class="smallcaps">onnx</span> file is to export it from a more popular model format,
+such as Pytorch (using the <a href="https://pytorch.org/docs/stable/onnx.html"><code>torch.onnx</code></a> module)
+or TensorFlow (using third-party packages, such as <a href="https://github.com/onnx/tensorflow-onnx"><code>tf2onnx</code></a>).</p>
+<p>Conceptually, an <span class="smallcaps">onnx</span> file describes a <em>model</em>
+containing a computation <em>graph</em>.
+The model acts as a program;
+it establishes the context through imports and helper function definitions.
+The primary graph is the <code>main</code> function;
+it defines a <a href="https://en.wikipedia.org/wiki/Pure_function">pure function</a> that maps model inputs to outputs.</p>
+<p>This description is abstract, so let’s get practical and inspect the <a href="https://onnx.ai/onnx/repo-docs/Syntax.html">textual representation</a> of a tiny perceptron model.</p>
+<figure><label class="margin-toggle" for="mn-tiny-perceptron">⊕</label><input type="checkbox" id="mn-tiny-perceptron" class="margin-toggle"><span class="marginnote">
+  The textual representation of a tiny perceptron model.
+</span><div class="source-container"><pre class="source linenumbers"><code><span class="line">&lt;</span>
+<span class="line">    ir_version: 7,</span>
+<span class="line">    opset_import: [&quot;&quot; : 21]</span>
+<span class="line">&gt;</span>
+<span class="line"></span>
+<span class="line">G (float[N, 3] X) =&gt; (float[N, 2] Out)</span>
+<span class="line">&lt;</span>
+<span class="line">    float[3, 4] W1 = {</span>
+<span class="line">        0.01, 0.02, 0.03, 0.04,</span>
+<span class="line">        0.05, 0.06, 0.07, 0.08,</span>
+<span class="line">        0.09, 0.10, 0.11, 0.12</span>
+<span class="line">    },</span>
+<span class="line">    float[4, 2] W2 = {</span>
+<span class="line">        0.11, 0.12,</span>
+<span class="line">        0.13, 0.14,</span>
+<span class="line">        0.15, 0.16,</span>
+<span class="line">        0.17, 0.18</span>
+<span class="line">    },</span>
+<span class="line">    float[4] B1 = { 0.001, 0.002, 0.003, 0.004 },</span>
+<span class="line">    float[2] B2 = { 0.01, 0.02 }</span>
+<span class="line">&gt;</span>
+<span class="line">{</span>
+<span class="line">    Y1 = <a href="https://onnx.ai/onnx/operators/onnx__Gemm.html">Gemm</a>(X, W1, B1)</span>
+<span class="line">    Y2 = <a href="https://onnx.ai/onnx/operators/onnx__Relu.html">Relu</a>(Y1)</span>
+<span class="line">    Z = <a href="https://onnx.ai/onnx/operators/onnx__Gemm.html">Gemm</a>(Y2, W2, B2)</span>
+<span class="line">    Out = <a href="https://onnx.ai/onnx/operators/onnx__Sigmoid.html">Sigmoid</a>(Z)</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<ul class="arrows"><li>
+    Lines 1–4 specify <a href="https://onnx.ai/onnx/repo-docs/IR.html#models">model attributes</a>:
+    the <span class="smallcaps">onnx</span> format version and the versions of <a href="https://onnx.ai/onnx/repo-docs/IR.html#operator-sets">operator sets</a> (<em>opsets</em>) this model uses.
+    Refer to the <a href="#custom-operators">Custom operators</a> section for an explanation of the opset concept.
+</li><li>
+    Line 6 defines the primary model graph named <code>G</code>.
+    The graph takes one input named <code>X</code> (an <span class="math">N × 3</span> matrix of floats, where <span class="math">N</span> is deduced from the input shape)
+    and produces one output named <code>Out</code> (an <span class="math">N × 2</span> matrix of floats).
+</li><li>
+    Lines 7–21 define the graph <em>initializers</em> corresponding to the model weights.
+    When you train an <span class="smallcaps">onnx</span> model, you optimize the initializer values.
+</li><li>
+    Lines 22–27 define the graph body, where each line (except for curly brackets) is an operator application.
+    Each operator is a pure function mapping zero or more inputs to one or more outputs.
+</li></ul>
+<p>An <span class="smallcaps">onnx</span> file is a model encoded as a <a href="https://protobuf.dev/">Protocol Buffers</a> message.
+It’s insightful to inspect this low-level representation of our example model.</p>
+<figure><label class="margin-toggle" for="mn-perceptron-raw">⊕</label><input type="checkbox" id="mn-perceptron-raw" class="margin-toggle"><span class="marginnote">
+  A Protocol Buffers representation of a tiny <span class="smallcaps">onnx</span> model.
+  Ellipses in initializers do not belong to the message; they indicate omitted data entries.
+</span><div class="source-container"><pre class="source"><code><span class="line">ir_version: 7</span>
+<span class="line">opset_import {</span>
+<span class="line">  domain: &quot;&quot;</span>
+<span class="line">  version: 21</span>
+<span class="line">}</span>
+<span class="line">graph {</span>
+<span class="line">  name: &quot;G&quot;</span>
+<span class="line">  input {</span>
+<span class="line">    name: &quot;X&quot;</span>
+<span class="line">    type {</span>
+<span class="line">      tensor_type {</span>
+<span class="line">        elem_type: 1</span>
+<span class="line">        shape {</span>
+<span class="line">          dim { dim_param: &quot;N&quot; }</span>
+<span class="line">          dim { dim_value: 3 }</span>
+<span class="line">        }</span>
+<span class="line">      }</span>
+<span class="line">    }</span>
+<span class="line">  }</span>
+<span class="line">  output {</span>
+<span class="line">    name: &quot;Out&quot;</span>
+<span class="line">    type {</span>
+<span class="line">      tensor_type {</span>
+<span class="line">        elem_type: 1</span>
+<span class="line">        shape {</span>
+<span class="line">          dim { dim_param: &quot;N&quot; }</span>
+<span class="line">          dim { dim_value: 2 }</span>
+<span class="line">        }</span>
+<span class="line">      }</span>
+<span class="line">    }</span>
+<span class="line">  }</span>
+<span class="line">  initializer {</span>
+<span class="line">    name: &quot;W1&quot;</span>
+<span class="line">    dims: 3</span>
+<span class="line">    dims: 4</span>
+<span class="line">    data_type: 1</span>
+<span class="line">    float_data: 0.01</span>
+<span class="line">    …</span>
+<span class="line">  }</span>
+<span class="line">  initializer {</span>
+<span class="line">    name: &quot;W2&quot;</span>
+<span class="line">    dims: 4</span>
+<span class="line">    dims: 2</span>
+<span class="line">    data_type: 1</span>
+<span class="line">    float_data: 0.11</span>
+<span class="line">    …</span>
+<span class="line">  }</span>
+<span class="line">  initializer {</span>
+<span class="line">    name: &quot;B1&quot;</span>
+<span class="line">    dims: 4</span>
+<span class="line">    data_type: 1</span>
+<span class="line">    float_data: 0.001</span>
+<span class="line">    …</span>
+<span class="line">  }</span>
+<span class="line">  initializer {</span>
+<span class="line">    name: &quot;B2&quot;</span>
+<span class="line">    dims: 2</span>
+<span class="line">    data_type: 1</span>
+<span class="line">    float_data: 0.01</span>
+<span class="line">    …</span>
+<span class="line">  }</span>
+<span class="line">  node {</span>
+<span class="line">    input: &quot;X&quot;</span>
+<span class="line">    input: &quot;W1&quot;</span>
+<span class="line">    input: &quot;B1&quot;</span>
+<span class="line">    output: &quot;Y1&quot;</span>
+<span class="line">    op_type: &quot;Gemm&quot;</span>
+<span class="line">    domain: &quot;&quot;</span>
+<span class="line">  }</span>
+<span class="line">  node {</span>
+<span class="line">    input: &quot;Y1&quot;</span>
+<span class="line">    output: &quot;Y2&quot;</span>
+<span class="line">    op_type: &quot;Relu&quot;</span>
+<span class="line">    domain: &quot;&quot;</span>
+<span class="line">  }</span>
+<span class="line">  node {</span>
+<span class="line">    input: &quot;Y2&quot;</span>
+<span class="line">    input: &quot;W2&quot;</span>
+<span class="line">    input: &quot;B2&quot;</span>
+<span class="line">    output: &quot;Z&quot;</span>
+<span class="line">    op_type: &quot;Gemm&quot;</span>
+<span class="line">    domain: &quot;&quot;</span>
+<span class="line">  }</span>
+<span class="line">  node {</span>
+<span class="line">    input: &quot;Z&quot;</span>
+<span class="line">    output: &quot;Out&quot;</span>
+<span class="line">    op_type: &quot;Sigmoid&quot;</span>
+<span class="line">    domain: &quot;&quot;</span>
+<span class="line">  }</span>
+<span class="line">  value_info {</span>
+<span class="line">    name: &quot;Y1&quot;</span>
+<span class="line">    type {</span>
+<span class="line">      tensor_type {</span>
+<span class="line">        elem_type: 1</span>
+<span class="line">        shape {</span>
+<span class="line">          dim { dim_param: &quot;N&quot; }</span>
+<span class="line">          dim { dim_value: 4 }</span>
+<span class="line">        }</span>
+<span class="line">      }</span>
+<span class="line">    }</span>
+<span class="line">  }</span>
+<span class="line">  value_info {</span>
+<span class="line">    name: &quot;Y2&quot;</span>
+<span class="line">    type {</span>
+<span class="line">      tensor_type {</span>
+<span class="line">        elem_type: 1</span>
+<span class="line">        shape {</span>
+<span class="line">          dim { dim_param: &quot;N&quot; }</span>
+<span class="line">          dim { dim_value: 4 }</span>
+<span class="line">        }</span>
+<span class="line">      }</span>
+<span class="line">    }</span>
+<span class="line">  }</span>
+<span class="line">  value_info {</span>
+<span class="line">    name: &quot;Z&quot;</span>
+<span class="line">    type {</span>
+<span class="line">      tensor_type {</span>
+<span class="line">        elem_type: 1</span>
+<span class="line">        shape {</span>
+<span class="line">          dim { dim_param: &quot;N&quot; }</span>
+<span class="line">          dim { dim_value: 2 }</span>
+<span class="line">        }</span>
+<span class="line">      }</span>
+<span class="line">    }</span>
+<span class="line">  }</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>In this low-level representation, the graph has the following components:
+</p>
+<ul class="arrows"><li>A list of <em>inputs</em> that the caller must provide to compute the outputs.
+</li><li>A list of <em>outputs</em> that the graph computes.
+</li><li>A list of <em>initializers</em> specifying the model weights.
+</li><li>A list of <em>nodes</em> sorted <a href="https://en.wikipedia.org/wiki/Topological_sorting">topologically</a>: a node can refer only to the graph inputs, initializers, and values that preceding nodes produce.
+    Nodes refer to their inputs and outputs by names.
+    Nodes might also have names, but all the nodes in our examples are unnamed.
+</li><li>A list of <code>value_info</code> entries providing types for intermediate values.
+</li></ul>
+<p>Graph inputs, outputs, and initializers must have explicit types (in the example, these are float tensors of various shapes);
+internal values might not have the corresponding <code>value_info</code> entries.</p>
+</section>
+<section><h2 id="external-data"><a href="#external-data">External data</a></h2>
+<p>Since Protocol Buffers <a href="https://protobuf.dev/programming-guides/proto-limits/#total">restrict the file size to two gigabytes</a>, <span class="smallcaps">onnx</span> alone cannot encode large models<label class="margin-toggle sidenote-number" for="sn-llama-size"></label><input type="checkbox" id="sn-llama-size" class="margin-toggle"><span class="sidenote">
+    For example, <a href="https://huggingface.co/meta-llama/Llama-3.1-8B">Llama 3.1 <span class="smallcaps">8b</span></a> needs at least 16 gigabytes to encode its model weights using the <a href="https://en.wikipedia.org/wiki/Bfloat16_floating-point_format"><span class="smallcaps">bf16</span></a> type.
+</span>.
+To address this problem, <span class="smallcaps">onnx</span> allows storing any tensor, such as an initializer or an operator attribute, in external files.</p>
+<p>An external data reference specifies the location of the tensor file relative to the model file and the offset and the length within the file<label class="margin-toggle sidenote-number" for="sn-offset-length"></label><input type="checkbox" id="sn-offset-length" class="margin-toggle"><span class="sidenote">
+  The <code>offset</code> and the <code>length</code> fields are optional.
+  Missing offset means <q>from the beginning of the file,</q> missing length—<q>until the end of the file.</q>
+</span>.
+The tensor is assumed to be in the flat row-major, little-endian format.</p>
+<p>Let’s make our tiny perceptron model larger and move its weight into a separate file.</p>
+<figure><label class="margin-toggle" for="mn-perceptron-external-tensors">⊕</label><input type="checkbox" id="mn-perceptron-external-tensors" class="margin-toggle"><span class="marginnote">
+  A perceptron model that stores its weights in an external file.
+  The <code>location</code> path is relative to the model file.
+</span><div class="source-container"><pre class="source linenumbers"><code><span class="line">&lt;</span>
+<span class="line">    ir_version: 7,</span>
+<span class="line">    opset_import: [&quot;&quot; : 21]</span>
+<span class="line">&gt;</span>
+<span class="line"></span>
+<span class="line">G (float[N, 64] X) =&gt; (float[N, 10] Out)</span>
+<span class="line">&lt;</span>
+<span class="line">    float[64, 1024] W1 = [</span>
+<span class="line">        &quot;location&quot;: &quot;weights.bin&quot;, &quot;offset&quot;: &quot;0&quot;, &quot;length&quot;: &quot;262144&quot;</span>
+<span class="line">    ],</span>
+<span class="line">    float[1024, 10] W2 = [</span>
+<span class="line">        &quot;location&quot;: &quot;weights.bin&quot;, &quot;offset&quot;: &quot;262144&quot;, &quot;length&quot;: &quot;40960&quot;</span>
+<span class="line">    ],</span>
+<span class="line">    float[1024] B1 = [</span>
+<span class="line">        &quot;location&quot;: &quot;weights.bin&quot;, &quot;offset&quot;: &quot;303104&quot;, &quot;length&quot;: &quot;4096&quot;</span>
+<span class="line">    ],</span>
+<span class="line">    float[10] B2 = [</span>
+<span class="line">        &quot;location&quot;: &quot;weights.bin&quot;, &quot;offset&quot;: &quot;307200&quot;, &quot;length&quot;: &quot;40&quot;</span>
+<span class="line">    ]</span>
+<span class="line">&gt;</span>
+<span class="line">{</span>
+<span class="line">    Y1 = <a href="https://onnx.ai/onnx/operators/onnx__Gemm.html">Gemm</a>(X, W1, B1)</span>
+<span class="line">    Y2 = <a href="https://onnx.ai/onnx/operators/onnx__Relu.html">Relu</a>(Y1)</span>
+<span class="line">    Z = <a href="https://onnx.ai/onnx/operators/onnx__Gemm.html">Gemm</a>(Y2, W2, B2)</span>
+<span class="line">    Out = <a href="https://onnx.ai/onnx/operators/onnx__Sigmoid.html">Sigmoid</a>(Z)</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>The textual syntax for external tensors desugars into a protobuf message
+with the <a href="https://github.com/onnx/onnx/blob/0277a1f62550c0b9edc3e1016a50a42dc4c73cf1/onnx/onnx.proto3#L653"><code>data_location</code></a> field set to <code>EXTERNAL</code>,
+and repeated <a href="https://github.com/onnx/onnx/blob/0277a1f62550c0b9edc3e1016a50a42dc4c73cf1/onnx/onnx.proto3#L642"><code>external_data</code></a> fields indicating the data location.</p>
+<figure><label class="margin-toggle" for="mn-initializer">⊕</label><input type="checkbox" id="mn-initializer" class="margin-toggle"><span class="marginnote">
+  An example of an initializer message that refers to external data.
+</span><div class="source-container"><pre class="source"><code><span class="line">initializer {</span>
+<span class="line">  name: &quot;W2&quot;</span>
+<span class="line">  dims: 1024</span>
+<span class="line">  dims: 10</span>
+<span class="line">  data_type: 1</span>
+<span class="line">  external_data {</span>
+<span class="line">    key: &quot;location&quot;</span>
+<span class="line">    value: &quot;weights.bin&quot;</span>
+<span class="line">  }</span>
+<span class="line">  external_data {</span>
+<span class="line">    key: &quot;offset&quot;</span>
+<span class="line">    value: &quot;262144&quot;</span>
+<span class="line">  }</span>
+<span class="line">  external_data {</span>
+<span class="line">    key: &quot;length&quot;</span>
+<span class="line">    value: &quot;40960&quot;</span>
+<span class="line">  }</span>
+<span class="line">  data_location: EXTERNAL</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>The external data feature explains why most <span class="smallcaps">onnx</span> tools accept a path to the model file:
+they might need to access external tensors,
+and tensor locations are always relative to the model path.</p>
+<p>The <a href="https://onnx.ai/onnx/api/external_data_helper.html"><code>onnx.external_data_helper</code></a> Python module provides helpful utilities for dealing with external data.</p>
+</section>
+<section><h2 id="custom-operators"><a href="#custom-operators">Custom operators</a></h2>
+<p><span class="smallcaps">onnx</span> allows the model to define custom operators, also called <em>functions</em>.
+The specification calls operator namespaces <em>domains</em>
+and groups operators into <a href="https://onnx.ai/onnx/repo-docs/Versioning.html#operator-sets">operator sets</a> (<em>opsets</em>).
+An opset is a versioned snapshot of operators from the same domain.</p>
+<p>We know enough terminology now to understand the <code>opset_import</code> line at the top of our <span class="smallcaps">onnx</span> programs.
+It pins the exact operator semantics within the model graph.</p>
+<p>The textual syntax for custom operators is almost identical to that of a graph definition.
+Custom operator definitions must appear after the primary model graph
+and have an attribute section defining their domain and dependencies.</p>
+<p>The following example demonstrates a model that defines a custom operator doubling its input.</p>
+<figure><label class="margin-toggle" for="mn-double-example">⊕</label><input type="checkbox" id="mn-double-example" class="margin-toggle"><span class="marginnote">
+  An <span class="smallcaps">onnx</span> model that doubles its input using a custom operator.
+</span><div class="source-container"><pre class="source linenumbers"><code><span class="line">&lt;</span>
+<span class="line">    ir_version: 7,</span>
+<span class="line">    opset_import: [&quot;&quot; : 21, &quot;com.example&quot; : 1]</span>
+<span class="line">&gt;</span>
+<span class="line"></span>
+<span class="line">G (float[N] X) =&gt; (float[N] Out)</span>
+<span class="line">{</span>
+<span class="line">    Out = com.example.Double(X)</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">&lt;</span>
+<span class="line">    domain: &quot;com.example&quot;,</span>
+<span class="line">    opset_import: [&quot;&quot;: 21]</span>
+<span class="line">&gt;</span>
+<span class="line">Double (float[N] X) =&gt; (float[N] Out) {</span>
+<span class="line">    Out = <a href="https://onnx.ai/onnx/operators/onnx__Add.html">Add</a>(X, X)</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<ul class="arrows"><li>
+Line 3 imports two operator sets: the standard set and the custom set we define later in the program.
+</li><li>
+Lines 11–17 define a custom operator that doubles its input.
+Note the difference between lines 1–4 that set the top-level model attributes
+and lines 11–14 that set attributes for the function that follows.
+The operator attributes specify its domain and the opsets required for the implementation.
+</li></ul>
+<p>Nodes might have <em>attributes</em> (values or subgraphs) that modify their behavior.
+Custom operators can also define attributes.</p>
+<p>The following examples introduce a custom <code>Root</code> operator that computes the <a href="https://en.wikipedia.org/wiki/Nth_root">n-th root</a> of its argument.</p>
+<figure><label class="margin-toggle" for="mn-onnx-root-example">⊕</label><input type="checkbox" id="mn-onnx-root-example" class="margin-toggle"><span class="marginnote">
+    An <span class="smallcaps">onnx</span> program that defines a custom <code>Root</code> operator with a single attribute, the root index.
+</span><div class="source-container"><pre class="source linenumbers"><code><span class="line">&lt;</span>
+<span class="line">    ir_version: 7,</span>
+<span class="line">    opset_import: [&quot;&quot; : 21, &quot;com.example&quot; : 1]</span>
+<span class="line">&gt;</span>
+<span class="line"></span>
+<span class="line">G (float[N] X) =&gt; (float[N] Out) {</span>
+<span class="line">    Out = com.example.Root&lt;nth = 2&gt;(X)</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">&lt;</span>
+<span class="line">    domain: &quot;com.example&quot;,</span>
+<span class="line">    opset_import: [&quot;&quot;: 21]</span>
+<span class="line">&gt;</span>
+<span class="line">Root &lt;nth: int = 2&gt; (float[N] X) =&gt; (float[N] Out) {</span>
+<span class="line">    One = <a href="https://onnx.ai/onnx/operators/onnx__Constant.html">Constant</a>&lt;value_float = 1.0&gt;()</span>
+<span class="line">    Nth = <a href="https://onnx.ai/onnx/operators/onnx__Constant.html">Constant</a>&lt;value_int = @nth&gt;()</span>
+<span class="line">    NthFloat = <a href="https://onnx.ai/onnx/operators/onnx__Cast.html">Cast</a>&lt;to = 1&gt;(Nth)</span>
+<span class="line">    E = <a href="https://onnx.ai/onnx/operators/onnx__Div.html">Div</a>(One, NthFloat)</span>
+<span class="line">    Out = <a href="https://onnx.ai/onnx/operators/onnx__Pow.html">Pow</a>(X, E)</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<ul class="arrows"><li>
+  Line 7 invokes our custom operator and explicitly specifies the <code>nth</code> attribute value.
+</li><li>
+  Line 14 defines the <code>Root</code> operator with an attribute section.
+</li><li>
+  Line 16 converts an attribute value into a constant graph node.
+  The following line casts the integer value into a floating-point number.
+</li></ul>
+</section>
+<section><h2 id="subgraphs"><a href="#subgraphs">Subgraphs</a></h2>
+<p><span class="smallcaps">onnx</span> supports branching and looping using <em>nested graphs</em> as operator attributes.
+For example, the <code>If</code> operator accepts a single formal input—the condition—and two required attributes specifying the computation
+that must happen in <q>then</q> and <q>else</q> branches.
+Nested graphs can reference values from the outer scope.</p>
+<p>There is no better way to demonstrate control flow than to solve <a href="https://en.wikipedia.org/wiki/Fizz_buzz">FizzBuzz</a> in <span class="smallcaps">onnx</span>.</p>
+<div class="source-container"><pre class="source linenumbers"><code><span class="line">&lt;</span>
+<span class="line">    ir_version: 7,</span>
+<span class="line">    opset_import: [&quot;&quot; : 21]</span>
+<span class="line">&gt;</span>
+<span class="line"></span>
+<span class="line">G (int64 Limit) =&gt; (string[N] Out) {</span>
+<span class="line">    Zero = <a href="https://onnx.ai/onnx/operators/onnx__Constant.html">Constant</a>&lt;value_int = 0&gt;()</span>
+<span class="line">    One = <a href="https://onnx.ai/onnx/operators/onnx__Constant.html">Constant</a>&lt;value_int = 1&gt;()</span>
+<span class="line">    Three = <a href="https://onnx.ai/onnx/operators/onnx__Constant.html">Constant</a>&lt;value_int = 3&gt;()</span>
+<span class="line">    Five = <a href="https://onnx.ai/onnx/operators/onnx__Constant.html">Constant</a>&lt;value_int = 5&gt;()</span>
+<span class="line">    Fifteen = <a href="https://onnx.ai/onnx/operators/onnx__Constant.html">Constant</a>&lt;value_int = 15&gt;()</span>
+<span class="line">    Cond = <a href="https://onnx.ai/onnx/operators/onnx__Cast.html">Cast</a>&lt;to = 9&gt;(One)</span>
+<span class="line"></span>
+<span class="line">    Out = <a href="https://onnx.ai/onnx/operators/onnx__Loop.html">Loop</a> (Limit, Cond) &lt;body = Body (int64 I, bool C) =&gt; (bool OutC, string Item) {</span>
+<span class="line">        X = <a href="https://onnx.ai/onnx/operators/onnx__Add.html">Add</a>(I, One)</span>
+<span class="line">        OutC = <a href="https://onnx.ai/onnx/operators/onnx__Identity.html">Identity</a>(C)</span>
+<span class="line"></span>
+<span class="line">        M15 = <a href="https://onnx.ai/onnx/operators/onnx__Mod.html">Mod</a>(X, Fifteen)</span>
+<span class="line">        Z15 = <a href="https://onnx.ai/onnx/operators/onnx__Equal.html">Equal</a>(M15, Zero)</span>
+<span class="line">        Item = <a href="https://onnx.ai/onnx/operators/onnx__If.html">If</a> (Z15) &lt;</span>
+<span class="line">            then_branch = FizzBuzz () =&gt; (string R) {</span>
+<span class="line">                R = <a href="https://onnx.ai/onnx/operators/onnx__Constant.html">Constant</a>&lt;value_string = &quot;fizzbuzz&quot;&gt;()</span>
+<span class="line">            },</span>
+<span class="line">            else_branch = Other () =&gt; (string R) {</span>
+<span class="line">                M3 = <a href="https://onnx.ai/onnx/operators/onnx__Mod.html">Mod</a>(X, Three)</span>
+<span class="line">                Z3 = <a href="https://onnx.ai/onnx/operators/onnx__Equal.html">Equal</a>(M3, Zero)</span>
+<span class="line">                R = <a href="https://onnx.ai/onnx/operators/onnx__If.html">If</a> (Z3) &lt;</span>
+<span class="line">                    then_branch = Fizz () =&gt; (string R) {</span>
+<span class="line">                        R = <a href="https://onnx.ai/onnx/operators/onnx__Constant.html">Constant</a>&lt;value_string = &quot;fizz&quot;&gt;()</span>
+<span class="line">                    },</span>
+<span class="line">                    else_branch = Other () =&gt; (string R) {</span>
+<span class="line">                        M5 = <a href="https://onnx.ai/onnx/operators/onnx__Mod.html">Mod</a>(X, Five)</span>
+<span class="line">                        Z5 = <a href="https://onnx.ai/onnx/operators/onnx__Equal.html">Equal</a>(M5, Zero)</span>
+<span class="line">                        R = <a href="https://onnx.ai/onnx/operators/onnx__If.html">If</a> (Z5) &lt;</span>
+<span class="line">                            then_branch = Buzz () =&gt; (string R) {</span>
+<span class="line">                                R = <a href="https://onnx.ai/onnx/operators/onnx__Constant.html">Constant</a>&lt;value_string = &quot;buzz&quot;&gt;()</span>
+<span class="line">                            },</span>
+<span class="line">                            else_branch = Other =&gt; (string R) {</span>
+<span class="line">                                R = <a href="https://onnx.ai/onnx/operators/onnx__Cast.html">Cast</a>&lt;to = 8&gt;(X)</span>
+<span class="line">                            }</span>
+<span class="line">                        &gt;</span>
+<span class="line">                    }</span>
+<span class="line">                &gt;</span>
+<span class="line">            }</span>
+<span class="line">        &gt;</span>
+<span class="line">    }&gt;</span>
+<span class="line">}</span>
+</code></pre></div>
+<ul class="arrows"><li>
+  The textual representation doesn’t support raw literals as operator arguments,
+  so explicitly declare all the constants we’ll use in lines 7–12.
+  Constant nodes have no inputs and one output, the value they wrap.
+  The magic constant <code>9</code> on line 12 is the <a href="https://github.com/onnx/onnx/blob/0277a1f62550c0b9edc3e1016a50a42dc4c73cf1/onnx/onnx.proto3#L515">boolean type id</a>.
+</li><li><span class="smallcaps">onnx</span> graphs express pure computation, so all operators must produce a value to be useful.
+  Thus, <span class="smallcaps">onnx</span> control structures resemble functional programming primitives, such as <a href="https://hackage.haskell.org/package/base-4.21.0.0/docs/Data-List.html#v:unfoldr"><code>unfoldr</code></a>.<p>  The <code>Loop</code> operator accepts multiple arguments:
+  the maximum number of iterations,
+  the exit condition (the loop won’t start if that value is <code>false</code>),
+  and a sequence of internal loop variables (we don’t use any in this example).
+  The <code>body</code> graph attribute specifies the variable transformation at each step.</p>
+<p>  The body transforms current iteration number, stop condition, and internal variables
+  into the next exit condition (for early termination), the next values of internal variables, and an output value.
+  The <code>Loop</code> operator accumulates all the output values into an output tensor.
+  It returns the final values of intermediate variables and the accumulated outputs.</p>
+</li><li>
+  Our loop body graph is a sequence of nested <a href="https://onnx.ai/onnx/operators/onnx__If.html"><code>If</code></a> operator calls.
+  An <code>If</code> operator accepts a boolean condition value and two graph attributes: <code>then_branch</code> and <code>else_branch</code>.
+  Our conditions check whether the input divides by 15, 5, and 3 and falls back to converting the number to string on line 39
+  (<a href="https://github.com/onnx/onnx/blob/0277a1f62550c0b9edc3e1016a50a42dc4c73cf1/onnx/onnx.proto3#L514">type id 8</a> corresponds to the string type).
+  Note how nested graphs can freely access values from their lexical scope.
+</li></ul>
+</section>
+<section><h2 id="running-onnx-programs"><a href="#running-onnx-programs">Appendix: running ONNX programs</a></h2>
+<p>You can use the following Python code snippet to parse and play with the textual format
+(the <a href="https://docs.astral.sh/uv/guides/scripts/#running-scripts">uv tool</a> makes it easy: <code>uv run --no-project script.py</code>).</p>
+<figure><label class="margin-toggle" for="mn-onnx-text-python-snippet">⊕</label><input type="checkbox" id="mn-onnx-text-python-snippet" class="margin-toggle"><span class="marginnote">
+  A snippet of Python code that parses <span class="smallcaps">onnx</span> textual syntax and runs the model.
+  The model source is in bold.
+</span><div class="source-container"><pre class="source python"><code><span class="line"><em># /// script</span>
+<span class="line"># dependencies = [</span>
+<span class="line">#   &quot;onnx~=1.17&quot;,</span>
+<span class="line">#   &quot;onnxruntime~=1.18&quot;,</span>
+<span class="line"># ]</span>
+<span class="line"># ///</em></span>
+<span class="line">import tempfile</span>
+<span class="line"></span>
+<span class="line">import numpy as np</span>
+<span class="line">import numpy.typing as npt</span>
+<span class="line">import onnx</span>
+<span class="line">import onnx.external_data_helper</span>
+<span class="line">import onnx.parser</span>
+<span class="line">import onnxruntime as ort</span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line">def parse_onnx(text: str) -&gt; onnx.ModelProto:</span>
+<span class="line">    model = onnx.parser.parse_model(text)</span>
+<span class="line">    onnx.checker.check_model(model)</span>
+<span class="line">    return onnx.shape_inference.infer_shapes(model, check_type=True)</span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line">def run_onnx(</span>
+<span class="line">    model: onnx.ModelProto, inputs: dict[str, npt.NDArray], outputs: list[str]</span>
+<span class="line">) -&gt; dict[str, npt.NDArray]:</span>
+<span class="line">    onnx.external_data_helper.load_external_data_for_model(model, &quot;.&quot;)</span>
+<span class="line">    with tempfile.NamedTemporaryFile() as model_file:</span>
+<span class="line">        onnx.save_model(model, model_file.name)</span>
+<span class="line">        runtime = ort.InferenceSession(model_file.name)</span>
+<span class="line">        return runtime.run(outputs, inputs)</span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line">print(</span>
+<span class="line">    run_onnx(</span>
+<span class="line">        parse_onnx(&quot;&quot;&quot;<b></span>
+<span class="line">    &lt;ir_version: 7, opset_import: [&quot;&quot;: 21]&gt;</span>
+<span class="line">    Square (float[N] X) =&gt; (float[N] Out) {</span>
+<span class="line">        Out = Mul(X, X)</span>
+<span class="line">    }</span>
+<span class="line">    </b>&quot;&quot;&quot;),</span>
+<span class="line">        inputs={&quot;X&quot;: np.array([1.0, 2.0, 3.0], dtype=np.float32)},</span>
+<span class="line">        outputs=[&quot;Out&quot;],</span>
+<span class="line">    )</span>
+<span class="line">)</span>
+</code></pre></div>
+</figure>
+</section>
+<section><h2 id="resources"><a href="#resources">Resources</a></h2>
+<ul class="arrows"><li><a href="https://onnx.ai/onnx/intro/index.html">The official <span class="smallcaps">onnx</span> introduction.</a></li><li><a href="https://onnx.ai/onnx/repo-docs/IR.html">The <span class="smallcaps">onnx ir</span> specification.</a></li><li><a href="https://onnx.ai/onnx/repo-docs/Syntax.html"><span class="smallcaps">onnx</span> textual syntax.</a></li><li><a href="https://github.com/onnx/onnx/blob/9fb11e344a7721b2eed1f3e26bf9312f168a79a0/onnx/test/cpp/parser_test.cc">Tests for the textual syntax parser.</a></li><li><a href="https://netron.app/">The Netron <span class="smallcaps">onnx</span> graph visualizer.</a></li></ul>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/41-box-combinators.html">Box combinators</a></li><li><a href="/posts/31-effective-design-docs.html">Effective design docs</a></li><li><a href="/posts/44-tag-based-logging.html">Tag-based logging</a></li><li><a href="/posts/45-compilation-is-communication.html">Compilation is communication</a></li><li><a href="/posts/38-static-types-perfectionism.html">Static types are for perfectionists</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/38-static-types-perfectionism.html"> ←Static types are for perfectionists</a></div><div id="older"><a href="/posts/36-2024-retro.html">2024 retrospective→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

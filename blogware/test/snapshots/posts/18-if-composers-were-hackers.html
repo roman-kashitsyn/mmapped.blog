@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="glasperlenspiel,music,programming"><meta name="description" content="What programming language would J.S. Bach use?"><title>If composers were hackers</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/18-if-composers-were-hackers.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/18-if-composers-were-hackers.html">If composers were hackers</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2023-04-01</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2025-10-26</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#introduction">Introduction</a></li><li class="toc toc-level-1"><a href="#bach">Johann Sebastian Bach</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#bach-apl-resources">Resources</a></li></ul></li><li class="toc toc-level-1"><a href="#mozart">Wolfgang Amadeus Mozart</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#mozart-scheme-resources">Resources</a></li></ul></li><li class="toc toc-level-1"><a href="#beethoven">Ludwig van Beethoven</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#beethoven-haskell-resources">Resources</a></li></ul></li><li class="toc toc-level-1"><a href="#scriabin">Alexander Nikolayevich Scriabin</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#scriabin-cl-resources">Resources</a></li></ul></li><li class="toc toc-level-1"><a href="#closing">Closing words</a></li></ul><hr>
+
+<section><h2 id="introduction"><a href="#introduction">Introduction</a></h2>
+<p>Music is my first true love<label class="margin-toggle sidenote-number" for="zero-love"></label><input type="checkbox" id="zero-love" class="margin-toggle"><span class="sidenote">Computer games are my zeroth true love.</span>.
+The first time I got my hands on an old untuned guitar, I didn’t want to put it down.
+I found a summer job to buy my first instrument and pay for a teacher, and since then, music has been a constant source of joy in my life.
+Picking a degree in computer science over a music college was a tough choice for me.</p>
+<p>I can’t help but look at the world through the lens of my music obsession.
+There are many deep similarities between music and computing,
+but we won’t explore them in this article;
+I will instead explore a silly and subjective question:
+<q>If my favorite composers decided to write some code, which language would they pick?</q></p>
+</section>
+<section><h2 id="bach"><a href="#bach">Johann Sebastian Bach</a></h2>
+<p><a href="https://en.wikipedia.org/wiki/Johann_Sebastian_Bach">Johann Sebastian Bach</a> is arguably the most talented and prolific musician in history.
+He would love the <a href="https://en.wikipedia.org/wiki/APL_(programming_language)"><span class="smallcaps">apl</span></a> programming language:</p>
+<ul class="arrows"><li>
+    Bach’s music is <em>terse</em> like a well-written <span class="smallcaps">apl</span> program.
+    He achieves immense expressive power with a few well-chosen constructs.
+  </li><li>
+    In his lifetime, Bach was famous primarily for his improvisation skills.
+    <span class="smallcaps">apl</span> is perfect for live coding because of its interactivity and terseness.
+  </li><li>
+    Motifs and keys in Bach’s music bear deep symbolic and emotional meaning.
+    For example, a twisted motif might mean a crucifixion
+    and a sequence of twelve beats might depict a clock striking midnight.
+    Bach would appreciate how <span class="smallcaps">apl</span> assigns meaning to symbols.
+  </li><li>
+    Bach was phenomenally prolific, cranking at least one cantata (about 20 minutes of music) per week for Sunday church services for over three years,
+    writing over three hundred cantatas in total,
+    and it wasn’t even his primary duty.
+    Only a caffeinated <span class="smallcaps">apl</span> wizard can match this pace.
+  </li><li>
+    The <a href="https://en.wikipedia.org/wiki/Contents_of_the_Voyager_Golden_Record">Voyager Golden Record</a> contains three compositions by Bach.
+    If we had to prove to aliens we can compute,
+    <span class="smallcaps">apl</span> is <em>the</em> language to etch on a golden disk.
+</li></ul>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-repr-bach">⊕</label><input type="checkbox" id="mn-repr-bach" class="margin-toggle"><span class="marginnote">
+    Representative Bach’s music: <em>Wachet auf, ruft uns die Stimme</em>, a deeply moving and masterfully harmonized chorale.
+  </span><img src="/images/18-bach-snippet.png">
+</figure>
+<figure><label class="margin-toggle" for="mn-apl-program">⊕</label><input type="checkbox" id="mn-apl-program" class="margin-toggle"><span class="marginnote">
+    An <span class="smallcaps">apl</span> function computing <span class="math">2<sup>n</sup></span> <a href="https://en.wikipedia.org/wiki/Gray_code">Gray codes</a> for the given number <span class="math">n</span>.
+    This code comes from <a href="https://www.jsoftware.com/papers/50/">A History of <span class="smallcaps">apl</span> in 50 functions</a> by Roger K.W. Hui.
+    <a href="https://tryapl.org/?clear&amp;q=%7B(0%E2%88%98%2C%20%E2%8D%AA%201%E2%88%98%2C%E2%88%98%E2%8A%96)%E2%8D%A3%E2%8D%B5%E2%8D%89%E2%8D%AA%E2%8D%AC%7D%C2%A8%202%203%204&amp;run">Try it yourself!</a>
+  </span><center><div class="source-container"><pre class="source apl"><code><span class="line">{(0∘, ⍪ 1∘,∘⊖)⍣⍵⍉⍪⍬}</span>
+</code></pre></div>
+</center>
+</figure>
+<h3 id="bach-apl-resources"><a href="#bach-apl-resources">Resources</a></h3>
+<p>If you want to learn more about J.S. Bach:
+</p>
+<ul class="arrows"><li>
+    Listen to the <a href="https://www.thegreatcourses.com/courses/bach-and-the-high-baroque">Bach and the High Baroque</a> course<label class="margin-toggle sidenote-number" for="sn-audible-gc"></label><input type="checkbox" id="sn-audible-gc" class="margin-toggle"><span class="sidenote">
+      <a href="https://audible.com">Audible.com</a> offers subscribers all courses I mention in this article for free or at a meager price.
+    </span> by professor <a href="https://robertgreenbergmusic.com/">Robert Greenberg</a>.
+  </li><li>
+    Read <a href="https://www.amazon.com/Johann-Sebastian-Bach-Musician-Paperback-ebook/dp/B002GKGBLE">Johann Sebastian Bach: The Learned Musician</a> by Christoph Wolff.
+</li></ul>
+<p>If you want to learn more about <span class="smallcaps">apl</span>:
+</p>
+<ul class="arrows"><li>
+    Read <a href="https://en.wikipedia.org/wiki/Kenneth_E._Iverson">Ken Iverson’s</a> <span class="smallcaps">acm</span> Turing Award lecture <a href="https://dl.acm.org/doi/10.1145/358896.358899">Notation as a Tool of Thought</a>.
+    The <a href="https://www.jsoftware.com/papers/">jsoftware website</a> hosts this and many other papers on <span class="smallcaps">apl</span>.
+  </li><li>
+    Read <a href="http://www.dyalog.com/mastering-dyalog-apl.htm">Mastering Dyalog <span class="smallcaps">apl</span></a> by Bernard Legrand and play with the <a href="https://tutorial.dyalog.com/">Dyalog <span class="smallcaps">apl</span> Tutorial</a>.
+  </li><li>
+    Listen to the <a href="https://arraycast.com/">ArrayCast</a> and <a href="https://apl.show/">APL.Show</a> podcasts.
+  </li><li>
+    Watch the <a href="https://youtu.be/DsZdfnlh_d0">Depth-first search in <span class="smallcaps">apl</span></a> video for inspiration.
+  </li><li>
+    Consider getting a physical copy of <a href="https://www.amazon.com/APL-Interactive-Approach-Leonard-Gilman/dp/0471093041">APL: An Interactive Approach</a> book by Leonard Gilman and Allen J. Rose.
+    The content is pretty dated, but it’s one of the most engaging books on programming I’ve read.
+</li></ul>
+</section>
+<section><h2 id="mozart"><a href="#mozart">Wolfgang Amadeus Mozart</a></h2>
+<p><a href="https://en.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart">Mozart</a>’s musical genius was so bright and enigmatic that mysteries and myths still surround his life.</p>
+<p>Mozart pairs well with the <a href="https://www.scheme.org/">Scheme</a> programming language.
+</p>
+<ul class="arrows"><li>
+    Mozart’s music reflects the values of <a href="https://en.wikipedia.org/wiki/Age_of_Enlightenment">the age of enlightenment</a>:
+    it’s clear and beautifully constructed.
+    Scheme is just as simple and elegant: An introduction to the language fits in a few pages.
+  </li><li>
+    Mozart mastered all genres of his time.
+    Scheme is a programmable programming language;
+    it is versatile enough to be helpful in any domain.
+    And just like opera had a special place in Mozart’s heart,
+    programming language research sparks Scheme hackers’ joy.
+</li></ul>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-repr-mozart">⊕</label><input type="checkbox" id="mn-repr-mozart" class="margin-toggle"><span class="marginnote">
+    Representative Mozart’s music: <a href="https://www.youtube.com/watch?v=0rnJu1rlm90">Piano Sonata 5 in G-major</a>, featuring a joyful melody with a simple but elegant arrangement.
+  </span><img src="/images/18-mozart-snippet.png">
+</figure>
+<figure><label class="margin-toggle" for="mn-scheme">⊕</label><input type="checkbox" id="mn-scheme" class="margin-toggle"><span class="marginnote">
+    Symbolic differentiation in Scheme (<a href="https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-16.html#%25_sec_2.3.2">example 2.3.2</a> in <a href="https://en.wikipedia.org/wiki/Structure_and_Interpretation_of_Computer_Programs">SICP</a>).
+    It’s just as transparent and easy on the eyes as Mozart’s works.
+  </span><div class="source-container"><pre class="source scheme"><code><span class="line">(define (deriv exp var)</span>
+<span class="line">  (cond ((number? exp) 0)</span>
+<span class="line">        ((variable? exp)</span>
+<span class="line">         (if (same-variable? exp var) 1 0))</span>
+<span class="line">        ((sum? exp)</span>
+<span class="line">         (make-sum (deriv (addend exp) var)</span>
+<span class="line">                   (deriv (augend exp) var)))</span>
+<span class="line">        ((product? exp)</span>
+<span class="line">         (make-sum</span>
+<span class="line">           (make-product (multiplier exp)</span>
+<span class="line">                         (deriv (multiplicand exp) var))</span>
+<span class="line">           (make-product (deriv (multiplier exp) var)</span>
+<span class="line">                         (multiplicand exp))))</span>
+<span class="line">        (else</span>
+<span class="line">         (error &quot;unknown expression type -- DERIV&quot; exp))))</span>
+</code></pre></div>
+</figure>
+<h3 id="mozart-scheme-resources"><a href="#mozart-scheme-resources">Resources</a></h3>
+<p>If you want to learn more about Mozart:
+</p>
+<ul class="arrows"><li>
+    Listen to the <a href="https://www.thegreatcourses.com/courses/great-masters-mozart-his-life-and-music">Great Masters: Mozart—His Life and Music</a> course by professor <a href="https://robertgreenbergmusic.com/">Robert Greenberg</a>.
+    </li><li>
+    Read <a href="https://www.amazon.com/Mozart-Life-Maynard-Solomon/dp/0060883448">Mozart: A Life</a> by Maynard Solomon.
+</li></ul>
+<p>If you want to learn more about Scheme:
+</p>
+<ul class="arrows"><li>
+    Read <a href="https://mitpress.mit.edu/9780262510875/structure-and-interpretation-of-computer-programs/">The Structure and Interpretation of Computer Programs</a> by Harold Abelson and Gerald Jay Sussman.
+    It’s worth reading even if you don’t care about Scheme.
+    </li><li>
+    Read <a href="https://www.amazon.com/Little-Schemer-Daniel-P-Friedman/dp/0262560992/">The Little Schemer</a> and related books: <a href="https://www.amazon.com/Reasoned-Schemer-MIT-Press/dp/0262535513/">The Reasoned Schemer</a>, <a href="https://www.amazon.com/Little-Typer-MIT-Press/dp/0262536439/">The Little Typer</a>, <a href="https://www.amazon.com/Little-Prover-MIT-Press/dp/0262527952/">The Little Prover</a>, and <a href="https://www.amazon.com/Little-Learner-Straight-Line-Learning/dp/026254637X/">The Little Learner</a>.
+</li></ul>
+</section>
+<section><h2 id="beethoven"><a href="#beethoven">Ludwig van Beethoven</a></h2>
+<p><a href="https://en.wikipedia.org/wiki/Ludwig_van_Beethoven">Beethoven</a> is the most influential composer in history;
+he single-handedly changed the direction of western music and the role of an artist in society.</p>
+<p>One of the few languages worthy of Beethoven would be <a href="https://www.haskell.org/">Haskell</a>:
+</p>
+<ul class="arrows"><li>
+  Beethoven constructed most of his music from tiny motifs and rhythms, many of which seem dull in isolation.
+  Good Haskell code thrives on composition of small, often trivial functions like <a href="https://hackage.haskell.org/package/base-4.18.0.0/docs/Prelude.html#v:id"><code>id</code></a> and <a href="https://hackage.haskell.org/package/base-4.18.0.0/docs/Data-Function.html#v:fix"><code>fix</code></a>.
+  </li><li>
+  Beethoven was constantly evolving his style, pushing the boundary of the art.
+  He reinvented himself twice during his career, turning his suffering into fuel for breakthroughs.
+  Similarly, the Haskell ecosystem constantly evolves, turning pain points into novel ways to write and think about software.
+  For example,
+  issues with lazy input/output led to the invention of <a href="https://wiki.haskell.org/Iteratee_I/O">iteratees</a>,
+  and the inconvenience of nested record updates led to <a href="https://www.youtube.com/watch?v=k-QwBL9Dia0">lenses</a> and <a href="https://www.cis.upenn.edu/~bcpierce/papers/icmt-2009-slides.pdf">bidirectional programming</a>.
+  </li><li>
+  Beethoven turned my musical world upside down:
+  I caught a piano bug after hearing <a href="https://en.wikipedia.org/wiki/Piano_Sonata_No._17_(Beethoven)">The Tempest</a> sonata finale.
+  Haskell had a matching influence on my professional life,
+  forever changing how I think about computing.
+</li></ul>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-repr-beethoven">⊕</label><input type="checkbox" id="mn-repr-beethoven" class="margin-toggle"><span class="marginnote">
+    Representative Beethoven’s music: <a href="https://www.youtube.com/watch?v=SrcOcKYQX3c&amp;t=7s">Sonata op. 13 in C minor</a>, also known as the Pathétique Sonata.
+    Note the operatic drama, the masterful use of piano’s sonority, and Beethoven’s way of building music landscapes from tiny memorable motifs and rhythms.
+  </span><img src="/images/18-beethoven-snippet.png">
+</figure>
+<figure><label class="margin-toggle" for="mn-haskell-example">⊕</label><input type="checkbox" id="mn-haskell-example" class="margin-toggle"><span class="marginnote">
+    An idiomatic implementation of the <a href="https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm">Knuth-Morris-Pratt</a> algorithm in Haskell.
+    The code comes from the <a href="https://www.twanvl.nl/blog/haskell/Knuth-Morris-Pratt-in-Haskell">Knuth-Morris-Pratt in Haskell</a> article by Twan van Laarhoven.
+  </span><div class="source-container"><pre class="source haskell"><code><span class="line">data KMP a = KMP { done :: Bool, next :: (a -&gt; KMP a) }</span>
+<span class="line"></span>
+<span class="line">makeTable :: Eq a =&gt; [a] -&gt; KMP a</span>
+<span class="line">makeTable xs = table</span>
+<span class="line">   where table = makeTable' xs (const table)</span>
+<span class="line"></span>
+<span class="line">makeTable' []     failure = KMP True failure</span>
+<span class="line">makeTable' (x:xs) failure = KMP False test</span>
+<span class="line">   where  test  c = if c == x then success else failure c</span>
+<span class="line">          success = makeTable' xs (next (failure x))</span>
+<span class="line"></span>
+<span class="line">isSublistOf :: Eq a =&gt; [a] -&gt; [a] -&gt; Bool</span>
+<span class="line">isSublistOf as bs = match (makeTable as) bs</span>
+<span class="line">   where  match table []     = done table</span>
+<span class="line">          match table (b:bs) = done table || match (next table b) bs</span>
+</code></pre></div>
+</figure>
+<h3 id="beethoven-haskell-resources"><a href="#beethoven-haskell-resources">Resources</a></h3>
+<p>If you want to learn more about Beethoven:
+</p>
+<ul class="arrows"><li>
+  Listen to the <a href="https://www.thegreatcourses.com/courses/great-masters-beethoven-his-life-and-music">Great Masters: Beethoven—His Life and Music</a> course by professor <a href="https://robertgreenbergmusic.com/">Robert Greenberg</a>.
+  </li><li>
+  Read <a href="https://www.amazon.com/Beethoven-Revised-Maynard-Solomon/dp/0825672686">Beethoven</a> by Maynard Solomon.
+  </li><li>
+  Consider watching the <a href="https://www.imdb.com/video/vi2964193561/">Immortal Beloved</a> movie.
+  It’s inspiring despite its many factual mistakes.
+</li></ul>
+<p>If you want to learn more about Haskell:
+</p>
+<ul class="arrows"><li>
+  Read <a href="http://www.learnyouahaskell.com/">Learn You a Haskell for Great Good!</a> by Miran Lipovača,
+  an engaging illustrated introduction to Haskell.
+  </li><li>
+  Read <a href="https://www.euterpea.com/haskell-school-of-music/">The Haskell School of Music</a> by Paul Hudak and Donya Quick;
+  it demonstrates the best sides of Haskell by building a library for music generation.
+  </li><li>
+  Check out the <a href="https://www.haskell.org/documentation/">Haskell documentation</a> page for more great pointers.
+</li></ul>
+</section>
+<section><h2 id="scriabin"><a href="#scriabin">Alexander Nikolayevich Scriabin</a></h2>
+<p><a href="https://en.wikipedia.org/wiki/Alexander_Scriabin">Scriabin</a> is a relatively obscure Russian composer
+who wrote deeply expressive, emotional, metaphysical music.
+He also had the most stylish mustache among all composers.
+He would love <a href="https://scala-lang.org/">Scala</a>:</p>
+<ul class="arrows"><li>
+  Scriabin dreamed of fusing arts into a synthetic form he called <a href="https://en.wikipedia.org/wiki/Mysterium_(Scriabin)">Mysterium</a>.
+  Similarly, Scala aims to be extensible enough to embrace all programming styles and paradigms, including functional, object-oriented, and actor-based.
+  </li><li>
+  Scriabin’s music feels profound and unfathomable, like the night sky.
+  Scala inspires the same awe: I admire its structure and elegance, even as its complexity makes my head spin.
+</li></ul>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-repr-scriabin">⊕</label><input type="checkbox" id="mn-repr-scriabin" class="margin-toggle"><span class="marginnote">
+    Representative Scriabin’s music: <a href="https://www.youtube.com/watch?v=Uy8MTTrh-Z8&amp;t=709s">Prelude in C#-minor from op. 11</a>, one of my favorite short piano pieces.
+  </span><img src="/images/18-scriabin-snippet.png">
+</figure>
+<figure><label class="margin-toggle" for="mn-scala-snippet">⊕</label><input type="checkbox" id="mn-scala-snippet" class="margin-toggle"><span class="marginnote">
+  The Scala way of saying that optional values are just an instance of a monoid in the category of endofunctors.
+  This snippet comes from the <a href="https://github.com/scalaz/scalaz#type-class-instance-definition"><code>scalaz</code></a> library documentation.
+</span><div class="source-container"><pre class="source scala"><code><span class="line">implicit val <em>option</em>: Traverse[Option] with MonadPlus[Option] =</span>
+<span class="line">  new Traverse[Option] with MonadPlus[Option] {</span>
+<span class="line">    def <em>point</em>[A](a: =&gt; A) = Some(a)</span>
+<span class="line"></span>
+<span class="line">    def <em>bind</em>[A, B](fa: Option[A])(f: A =&gt; Option[B]): Option[B] = fa flatMap f</span>
+<span class="line"></span>
+<span class="line">    override def <em>map</em>[A, B](fa: Option[A])(f: A =&gt; B): Option[B] = fa map f</span>
+<span class="line"></span>
+<span class="line">    def <em>traverseImpl</em>[F[_], A, B](fa: Option[A])(f: A =&gt; F[B])(implicit F: Applicative[F]) =</span>
+<span class="line">      fa map (a =&gt; F.map(f(a))(Some(_): Option[B])) getOrElse F.point(None)</span>
+<span class="line"></span>
+<span class="line">    def <em>empty</em>[A]: Option[A] = None</span>
+<span class="line"></span>
+<span class="line">    def <em>plus</em>[A](a: Option[A], b: =&gt; Option[A]) = a orElse b</span>
+<span class="line"></span>
+<span class="line">    def <em>foldR</em>[A, B](fa: Option[A], z: B)(f: (A) =&gt; (=&gt; B) =&gt; B): B = fa match {</span>
+<span class="line">      case Some(a) =&gt; f(a)(z)</span>
+<span class="line">      case None =&gt; z</span>
+<span class="line">    }</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<h3 id="scriabin-cl-resources"><a href="#scriabin-cl-resources">Resources</a></h3>
+<p>If you want to learn more about Scriabin:
+</p>
+<ul class="arrows"><li>
+  Read <a href="https://www.amazon.com/Alexander-Scriabin-Companion-History-Performance/dp/1442232617/">The Alexander Scriabin Companion: History, Performance, and Lore</a> by Lincoln Ballard and Matthew Bengtson.
+  </li><li>
+  Read <a href="https://www.amazon.com/Scriabin-Biography-Second-Revised-Dover/dp/0486288978/">Scriabin, a Biography</a> by Faubion Bowers.
+</li></ul>
+<p>If you want to learn more about Scala:
+</p>
+<ul class="arrows"><li>
+    Read <a href="https://www.amazon.com/Programming-Scala-Fifth-Odersky-dp-0997148004/dp/0997148004/">Programming in Scala</a> by Martin Odersky et al., and <a href="https://www.amazon.com/gp/product/1617290653/">Functional Programming in Scala</a> by Rúnar Bjarnason and Paul Chiusano.
+</li></ul>
+</section>
+<section><h2 id="closing"><a href="#closing">Closing words</a></h2>
+<p>There are many more great composers and excellent programming languages.
+Matching these is left as an exercise for the reader<label class="margin-toggle sidenote-number" for="sn-php-match"></label><input type="checkbox" id="sn-php-match" class="margin-toggle"><span class="sidenote">Bonus points for finding a good match for <span class="smallcaps">php</span>.</span>.</p>
+<p>I like how hosts of the <a href="https://kpknudson.com/my-favorite-theorem/">My Favorite Theorem</a> podcast ask their guests to pair theorems with more tangible things and activities,
+such as pizza and rock climbing.
+Try it with the things or people you like, it’s fun!
+Enjoy your <a href="https://www.youtube.com/watch?v=2G6dd7ikrXs">favorite things</a>!</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/26-good-names-form-galois-connections.html">Good names form Galois connections</a></li><li><a href="/posts/05-debug-like-feynman.html">Debug like Feynman, test like Faraday</a></li><li><a href="/posts/38-static-types-perfectionism.html">Static types are for perfectionists</a></li><li><a href="/posts/48-the-third-hard-problem.html">The third hard problem</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/19-eventlog.html"> ←ckBTC internals: event log</a></div><div id="older"><a href="/posts/17-scaling-rust-builds-with-bazel.html">Scaling Rust builds with Bazel→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

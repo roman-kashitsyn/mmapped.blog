@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="ic"><meta name="description" content="A deep dive into the protocol that IC subnets communicate over."><title>IC internals: XNet protocol</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/08-ic-xnet.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/08-ic-xnet.html">IC internals: XNet protocol</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2022-07-01</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2022-07-01</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#introduction">Introduction</a></li><li class="toc toc-level-1"><a href="#subnets">Subnets</a></li><li class="toc toc-level-1"><a href="#message-streams">Message streams</a></li><li class="toc toc-level-1"><a href="#block-payloads">Block payloads</a></li><li class="toc toc-level-1"><a href="#garbage-collection">Garbage collection</a></li><li class="toc toc-level-1"><a href="#stream-certification">Stream certification</a></li><li class="toc toc-level-1"><a href="#limitations">Limitations</a></li><li class="toc toc-level-1"><a href="#references">Code references</a></li><li class="toc toc-level-1"><a href="#credits">Credits</a></li></ul><hr>
+
+<section><h2 id="introduction"><a href="#introduction">Introduction</a></h2>
+<p>This article continues the previous post on state machine replication in the Internet Computer (IC), <a href="/posts/02-ic-state-machine-replication.html">IC internals: replicated state machine</a>.
+This time, we shall examine the protocol over which independent state machines (also known as <em>subnets</em>) communicate, the <em>XNet protocol</em>.</p>
+</section>
+<section><h2 id="subnets"><a href="#subnets">Subnets</a></h2>
+<p>A <em>subnet</em> is a collection of nodes participating in a single instance of the <a href="https://dfinity.org/howitworks/consensus">consensus protocol</a>.
+All the nodes in a subnet have the same state and apply the same blocks.</p>
+<p>It might be tempting to think that nodes of a subnet are physically collocated.
+However, the opposite is usually true: subnet nodes are often geographically distributed across independent data centers<label class="margin-toggle sidenote-number" for="sn-dc-nodes"></label><input type="checkbox" id="sn-dc-nodes" class="margin-toggle"><span class="sidenote">
+  There are still good reasons to assign multiple nodes in a data center to the same subnet, such as increasing query call capacity and speeding up recovery in case of a replica restart.
+</span>.
+The goal is to improve availability: a disaster in a single data center cannot take down the entire subnet.
+The <em>registry</em> canister maintains the assignment of nodes to physical machines, and the <a href="https://dfinity.org/howitworks/network-nervous-system-nns">Network Nervous System</a> governs all the changes to the registry.</p>
+<p>Nodes from different subnets can live in the same data center.
+This setup might be counter-intuitive: nodes from different subnets might sometimes have better network connectivity than nodes in the same subnet.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-subnets">⊕</label><input type="checkbox" id="mn-subnets" class="margin-toggle"><span class="marginnote">
+    Two three-node subnets located in three data centers.
+    Solid lines represent peer-to-peer communication within a subnet; dotted lines — cross-subnet communication.
+    Not all XNet connections are present in the picture.
+  </span><p class="svg"><img src="/images/08-subnets.svg"></p>
+</figure>
+<p>XNet protocol is not limited to the same-datacenter communication; any node from one subnet can talk to any other node from another subnet.
+However, the replica prefers contacting close<label class="margin-toggle sidenote-number" for="mn-proximity"></label><input type="checkbox" id="mn-proximity" class="margin-toggle"><span class="sidenote">
+  The replica uses network latency as the proximity measure.
+  It randomly contacts nodes from other subnets, assigning higher weights to nodes with lower latency.
+</span> peers to reduce the message delivery latency.</p>
+</section>
+<section><h2 id="message-streams"><a href="#message-streams">Message streams</a></h2>
+<p>Messages start their journey in the output queues of canisters hosted on the source subnet.
+The subnet sorts these messages based on the destination subnet and interleaves them into flat message streams (one stream per destination subnet).
+Each message in the stream gets a unique monotonically increasing index.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-message-streams">⊕</label><input type="checkbox" id="mn-message-streams" class="margin-toggle"><span class="marginnote">
+    The flow of messages within a subnet.
+    Canisters push messages into their output queues; the stream builder picks up these messages and constructs a flat outgoing message stream for each subnet.
+  </span><p class="svg"><img src="/images/08-message-streams.svg"></p>
+</figure>
+<p>The component merging the queues (aptly called <em>stream builder</em>) should satisfy a few constraints:
+</p>
+<ul class="arrows"><li><em>Determinism</em>.
+  All nodes in the subnet must agree on the exact contents of the stream.
+  To do its job, the stream builder needs the mapping from canister identifiers to subnet identifiers, the <em>routing table</em>.
+  The routing table comes from the registry and changes over time.
+  To ensure determinism, each block pins the registry version that the state machine is using for message processing.
+  </li><li><em>Ordering</em>.
+  If canister <span class="math">A</span> sends two requests to canister <span class="math">B</span>, <span class="math">R<sub>1</sub></span>, and <span class="math">R<sub>2</sub></span>, then <span class="math">R<sub>1</sub></span> should appear before <span class="math">R<sub>2</sub></span> in the stream.
+  </li><li><em>Fairness.</em>
+  We do not want messages from a single chatty canister to dominate the stream.
+  The stream builder tries to interleave messages so that each canister has the same bandwidth.
+</li></ul>
+<p>When a node from subnet <span class="math">X</span> decides to get new messages from subnet <span class="math">Y</span>, it picks a node from <span class="math">Y</span> (the registry stores the entire network topology) and calls <span class="math">Y</span>’s XNet endpoint with the index of the first unseen message and the number of messages to fetch.</p>
+</section>
+<section><h2 id="block-payloads"><a href="#block-payloads">Block payloads</a></h2>
+<p>The job of the consensus protocol is to aggregate messages from the outside world and pack them into a neat block.
+Consensus includes several types of messages into blocks, such as user ingress messages, Bitcoin transactions (for subnets with enabled Bitcoin integration), and inter-canister messages from other subnets.
+We call messages paired with the data required for their validation a <em>payload</em>.
+We call components that pull payloads from the network <em>payload builders</em>.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-payloads">⊕</label><input type="checkbox" id="mn-payloads" class="margin-toggle"><span class="marginnote">The consensus algorithm aggregates messages from the outside world into blocks.</span><p class="svg"><img src="/images/08-block-payloads.svg"></p>
+</figure>
+<p>XNet payload builder pulls messages from nodes assigned to other subnets using a simple HTTP protocol.
+<em>XNet endpoint</em> is a component that serves messages destined for other subnets over secure TLS connections, accepting connections only from other nodes<label class="margin-toggle sidenote-number" for="sn-xnet-tls"></label><input type="checkbox" id="sn-xnet-tls" class="margin-toggle"><span class="sidenote">This measure does not imply privacy because malicious nodes can access the data; but ensures that network providers cannot read the messages.</span>.
+XNet endpoint fetches the complete list of nodes, their subnet assignment, IP addresses, and public keys (required to establish a TLS connection) from the registry.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-endpoint">⊕</label><input type="checkbox" id="mn-endpoint" class="margin-toggle"><span class="marginnote">
+    The data flow in the XNet protocol.
+    Subnet <span class="math">Y</span> produces a signed stream of messages for subnet X and exposes this stream via an HTTP endpoint.
+    Subnet <span class="math">X</span> pulls messages from one of the nodes on subnet Y.
+  </span><p class="svg"><img src="/images/08-xnet-endpoint.svg"></p>
+</figure>
+</section>
+<section><h2 id="garbage-collection"><a href="#garbage-collection">Garbage collection</a></h2>
+<p>We now know how one subnet accumulates messages destined for another subnet.
+This knowledge begs another question: how do replicas remove messages that the destination subnet has already consumed?
+We need a feedback mechanism allowing the consumer subnet to tell the producer subnet that it does not need some stream prefix anymore.
+We call this mechanism <em>signals</em>.</p>
+<p>Signals are a part of the XNet payload specifying the prefix of the <em>reverse</em> stream that the sending subnet can drop.
+When a node from subnet <span class="math">X</span> fetches XNet payload from a node from subnet <span class="math">Y</span>, in addition to actual messages, the <span class="math">Y</span> node includes the <em>stream header</em>.
+The stream header describes the state of the <span class="math">X ↔ Y</span> communication:</p>
+<ul class="arrows"><li>
+    The full range of message indices in the forward stream <span class="math">X → Y</span>.
+  </li><li>
+    The signals for the <em>reverse</em> stream (<span class="math">Y → X</span>): for each message index in the reverse stream, <span class="math">Y</span> tells whether <span class="math">X</span> can garbage collect the message (an <span class="smallcaps">ack</span> signal) or should reroute the message (a <span class="smallcaps">reject</span> signal).
+    A <span class="smallcaps">reject</span> signal indicates that the destination canister moved, so <span class="math">X</span> should route the message into another stream.
+</li></ul>
+<p>Signals solve the issue of collecting obsolete messages, but they introduce another problem: now we also need to garbage-collect signals!
+Luckily, we already have all the information we need: we keep signals only for messages that are still present in the reverse stream.
+Once we notice (by looking at the range of message indices) that the remote subnet dropped messages from its stream, we can remove the corresponding signals from our header.</p>
+<p>From my experience, the interplay of message indices and signals is notoriously hard to grasp, so let us look at an example.
+The diagram below depicts two subnets, <span class="math">X</span> and <span class="math">Y</span>, caught in the middle of communication.
+Subnet <span class="math">X</span> gets a prefix of <span class="math">Y</span>’s stream and the header, allowing <span class="math">X</span> to induct new messages and garbage-collect its messages and signals.
+<span class="math">X</span> also publishes signals for the newly received messages and updates its indices accordingly so that <span class="math">Y</span> could garbage-collect its messages and signals in the next round of communication.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-signals">⊕</label><input type="checkbox" id="mn-signals" class="margin-toggle"><span class="marginnote">
+    Two subnets, <span class="math">X</span> and <span class="math">Y</span>, communicating over the XNet protocol.
+    In previous communications, subnet <span class="math">Y</span> consumed messages <span class="math">[0,10)</span> from <span class="math">X</span>’s stream and has recently received messages <span class="math">10</span> and <span class="math">11</span>.
+    Now, subnet <span class="math">X</span> receives a prefix of <span class="math">Y</span>’s stream and the matching header and removes messages <span class="math">10</span> and <span class="math">11</span> from its stream because <span class="math">Y</span> will not need them anymore.
+    <span class="math">X</span> also includes signals for the newly received messages into the <span class="math">X → Y</span> stream header and removes an obsolete signal for message <span class="math">Y<sub>1</sub></span> it consumed before.
+  </span><p class="svg"><img src="/images/08-signals.svg"></p>
+</figure>
+<p>Signals and stream messages are like snakes eating each other’s tails on the <a href="https://theneverendingstory.fandom.com/wiki/Auryn">Auryn</a>: the sender drops messages when it sees signals, and the receiver drops signals when it sees stream bounds advancing.</p>
+</section>
+<section><h2 id="stream-certification"><a href="#stream-certification">Stream certification</a></h2>
+<p>Since no two nodes in the network can blindly trust each other, we need a mechanism to validate the contents of XNet payloads.
+More specifically, we want proof that the stream prefix in the payload is the same on all honest nodes in the subnet that produced the stream.
+In the previous article, we have seen how nodes use threshold signatures on <a href="/posts/02-ic-state-machine-replication.html#state-trees">state trees</a> as authenticity proofs for call replies.
+The XNet protocol relies on the same trick: nodes include streams destined for other subnets into their state trees and use threshold signatures as proofs of authenticity for nodes from other subnets.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-certification">⊕</label><input type="checkbox" id="mn-certification" class="margin-toggle"><span class="marginnote">
+    The encoding of subnet message streams in the <a href="/posts/02-ic-state-machine-replication.html#state-trees">state tree</a>.
+  </span><p class="svg"><img src="/images/08-certification.svg"></p>
+</figure>
+<p>Conceptually, a node requesting messages from a subnet is not different from a client requesting a response.
+This similarity allows us to use the same<label class="margin-toggle sidenote-number" for="sn-same-auth"></label><input type="checkbox" id="sn-same-auth" class="margin-toggle"><span class="sidenote">
+  Currently, there is a minor difference in how we represent certificates in the XNet protocol and the <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec/#_certificate">IC HTTP</a> interface.
+  The HTTP interface certificates combine the data and the hashes required to check the authenticity in a single data structure, the <em>hash tree</em>.
+  The XNet protocol separates the raw message data and the hashes (called the <em>witness</em>) into separate data structures.
+  The reason for that distinction is purely historical.
+  We implemented the XNet protocol significantly earlier than the response authentication, so we could not benefit from <a href="https://www.joachim-breitner.de/blog">Joachim Breitner’s</a> brilliance.
+  Joachim took the XNet authentication scheme as the starting point and simplified it for the IC Interface Specification.
+</span> authentication mechanism in both cases.</p>
+<p>The tree structure of the certificate comes in handy for buffering messages on the receiver: the receiver can maintain a slightly larger pool of messages than a single block can fit, asynchronously fetching new messages and appending them to the pool, merging the certificates appropriately.
+This optimization allows us to use the subnet’s narrow XNet channel more efficiently and improve fairness when we include messages from multiple subnets into a single block.</p>
+</section>
+<section><h2 id="limitations"><a href="#limitations">Limitations</a></h2>
+<p>The XNet protocol is a marvelous feat of engineering, but it has a few inherent limitations:
+</p>
+<ul class="arrows"><li>
+    All XNet messages have to go through consensus blocks.
+    This constraint bounds the theoretical throughput of the protocol by the block rate and size.
+    For example, if a subnet produces one block every second and the block size is 2MiB, the XNet throughput on this subnet can be at most 2MiB/sec.
+  </li><li>
+    Delivering a message requires two rounds of consensus (one round on the sender, one round on the receiver).
+    This constraint bounds the latency of the protocol by the block rate.
+    If both the receiving and the sending subnet need a second to produce a block, a request will need at least two seconds to reach the destination.
+    Delivering the response will need another two rounds, so the call round-trip time is at least four seconds.
+</li></ul>
+</section>
+<section><h2 id="references"><a href="#references">Code references</a></h2>
+<p>A few pointers to the code implementing designs from this article:
+</p>
+<ul class="arrows"><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/registry/routing_table/src/lib.rs#L213">routing table</a>.
+  </li><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/messaging/src/routing/stream_builder.rs#L237">stream builder</a>.
+  </li><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/payload_builder/src/lib.rs#L665">payload builder</a> and the <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/payload_builder/src/certified_slice_pool.rs#L1042">XNet message buffer</a>.
+  </li><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/endpoint/src/lib.rs#L93">XNet endpoint</a> and the <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/payload_builder/src/proximity.rs#L118">node proximity metric</a> computation.
+  </li><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/messaging/src/routing/stream_handler.rs#L557">induction of messages</a> into the state machine state.
+  </li><li>The garbage collection of <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/messaging/src/routing/stream_handler.rs#L391-L426">messages</a> and <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/messaging/src/routing/stream_handler.rs#L428-L465">signals</a>.
+  </li><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/canonical_state/src/lazy_tree/conversion.rs#L254-L284">mapping of streams</a> to the tree structure, <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/state_manager/src/stream_encoding.rs#L40">tree encoding</a>, and <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/state_manager/src/lib.rs#L2912-L2972">validation</a>.
+</li></ul>
+</section>
+<section><h2 id="credits"><a href="#credits">Credits</a></h2>
+<p>Finally, I shall give due credit to people who played an essential role in the protocol development.
+</p>
+<ul class="arrows"><li><a href="https://www.linkedin.com/in/allen-clement-b73a4652/">Allen Clement</a> is the mastermind behind most of the features of the XNet protocol.
+</li><li><a href="https://www.linkedin.com/in/david-derler-08630495/">David Derler</a> refined many of Allen’s ideas and wrote a formal mathematical specification for the protocol.
+</li><li><a href="https://www.linkedin.com/in/alin-sinpalean-8451b8139/">Alin Sinpalean</a> implemented the protocol in the <a href="https://github.com/dfinity/ic/tree/3fe4137c86ab0521c39089954c03d7fb29e2c3d2/rs/xnet">IC replica</a> and developed many optimizations.
+</li></ul>
+<p>My main contributions are stream certification and TLS integration.
+</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/06-ic-orthogonal-persistence.html">IC internals: orthogonal persistence</a></li><li><a href="/posts/02-ic-state-machine-replication.html">IC internals: replicated state machine</a></li><li><a href="/posts/20-candid-for-engineers.html">Candid for engineers</a></li><li><a href="/posts/27-extending-https-outcalls.html">Extending HTTPS outcalls</a></li><li><a href="/posts/11-ii-stable-memory.html">IC internals: Internet Identity storage</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/09-fungible-tokens-101.html"> ←Fungible tokens 101</a></div><div id="older"><a href="/posts/07-square-joy-pre-order.html">Square joy: pre-order→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

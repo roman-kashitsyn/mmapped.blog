@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="math,programming"><meta name="description" content="How STL algorithms parallel the fundamental theorem of calculus."><title>Stepanov’s biggest blunder</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/43-stepanovs-biggest-blunder.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/43-stepanovs-biggest-blunder.html">Stepanov’s biggest blunder</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2025-07-13</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2025-07-13</span></span><span class="post-icons"><a class="icon-link" href="https://news.ycombinator.com/item?id=44971451" title="Discuss on Hacker News" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/y18.svg" alt="Hacker News"></a><a class="icon-link" href="https://lobste.rs/s/zyiibk/stepanov_s_biggest_blunder" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#adjacent-difference">The curious case of adjacent difference</a></li><li class="toc toc-level-1"><a href="#three-problems-of-calculus">Three central problems of calculus</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#problem-slopes">Finding slopes with adjacent differences</a></li><li class="toc toc-level-2"><a href="#problem-recovering">Recovering the original with partial sums</a></li><li class="toc toc-level-2"><a href="#problem-areas">Finding areas with partial sums</a></li></ul></li><li class="toc toc-level-1"><a href="#symmetry-vs-pragmatism">Symmetry vs pragmatism</a></li><li class="toc toc-level-1"><a href="#appendinx-detals-in-q">Appendix: deltas in q</a></li></ul><hr>
+
+<section><h2 id="adjacent-difference"><a href="#adjacent-difference">The curious case of adjacent difference</a></h2>
+<p>If you have ever tried using the <a href="http://www.en.cppreference.com/w/cpp/algorithm/adjacent_difference.html"><code>std::adjacent_difference</code></a> algorithm in <span class="smallcaps">c++</span>,
+I’m sure it left you puzzled.
+As the name suggests, this algorithm computes differences between adjacent elements of the input sequence,
+but it does one more thing: it copies the first element of the input sequence into the output sequence unmodified.
+The following example demonstrates how to apply the algorithm to delta-compress a <a href="https://en.wikipedia.org/wiki/Inverted_index">postings list</a> of document identifiers that contain a search term
+(the example is contrived since Google <a href="https://static.googleusercontent.com/media/research.google.com/en//people/jeff/WSDM09-keynote.pdf">developed</a> much more sophisticated posting list compression techniques).</p>
+<figure><label class="margin-toggle" for="mn-diff-posings">⊕</label><input type="checkbox" id="mn-diff-posings" class="margin-toggle"><span class="marginnote">
+  Delta-compressing a posting list using the <code>std::adjacent_difference</code> algorithm.
+  The compressed version might require less memory when encoded using <a href="https://en.wikipedia.org/wiki/Variable-length_quantity">variable-length integers</a>.
+</span><div class="source-container"><pre class="source good cpp"><code><span class="line">#include &lt;iostream&gt;</span>
+<span class="line">#include &lt;numeric&gt;</span>
+<span class="line">#include &lt;vector&gt;</span>
+<span class="line"></span>
+<span class="line">// prints:</span>
+<span class="line">// 12586 426 548 110 566</span>
+<span class="line">int main() {</span>
+<span class="line">    // Sorted list of documents containing a word.</span>
+<span class="line">    std::vector&lt;int&gt; postings{{12586, 13012, 13560, 13670, 14236}};</span>
+<span class="line">    std::vector&lt;int&gt; compressed(postings.size());</span>
+<span class="line">    std::adjacent_difference(</span>
+<span class="line">        postings.cbegin(),</span>
+<span class="line">        postings.cend(),</span>
+<span class="line">        compressed.begin()</span>
+<span class="line">    );</span>
+<span class="line">    for (auto n : compressed) std::cout &lt;&lt; n &lt;&lt; &quot; &quot;;</span>
+<span class="line">    std::cout &lt;&lt; std::endl;</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>This extra copy makes the algorithm less generic and practical,
+since a difference of two values of an arbitrary type <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>T</mi></math> is likely to have a different type.
+For example, the difference between two timestamps is not a timestamp but a duration;
+and subtracting two unsigned integers might require a signed integer.
+The following example illustrates this limitation: the code attempts to compute durations between timestamps in a container, but the compiler rejects it.</p>
+<figure><label class="margin-toggle" for="mn-diff-timestamps">⊕</label><input type="checkbox" id="mn-diff-timestamps" class="margin-toggle"><span class="marginnote">
+  Attempting to compute <code>std::adjacent_difference</code> over a vector of timestamps leads to a compiler error.
+</span><div class="source-container"><pre class="source bad cpp"><code><span class="line">#include &lt;chrono&gt;</span>
+<span class="line">#include &lt;numeric&gt;</span>
+<span class="line">#include &lt;vector&gt;</span>
+<span class="line"></span>
+<span class="line">int main() {</span>
+<span class="line">    using clock = std::chrono::steady_clock;</span>
+<span class="line">    auto start = clock::now();</span>
+<span class="line">    std::vector&lt;clock::time_point&gt; timestamps{</span>
+<span class="line">        start,</span>
+<span class="line">        start + std::chrono::seconds(5),</span>
+<span class="line">        start + std::chrono::seconds(15)</span>
+<span class="line">    };</span>
+<span class="line">    std::vector&lt;clock::duration&gt; durations;</span>
+<span class="line">    std::adjacent_difference(</span>
+<span class="line">        timestamps.cbegin(),</span>
+<span class="line">        timestamps.cend(),</span>
+<span class="line">        std::back_inserter(durations)</span>
+<span class="line">    );</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>Why did Alex Stepanov design <code>adjacent_difference</code> in such a way?
+Was it a mistake?
+No, it was a deliberate design choice; the original <a href="https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html#1"><span class="smallcaps">sgi stl</span> documentation</a> provides the reasoning behind it:
+</p>
+<div class="epigraph"><blockquote><p>
+  The reason it is useful to store the value of the first element, as well as simply storing the differences, is that this provides enough information to reconstruct the input range.
+  In particular, if addition and subtraction have the usual arithmetic definitions, then <a href="https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html"><code>adjacent_difference</code></a> and <a href="https://www.jmeiners.com/sgi-stl-docs/partial_sum.html"><code>partial_sum</code></a> are inverses of each other.
+</p><footer><a href="https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html#1"><span class="smallcaps">sgi stl</span> documentation</a></footer></blockquote></div>
+<p><code>std::adjacent_difference</code> and <a href="http://www.en.cppreference.com/w/cpp/algorithm/partial_sum.html"><code>std::partial_sum</code></a> are inverses:
+computing partial sums over the adjacent differences of a sequence yields that sequence, and vice versa.</p>
+<figure><label class="margin-toggle" for="mn-inverses">⊕</label><input type="checkbox" id="mn-inverses" class="margin-toggle"><span class="marginnote">
+  <code>std::partial_sum</code> undoes the effects of <code>std::adjacent_difference</code>, and vice versa.
+  In this and other sequence examples, each line transforms the line above it.
+</span><div class="source-container"><pre class="source"><code><span class="line">           sequence   1  1  2  3  5</span>
+<span class="line">adjacent_difference   1  0  1  1  2</span>
+<span class="line">        partial_sum   1  1  2  3  5</span>
+</code></pre></div>
+</figure>
+<p>This symmetry has a beautiful connection to the fundamental theorem of calculus,
+and it helped me understand both the algorithms and the theorem more intuitively.
+The following section explores this connection in detail.</p>
+</section>
+<section><h2 id="three-problems-of-calculus"><a href="#three-problems-of-calculus">Three central problems of calculus</a></h2>
+<p>According to Steven Strogatz<label class="margin-toggle sidenote-number" for="sn-strogatz"></label><input type="checkbox" id="sn-strogatz" class="margin-toggle"><span class="sidenote">
+  Steven Strogatz, <q><a href="https://www.goodreads.com/book/show/40796176-infinite-powers">Infinite Powers</a></q>, p. 144
+</span>, calculus has three central problems:
+</p>
+<ol class="circled"><li data-num-glyph="①">given a curve, find its slope everywhere (the forward problem),
+</li><li data-num-glyph="②">given a curve’s slope everywhere, find the curve (the backward problem),
+</li><li data-num-glyph="③">given a curve, find an area under it (the area problem).
+</li></ol>
+<p>The fundamental theorem of calculus connects all three problems
+and states that the area under a slope of a curve on an interval
+is the difference of the curve height evaluated at the ends of this interval:</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><munderover><mo>∫</mo><mi>a</mi><mi>b</mi></munderover><msup><mi>f</mi><mrow><mo>′</mo></mrow></msup><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mi>d</mi><mi>x</mi><mo stretchy="false">=</mo><mi>f</mi><mo stretchy="false">(</mo><mi>b</mi><mo stretchy="false">)</mo><mo stretchy="false">-</mo><mi>f</mi><mo stretchy="false">(</mo><mi>a</mi><mo stretchy="false">)</mo></math></p>
+<p>Calculus deals with continuous curves, but we will tackle these problems through the lens of discrete value sequences.
+We’ll view a sequence <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>f</mi></math> as a function over natural number
+and denote the discrete derivative of <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>f</mi></math> as <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>D</mi><mi>f</mi></msub></math>.
+and its antiderivative as <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>S</mi><mi>f</mi></msub></math>, where</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><mtable columnalign="right center left "><mtr><mtd><mrow><msub><mi>D</mi><mi>f</mi></msub><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></mtd><mtd><mrow><mo stretchy="false">=</mo></mrow></mtd><mtd><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">+</mo><mn>1</mn><mo stretchy="false">)</mo><mo stretchy="false">-</mo><mi>f</mi><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></mtd></mtr><mtr><mtd><mrow><msub><mi>S</mi><mi>f</mi></msub><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></mtd><mtd><mrow><mo stretchy="false">=</mo></mrow></mtd><mtd><mrow><munderover><mo>∑</mo><mrow><mi>k</mi><mo stretchy="false">=</mo><mn>0</mn></mrow><mi>i</mi></munderover><mi>f</mi><mo stretchy="false">(</mo><mi>k</mi><mo stretchy="false">)</mo></mrow></mtd></mtr></mtable></math></p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>D</mi><mi>f</mi></msub></math> corresponds to differences between adjacent elements in the source sequence,
+and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>S</mi><mi>f</mi></msub></math> corresponds to partial sums.
+The discrete variant of the fundamental theorem becomes:</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><munderover><mo>∑</mo><mrow><mi>i</mi><mo stretchy="false">=</mo><mi>k</mi></mrow><mi>n</mi></munderover><msub><mi>D</mi><mi>f</mi></msub><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo><mo stretchy="false">=</mo><mi>f</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo><mo stretchy="false">-</mo><mi>f</mi><mo stretchy="false">(</mo><mi>k</mi><mo stretchy="false">-</mo><mn>1</mn><mo stretchy="false">)</mo></math></p>
+<p><span id="off-by-one"></span>
+This formula has an off-by-one issue:
+if <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>k</mi><mo stretchy="false">=</mo><mn>0</mn></math>,
+we have to access the minus first element, so, for convenience,
+we define <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>f</mi><mo stretchy="false">(</mo><mo stretchy="false">-</mo><mn>1</mn><mo stretchy="false">)</mo><mo stretchy="false">=</mo><mn>0</mn></math>.</p>
+<p>I like how Kyne Santos explained this result:</p>
+<div class="epigraph"><blockquote><p>
+imagine you’re hiking up a mountain, going from point A to point B, and you want to find out the overall change in elevation.
+So let’s say that point A, the starting point, is 500 meters above sea level.
+In the first hour, you ascend 100 meters.
+In the second hour, you descend 50 meters, and in the third and final hour you ascend 200 meters to arrive at point B, which is 750 meters above sea level.
+The question is, what’s the overall change in elevation? Well, there’s two ways to go about it.
+You can find the final elevation, which is 750 meters, and just subtract the starting elevation, which was 500 and the difference between 750 and 500 is 250 meters.
+Or you can add up the little changes along the way.
+So in the first hour, we climbed 100 meters, and then we descended 50, and then we climbed another 200 so 100 minus 50 plus 200 is 250 meters.
+And these two approaches represent the two sides of the equation in the fundamental theorem of calculus.
+</p><footer>Kyne Santos, <a href="https://kpknudson.com/my-favorite-theorem/2025/5/15/episode-95-kyne-santos">episode 95</a> of the <a href="https://kpknudson.com/my-favorite-theorem">My Favorite Theorem</a> podcast</footer></blockquote></div>
+<h3 id="problem-slopes"><a href="#problem-slopes">Finding slopes with adjacent differences</a></h3>
+<p>The slope between two discrete values is their difference,
+so taking the difference between neighboring points of a sequence solves the forward problem,
+yielding <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>N</mi><mo stretchy="false">-</mo><mn>1</mn></math> slopes for a sequence of <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>N</mi></math> elements.</p>
+<div class="source-container"><pre class="source"><code><span class="line">sequence  1  3  5  7  9</span>
+<span class="line">  slopes  2  2  2  2</span>
+</code></pre></div>
+<p>This operation loses information:
+we cannot recover the original sequence from its slopes.
+In calculus, taking a derivative is also a lossy operation since functions
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></math> and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>g</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo stretchy="false">=</mo><mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo stretchy="false">+</mo><mi>c</mi></math>
+(where <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>c</mi></math> is an arbitrary constant) have the same derivative <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msup><mi>f</mi><mo>′</mo></msup><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></math>.</p>
+<h3 id="problem-recovering"><a href="#problem-recovering">Recovering the original with partial sums</a></h3>
+<p>The backward problem is the most interesting of the three.
+Since the sequence of slopes had one less item than the source sequence,
+there is not enough information to recover the latter.
+We know the changes between points,
+but not the first value to apply the changes to.
+Once we know it, we can compute the rest using partial sums.</p>
+<div class="source-container"><pre class="source"><code><span class="line">  slopes       2    2    2    2</span>
+<span class="line">sequence  C  C+2  C+4  C+6  C+8</span>
+</code></pre></div>
+<p>The lossiness of differentiation is the reason for introducing an <a href="https://en.wikipedia.org/wiki/Constant_of_integration">arbitrary constant</a> <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>C</mi></math>
+when computing an indefinite integral in calculus:
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo>∫</mo><msup><mi>f</mi><mo>′</mo></msup><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mi>d</mi><mi>x</mi><mo stretchy="false">=</mo><mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo stretchy="false">+</mo><mi>C</mi></math>
+In the discrete case, this constant corresponds to the first value in the original sequence;
+that’s why <code>std::adjacent_difference</code> preserves the first element in its output.</p>
+<h3 id="problem-areas"><a href="#problem-areas">Finding areas with partial sums</a></h3>
+<p>The <q>area</q> of a sequence is the sum of its elements.
+The sequence of partial sums solves this problem
+because it allows us to sum the items on any subinterval of the original sequence in a single step:
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><munderover><mo>∑</mo><mrow><mi>i</mi><mo stretchy="false">=</mo><mi>k</mi></mrow><mi>n</mi></munderover><mi>f</mi><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo><mo stretchy="false">=</mo><msub><mi>S</mi><mi>f</mi></msub><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo><mo stretchy="false">-</mo><msub><mi>S</mi><mi>f</mi></msub><mo stretchy="false">(</mo><mi>k</mi><mo stretchy="false">-</mo><mn>1</mn><mo stretchy="false">)</mo></math>
+(as I <a href="#off-by-one">previously mentioned</a>, we define <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>S</mi><mi>f</mi></msub><mo stretchy="false">(</mo><mo stretchy="false">-</mo><mn>1</mn><mo stretchy="false">)</mo></math> to be zero).</p>
+<div class="source-container"><pre class="source"><code><span class="line">    sequence  1   3   5   7   9</span>
+<span class="line">partial sums  1   4   9  16  25</span>
+</code></pre></div>
+<p>Partial sums don’t introduce or lose any information.
+We can always recover the original sequence using the <span class="smallcaps">stl</span> definition of adjacent differences:</p>
+<div class="source-container"><pre class="source"><code><span class="line">     sequence  1   3   5   7   9</span>
+<span class="line"> partial sums  1   4   9  16  25</span>
+<span class="line">adjacent diff  1   3   5   7   9</span>
+</code></pre></div>
+</section>
+<section><h2 id="symmetry-vs-pragmatism"><a href="#symmetry-vs-pragmatism">Symmetry vs pragmatism</a></h2>
+<p>The connection between <code>std::partial_sums</code> and <code>std::adjacent_difference</code> is aesthetically pleasing,
+but I find the design of the latter algorithm unfortunate:</p>
+<ol class="circled"><li data-num-glyph="①"><code>std::adjacent_difference</code> is significantly less generic than its lossy version
+  (i.e., a version that doesn’t copy the first element) would be,
+  as it forces the output element type to match the input element type.
+  The few times I needed to compute pairwise differences,
+  the semantics of <code>std::adjacent_difference</code> stood in the way,
+  and I ended up writing a custom loop.
+  <a href="https://stackoverflow.com/questions/8267806/implicit-transformation-while-calling-stdadjacent-difference">I’m not alone.</a>
+  Luckily, the <a href="https://en.cppreference.com/w/cpp/ranges/adjacent_transform_view.html"><code>pairwise_transform</code></a> adapter from <span class="smallcaps">c++23</span> doesn’t make the extra copy.</li><li data-num-glyph="②">
+  Derivatives in calculus are lossy,
+  so the definition of <code>std::adjacent_difference</code> doesn’t exactly correspond to a derivative.
+  Forcing the symmetry between discrete algorithms breaks the symmetry with their continuous counterparts.
+</li></ol>
+<p>I disagree with Stepanov’s design choice,
+but I’m glad it made me question his intentions and find these hidden connections.
+<span class="smallcaps">api</span> design is hard,
+especially when you try to express novel ideas,
+such as efficient generic programming,
+in a new programming language,
+as <span class="smallcaps">c++</span> was at the time.
+Just like <a href="https://en.wikipedia.org/wiki/Cosmological_constant">Einstein’s cosmological constant</a>,
+Stepanov’s extra copy turned out to be useful after all.</p>
+</section>
+<section><h2 id="appendinx-detals-in-q"><a href="#appendinx-detals-in-q">Appendix: deltas in q</a></h2>
+<p>Just like <code>std::adjacent_difference</code>,
+the <a href="https://code.kx.com/q/ref/deltas/"><code>deltas</code></a> function from the <a href="https://code.kx.com/q/learn/startingkdb/language/"><code>q</code></a> programming language preserves the first item of its input:</p>
+<div class="source-container"><pre class="source q"><code><span class="line">deltas 1 4 9 16</span>
+<span class="line">1 3 5 7</span>
+</code></pre></div>
+<p>However, the <code>deltas</code> function operates slightly differently from its <span class="smallcaps">c++</span> cousin:
+Instead of copying the first item verbatim,
+it prepends a seed value of zero to the sequence before computing pairwise differences.</p>
+<div class="source-container"><pre class="source"><code><span class="line">deltas 1 4 9 16 == (1 - 0) (4 - 1) (9 - 4) (16 - 9) == 1 3 5 7</span>
+</code></pre></div>
+<p><code>q</code> defines <code>deltas</code> in terms of a more general <a href="https://code.kx.com/q/ref/maps/#each-prior">Each Prior</a> operator as <code>-':</code>.
+This direct form picks the seed based on the operation (zero for subtraction, one for multiplication, etc.)
+and allows the caller to override the default through its left argument.</p>
+<div class="source-container"><pre class="source q"><code><span class="line">(*':) 2 3 4  / 1 is the identity for *.</span>
+<span class="line">2 6 12</span>
+<span class="line"></span>
+<span class="line">1950 -': 1952 1954 1960 / Use 1950 as the seed instead of zero.</span>
+<span class="line">2 2 6</span>
+</code></pre></div>
+<p>This design preserves symmetry with partial <a href="https://code.kx.com/q/ref/sum/#sums"><code>sums</code></a>
+but avoids the type mismatch between the input and output sequences, achieving both elegance and pragmatism.</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/44-tag-based-logging.html">Tag-based logging</a></li><li><a href="/posts/41-box-combinators.html">Box combinators</a></li><li><a href="/posts/45-compilation-is-communication.html">Compilation is communication</a></li><li><a href="/posts/37-onnx-intro.html">ONNX introduction</a></li><li><a href="/posts/31-effective-design-docs.html">Effective design docs</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/44-tag-based-logging.html"> ←Tag-based logging</a></div><div id="older"><a href="/posts/42-parasites-found.html">Parasites found→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

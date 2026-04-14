@@ -45,8 +45,8 @@ OPAMSWITCH := $(OPAM_ROOT)/local-switch
 OPAM_SWITCH_ABS := $(abspath $(OPAMSWITCH))
 OPAM_COMMON_ARGS := --root=$(OPAM_STATE_ROOT) --switch=$(OPAM_SWITCH_ABS)
 DUNE := $(OPAM) exec $(OPAM_COMMON_ARGS) -- dune
-BLOGWARE := $(BLOGWARE_DIR)/_build/default/bin/main.exe
-BLOGWARE_BUILD_DIR := $(BLOGWARE_DIR)/_build
+BLOGWARE := _build/default/$(BLOGWARE_DIR)/bin/main.exe
+BLOGWARE_BUILD_DIR := _build
 
 .PHONY: help
 help:
@@ -57,6 +57,7 @@ help:
 	@echo "render       - render the website into the DEST directory"
 	@echo "test         - run the test suite"
 	@echo "test-verbose - run tests with verbose output"
+	@echo "snapshots    - update website rendering snapshots"
 	@echo "clean        - remove build artifacts"
 	@echo "distclean    - remove build artifacts and installed toolchains"
 	@echo "deps         - install dependencies"
@@ -70,7 +71,7 @@ $(OPAMSWITCH)/_opam/.opam-switch/switch-config: $(OPAM_STATE_ROOT)/config
 	$(OPAM) switch create $(OPAM_SWITCH_ABS) ocaml-base-compiler.5.3.0 --yes --root=$(OPAM_STATE_ROOT)
 
 # Install project dependencies
-$(OPAM_ROOT)/.deps: $(OPAMSWITCH)/_opam/.opam-switch/switch-config $(BLOGWARE_DIR)/dune-project
+$(OPAM_ROOT)/.deps: $(OPAMSWITCH)/_opam/.opam-switch/switch-config dune-project
 	@echo "Installing dependencies..."
 	$(OPAM) install $(OPAM_COMMON_ARGS) dune ocaml-lsp-server odoc --yes
 	@touch $@
@@ -85,15 +86,19 @@ render: build
 
 .PHONY: test
 test: $(OPAM_ROOT)/.deps
-	$(DUNE) test --root=$(BLOGWARE_DIR)
+	$(DUNE) test
 
 .PHONY: test-verbose
 test-verbose: $(OPAM_ROOT)/.deps
-	$(DUNE) exec --root=$(BLOGWARE_DIR) ./test/test_main.exe -- -verbose
+	$(DUNE) exec ./blogware/test/test_main.exe -- -verbose
+
+.PHONY: snapshots
+snapshots: $(OPAM_ROOT)/.deps
+	UPDATE_SNAPSHOTS=1 $(DUNE) exec ./blogware/test/snapshot_test.exe
 
 .PHONY: build
 build: $(OPAM_ROOT)/.deps
-	$(DUNE) build --root=$(BLOGWARE_DIR) ./bin/main.exe
+	$(DUNE) build ./blogware/bin/main.exe
 
 .PHONY: deps
 deps: $(OPAM_ROOT)/.deps

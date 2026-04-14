@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="ai,programming"><meta name="description" content="Vibe-specing from the chair."><title>Kirk, Scotty, and Spock</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/49-kirk-scotty-spock.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/49-kirk-scotty-spock.html">Kirk, Scotty, and Spock</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2026-03-22</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2026-03-22</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#good-summaries">Good summaries</a></li><li class="toc toc-level-1"><a href="#scotty-and-spock">Scotty and Spock</a></li><li class="toc toc-level-1"><a href="#experiment">Experiment: binary exponentiation</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
+
+<section><p>I love reading code for education, but code reviews are different.
+I’ve been doing them for over a decade, and I can testify to their virtues, but they just aren’t fun.
+Perusing code is to code reviews as devouring a nerdy magazine article is to ploughing through Terms and Conditions.
+It’s all reading in the end, but the latter is somehow less enticing.</p>
+<p>The rise of AI has had two effects on code reviews: more code to review, and more subtly broken code.
+The outcome is the same: even less fun.
+This article argues that we can counter both effects if AI agents are to formally prove their work.</p>
+</section>
+<section><h2 id="good-summaries"><a href="#good-summaries">Good summaries</a></h2>
+<div class="epigraph"><blockquote><p>
+  So he [Grandmaster] is looking at very little and seeing quite a lot.
+</p><footer>Josh Waitzkin, <q>The Art of Learning</q></footer></blockquote></div>
+<p>Being more efficient at code reviews means doing less work.
+Instead of inspecting each line of a change, we seek a succinct, accurate summary.
+Three commonly used summary types are names, type signatures, and doc comments.</p>
+<p>Names are succinct but unreliable.
+A name might tell you everything you need to know or lead you astray.
+Type signatures are succinct and accurate, but most type systems are too simple to restrict implementations sufficiently.
+Doc comments are infinitely expressive and can tell you things you can’t deduce from the code alone,
+but they’re even less reliable than names.</p>
+<p>None of these summaries is trustworthy enough to skip reading the implementation details.
+Luckily, there is a better kind of summary: a specification.
+I don’t mean that lame <code>SPEC.md</code> file collecting dust in your repository
+or that design doc of yours that became stale before it got approved—I mean honest-to-god, machine-verifiable logic.</p>
+<p>In the vast landscape of formal methods, two tools suggest realistic modes of interaction with agents:
+the <a href="https://lean-lang.org/"><span class="smallcaps">lean</span> theorem prover</a> and the <a href="https://www.adacore.com/languages/spark"><span class="smallcaps">spark</span> toolchain</a><label class="margin-toggle sidenote-number" for="f-star"></label><input type="checkbox" id="f-star" class="margin-toggle"><span class="sidenote">
+  <a href="https://fstar-lang.org/">F*</a> also looks promising, but I don’t have any experience with it.
+</span>.
+Both separate interface and implementation and ensure they stay in sync.</p>
+<p><span class="smallcaps">lean</span> represents mathematical theorems as types and their proofs as values inhabiting these types.
+Once you know that a proof exists, you never have to look at it.
+You can study it for insight,
+but if <span class="smallcaps">lean</span> tells us that the proof has no holes,
+you can treat it as an opaque and reliable building block.
+So if you’re reviewing a contribution in <span class="smallcaps">lean</span>,
+you can focus on the theorem and let the compiler handle all the drudgery<label class="margin-toggle sidenote-number" for="assistant-proofs"></label><input type="checkbox" id="assistant-proofs" class="margin-toggle"><span class="sidenote">
+  My experience with proof assistants is that the proofs aren’t human-friendly anyway:
+  it’s hard to follow a proof without stepping through it interactively.
+</span>.</p>
+<p><span class="smallcaps">spark</span> ecosystem features a similar abstraction.
+Its module system separates interface files (<code>.ads</code>) that contain public declarations and contracts
+from implementation files (<code>.adb</code>) that contain private declarations and function bodies.
+The GNATprove prover checks whether bodies fullfil their contracts.
+When the specification is precise, and the prover succeeds, the code is likely solid enough to run on a spaceship.</p>
+<p>Even though <span class="smallcaps">lean</span> and <span class="smallcaps">spark</span> specifications are biased toward functional requirements
+(they focus on what the system does, not how;
+they can’t specify time complexity, for example),
+they are are both expressive and accurate summaries.</p>
+</section>
+<section><h2 id="scotty-and-spock"><a href="#scotty-and-spock">Scotty and Spock</a></h2>
+<div class="epigraph"><blockquote><p>I object to intellect without discipline.</p><footer>Spock, <q>The Squire of Gothos</q></footer></blockquote></div>
+<p>When ChatGPT became a hit, I treated it as an abomination.
+It combined the worst parts of humans and computers:
+not only was it opaque and unreliable, but it also lacked common sense.
+Computers say <q>no</q>, and they are correct.
+ChatGPT says <q>you’re absolutely right!</q> and lies in your face with the confidence of a K-Pop star.</p>
+<p>I became more tolerant with exposure and now treat traditional systems and <span class="smallcaps">llm</span>s as different thinking modes
+(System 2 vs. System 1, in Daniel Kahneman’s terms) or different characters.
+A prover evokes an image of Spock, the Science Officer of the <span class="smallcaps">uss</span> Enterprise,
+while <span class="smallcaps">llm</span> reminds me of the resourceful (and sometimes drunk) Chief Engineer Scotty.
+Together they can iron out details without bothering you, which
+gives you more time to sit in the chair and plan the next step.</p>
+<figure class="grayscale-diagram medium-size"><label class="margin-toggle" for="mn-double-feedback-loop">⊕</label><input type="checkbox" id="mn-double-feedback-loop" class="margin-toggle"><span class="marginnote">
+  Interactions between a human, an agent, and a prover form a double feedback loop:
+  The human checks that the agent’s specification matches the intent,
+  and the prover checks that the implementation matches the specification.
+</span><p class="svg"><img src="/images/49-double-feedback-loop.svg"></p>
+</figure>
+<p>When all three of you are on board,
+the optimal workflow seems to be a double feedback loop.
+A human expresses an intent in natural language;
+an agent derives a specification and an implementation of that intent.
+One loop features the human commenting on the specification until it meets the intent,
+another features a prover commenting on the implementation until it meets the specification.
+Scotty gets caught between two fires, but, being a miracle worker, he always finds his way out.</p>
+</section>
+<section><h2 id="experiment"><a href="#experiment">Experiment: binary exponentiation</a></h2>
+<div class="epigraph"><blockquote><p>Beware of bugs in the above code; I have only proved it correct, not tried it.</p><footer>
+  Donald Knuth, <a href="https://staff.fnwi.uva.nl/p.vanemdeboas/knuthnote.pdf">Notes on the van Emde Boas construction of priority deques</a>
+</footer></blockquote></div>
+<p>The <a href="https://en.wikipedia.org/wiki/Exponentiation_by_squaring">binary exponentiation algorithm</a> has a special place in my heart
+because it helped me grok the power of loop invariants.
+I asked <a href="https://claude.com/product/claude-code">Claude Code</a> (Opus 4.5 and 4.6) to implement it in <span class="smallcaps">spark</span>.
+My understanding of <span class="smallcaps">spark</span> is superficial:
+I can read it, but it would take me several hours to produce a verified version.
+Guided by GNATprove and my Socratic questions,
+Claude did it in about an hour,
+most of the time being blocked on the prover.
+Here is its code with my annotations<label class="margin-toggle sidenote-number" for="blame-claude"></label><input type="checkbox" id="blame-claude" class="margin-toggle"><span class="sidenote">All the credit is mine, all mistakes are Claude’s.</span>.</p>
+<p>First, I decided to cheat and specify exponentiation in terms of the built-in power operator <code>**</code>.
+The <code>fast_exp.ads</code> file specifies the interface of the fast exponentiation package.
+Line 9 defines the postcondition of the <code>Fast_Exp</code> function (line 8):
+it must agree with the power operator.</p>
+<figure><div class="source-container"><pre class="source linenumbers"><code><span class="line">package Fast_Exp</span>
+<span class="line">  with SPARK_Mode =&gt; On</span>
+<span class="line">is</span>
+<span class="line">   type Word is mod 2**64;</span>
+<span class="line"></span>
+<span class="line">   <em>--  Fast exponentiation using binary method (exponentiation by squaring).</em></span>
+<span class="line">   <em>--  Computes Base**Exp in O(log Exp) multiplications.</em></span>
+<span class="line">   function Fast_Power (Base : Word; Exp : Natural) return Word</span>
+<span class="line">     with Post =&gt; Fast_Power'Result = Base ** Exp;</span>
+<span class="line"></span>
+<span class="line">end Fast_Exp;</span>
+</code></pre></div>
+</figure>
+<p>The <code>fast_exp.adb</code> file implements the <code>Fast_Power</code> function (line 13).
+The code is peppered with assertions that guide the prover.
+<code>Lemma_Power_Sq</code> is a helper ghost procedure
+(Ghost code facilitates proofs and doesn’t appear in the executable)
+that suggests a proof by induction for the even-exponent case
+(the prover can handle most of the details, including the base case).</p>
+<figure><div class="source-container"><pre class="source linenumbers"><code><span class="line">package body Fast_Exp</span>
+<span class="line">  with SPARK_Mode =&gt; On</span>
+<span class="line">is</span>
+<span class="line"></span>
+<span class="line">   procedure <b>Lemma_Power_Sq</b> (B : Word; E : Natural)</span>
+<span class="line">     with Ghost, Pre =&gt; E &gt;= 2 and E mod 2 = 0,</span>
+<span class="line">          Subprogram_Variant =&gt; (Decreases =&gt; E),</span>
+<span class="line">          Post =&gt; B ** E = (B * B) ** (E / 2)</span>
+<span class="line">   is begin</span>
+<span class="line">      if E &gt; 2 then <b>Lemma_Power_Sq</b> (B, E - 2); end if;</span>
+<span class="line">   end Lemma_Power_Sq;</span>
+<span class="line"></span>
+<span class="line">   function <b>Fast_Power</b> (Base : Word; Exp : Natural) return Word is</span>
+<span class="line">      Result : Word := 1;</span>
+<span class="line">      B      : Word := Base;</span>
+<span class="line">      E      : Natural := Exp;</span>
+<span class="line">   begin</span>
+<span class="line">      while E &gt; 0 loop</span>
+<span class="line">         pragma Loop_Invariant (Result * B ** E = Base ** Exp);</span>
+<span class="line">         pragma Loop_Variant (Decreases =&gt; E);</span>
+<span class="line"></span>
+<span class="line">         if E mod 2 = 1 then</span>
+<span class="line">            pragma Assert (B ** E = B * B ** (E - 1));</span>
+<span class="line">            pragma Assert (Result * B ** E = Result * (B * B ** (E - 1)));</span>
+<span class="line">            pragma Assert (Result * (B * B ** (E - 1)) =</span>
+<span class="line">                          (Result * B) * B ** (E - 1));</span>
+<span class="line">            Result := Result * B;</span>
+<span class="line">            E := E - 1;</span>
+<span class="line">         end if;</span>
+<span class="line"></span>
+<span class="line">         exit when E = 0;</span>
+<span class="line"></span>
+<span class="line">         <b>Lemma_Power_Sq</b> (B, E);</span>
+<span class="line">         B := B * B;</span>
+<span class="line">         E := E / 2;</span>
+<span class="line">      end loop;</span>
+<span class="line"></span>
+<span class="line">      return Result;</span>
+<span class="line">   end Fast_Power;</span>
+<span class="line"></span>
+<span class="line">end Fast_Exp;</span>
+</code></pre></div>
+</figure>
+<p>
+In my next prompt,
+I asked Claude to remove the dependency on the built-in operator and derive correctness from first principles.
+The new interface defines the ghost function <code>Power</code> (line 7)
+that models exponentiation for the <code>Fast_Power</code> function (line 14).</p>
+<figure><div class="source-container"><pre class="source linenumbers"><code><span class="line">package Fast_Exp</span>
+<span class="line">  with SPARK_Mode =&gt; On</span>
+<span class="line">is</span>
+<span class="line">   type Word is mod 2**64;</span>
+<span class="line"></span>
+<span class="line">   <em>--  Ghost function for specification: computes base^exp recursively.</em></span>
+<span class="line">   function <b>Power</b> (Base : Word; Exp : Natural) return Word is</span>
+<span class="line">     (if Exp = 0 then 1 else Base * Power (Base, Exp - 1))</span>
+<span class="line">     with Ghost,</span>
+<span class="line">          Subprogram_Variant =&gt; (Decreases =&gt; Exp);</span>
+<span class="line"></span>
+<span class="line">   <em>--  Fast exponentiation using binary method (exponentiation by squaring).</em></span>
+<span class="line">   <em>--  Computes Base^Exp in O(log Exp) multiplications.</em></span>
+<span class="line">   function <b>Fast_Power</b> (Base : Word; Exp : Natural) return Word</span>
+<span class="line">     with Post =&gt; Fast_Power'Result = Power (Base, Exp);</span>
+<span class="line"></span>
+<span class="line">end Fast_Exp;</span>
+</code></pre></div>
+</figure>
+<p>The shape of the package body stayed the same;
+the <code>Lemma_Power_Sq</code> (line 5) procedure got bulkier because the prover needed more help.</p>
+<figure><div class="source-container"><pre class="source linenumbers"><code><span class="line">package body Fast_Exp</span>
+<span class="line">  with SPARK_Mode =&gt; On</span>
+<span class="line">is</span>
+<span class="line"></span>
+<span class="line">   procedure <b>Lemma_Power_Sq</b> (B : Word; E : Natural)</span>
+<span class="line">     with Ghost, Pre =&gt; E &gt;= 2 and E mod 2 = 0,</span>
+<span class="line">          Subprogram_Variant =&gt; (Decreases =&gt; E),</span>
+<span class="line">          Post =&gt; Power (B, E) = Power (B * B, E / 2)</span>
+<span class="line">   is</span>
+<span class="line">   begin</span>
+<span class="line">      if E = 2 then</span>
+<span class="line">         pragma Assert (Power (B, 1) = B);</span>
+<span class="line">         pragma Assert (Power (B * B, 1) = B * B);</span>
+<span class="line">      else</span>
+<span class="line">         Lemma_Power_Sq (B, E - 2);</span>
+<span class="line">         pragma Assert (Power (B, E - 1) = B * Power (B, E - 2));</span>
+<span class="line">         pragma Assert (Power (B, E) = B * Power (B, E - 1));</span>
+<span class="line">         pragma Assert (B * (B * Power (B, E - 2)) =</span>
+<span class="line">                       (B * B) * Power (B, E - 2));</span>
+<span class="line">         pragma Assert (Power (B, E) = (B * B) * Power (B, E - 2));</span>
+<span class="line">      end if;</span>
+<span class="line">   end Lemma_Power_Sq;</span>
+<span class="line"></span>
+<span class="line">   function <b>Fast_Power</b> (Base : Word; Exp : Natural) return Word is</span>
+<span class="line">      Result : Word := 1;</span>
+<span class="line">      B      : Word := Base;</span>
+<span class="line">      E      : Natural := Exp;</span>
+<span class="line">   begin</span>
+<span class="line">      while E &gt; 0 loop</span>
+<span class="line">         pragma Loop_Invariant (Result * Power (B, E) =</span>
+<span class="line">                                Power (Base, Exp));</span>
+<span class="line">         pragma Loop_Variant (Decreases =&gt; E);</span>
+<span class="line"></span>
+<span class="line">         if E mod 2 = 1 then</span>
+<span class="line">            pragma Assert (Power (B, E) = B * Power (B, E - 1));</span>
+<span class="line">            pragma Assert (Result * (B * Power (B, E - 1)) =</span>
+<span class="line">                          (Result * B) * Power (B, E - 1));</span>
+<span class="line">            Result := Result * B;</span>
+<span class="line">            E := E - 1;</span>
+<span class="line">         end if;</span>
+<span class="line"></span>
+<span class="line">         pragma Assert (Result * Power (B, E) = Power (Base, Exp));</span>
+<span class="line">         exit when E = 0;</span>
+<span class="line"></span>
+<span class="line">         Lemma_Power_Sq (B, E);</span>
+<span class="line">         B := B * B;</span>
+<span class="line">         E := E / 2;</span>
+<span class="line">      end loop;</span>
+<span class="line"></span>
+<span class="line">      return Result;</span>
+<span class="line">   end Fast_Power;</span>
+<span class="line"></span>
+<span class="line"> end Fast_Exp;</span>
+</code></pre></div>
+</figure>
+<p>Lastly, I asked Claude to generalize the algorithm to work on arbitrary <a href="https://en.wikipedia.org/wiki/Monoid">monoids</a>.
+Claude correctly parameterized the package:</p>
+<figure><div class="source-container"><pre class="source linenumbers"><code><span class="line">generic</span>
+<span class="line">   type T is private;</span>
+<span class="line">   Identity : T;</span>
+<span class="line">   with function &quot;*&quot; (Left, Right : T) return T;</span>
+<span class="line">package Fast_Exp</span>
+<span class="line">  with SPARK_Mode =&gt; On</span>
+<span class="line">is</span>
+<span class="line">   procedure <b>Axiom_Assoc</b> (A, B, C : T) with</span>
+<span class="line">     Ghost, Import, Always_Terminates, Global =&gt; null,</span>
+<span class="line">     Post =&gt; A * (B * C) = (A * B) * C;</span>
+<span class="line"></span>
+<span class="line">   procedure <b>Axiom_Id_Right</b> (A : T) with</span>
+<span class="line">     Ghost, Import, Always_Terminates, Global =&gt; null,</span>
+<span class="line">     Post =&gt; A * Identity = A;</span>
+<span class="line"></span>
+<span class="line">   procedure <b>Axiom_Id_Left</b> (A : T) with</span>
+<span class="line">     Ghost, Import, Always_Terminates, Global =&gt; null,</span>
+<span class="line">     Post =&gt; Identity * A = A;</span>
+<span class="line"></span>
+<span class="line">   function <b>Power</b> (Base : T; Exp : Natural) return T is</span>
+<span class="line">     (if Exp = 0 then Identity else Base * Power (Base, Exp - 1))</span>
+<span class="line">     with Ghost,</span>
+<span class="line">          Subprogram_Variant =&gt; (Decreases =&gt; Exp);</span>
+<span class="line"></span>
+<span class="line">   function <b>Fast_Power</b> (Base : T; Exp : Natural) return T</span>
+<span class="line">     with Post =&gt; Fast_Power'Result = Power (Base, Exp);</span>
+<span class="line">end Fast_Exp;</span>
+</code></pre></div>
+</figure>
+<p>The corresponding body is close to the previous iteration, so I omitted it.
+The prover can’t analyze generic code;
+it works only with specific instances.
+Claude checked the code by specializing the package for integer arithmetic.</p>
+<figure><div class="source-container"><pre class="source linenumbers"><code><span class="line">with Fast_Exp;</span>
+<span class="line"></span>
+<span class="line">package Mod64_Fast_Exp</span>
+<span class="line">  with SPARK_Mode =&gt; On</span>
+<span class="line">is</span>
+<span class="line">   type Word is mod 2**64;</span>
+<span class="line"></span>
+<span class="line">   package Inst is new Fast_Exp</span>
+<span class="line">     (T =&gt; Word, Identity =&gt; 1, &quot;*&quot; =&gt; &quot;*&quot;);</span>
+<span class="line"></span>
+<span class="line">end Mod64_Fast_Exp;</span>
+</code></pre></div>
+</figure>
+<p>Claude impressed me,
+but it required more guidance and time than I expected.
+For example, the body of its first attempt spanned over 130 lines of code,
+too much for an algorithm that fits on a business card.
+When Claude started from scratch,
+adding only what was needed to help the prover,
+the implementation shrank to 50 lines.
+Another problem was that Claude tried to shift work to the prover early in the session and raised the resource limits too high,
+so every invocation took several minutes.
+Dialing down the settings boosted progress.</p>
+<p>I consider the experiment a success: the package interface constitutes about 25% of the code
+(about 10% if counting omitted test code) and summarizes it perfectly.
+During a code review,
+I would read only the specification and approve the rest after a quick glance to ensure the agent didn’t cheat.</p>
+</section>
+<section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
+<div class="epigraph"><blockquote><p>
+  Ain’t technology grand—solving problems we never should have had in the first place?
+</p><footer>Gerald M. Weinberg, <q>Weinberg on Writing</q></footer></blockquote></div>
+<p>Agents are drowning humans in subtly broken code,
+but they can also alleviate the problems they created if we require them to provide machine-verifiable proofs.
+<span class="smallcaps">lean</span> and <span class="smallcaps">spark</span>, though unlikely to become mainstream,
+serve as models for future verified toolchains
+that should feature a clear separation between interface and implementation (so that people know where to look)
+and easy-to-use, fast provers (so that agents can iterate quickly).</p>
+<p>Researchers build specialized systems (e.g.,
+<a href="https://www.julian.ac/blog/2025/11/13/alphaproof-paper/">AlphaProof</a>
+and <a href="https://aristotle.harmonic.fun/">Aristotle</a>)
+that rely on <span class="smallcaps">lean</span> to obtain verified results.
+Mathematicians (most notably, <a href="https://youtu.be/cyyR7j2ChCI?si=NslhiTzusR4E10K_">Terence Tao</a>)
+join forces with <span class="smallcaps">llm</span>s and <span class="smallcaps">lean</span> and formalize proofs faster than ever before.
+It’s time to bridge pure math and greasy engineering filled with concurrency and networking.
+Consumer-grade models can handle propositional logic,
+but tooling, libraries (verification always works bottom up), and education lag behind.</p>
+<p>Scotty is on board. We’re waiting for you, Mr. Spock.</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/42-parasites-found.html">Parasites found</a></li><li><a href="/posts/45-compilation-is-communication.html">Compilation is communication</a></li><li><a href="/posts/44-tag-based-logging.html">Tag-based logging</a></li><li><a href="/posts/41-box-combinators.html">Box combinators</a></li><li><a href="/posts/37-onnx-intro.html">ONNX introduction</a></li></ul><div id="next-prev-nav"><div id="older"><a href="/posts/48-the-third-hard-problem.html">The third hard problem→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

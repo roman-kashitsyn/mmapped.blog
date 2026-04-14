@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="arrays,j,puzzles"><meta name="description" content="Solving the trapped rainwater problem in J."><title>Square joy: trapped rainwater</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/04-square-joy-trapped-rain-water.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/04-square-joy-trapped-rain-water.html">Square joy: trapped rainwater</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2022-02-15</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2024-03-03</span></span><span class="post-icons"><a class="icon-link" href="https://www.reddit.com/r/apljk/comments/ssyl00/blog_post_square_joy_trapped_rainwater/" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#the-why">But why?</a></li><li class="toc toc-level-1"><a href="#the-problem">The problem: heavy rains in Flatland</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#example-2d">Example</a></li></ul></li><li class="toc toc-level-1"><a href="#a-solution">A solution</a></li><li class="toc toc-level-1"><a href="#translating-to-j">Translating our idea to J</a></li><li class="toc toc-level-1"><a href="#drawing-solutions">Drawing solutions</a></li><li class="toc toc-level-1"><a href="#3d">Breaking out of Flatland</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#solution-3d">Solution</a></li></ul></li><li class="toc toc-level-1"><a href="#back-to-2d">Looking back at Flatland</a></li><li class="toc toc-level-1"><a href="#where-to-go-next">Where to go next</a></li></ul><hr>
+
+<section><p>
+In this article, we’ll explore one of my favorite programming puzzles using the <a href="https://en.wikipedia.org/wiki/Array_programming">array programming</a> paradigm.</p>
+</section>
+<section><h2 id="the-why"><a href="#the-why">But why?</a></h2>
+<p>I am always looking for new perspectives on software engineering and programming.
+My views on computing changed profoundly when I discovered the array programming paradigm a few years ago.</p>
+<p>For me, the hardest and the most rewarding part of array programming is coming up with simple idiomatic solutions.
+Idiomatic solutions require knowledge of many little tricks array-wrangling wizards developed in their chambers over the last fifty years.
+I would love to learn or rediscover these tricks, and I hope you might derive some pleasure and insights from reading about my little discoveries.</p>
+<p>In this article, we’ll use the <a href="https://www.jsoftware.com/#/"><span class="smallcaps">j</span> programming language</a>.
+Why <span class="smallcaps">j</span> and not, say, <a href="https://dyalog.com/"><span class="smallcaps">apl</span></a>?
+<span class="smallcaps">j</span> is easier to type on most keyboards, and it’s <a href="https://github.com/jsoftware/jsource">open source</a>.</p>
+<p>The code in this article will look like line noise if you aren’t familiar with <span class="smallcaps">j</span>.
+Don’t be discouraged; this reaction is typical when working with <span class="smallcaps">j</span>.
+I’ll explain most of the steps, but the steps might still look like black magic sometimes.
+My goal is not to explain every aspect of the language but to demonstrate the problem-solving approach.</p>
+<p>Time to have some fun!</p>
+</section>
+<section><h2 id="the-problem"><a href="#the-problem">The problem: heavy rains in Flatland</a></h2>
+<p>Imagine living in a two-dimensional city where all buildings have the same unit width and stand next to one another.
+We don’t like rain very much: the two-dimensional water gets stuck between the buildings forever, forming pools.
+As city architects, we know the heights in units of all the buildings.
+We need to compute how much water (in square units) accumulates between the buildings after heavy rain.</p>
+<p>More dryly: given an array of non-negative integers <em>H</em>, representing heights of unit-width bars placed next to one another, compute the total area of water trapped by the configuration after a rain.</p>
+<h3 id="example-2d"><a href="#example-2d">Example</a></h3>
+<table class="table-2 "><tbody><tr><td colspan="1" class="align-r">
+    <em>Input</em> </td><td colspan="1" class="align-l"> <code>0 1 0 2 1 0 1 3 2 1 2 1</code> </td></tr><tr><td colspan="1" class="align-r">
+    <em>Output</em> </td><td colspan="1" class="align-l"> <code>6</code> </td></tr></tbody></table>
+<p><br></p>
+<figure><label class="margin-toggle" for="mn-example">⊕</label><input type="checkbox" id="mn-example" class="margin-toggle"><span class="marginnote">The configuration of bars with heights 0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1, and the water trapped by this configuration.</span><img src="/images/04-viewmat-2d.png">
+</figure>
+</section>
+<section><h2 id="a-solution"><a href="#a-solution">A solution</a></h2>
+<p>A natural first question is: what is the water level above each bar?
+If we knew that, summing contributions of levels above each bar would give us the answer.</p>
+<p>So, let’s focus on the bar at an arbitrary index <span class="math">i</span>.
+What would stop the water from flowing out?
+Another bar that is higher than <span class="math">H[i]</span>.
+Furthermore, we need bars higher than <span class="math">H[i]</span> on <em>both</em> sides of <span class="math">i</span> for the water to stay.
+So, the water level at index <span class="math">i</span> is determined by the minimum of the highest bars on the left and right.</p>
+<p>Computing the highest bar to the left and to the right for each index is not efficient: we would need to make <span class="math">O(N<sup>2</sup>)</span> steps.
+Luckily, we can eliminate a lot of duplication in this computation.
+Instead of running the search from each position in the array, we can precompute the left and right maxima for all positions in two sweeps.</p>
+<p>The algorithm to compute the running left maximum is called <a href="https://en.wikipedia.org/wiki/Prefix_sum">prefix scan</a>.
+We can compute the right maximum by running the same scan from right to left (i.e., performing a suffix scan).
+Taking the minimum of precomputed left and right maxima gives us the water level at each point.
+The difference between the water level and the bar height gives us the volume of water trapped at this position.
+Summing up all volumes gives us the answer.</p>
+</section>
+<section><h2 id="translating-to-j"><a href="#translating-to-j">Translating our idea to J</a></h2>
+<p><span class="smallcaps">j</span> is an interpreted language and it has a <a href="https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop"><span class="smallcaps">repl</span></a>.
+It’s pretty standard for <span class="smallcaps">j</span> programmers to build solutions incrementally by trying snippets of code in the <span class="smallcaps">repl</span> and observing the effects.
+The code in this article is also an interactive <span class="smallcaps">repl</span> session that you can replicate locally.
+Let us get some data to play with.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">    NB. Comments start with the symbol NB.</span>
+<span class="line">    NB. I use PascalCase for data (“nouns”)</span>
+<span class="line">    NB. and snake_case for functions (“verbs”).</span>
+<span class="line"></span>
+<span class="line">    NB. User input is indented.</span>
+<span class="line">NB. Machine output is not.</span>
+<span class="line"></span>
+<span class="line">    H =. 0 1 0 2 1 0 1 3 2 1 2 1</span>
+</code></pre></div>
+<p>The next item on our agenda is computing the left and right running maxima.</p>
+<div class="source-container"><pre class="source j"><code>    &gt;./\ H
+0 1 1 2 2 2 2 3 3 3 3 3
+
+    &gt;./\. H
+3 3 3 3 3 3 3 3 2 2 2 1
+</code></pre></div>
+<p>Wait, where is all the code?
+Let me break it down.
+In <span class="smallcaps">j</span>, <a href="https://code.jsoftware.com/wiki/Vocabulary/gtdot#dyadic"><code>&gt;.</code> (max)</a> is a verb (<span class="smallcaps">j</span> word for &quot;function&quot;) that, when you use it dyadically (<span class="smallcaps">J</span> word for <q>with two arguments</q>), computes the maximum of the arguments.
+It’s easy to guess that <a href="https://code.jsoftware.com/wiki/Vocabulary/ltdot#dyadic"><code>&lt;.</code> (min)</a> is an analogous verb that computes the minimum.</p>
+<p>The single character <a href="https://code.jsoftware.com/wiki/Vocabulary/slash"><code>/</code> (insert)</a> is an adverb (<span class="smallcaps">j</span> word for <q>function modifier</q>) that takes a dyadic verb to the left and turns it into a verb that folds an entire array.
+Why is it called <q>insert</q>?
+Because it inserts the verb between elements of the array it operates on.
+For example, summing up an array is just <code>+/</code>.</p>
+<div class="source-container"><pre class="source j"><code>    NB. +/ 1 2 3 4    &lt;-&gt;    1 + 2 + 3 + 4
+
+    +/ 1 2 3 4
+10
+</code></pre></div>
+<p>But wait, we want running results, not just the final maximum.
+That is a job for adverbs <a href="https://code.jsoftware.com/wiki/Vocabulary/bslash"><code>\</code> (prefix)</a> and <a href="https://code.jsoftware.com/wiki/Vocabulary/bslashdot"><code>\.</code> (suffix)</a>.
+These take a verb and produce a new verb that applies the original verb to all prefixes/suffixes of an array, forming a new array.</p>
+<div class="source-container"><pre class="source j"><code>    NB. +/\  1 2 3 4    &lt;-&gt;    (1) (+/ 1 2) (+/ 1 2 3) (+/ 1 2 3 4)
+    NB. +/\. 1 2 3 4    &lt;-&gt;    (+/ 1 2 3 4) (+/ 2 3 4) (+/ 3 4) (4)
+
+    +/\ 1 2 3 4
+1 3 6 10
+
+    +/\. 1 2 3 4
+10 9 7 4
+</code></pre></div>
+<p>We already know enough to compute water levels for our example:</p>
+<div class="source-container"><pre class="source j"><code>    (&gt;./\ H) &lt;. (&gt;./\. H)
+0 1 1 2 2 2 2 3 2 2 2 1
+</code></pre></div>
+<p>We need to subtract the bar heights and sum up the results.
+We can get away with tools that we already know:</p>
+<div class="source-container"><pre class="source j"><code>    NB. Look at the picture in the example and convince yourself that the
+    NB. water amounts we computed are correct.
+
+    ((&gt;./\ H) &lt;. (&gt;./\. H)) - H
+0 0 1 0 1 2 1 0 0 1 0 0
+
+    +/ ((&gt;./\ H) &lt;. (&gt;./\. H)) - H
+6
+</code></pre></div>
+<p>This solution is remarkably concise.
+Believe it or not, we can make it even shorter.
+Look at the argument we repeated three times and at all these parentheses!
+If only we could move some of those out…</p>
+<div class="source-container"><pre class="source j"><code>    +/@((&gt;./\ &lt;. &gt;./\.) - ]) H
+6
+</code></pre></div>
+<p>Such terse expressions that combine functions without mentioning their arguments are called <a href="https://www.jsoftware.com/help/jforc/tacit_programs.htm">tacit</a>.
+I won’t explain how to form these expressions here, but I encourage you to learn more about tacit programming independently.</p>
+<p>Let us bind our beautiful tacit expression to a name.</p>
+<div class="source-container"><pre class="source j"><code>    trapped =. +/@((&gt;./\ &lt;. &gt;./\.)-])
+    trapped 0 1 0 2 1 0 1 3 2 1 2 1
+6
+</code></pre></div>
+<p>The full implementation of our idea now fits into 12 <span class="smallcaps">ascii</span> characters.
+One surprising property of array languages is that it’s often not worth naming functions.
+Their entire body is shorter and more expressive than any name we could come up with.</p>
+</section>
+<section><h2 id="drawing-solutions"><a href="#drawing-solutions">Drawing solutions</a></h2>
+<p>Knowing the answer is excellent, but being able to <em>see</em> it at a glance would be even better.
+In this section, we’ll write code to represent solutions visually.</p>
+<p>What would we like to see in that picture?
+We want to tell the space from the buildings and water pools.</p>
+<p>Let us start by drawing the original problem first.
+We know how to compute maxima: <code>&gt;./ H</code>.
+Now we need to build a matrix <span class="math">max(H)</span> rows by <span class="math">length(H)</span> columns.
+The idiomatic way of doing this is using our old friend <a href="https://code.jsoftware.com/wiki/Vocabulary/slash#dyadic"><code>/</code> (table)</a> in a new disguise.
+When used as <code>noun1 verb/ noun1</code>, slash builds a <span class="math">length(noun1)</span> by <span class="math">length(noun2)</span> table, where each cell <span class="math">i, j</span> is filled with the value computed as <span class="math">noun1[i] verb noun2[j]</span>.</p>
+<p>Let’s make a multiplication table to understand how it works.
+We’ll also need <a href="https://code.jsoftware.com/wiki/Vocabulary/idot"><code>i.</code> (integers)</a>, the function that takes an integer and makes an arithmetic progression of the specified length starting at zero.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">    i. 10</span>
+<span class="line">0 1 2 3 4 5 6 7 8 9</span>
+<span class="line"></span>
+<span class="line">    NB. When the input is negative, the progression is descending.</span>
+<span class="line">    i. _10</span>
+<span class="line">9 8 7 6 5 4 3 2 1 0</span>
+<span class="line"></span>
+<span class="line">    (i. 10) */ (i. 10)</span>
+<span class="line">0 0  0  0  0  0  0  0  0  0</span>
+<span class="line">0 1  2  3  4  5  6  7  8  9</span>
+<span class="line">0 2  4  6  8 10 12 14 16 18</span>
+<span class="line">0 3  6  9 12 15 18 21 24 27</span>
+<span class="line">0 4  8 12 16 20 24 28 32 36</span>
+<span class="line">0 5 10 15 20 25 30 35 40 45</span>
+<span class="line">0 6 12 18 24 30 36 42 48 54</span>
+<span class="line">0 7 14 21 28 35 42 49 56 63</span>
+<span class="line">0 8 16 24 32 40 48 56 64 72</span>
+<span class="line">0 9 18 27 36 45 54 63 72 81</span>
+</code></pre></div>
+<p>Note that there is no particular boolean type in array languages.
+They use integers instead: false is zero, and true is one.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">    NB. Here, we build a table using the verb “less” (&lt;).</span>
+<span class="line">    (i. 5) &lt;/ (i. 5)</span>
+<span class="line">0 1 1 1 1</span>
+<span class="line">0 0 1 1 1</span>
+<span class="line">0 0 0 1 1</span>
+<span class="line">0 0 0 0 1</span>
+<span class="line">0 0 0 0 0</span>
+</code></pre></div>
+<p>We have all the tools we need to display our problems and solutions.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">    NB. Compute the maximum of H.</span>
+<span class="line">    &gt;./ H</span>
+<span class="line">3</span>
+<span class="line"></span>
+<span class="line">    NB. Negate the maximum of H.</span>
+<span class="line">    - &gt;./ H</span>
+<span class="line">_3</span>
+<span class="line"></span>
+<span class="line">    NB. Make a descending progression that has the length of H maximum.</span>
+<span class="line">    i. - &gt;./ H</span>
+<span class="line">2 1 0</span>
+<span class="line"></span>
+<span class="line">    NB. Make a “less” table from the progression above and H.</span>
+<span class="line">    (i. - &gt;./ H) &lt;/ H</span>
+<span class="line">0 0 0 0 0 0 0 1 0 0 0 0</span>
+<span class="line">0 0 0 1 0 0 0 1 1 0 1 0</span>
+<span class="line">0 1 0 1 1 0 1 1 1 1 1 1</span>
+</code></pre></div>
+<p>If you squint a bit, you will see in the pattern of zeros and ones above the configuration of bars corresponding to <span class="math">H</span>.
+We already know how to compute water levels.
+Let’s add them (quite literally) to the picture.</p>
+<div class="source-container"><pre class="source j"><code>    NB. Make a similar “less” table, but use water levels instead of just H.
+    (i. - &gt;./ H) &lt;/ ((&gt;./\ &lt;. &gt;./\.) H)
+0 0 0 0 0 0 0 1 0 0 0 0
+0 0 0 1 1 1 1 1 1 1 1 0
+0 1 1 1 1 1 1 1 1 1 1 1
+
+    NB. Add two “less” tables component-wise.
+    ((i. - &gt;./ H) &lt;/ ((&gt;./\ &lt;. &gt;./\.) H)) + (i. - &gt;./ H) &lt;/ H
+0 0 0 0 0 0 0 2 0 0 0 0
+0 0 0 2 1 1 1 2 2 1 2 0
+0 2 1 2 2 1 2 2 2 2 2 2
+</code></pre></div>
+<p>Look carefully at the matrix that we got.
+Zeros correspond to empty spaces, ones—to water pools, twos—to bars.</p>
+<p>Let’s extract and name the verb that converts an instance of our problem into a matrix with classified cells.
+Again, I won’t explain how this tacit expression works, but I am sure you can see a lot of common parts with the expression above.</p>
+<div class="source-container"><pre class="source j"><code>    pic =. ((i.@-@:(&gt;./) &lt;/ (&gt;./\ &lt;. &gt;./\.)) + (i.@-@:(&gt;./) &lt;/ ]))
+    pic H
+0 0 0 0 0 0 0 2 0 0 0 0
+0 0 0 2 1 1 1 2 2 1 2 0
+0 2 1 2 2 1 2 2 2 2 2 2
+</code></pre></div>
+<p>We are one step away from turning this matrix into a picture.</p>
+<div class="source-container"><pre class="source j"><code>    (pic H) { ucp ' ░█'
+       █
+   █░░░██░█
+ █░██░██████
+</code></pre></div>
+<p><code>ucp</code> is a built-in verb that constructs an array of Unicode codepoints from a <span class="smallcaps">utf</span>-8 encoded string.
+<a href="https://code.jsoftware.com/wiki/Vocabulary/curlylf#dyadic"><code>{</code> (from)</a> is at the heart of our drawing trick.
+This verb selects items from the right argument according to the indices from the left argument.
+The effect is that all zeros got replaced with a space, ones—with a watery-looking glyph, and twos—with a solid rectangle.</p>
+<p><span id="viewmat"></span>
+Our pseudo-graphics look quite impressive already, but we can do even better.
+<span class="smallcaps">j</span> comes with a convenient <a href="https://code.jsoftware.com/wiki/Studio/Viewmat">viewmat</a> library that can visualize arrays.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">    require 'viewmat'</span>
+<span class="line">    viewmat pic H</span>
+</code></pre></div>
+<figure><img src="/images/04-viewmat-2d-raw.png">
+</figure>
+<p>That image looks quite good, but the colors are too psychedelic.
+Let’s use a more neutral color scheme.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">    (255 255 255 , 0 0 128 ,: 128 128 128) viewmat pic H</span>
+</code></pre></div>
+<figure><img src="/images/04-viewmat-2d.png">
+</figure>
+<p>Ah, much better!
+Now you know how I got the picture for the example.</p>
+<p>Alternatively, we can use the <a href="https://code.jsoftware.com/wiki/Plot">plot</a> package and draw our solution as a stacked bar chart.
+However, this approach needs more configuration and is slightly more cumbersome than <code>viewmat</code>.</p>
+<div class="source-container"><pre class="source j"><code>    require 'plot'
+    'sbar;color gray,blue;aspect 0.5;barwidth 1;edgesize 0;frame 0;labels 0 1' plot H ,:  ((&gt;./\ &lt;. &gt;./\.)-]) H
+</code></pre></div>
+<figure><img src="/images/04-plot-2d.png">
+</figure>
+</section>
+<section><h2 id="3d"><a href="#3d">Breaking out of Flatland</a></h2>
+<div class="epigraph"><blockquote><p>One must always generalize.</p><footer>Karl Jacobi</footer></blockquote></div>
+<p>One of the ways to better understand a problem is to generalize it.
+Let’s break out into the third dimension.</p>
+<p>Given a <em>two-dimensional</em> array of non-negative integers <span class="math">H</span>, representing heights of square-unit bars placed next to one another, compute the total <em>volume</em> of water trapped by the configuration after it rains.</p>
+<p>To make the problem more concrete, let’s inspect a few instances.
+We’ll use <a href="https://code.jsoftware.com/wiki/Vocabulary/tilde"><code>~</code> (reflex)</a> adverb to save us some typing.
+This adverb takes a verb and produces another verb that duplicates its right argument and passes the copies as the left and the right argument of the original verb.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">    NB. +/~ X   &lt;-&gt;   X +/ X</span>
+<span class="line">    NB. A cone that traps no water.</span>
+<span class="line">    +/~  (i. 4) , (i._4)</span>
+<span class="line">0 1 2 3 3 2 1 0</span>
+<span class="line">1 2 3 4 4 3 2 1</span>
+<span class="line">2 3 4 5 5 4 3 2</span>
+<span class="line">3 4 5 6 6 5 4 3</span>
+<span class="line">3 4 5 6 6 5 4 3</span>
+<span class="line">2 3 4 5 5 4 3 2</span>
+<span class="line">1 2 3 4 4 3 2 1</span>
+<span class="line">0 1 2 3 3 2 1 0</span>
+<span class="line"></span>
+<span class="line">    NB. An inversed cone that traps water in the middle.</span>
+<span class="line">    +/~  (i. _4), (i. 4)</span>
+<span class="line">6 5 4 3 3 4 5 6</span>
+<span class="line">5 4 3 2 2 3 4 5</span>
+<span class="line">4 3 2 1 1 2 3 4</span>
+<span class="line">3 2 1 0 0 1 2 3</span>
+<span class="line">3 2 1 0 0 1 2 3</span>
+<span class="line">4 3 2 1 1 2 3 4</span>
+<span class="line">5 4 3 2 2 3 4 5</span>
+<span class="line">6 5 4 3 3 4 5 6</span>
+</code></pre></div>
+<h3 id="solution-3d"><a href="#solution-3d">Solution</a></h3>
+<p>Let’s play the same trick: pick an arbitrary place on the grid and think of the water level we’ll observe at that place.
+This time, the problem is a bit trickier because there are many more ways for the water to flow.
+We must consider all possible paths through the grid.
+For each path, there is the highest bar that the water will have to flow through.
+The water will choose a path where that highest bar is the lowest among all paths.
+The height of that bar will determine the water level at that position.</p>
+<p>Running a graph search from each point is very inefficient.
+Luckily, we do not have to.
+All our searches have the same destination, the <q>ground</q> outside of the grid!
+We can invert the problem and ask: what is the most efficient way for the water to <q>climb up</q> the bars?
+In this formulation, a single run of a shortest-path algorithm will give us the answer.</p>
+<p>What shortest path algorithm should we use?
+<a href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">Dijkstra algorithm</a> is the best in class for this problem.
+However, it needs a priority queue to work well, and it uses a lot of branching.
+Let us search for a more array-friendly solution.</p>
+<p>There is another approach to the shortest path problem, a beautifully simple <a href="https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm">Bellman-Ford algorithm</a> that works by incremental relaxation of the distance matrix.
+It looks especially simple for implicitly defined graphs like our grid.
+Here is how to apply it to our problem:</p>
+<ul class="arrows"><li>
+    Start with a grid of distances with the same shape as the input grid, but all the values are infinite.
+  </li><li>
+    Compute the next grid of distances by taking the minimum of the four neighboring cells at each point and capping this value below by the bar height at the same position.
+    If some cell misses one of the neighbors, replace the neighbor with zero.
+  </li><li>Iterate the previous step until the distance grid converges.
+</li></ul>
+<p>Let’s put this idea in <span class="smallcaps">j</span> now.
+We start by constructing the initial matrix of distances.
+We’ll use the <a href="https://code.jsoftware.com/wiki/Vocabulary/dollar"><code>$</code> (shape of, reshape)</a> verb for that.</p>
+<div class="source-container"><pre class="source j"><code>    NB. We use the inverted cone as our example.
+    ] C =.  +/~  (i. _4), (i. 4)
+6 5 4 3 3 4 5 6
+5 4 3 2 2 3 4 5
+4 3 2 1 1 2 3 4
+3 2 1 0 0 1 2 3
+3 2 1 0 0 1 2 3
+4 3 2 1 1 2 3 4
+5 4 3 2 2 3 4 5
+6 5 4 3 3 4 5 6
+
+    NB. Make an array with the shape of C filled with infinities.
+    ($ C) $ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+</code></pre></div>
+<p>That was easy.
+Let us shift the data in all four directions.
+We’ll need the aptly named <a href="https://code.jsoftware.com/wiki/Vocabulary/bardot#dyadicfit"><code>|.!.f</code> (shift)</a> verb.</p>
+<div class="source-container"><pre class="source j"><code>    D =. ($ C) $ _
+
+    NB. Shift down, fill the space with zeros.
+
+   _1 |.!.0 D
+0 0 0 0 0 0 0 0
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+
+    NB. Now shift up.
+   1 |.!.0 D
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+0 0 0 0 0 0 0 0
+
+    NB. Now left.
+   1 |.!.0&quot;1 D
+_ _ _ _ _ _ _ 0
+_ _ _ _ _ _ _ 0
+_ _ _ _ _ _ _ 0
+_ _ _ _ _ _ _ 0
+_ _ _ _ _ _ _ 0
+_ _ _ _ _ _ _ 0
+_ _ _ _ _ _ _ 0
+_ _ _ _ _ _ _ 0
+
+    NB. Now right.
+   _1 |.!.0&quot;1 D
+0 _ _ _ _ _ _ _
+0 _ _ _ _ _ _ _
+0 _ _ _ _ _ _ _
+0 _ _ _ _ _ _ _
+0 _ _ _ _ _ _ _
+0 _ _ _ _ _ _ _
+0 _ _ _ _ _ _ _
+0 _ _ _ _ _ _ _
+
+    NB. Take the minimum of all four shifts.
+    ((_1 &amp; (|.!.0)) &lt;. (1 &amp; (|.!.0)) &lt;. (_1 &amp; (|.!.0)&quot;1) &lt;. (1 &amp; (|.!.0)&quot;1)) D
+0 0 0 0 0 0 0 0
+0 _ _ _ _ _ _ 0
+0 _ _ _ _ _ _ 0
+0 _ _ _ _ _ _ 0
+0 _ _ _ _ _ _ 0
+0 _ _ _ _ _ _ 0
+0 _ _ _ _ _ _ 0
+0 0 0 0 0 0 0 0
+</code></pre></div>
+<p>We are now ready to define the relaxation function.</p>
+<div class="source-container"><pre class="source j"><code>    NB. Take the maximum of the left argument (the original height matrix)
+    NB. and minimum of shifted right argument (the distance matrix).
+    step =. &gt;. ((_1 &amp; (|.!.0)) &lt;. (1 &amp; (|.!.0)) &lt;. (_1 &amp; (|.!.0)&quot;1) &lt;. (1 &amp; (|.!.0)&quot;1))
+</code></pre></div>
+<p>To apply this function iteratively, we’ll use the <a href="https://code.jsoftware.com/wiki/Vocabulary/hatco"><code>^:</code> (power of verb)</a> conjunction (another <span class="smallcaps">j</span> word for <q>verb modifier</q>).
+If we raise a verb to power <span class="math">N</span>, we get a verb that applies the original verb <span class="math">N</span> times in a row.
+If we raise a verb to infinite power <a href="https://code.jsoftware.com/wiki/Vocabulary/under"><code>_</code> (infinity)</a>, the original verb gets applied until the computation reaches a fixed point.</p>
+<div class="source-container"><pre class="source j"><code>    NB. X f^:1 Y   &lt;-&gt;   X f Y
+    NB. X f^:2 Y   &lt;-&gt;   X f (X f Y)
+    NB. X f^:3 Y   &lt;-&gt;   X f ( X f ( X f Y))
+
+    NB. Step once.
+    C step^:1 D
+6 5 4 3 3 4 5 6
+5 _ _ _ _ _ _ 5
+4 _ _ _ _ _ _ 4
+3 _ _ _ _ _ _ 3
+3 _ _ _ _ _ _ 3
+4 _ _ _ _ _ _ 4
+5 _ _ _ _ _ _ 5
+6 5 4 3 3 4 5 6
+
+    NB. Step twice.
+    C step^:2 D
+6 5 4 3 3 4 5 6
+5 5 4 3 3 4 5 5
+4 4 _ _ _ _ 4 4
+3 3 _ _ _ _ 3 3
+3 3 _ _ _ _ 3 3
+4 4 _ _ _ _ 4 4
+5 5 4 3 3 4 5 5
+6 5 4 3 3 4 5 6
+
+    NB. Apply the step function until convergence.
+    C step^:_ D
+6 5 4 3 3 4 5 6
+5 4 3 3 3 3 4 5
+4 3 3 3 3 3 3 4
+3 3 3 3 3 3 3 3
+3 3 3 3 3 3 3 3
+4 3 3 3 3 3 3 4
+5 4 3 3 3 3 4 5
+6 5 4 3 3 4 5 6
+
+    NB. Package the computation into a function.
+    levels =. (&gt;. (_1&amp;(|.!.0) &lt;. 1&amp;(|.!.0) &lt;. _1&amp;(|.!.0)&quot;1 &lt;. 1&amp;(|.!.0)&quot;1)) ^:_ ($&amp;_ @ $)
+</code></pre></div>
+<p>Computing the water volume is easy now: subtract the original height from the water levels and sum up the differences.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">    NB. Water volumes at each position.</span>
+<span class="line">    (levels C) - C</span>
+<span class="line">0 0 0 0 0 0 0 0</span>
+<span class="line">0 0 0 1 1 0 0 0</span>
+<span class="line">0 0 1 2 2 1 0 0</span>
+<span class="line">0 1 2 3 3 2 1 0</span>
+<span class="line">0 1 2 3 3 2 1 0</span>
+<span class="line">0 0 1 2 2 1 0 0</span>
+<span class="line">0 0 0 1 1 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0</span>
+<span class="line"></span>
+<span class="line">    NB. Flatten the matrix and sum it up.</span>
+<span class="line">    +/, (levels C) - C</span>
+<span class="line">40</span>
+</code></pre></div>
+</section>
+<section><h2 id="back-to-2d"><a href="#back-to-2d">Looking back at Flatland</a></h2>
+<p>Did we learn anything new about the Flatland after considering three dimensions?
+Yes: for each shortest path algorithm, there is an analogous solution for the two-dimensional case.</p>
+<p>For example, the analog of the Bellmann-Ford algorithm involves the following steps:
+</p>
+<ul class="arrows"><li>Start with an array of the same shape as the input filled with infinities.
+  </li><li>
+    For each position, compute the minimum of its left and right neighbors.
+    Take the maximum of that value and the height at this position.
+  </li><li>Repeat the previous step until convergence.
+</li></ul>
+<div class="source-container"><pre class="source j"><code><span class="line">    bf_levels_2d =. (&gt;. (_1&amp;(|.!.0) &lt;. 1&amp;(|.!.0))) ^:_ ($&amp;_ @ $)</span>
+<span class="line">    bf_levels_2d H</span>
+<span class="line">0 1 1 2 2 2 2 3 2 2 2 1</span>
+</code></pre></div>
+<p>I don’t know about you, but if it were the first solution I heard of, I would be surprised it works.
+But once the three-dimensional case paved the way, this solution looks natural and almost obvious.</p>
+<p>What would be the analog of the Dijkstra algorithm, then?
+Dijkstra gives rise to a very efficient <q>two-pointer</q> solution:</p>
+<ul class="arrows"><li>Start by placing the left and the right pointers on the boundaries of the input array.
+  </li><li>Keep track of the lowest boundary so far.
+  </li><li>
+    Always move the pointer that looks at the lowest height.
+    The left pointer moves to the right; the right pointer moves to the left.
+  </li><li>If one of the two pointers looks at height <em>M</em> greater than the lowest boundary, update the lowest boundary to be <em>M</em>.
+</li></ul>
+<p>That is precisely how a Dijkstra graph search would propagate, always picking the shortest edge to proceed.
+This solution does not map naturally to array languages, so I implemented it below in C.</p>
+<figure><label class="margin-toggle" for="mn-c-dijkstra">⊕</label><input type="checkbox" id="mn-c-dijkstra" class="margin-toggle"><span class="marginnote">The equivalent of the Dijkstra algorithm in the two-dimensional case.</span><div class="source-container"><pre class="source c"><code><span class="line">static inline int int_min(int l, int r) { return l &lt; r ? l : r; }</span>
+<span class="line"></span>
+<span class="line">long trapped_water(int H[], int N) {</span>
+<span class="line">  if (N == 0) return 0;</span>
+<span class="line"></span>
+<span class="line">  long S = 0;</span>
+<span class="line">  for (int L = 0, R = N-1, LowBound = int_min(H[L], H[R]); L &lt; R;) {</span>
+<span class="line">    int M = int_min(H[L], H[R]);</span>
+<span class="line"></span>
+<span class="line">    if (M &lt; LowBound) S += LowBound - M;</span>
+<span class="line">    else LowBound = M;</span>
+<span class="line"></span>
+<span class="line">    if (H[L] &lt; H[R]) L++; else R--;</span>
+<span class="line">  }</span>
+<span class="line">  return S;</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+</section>
+<section><h2 id="where-to-go-next"><a href="#where-to-go-next">Where to go next</a></h2>
+<p>
+That was all the <span class="smallcaps">j</span> magic for today!
+If you are confused and intrigued, I can recommend the following resources:</p>
+<ul class="arrows"><li>Solve this problem on <a href="https://leetcode.com/problems/trapping-rain-water/">Leetcode</a>.
+  </li><li>Watch <a href="https://youtu.be/ftcIcn8AmSY">Four Solutions to a Trivial Problem</a>, a talk by Guy Steele where he explores the problem from different angles.
+  </li><li>Read some <a href="https://code.jsoftware.com/wiki/Books">Books on <span class="smallcaps">j</span></a>.
+  </li><li>Listen to the <a href="https://arraycast.com/">Arraycast podcast</a>.
+</li></ul>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/07-square-joy-pre-order.html">Square joy: pre-order</a></li><li><a href="/posts/34-square-joy-tile-crush.html">Square joy: tile crush</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/05-debug-like-feynman.html"> ←Debug like Feynman, test like Faraday</a></div><div id="older"><a href="/posts/03-rust-packages-crates-modules.html">Rust at scale: packages, crates, and modules→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

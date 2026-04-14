@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="retrospective"><meta name="description" content="Looking back at the year 2024."><title>2024 retrospective</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/36-2024-retro.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/36-2024-retro.html">2024 retrospective</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2025-01-20</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2025-01-20</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#programming">Programming</a></li><li class="toc toc-level-1"><a href="#software">Software</a></li><li class="toc toc-level-1"><a href="#books">Books</a></li><li class="toc toc-level-1"><a href="#writing">Writing</a></li><li class="toc toc-level-1"><a href="#duolingo">Duolingo</a></li><li class="toc toc-level-1"><a href="#music">Music</a></li><li class="toc toc-level-1"><a href="#sports">Sports</a></li><li class="toc toc-level-1"><a href="#the-most-memorable-day">The most memorable day</a></li></ul><hr>
+
+<section><p>This article summarizes my activities in 2024 and mentions the books I liked, the sports I enjoyed, and the routines I plan to change.
+Overall, it was a great year: I met great people, learned a ton, and peaked my physical shape.</p>
+</section>
+<section><h2 id="programming"><a href="#programming">Programming</a></h2>
+<p>In 2024, I rewrote my blog engine from scratch in Go (before that, I used <a href="https://docs.racket-lang.org/pollen/">Pollen</a>).
+I chose a small subset of LaTeX as the markup language for my articles.
+Markdown is fine for simple things, but it confuses me when things get complicated.
+Even seemingly simple tasks, such as using a code block in the middle of a bullet list, leave me puzzled.
+My articles have plenty of markup inexpressible in any Markdown dialect.
+LaTeX requires more boilerplate, but at least I can always express what I want.</p>
+<p>The transition allowed me to streamline article editing, implement new features more quickly, and render the website in under a second without installing any dependencies<label class="margin-toggle sidenote-number" for="sn-pollen-dependencies"></label><input type="checkbox" id="sn-pollen-dependencies" class="margin-toggle"><span class="sidenote">
+  Pollen depends on half of the internet, and some of these dependencies don’t play well together.
+</span>.
+Programming the new engine was fun, but converting the old articles to the new format wasn’t.
+I’m unsure whether Go is optimal for the task, but it doesn’t matter:
+since I control every aspect of the markup language, I can always rewrite the engine without changing the old articles.</p>
+<p>I participated in the Advent of Code for the first time and had a lot of fun (see my <a href="/posts/35-aoc-2024.html">Advent of Code 2024</a> article).
+I plan to participate again in 2025, using it to familiarize myself with a new language (likely <a href="https://lean-lang.org/"><span class="smallcaps">lean</span></a> or <a href="https://julialang.org/">Julia</a>).</p>
+</section>
+<section><h2 id="software"><a href="#software">Software</a></h2>
+<p>My employment this year was somewhat turbulent, so I had a chance to try some new software tools.
+Two tools are especially promising:</p>
+<ol class="circled"><li data-num-glyph="①">
+The fraction of editing time I spend in <a href="https://zed.dev/">Zed</a> goes up.
+The editor is insanely responsive, renders fonts well, supports Vim keybindings out of the box, and requires little setup.
+The main feature I miss in Zed is a decent Git plugin, since I can’t function without <a href="https://github.com/tpope/vim-fugitive">vim-fugitive</a> or <a href="https://magit.vc/">magit</a>.</li><li data-num-glyph="②">
+Google’s <a href="https://github.com/jj-vcs/jj">jujutsu</a> is a Git-compatible version control tool built around a simpler mental model.
+I’m eager to incorporate it into my daily workflows, but the lack of editor integration (see the previous point) puts me off.
+If you’re interested in trying jujutsu, <a href="https://steveklabnik.github.io/jujutsu-tutorial/introduction/introduction.html">Steve Klabnik’s introduction</a> is a great place to start.
+</li></ol>
+</section>
+<section><h2 id="books"><a href="#books">Books</a></h2>
+<p>I read and listened to about fifty titles this year, primarily on writing, graphical design, and self-help.</p>
+<p>I nominate <a href="https://www.goodreads.com/book/show/35289.The_33_Strategies_of_War">33 Strategies of War</a> by Robert Greene as my book of the year.
+It extracts unconventional lessons from fascinating historical events.
+It turned <a href="https://en.wikipedia.org/wiki/Klemens_von_Metternich">Prince Metternich</a> into one of my favorite historical figures.
+This guy kept Russians at bay and defeated Napoleon without shedding a drop of blood.</p>
+<p>On the writing front, I found the following books most helpful:
+</p>
+<ul class="arrows"><li><a href="https://www.goodreads.com/book/show/6477103-trees-maps-and-theorems">Trees, maps, and theorems</a> by Jean-luc Doumont is the best book on structuring nonfiction writing.
+Its author is a physicist; you can sense this while reading the book, as he derives optimal document structures from first principles.
+</li><li><a href="https://www.goodreads.com/book/show/39874447-how-to-write-a-lot">How to Write a Lot</a> by Paul J. Siliva contains the most powerful advice for becoming a prolific writer:
+allocating time for writing and using it effectively.
+</li><li>
+Bob Doto’s <a href="https://www.goodreads.com/book/show/214971755-a-system-for-writing">A System For Writing</a> is the best hands-on introduction to the Zettelkasten method.
+Most importantly, it gives concrete advice on using this method to produce good writing.
+</li></ul>
+<p>My self-help interests included productivity, parenting, psychology, and neurodiversity.
+My favorites were:
+</p>
+<ul class="arrows"><li><a href="https://www.goodreads.com/book/show/29430725-how-to-talk-so-little-kids-will-listen">How to Talk so Little Kids Will Listen</a> by Joanna Faber and Julie King is a practical manual for dealing with little kids.
+It works.
+Unexpectedly, this book also taught me how to deal with adults.
+</li><li><a href="https://www.goodreads.com/book/show/3063393-pragmatic-thinking-and-learning">Pragmatic Thinking and Learning</a> by Andy Hunt is a treasure trove of techniques and ideas that might help you become more creative and productive.
+</li><li><a href="https://www.goodreads.com/book/show/324748.The_Dip">The Dip</a> by Seth Godin is a short book that explains when to quit an activity or a relationship.
+Although I disagree with some of its statements, the core idea makes a lot of sense for exclusive commitments, such as jobs or relationships.
+Use the best, ignore the rest.
+</li></ul>
+<p>I read only a few books on technology this year.
+</p>
+<ul class="arrows"><li>
+I finally finished <a href="https://www.goodreads.com/book/show/33618151-category-theory-for-programmers">Category Theory for Programmers</a> Bartosz Milewski, much of which went over my head.
+</li><li>
+I enjoyed listening to the <a href="https://www.thegreatcourses.com/courses/the-science-of-information-from-language-to-black-holes">The Science of Information</a> course on <a href="https://www.audible.de/pd/The-Science-of-Information-From-Language-to-Black-Holes-Hoerbuch/1629976067">Audible</a>
+and followed up on it by reading <a href="https://www.goodreads.com/book/show/433443.An_Introduction_to_Information_Theory">An Introduction to Information Theory</a> by John Pierce, which was fun but dated.
+</li><li>
+I learned much from <a href="https://www.goodreads.com/book/show/10064443-introduction-to-reliable-and-secure-distributed-programming">Introduction to Reliable and Secure Distributed Programming</a>, even though I didn’t finish it.
+</li><li>
+I started reading books on technologies that fascinated me, such as CUDA programming and Wolfram Mathematica, but I haven’t finished them yet.
+</li></ul>
+<p>I plan to read much more technical literature in 2025.</p>
+<p>The few fiction books I read belong to the Dune saga.
+I enjoyed <a href="https://www.goodreads.com/book/show/44767458-dune">the first book in the series</a>, which offers a breathtaking hero journey and blends several fascinating topics:
+body-mind connection, complex systems (such as planet ecology), and martial arts.
+The second book, <a href="https://www.goodreads.com/book/show/44492285-dune-messiah">Dune: Messiah</a>, was okay.
+<a href="https://www.goodreads.com/book/show/46037428-children-of-dune">The Children of Dune</a> moved too slowly for my liking, so I quit after finishing about 60%.
+Maybe I’ll return to it one day.</p>
+<p>Lastly, I published a <a href="https://github.com/roman-kashitsyn/my-favorite-things">list categorizing my favorite books</a>.</p>
+</section>
+<section><h2 id="writing"><a href="#writing">Writing</a></h2>
+<p>I wrote eleven articles in 2024.
+My most popular article was <a href="/posts/28-enlightenmentware.html">Enlightenmentware</a>; it even reached the top of the Hackernews front page.
+Writing this article was a rare opportunity to express my feelings toward the software that shaped my life; I’m glad many people found it fun to read.
+My favorite articles were the most technical: <a href="/posts/25-domain-types.html">Universal domain types</a> and <a href="/posts/29-plan-execute.html">The plan-execute pattern</a>.
+I hope to have enough material to write a book covering such topics one day.</p>
+<p>In 2025, I plan to publish at least one article a month.
+I’ll also start writing more personal articles on this blog (such as this one).
+I initially thought they didn’t belong here and explored other platforms, but ultimately, no platform suits my writing needs better than the one I hand-crafted.
+Furthermore, I already publish a lot of material here that only a handful of people worldwide are interested in<label class="margin-toggle sidenote-number" for="sn-my-autistic-friend"></label><input type="checkbox" id="sn-my-autistic-friend" class="margin-toggle"><span class="sidenote">
+  If you enjoyed <a href="/posts/18-if-composers-were-hackers.html">If composers were hackers</a> and the <q>Square joy</q> series, don’t hesitate to reach out; we have a lot to talk about.
+</span>.</p>
+</section>
+<section><h2 id="duolingo"><a href="#duolingo">Duolingo</a></h2>
+<p>
+I spent too much time on Duolingo pretending to be learning languages.
+I spent over 5000 minutes drilling German, practicing a little French, and finishing the music course, which was a lot of fun<label class="margin-toggle sidenote-number" for="sn-duolingo-music"></label><input type="checkbox" id="sn-duolingo-music" class="margin-toggle"><span class="sidenote">
+  Well, the sight-reading part was fun. The other exercises were boring.
+</span>.</p>
+<figure class="medium-size center"><img src="/images/36-duolingo.jpg">
+</figure>
+<p>I have reached the point of diminishing returns with Duolingo.
+I plan to quit it in 2025 after completing a 3000-day streak (I want to quit with style).
+If I ever decide to pick up another natural language, I’ll go with <a href="https://www.pimsleur.com/">Pimsleur</a> instead of Duolingo.
+Pimsleur courses require more investment, but they teach you the right things faster.</p>
+</section>
+<section><h2 id="music"><a href="#music">Music</a></h2>
+<p>As in previous years, I focused on improving my sight-reading skills.
+I spent about 150 hours at the piano.
+I did not learn any music by heart, but I played a lot of new music without explicitly avoiding memorizing anything.</p>
+<p>I only recently realized the difference between reading music and sight-reading it.
+It’s like your typical Linux versus a hard real-time operating system.
+When reading, you can slow down to play things right.
+When sight-reading, you need to move on even if you didn’t get all the notes right.</p>
+<p>In 2025, I’ll revise my approach and try a tool that promotes good sight-reading habits, <a href="https://pianomarvel.com/">Piano Marvel</a>.
+I’ll also learn a Mozart sonata<label class="margin-toggle sidenote-number" for="sn-mozart-sonata"></label><input type="checkbox" id="sn-mozart-sonata" class="margin-toggle"><span class="sidenote">
+  Likely <a href="https://www.youtube.com/watch?v=I_AX4R-d29o">Sonata N16 K. 545</a> since everyone knows it.
+</span> by heart so that I do not feel embarrassed when people ask me to play something.</p>
+</section>
+<section><h2 id="sports"><a href="#sports">Sports</a></h2>
+<p>2024 was my most active year to date.
+I ran more than 3534km, practiced Brazilian Jiu-Jiutsu in more than 150 classes (probably close to 200 hours in total), and lifted weights for over 80 hours.</p>
+<figure class="medium-size center"><img src="/images/36-strava.png">
+</figure>
+<p>My most memorable sports event was the Zürich marathon in April, which I finished in 3:32:15, quite a bit faster than I expected.
+Most of the distance felt easy and fun, but the last ten kilometers felt pretty miserable, especially since nature decided to shower everyone in rain and snow.</p>
+<figure><label class="margin-toggle" for="mn-marathon-before-after">⊕</label><input type="checkbox" id="mn-marathon-before-after" class="margin-toggle"><span class="marginnote">
+  Me early in the Zürich marathon race and crossing the finish line a few hours later.
+</span><center><img src="/images/36-marathon-start.png">
+<img src="/images/36-marathon-finish.png">
+</center>
+</figure>
+<p>I also raced two half-marathons (1:40:40 in May and 1:38:38 in September), and improved my time on the <a href="https://www.zuerilaufcup.ch/12-laeufe/pfaeffikersee-lauf">Pfäffikersee-Lauf event</a> (12.2K) from 59:00 (October 2023) to 54:00 (September 2024).</p>
+<p><a href="https://www.goodreads.com/author/show/99585.Matt_Fitzgerald">Matt Fitzgerald’s books</a> kept me motivated throughout the year, especially <a href="https://www.goodreads.com/book/show/49342140-running-the-dream">Running the Dream</a>.
+I followed one of the half-marathon plans from his <a href="https://www.goodreads.com/book/show/58284094-run-like-a-pro-even-if-you-re-slow">Run Like a Pro (Even If You’re Slow)</a>, but I overdid it and injured my leg.
+Running fast became challenging, so I’ll probably wind down my running ambitions in 2025.</p>
+<p>BJJ is by far my favorite physical activity.
+It’s a steady supply of calmness, focus, and hope.
+I will keep training in 2025 at least at the same intensity level.
+I haven’t participated in any competitions yet, and 2025 is a good year to start.</p>
+<figure class="medium-size"><label class="margin-toggle" for="mn-bjj">⊕</label><input type="checkbox" id="mn-bjj" class="margin-toggle"><span class="marginnote">
+  My sensei Joonas (left) and me (right) on the day I got my third stripe.
+</span><center><img src="/images/36-bjj.jpg">
+</center>
+</figure>
+</section>
+<section><h2 id="the-most-memorable-day"><a href="#the-most-memorable-day">The most memorable day</a></h2>
+<p>I conclude this article by describing one day in 2024 that I remember the most.</p>
+<p>I had to travel to Paris on a Wednesday in September so the Canadian government could collect my biometrics.
+I wanted to resolve the matter in one day, which required about ten hours of commute (about five hours each way).
+The day didn’t start well: I had to be up with the roosters and could barely walk after a fast run the previous night.
+The pain was so intense that I was limping and couldn’t climb the stairs.</p>
+<p>The travel time was surprisingly peaceful and productive; the hours flew by.
+I reworked one of my early articles, <a href="/posts/05-debug-like-feynman.html">Debug like Feynman, test like Faraday</a>, and made progress on my tax declaration, which relieved some of my anxiety.</p>
+<p>Since the biometrics collection takes at most five minutes,
+I didn’t have much to do in Paris,
+so I roamed the streets,
+enjoyed the sunny weather,
+sat on a bench in Roger Solengro Park,
+and observed kids playing.</p>
+<p>On the way back,
+I bought presents for my kids, found some tasty butter bread, and listened to a man playing on a slightly out-of-tune piano at La Gare de Lyon before boarding my train to Zürich.</p>
+<p>A bit of idleness and quiet solitude transformed a day I dreaded into a highlight of the year.
+I didn’t get my visa in the end, though.</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/47-2025-retro.html">2025 retrospective</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/37-onnx-intro.html"> ←ONNX introduction</a></div><div id="older"><a href="/posts/35-aoc-2024.html">Advent of Code 2024→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

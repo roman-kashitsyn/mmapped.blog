@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="ic"><meta name="description" content="How the Internet Computer represents and transfers states."><title>IC internals: replicated state machine</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/02-ic-state-machine-replication.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/02-ic-state-machine-replication.html">IC internals: replicated state machine</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2021-12-01</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2025-12-08</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#state-machine">The state machine</a></li><li class="toc toc-level-1"><a href="#state-trees">State trees</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#stat-auth">State authentication</a></li><li class="toc toc-level-2"><a href="#tree-lookup">Authorization through tree pruning</a></li></ul></li><li class="toc toc-level-1"><a href="#state-transfer">State transfer</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#checkpoints">Checkpoints</a></li><li class="toc toc-level-2"><a href="#state-artifact">State as an artifact</a></li><li class="toc toc-level-2"><a href="#trigger-transfer">Triggering state transfer</a></li><li class="toc toc-level-2"><a href="#incremental-sync">Fetching states incrementally</a></li><li class="toc toc-level-2"><a href="#state-sync-alternatives">Paths not taken</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
+
+<div class="epigraph"><blockquote><p>
+My dear, here we must run as fast as we can, just to stay in place.
+And if you wish to go anywhere you must run twice as fast as that.
+</p><footer>
+  <a href="https://en.wikipedia.org/wiki/Red_Queen_(Through_the_Looking-Glass)">Red Queen</a> explaining state sync.
+</footer></blockquote></div>
+<section><p>Like all blockchains, the Internet Computer relies on <a href="https://en.wikipedia.org/wiki/State_machine_replication">state machine replication</a> for fault-tolerance.
+This article highlights its two differences from most blockchains:
+restricted access to the network state
+and support for efficient fault recovery via state checkpoints.</p>
+</section>
+<section><h2 id="state-machine"><a href="#state-machine">The state machine</a></h2>
+<p>Before we dive into the protocol internals,
+let’s define its <a href="https://en.wikipedia.org/wiki/Finite-state_machine">state machine</a>.
+The nodes in the protocol are grouped into <em>subnets</em>.
+Each subnet runs a separate instance of the consensus protocol,
+and subnets can exchange messages<label class="margin-toggle sidenote-number" for="sn-xnet-protocol"></label><input type="checkbox" id="sn-xnet-protocol" class="margin-toggle"><span class="sidenote">
+  The <a href="/posts/08-ic-xnet.html">IC internals: XNet protocol</a> article explains this exchange protocol in more detail.
+</span>.
+Consensus orders inputs for the state machine,
+which executes <em>canisters</em>
+(<a href="https://webassembly.org/">WebAssembly</a> programs).</p>
+<p>When formally defined, the state machine has the following components:</p>
+<ul class="arrows"><li><em>Inputs</em> are blocks that contain messages
+  destined for canisters hosted on this state machine instance
+  and originating from users of canisters on other subnets.
+</li><li><em>Outputs</em> are
+  <em>state trees</em> that authenticate the observable state.
+</li><li><em>State</em> is the data required to serve canisters:
+  their WebAssembly modules,
+  linear and stable memories, mailboxes,
+  and recent execution results.
+</li><li><em>Transition function:</em>
+  Given a new block,
+  inject its messages into the canister mailboxes,
+  schedule canisters that are ready for execution,
+  and record the execution results.
+</li><li><em>Output function</em> merkelizes the state to produce a state tree.
+</li><li>
+  The <em>initial state</em> is trivial: no canisters, no messages, and no execution results.
+</li></ul>
+</section>
+<section><h2 id="state-trees"><a href="#state-trees">State trees</a></h2>
+<p>The replica state is a black box,
+but for the protocol to be useful,
+some pieces of it must be public, including the
+results of ingress message execution,
+canister metadata (such as Wasm module hashes and certified values),
+and messages destined for other subnets.</p>
+<p>Accessing the state machine data has two challenges:
+</p>
+<ol class="circled"><li data-num-glyph="①"><em>Authentication:</em>
+  A client can’t trust any single node,
+  so nodes must attest their responses.
+</li><li data-num-glyph="②"><em>Authorization:</em>
+  Users should only be able to access the data they’re authorized to see.
+</li></ol>
+<h3 id="stat-auth"><a href="#stat-auth">State authentication</a></h3>
+<p>The most straightforward way to authenticate a data structure
+is to represent it as a <a href="https://en.wikipedia.org/wiki/Merkle_tree">Merkle tree</a> over a uniform data format, such as a list or a tree.
+The Internet Computer uses <a href="https://en.wikipedia.org/wiki/Rose_tree">rose trees</a>
+with blobs at leaves as its primary data model.
+Rose trees are like <span class="smallcaps">json</span> objects
+that map textual keys to blobs or nested objects:</p>
+<div class="source-container"><pre class="source"><code><span class="line">enum RoseTree {</span>
+<span class="line">    Fork(Vec&lt;(String, Box&lt;RoseTree&gt;)&gt;),</span>
+<span class="line">    Leaf(Vec&lt;u8&gt;),</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>A <em>state tree</em> is a merklized rose tree:</p>
+<div class="source-container"><pre class="source"><code><span class="line">enum <b>StateTree</b> {</span>
+<span class="line">    Fork(<b>Hash</b>, Vec&lt;(<b>Hash</b>, String, Box&lt;<b>StateTree</b>&gt;)&gt;),</span>
+<span class="line">    Leaf(<b>Hash</b>, Vec&lt;u8&gt;)</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>
+After each round,
+nodes compute the state tree
+and exchange their signature shares for its root hash.
+The result of this exchange is a threshold signature
+that enables a client to authenticate the data received from any node.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="st-structure">⊕</label><input type="checkbox" id="st-structure" class="margin-toggle"><span class="marginnote">
+    A state tree is a labeled merkle tree
+    built over the public section of the replica state.
+  </span><p class="svg"><img src="/images/02-state-tree.svg"></p>
+</figure>
+<h3 id="tree-lookup"><a href="#tree-lookup">Authorization through tree pruning</a></h3>
+<p>A sequence of textual labels identifies a path in a state tree.
+Clients access the state by enumerating the paths they’re interested in.</p>
+<p>Suppose a user sends an ingress message with <span class="smallcaps">id</span> <code>1355…48de</code>.
+The system stores its reply in the state tree at path <code>/request_status/1355…48de/reply</code>.
+The user connects to a healthy node and calls the <a href="https://internetcomputer.org/docs/references/ic-interface-spec#http-read-state"><code>read_state</code></a> endpoint with that path as an argument.
+Upon receiving the request, the node:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+  Fetches the latest certified state tree.
+</li><li data-num-glyph="②">
+  Checks that the caller has permission to access the path
+  (the <code>read_request</code> signer matches the ingress message signer).
+</li><li data-num-glyph="③">
+  Trims the state tree to include only the requested path,
+  replacing all the pruned branches with their hashes.
+</li><li data-num-glyph="④">
+  Returns the pruned tree and the state tree certificate.
+</li></ol>
+<p>The resulting tree contains only the data that the caller is authorized to see
+and has the same root hash as the original state tree,
+so the certificate stays valid.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="response-structure">⊕</label><input type="checkbox" id="response-structure" class="margin-toggle"><span class="marginnote">The logical structure of a tree containing a response to an ingress message.</span><p class="svg"><img src="/images/02-pruned-state-tree.svg"></p>
+</figure>
+<p>The only way for a dishonest node to manipulate the caller
+is to reply with an outdated state view,
+so honest nodes always include in their output the <code>/time</code> path that
+maps to the timestamp of the block that triggered the tree construction.</p>
+</section>
+<section><h2 id="state-transfer"><a href="#state-transfer">State transfer</a></h2>
+<h3 id="checkpoints"><a href="#checkpoints">Checkpoints</a></h3>
+<p>When a node crashes,
+it loses its in-memory state and must recover before participating again.
+To facilitate recovery,
+nodes periodically write <em>checkpoints</em>—serialized states—to disk.
+If a node was offline briefly,
+it catches up by replaying blocks from the last checkpoint.
+If it was offline longer,
+replaying blocks alone would take too long,
+so fetching the latest checkpoint from a peer is a more efficient strategy.
+The same approach applies when a fresh node joins a subnet.</p>
+<p>Most blockchains treat checkpoints as implementation details
+and distribute them via a side channel.
+In the Internet Computer, state sync is part of the core protocol,
+streamlining node operations.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="sm-components">⊕</label><input type="checkbox" id="sm-components" class="margin-toggle"><span class="marginnote">
+  State machine components: blocks, states, state trees, and checkpoints.
+</span><p class="svg"><img src="/images/02-states.svg"></p>
+</figure>
+<h3 id="state-artifact"><a href="#state-artifact">State as an artifact</a></h3>
+<p>Replicas in a subnet communicate by exchanging <em>artifacts</em>
+(ingress messages, blocks, random beacons, state certificates)
+over a <a href="https://en.wikipedia.org/wiki/Peer-to-peer">peer-to-peer protocol</a>.
+Most artifacts are a few megabytes,
+but the protocol can fetch arbitrarily large blobs by slicing them into chunks.
+State sync uses this machinery to transfer checkpoints.</p>
+<p>The peer-to-peer protocol combines a <a href="https://en.wikipedia.org/wiki/Push_technology">push model</a> for metadata and a <a href="https://en.wikipedia.org/wiki/Pull_technology">pull model</a> for data:
+Nodes advertise their artifacts
+and serve them to interested peers.</p>
+<p>Before advertising a checkpoint, a replica computes its <em>manifest</em>—a summary of the checkpoint directory,
+similar to the <code>info</code> section of a <a href="https://en.wikipedia.org/wiki/Torrent_file"><code>.torrent</code> file</a>.
+A manifest consists of two tables:
+the file table contains file metadata,
+the chunk table describes the file contents.</p>
+<figure><label class="margin-toggle" for="mn-manifest-example">⊕</label><input type="checkbox" id="mn-manifest-example" class="margin-toggle"><span class="marginnote">
+  A checkpoint manifest example.
+  It consists of two tables:
+  the file table contains file metadata,
+  the chunk table describes the contents of these files.
+</span><table class="table-4 "><thead><thead><tr><th colspan="1" class="align-r">
+  File </th><th colspan="1" class="align-l"> Path </th><th colspan="1" class="align-r"> Size </th><th colspan="1" class="align-l"> Hash </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-r">
+  
+0 </td><td colspan="1" class="align-l"> <code>canisters/…/queues.pb</code> </td><td colspan="1" class="align-r"> 100 </td><td colspan="1" class="align-l"> <code>e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934c…</code> </td></tr><tr><td colspan="1" class="align-r">
+1 </td><td colspan="1" class="align-l"> <code>canisters/…/memory.bin</code> </td><td colspan="1" class="align-r"> 2101248 </td><td colspan="1" class="align-l"> <code>07123e1f482356c415f684407a3b8723e10b2cbbc0b8fcd6…</code> </td></tr></tbody></table>
+<br>
+<br><table class="table-5 "><thead><thead><tr><th colspan="1" class="align-r">
+Chunk </th><th colspan="1" class="align-r"> File </th><th colspan="1" class="align-r"> Offset </th><th colspan="1" class="align-r"> Size </th><th colspan="1" class="align-l"> Hash </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-r">
+
+0 </td><td colspan="1" class="align-r"> 0 </td><td colspan="1" class="align-r"> 0 </td><td colspan="1" class="align-r"> 100 </td><td colspan="1" class="align-l"> <code>ad57366865126e55649ecb23ae1d48887544976efea46a48…</code> </td></tr><tr><td colspan="1" class="align-r">
+1 </td><td colspan="1" class="align-r"> 1 </td><td colspan="1" class="align-r"> 0 </td><td colspan="1" class="align-r"> 1048576 </td><td colspan="1" class="align-l"> <code>5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b4…</code> </td></tr><tr><td colspan="1" class="align-r">
+2 </td><td colspan="1" class="align-r"> 1 </td><td colspan="1" class="align-r"> 1048576 </td><td colspan="1" class="align-r"> 1048576 </td><td colspan="1" class="align-l"> <code>6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49…</code> </td></tr><tr><td colspan="1" class="align-r">
+3 </td><td colspan="1" class="align-r"> 1 </td><td colspan="1" class="align-r"> 2097152 </td><td colspan="1" class="align-r"> 4096 </td><td colspan="1" class="align-l"> <code>d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90…</code> </td></tr></tbody></table>
+</figure>
+<p>Replicas use manifests as blueprints for organizing the data on disk
+and for validating the chunks they receive.
+A manifest hash identifies the checkpoint as a network artifact.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="checkpoint-advert">⊕</label><input type="checkbox" id="checkpoint-advert" class="margin-toggle"><span class="marginnote">A replica advertising a checkpoint as an artifact.</span><p class="svg"><img src="/images/02-checkpoint-artifact.svg"></p>
+</figure>
+<h3 id="trigger-transfer"><a href="#trigger-transfer">Triggering state transfer</a></h3>
+<p>The signal that a replica is behind comes from the consensus module.
+After every checkpoint, it creates a <em>catch-up package</em>—the bill of materials a replica needs to participate in the protocol,
+including the <a href="https://en.wikipedia.org/wiki/Distributed_key_generation"><span class="smallcaps">dkg</span></a> summary, the random beacon value,
+and the checkpoint hash.</p>
+<p>Suppose a replica crashes after processing nine blocks
+and comes back when the network moves on to state 100,
+which happens to be the next scheduled checkpoint.
+Here is how replica components interact to trigger the state transfer:</p>
+<ol class="circled"><li data-num-glyph="①">
+  Consensus observes a catch-up package advertisement and fetches its content.
+  The package indicates that the latest recoverable state is 100
+  and its manifest hash is <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>H</mi><mrow><mn>100</mn></mrow></msub></math>.
+</li><li data-num-glyph="②">
+  Consensus checks the latest locally available state height (it’s nine).
+</li><li data-num-glyph="③">
+  Consensus decides that replaying blocks is not an option
+  and instructs the State Machine to fetch state 100 with root hash <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>H</mi><mrow><mn>100</mn></mrow></msub></math>.
+</li><li data-num-glyph="④">
+  State Machine subscribes to artifact advertisements
+  and initiates the fetch once a matching one arrives.
+</li></ol>
+<h3 id="incremental-sync"><a href="#incremental-sync">Fetching states incrementally</a></h3>
+<p>Once the state machine knows which state it needs to fetch,
+it doesn’t need any instructions from the consensus module;
+it uses the transport module directly.
+Continuing our example,
+here is how the State Machine syncs from state 9 to 100:</p>
+<ol class="circled"><li data-num-glyph="①">
+  Transport delivers an advertisement for a checkpoint with hash <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>H</mi><mrow><mn>100</mn></mrow></msub></math>.
+  State Machine initiates an artifact fetch.
+</li><li data-num-glyph="②">
+  State Machine fetches the zeroth chunk, which by convention contains the manifest,
+  decodes it,
+  and ensures that its hash matches <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>H</mi><mn>100</mn></msub></math>.
+</li><li data-num-glyph="③">
+  State Machine compares the manifests of checkpoint 9 and 100,
+  classifying chunks as either <em>locally available</em> or <em>missing.</em></li><li data-num-glyph="④">
+  It copies locally available chunks into their proper positions.
+</li><li data-num-glyph="⑤">
+  It instructs Transport to fetch all the missing chunks.
+  Transport can stream data from several peers concurrently.
+</li><li data-num-glyph="⑥">
+  As Transport delivers chunks,
+  State Machine validates their hashes against the manifest
+  and puts them into their slots on disk.
+</li></ol>
+<p>When there are no more chunks to fetch,
+the checkpoint 100 is finalized.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="checkpoint-construct">⊕</label><input type="checkbox" id="checkpoint-construct" class="margin-toggle"><span class="marginnote">A replica constructing a fresh checkpoint by re-using existing chunks and fetching the missing ones.</span><p class="svg"><img src="/images/02-state-sync.svg"></p>
+</figure>
+<p>The state transfer procedure is <em>incremental:</em>
+A replica that was offline for a brief period fetches only the changed data.
+It’s also <em>resumable:</em>
+If a checkpoint goes away before the transfer completes,
+the receiver can reuse the fetched chunks in the next sync attempt.</p>
+<h3 id="state-sync-alternatives"><a href="#state-sync-alternatives">Paths not taken</a></h3>
+<p>It’s instructive to mention alternative rejected state sync protocols.</p>
+<p>One early idea involved a catching-up node connecting to a healthy one,
+sending its state height,
+and receiving all the subsequent state updates.
+This protocol has major flaws:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+  It requires versioning every bit of the replica state
+  and peppering all state transitions with version updates.
+  Missing an update is a nasty bug.
+</li><li data-num-glyph="②">
+  It pushes most of the work to the healthy node,
+  slowing down the subnet.
+  A catching-up node is idle,
+  so it should bear most of the costs.
+</li><li data-num-glyph="③">
+  It’s sequential: 
+  there is no obvious way to involve more than one sender.
+</li><li data-num-glyph="④">
+  It isn’t resumable:
+  If the transfer interrupts,
+  the receiver starts from scratch.
+</li></ol>
+<p>Another alternative was to represent the entire replica state as a state tree
+and sync these logical trees instead of concrete file-system representations.
+This approach would make it easier to specify the protocol
+and support syncing between <a href="https://en.wikipedia.org/wiki/N-version_programming">replicas written in different languages</a>,
+but the extra complexity outweighed the benefits.</p>
+</section>
+<section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
+<p>This article focused on two features that differentiate the Internet Computer
+from most other blockchains:
+<a href="#state-tree">state trees</a>
+and a built-in <a href="#state-transfer">state sync protocol</a>.
+State trees allow clients to query a certified subnet state by talking to a single node.
+The state sync protocol allows for fast node recovery and painless reconfiguration.</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/06-ic-orthogonal-persistence.html">IC internals: orthogonal persistence</a></li><li><a href="/posts/08-ic-xnet.html">IC internals: XNet protocol</a></li><li><a href="/posts/20-candid-for-engineers.html">Candid for engineers</a></li><li><a href="/posts/27-extending-https-outcalls.html">Extending HTTPS outcalls</a></li><li><a href="/posts/11-ii-stable-memory.html">IC internals: Internet Identity storage</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/03-rust-packages-crates-modules.html"> ←Rust at scale: packages, crates, and modules</a></div><div id="older"><a href="/posts/01-effective-rust-canisters.html">Effective Rust canisters→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

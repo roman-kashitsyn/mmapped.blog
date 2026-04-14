@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="ic,rust"><meta name="description" content="An introduction to the stable-structures library."><title>Tutorial: stable-structures</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/14-stable-structures.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/14-stable-structures.html">Tutorial: stable-structures</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2023-01-20</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2023-02-04</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#introduction">Introduction</a></li><li class="toc toc-level-1"><a href="#design-principles">Design principles</a></li><li class="toc toc-level-1"><a href="#abstractions">Abstractions</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#memory">Memory</a></li><li class="toc toc-level-2"><a href="#storable-types">Storable types</a></li></ul></li><li class="toc toc-level-1"><a href="#data-structures">Data structures</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#stable-cell">Stable cell</a></li><li class="toc toc-level-2"><a href="#stable-vec">Stable vector</a></li><li class="toc toc-level-2"><a href="#stable-log">Stable log</a></li><li class="toc toc-level-2"><a href="#stable-btree">Stable B-tree</a></li></ul></li><li class="toc toc-level-1"><a href="#constructing-ss">Constructing stable structures</a></li><li class="toc toc-level-1"><a href="#tying-together">Tying it all together</a></li><li class="toc toc-level-1"><a href="#next">Where to go next</a></li></ul><hr>
+
+<div class="epigraph"><blockquote><p>
+  Only purpose of any code is to transform data.
+</p><footer>Mike Acton, <q><a href="https://youtu.be/rX0ItVEVjHc?t=1360">Data-Oriented Design and C++</a></q>, CppCon 2014</footer></blockquote></div>
+<section><h2 id="introduction"><a href="#introduction">Introduction</a></h2>
+<p>Canisters hosted on the Internet Computer (IC) are mutable: canister controllers can upgrade the code to add new features or fix bugs without changing the canister’s identity.</p>
+<p>Since the <a href="/posts/06-ic-orthogonal-persistence.html#upgrades">orthogonal persistence</a> feature cannot handle upgrades, the IC allows canisters to use additional storage, called <em>stable memory</em>, to facilitate the data transfer between code versions.
+The <a href="/posts/11-ii-stable-memory.html#conventional-memory-management">conventional approach</a> to canister state persistence is to serialize the entire state to stable memory in the <code>pre_upgrade</code> hook and decode it back in the <code>post_upgrade</code> hook.
+This approach is easy to implement and works well for relatively small datasets.
+Unfortunately, it does not scale well and can render a canister non-upgradable, so I <a href="/posts/01-effective-rust-canisters.html#stable-memory-main">recommend</a> using stable memory as the primary storage when possible.</p>
+<p>
+The <a href="https://github.com/dfinity/stable-structures">ic-stable-structures</a> library aims to simplify managing data structures directly in stable memory.
+This article explains the philosophy behind the library<label class="margin-toggle sidenote-number" for="sn-library-version"></label><input type="checkbox" id="sn-library-version" class="margin-toggle"><span class="sidenote">
+  This article describes the <a href="https://github.com/dfinity/stable-structures/tree/v0.5.0/src">0.5.0</a> version of the library.
+</span> and how to use it effectively.</p>
+</section>
+<section><h2 id="design-principles"><a href="#design-principles">Design principles</a></h2>
+<div class="epigraph"><blockquote><p>
+    The point is that you must decide, in advance, what the coding priorities and quality bars will be; otherwise, the team will have to waste time rewriting misconceived or substandard code.
+</p><footer>Steve Maguire, <q>Debugging the Development Process</q>, <span class="smallcaps">the groundwork</span>, p. 19</footer></blockquote></div>
+<p>Software designs reflect their creators’ values.
+The following principles shaped the <code>stable-structures</code> library design.
+</p>
+<ul class="arrows"><li><span id="radical-simplicity"></span>
+    <em>Radical simplicity.</em>
+    Programming stable memory is significantly easier than working with conventional file systems.
+    The IC solves many issues with which any good storage must deal: data integrity, partial writes, power outages, and atomicity of multiple writes.
+    Even with all these issues sorted out, complicated designs would be hard to implement, debug, and maintain.
+    Each data structure follows the most straightforward design that solves the problem at hand.
+  </li><li><span id="backward-compatibility"></span>
+    <em>Backward compatibility.</em>
+    Upgrading the library version must preserve the data.
+    All data structures have a metadata section with the layout version.
+    Newer implementations will respect old layouts and should not require data migration.
+  </li><li><em>No <code>pre_upgrade</code> hooks.</em>
+    A bug in the <code>pre_upgrade</code> hook can make your canister <a href="/posts/01-effective-rust-canisters.html#upgrade-hook-panics">non-upgradable</a>.
+    The best way to avoid this issue is not to have a <code>pre_upgrade</code> hook.
+  </li><li><em>Limited blast radius.</em>
+    If a single data structure has a bug, it should not corrupt the contents of other data structures.
+  </li><li><em>No reallocation.</em>
+    Moving large amounts of data is expensive and can lead to prohibitively high cycle consumption.
+    All data structures must manage their memory without costly moves.
+  </li><li><em>Compatibility with <a href="https://github.com/WebAssembly/multi-memory/blob/master/proposals/multi-memory/Overview.md">multi-memory</a> WebAssembly.</em>
+    The design should work when canisters have multiple stable memories since this feature is on the <a href="https://forum.dfinity.org/t/proposal-wasm-native-stable-memory/15966#proposal-7">IC roadmap</a>.
+</li></ul>
+<p>As a result of these goals, using the library requires planning and understanding your data shape.
+For example, you might need to set an <a href="#max-size-attribute">upper bound</a> on a value size that you cannot adjust without data migration.
+Or you might have to decide how many memory pages you want to allocate for canister configuration.
+There are other libraries with similar goals whose authors chose a slightly different set of trade-offs, such as <a href="https://crates.io/crates/ic-stable-memory"><code>ic-stable-memory</code></a>.</p>
+</section>
+<section><h2 id="abstractions"><a href="#abstractions">Abstractions</a></h2>
+<div class="epigraph"><blockquote><p>
+  In solving a problem with or without a computer it is necessary to choose an abstraction of reality, i.e., to define a set of data that is to represent the real situation.
+  The choice must be guided by the problem to be solved.
+</p><footer>Niklaus Wirth, <q>Algorithms + Data Structures = Programs</q>, <span class="smallcaps">fundamental data structures</span>, p. 1</footer></blockquote></div>
+<h3 id="memory"><a href="#memory">Memory</a></h3>
+<p>The core abstraction of the library is the <a href="https://docs.rs/ic-stable-structures/latest/ic_stable_structures/trait.Memory.html"><code>Memory</code></a> trait that models a WebAssembly <a href="https://webassembly.github.io/multi-memory/core/exec/runtime.html#memory-instances">memory instance</a><label class="margin-toggle sidenote-number" for="sn-multiple-memories"></label><input type="checkbox" id="sn-multiple-memories" class="margin-toggle"><span class="sidenote">
+  That design decision is not a coincidence.
+  Eventually, canisters will access multiple stable memories, and each data structure might reside in a dedicated memory instance.
+</span>.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line">pub trait <b>Memory</b> {</span>
+<span class="line">    <em>/// Equivalent to WebAssembly memory.size.</em></span>
+<span class="line">    fn <b>size</b>(&amp;self) -&gt; u64;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Equivalent to WebAssembly memory.grow.</em></span>
+<span class="line">    fn <b>grow</b>(&amp;self, pages: u64) -&gt; i64;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Copies bytes from this memory to the heap (in Wasm, memory 0).</em></span>
+<span class="line">    fn <b>read</b>(&amp;self, offset: u64, dst: &amp;mut [u8]);</span>
+<span class="line"></span>
+<span class="line">    <em>/// Writes bytes from the heap (in Wasm, memory 0) to this memory.</em></span>
+<span class="line">    fn <b>write</b>(&amp;self, offset: u64, src: &amp;[u8]);</span>
+<span class="line">}</span>
+</code></pre></div>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-memory-trait">⊕</label><input type="checkbox" id="mn-memory-trait" class="margin-toggle"><span class="marginnote">
+  The <a href="https://docs.rs/ic-stable-structures/latest/ic_stable_structures/trait.Memory.html"><code>Memory</code></a> trait models the WebAssembly <a href="https://webassembly.github.io/multi-memory/core/exec/runtime.html#memory-instances">memory instance</a>.
+  It allocates memory in 64KiB pages: the zero page spans addresses <code>0</code>–<code>ffff</code>, the first page—<code>10000</code>–<code>1ffff</code>, etc.
+</span><p class="svg"><img src="/images/14-memory.svg"></p>
+</figure>
+<p>Some instances of the <code>Memory</code> trait are:
+</p>
+<ul class="arrows"><li>
+    The <a href="https://github.com/dfinity/stable-structures/blob/3d22d483b9c55b79f7b869e3cf930883687d9fda/src/ic0_memory.rs"><code>Ic0StableMemory</code></a> type delegates calls to the <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec#system-api-stable-memory">IC System API</a>.
+  </li><li><a href="https://github.com/dfinity/stable-structures/blob/3d22d483b9c55b79f7b869e3cf930883687d9fda/src/vec_mem.rs#L11"><code>RefCell&lt;Vec&lt;u8&gt;&gt;</code></a> implements the <code>Memory</code> interface for a byte array.
+    This type is helpful for unit tests.
+  </li><li><span id="default-memory-impl"></span>
+    The <a href="https://docs.rs/ic-stable-structures/latest/ic_stable_structures/type.DefaultMemoryImpl.html"><code>DefaultMemoryImpl</code></a> type alias points to <code>Ic0StableMemory</code> when compiled to WebAssembly.
+    Otherwise it expands to a memory backed by a byte array.
+    This alias allows you to compile your canister to <a href="/posts/01-effective-rust-canisters.html#target-independent">native code</a> with minimal effort.
+  </li><li><a href="https://docs.rs/ic-stable-structures/latest/ic_stable_structures/struct.RestrictedMemory.html"><code>RestrictedMemory</code></a> is a view of another memory restricted to a contiguous page range.
+    You can use this type to split a large memory into non-intersecting regions if you know the size of the chunk in advance.
+    <code>RestrictedMemory</code> works best for allocating relatively small fixed-size memories.
+</li></ul>
+<figure class="grayscale-diagram"><span id="restricted-memory"></span>
+<label class="margin-toggle" for="mn-restricted-memory">⊕</label><input type="checkbox" id="mn-restricted-memory" class="margin-toggle"><span class="marginnote">
+  Restricted memory limits the primary memory to a contiguous page range.
+  The example on the diagram demonstrates splitting a 5-page primary memory into two memories: the first memory spans pages from zero to two (exclusive), and the second memory spans pages from two to five (exclusive).
+</span><p class="svg"><img src="/images/14-restricted-memory.svg"></p>
+</figure>
+<p>The most powerful and convenient way to create memories is to use the <a href="https://docs.rs/ic-stable-structures/latest/ic_stable_structures/memory_manager/struct.MemoryManager.html"><code>MemoryManager</code></a>.
+This utility interleaves up to 255 non-intersecting memories in a single address space, acting similarly to a virtual memory subsystem in modern operating systems.
+The memory manager uses part of the parent memory to keep a dynamic translation table assigning page ranges to virtual memories.</p>
+<figure class="grayscale-diagram"><span id="memory-manager"></span>
+<label class="margin-toggle" for="mn-memory-manager">⊕</label><input type="checkbox" id="mn-memory-manager" class="margin-toggle"><span class="marginnote">
+  The memory manager interleaves multiple virtual memories in a single primary memory, using the first few pages to store metadata.
+</span><p class="svg"><img src="/images/14-memory-manager.svg"></p>
+</figure>
+<p>Virtual memories have a non-contiguous representation, so a single write can translate to multiple system calls.</p>
+<h3 id="storable-types"><a href="#storable-types">Storable types</a></h3>
+<p>The library does not impose any serialization format on you and does not provide a default.
+Depending on your needs, you might prefer <a href="https://github.com/dfinity/candid">Candid</a>, <a href="https://developers.google.com/protocol-buffers">Protocol Buffers</a>, <a href="https://cbor.io/">CBOR</a>, <a href="https://borsh.io/">Borsh</a>, <a href="https://en.wikipedia.org/wiki/X.690#DER_encoding">DER</a>, or something else.
+The <code>Storable</code> trait abstracts data structures over your choice of serialization format.</p>
+<figure><label class="margin-toggle" for="mn-storable-trait">⊕</label><input type="checkbox" id="mn-storable-trait" class="margin-toggle"><span class="marginnote">
+  The <code>Storable</code> trait abstracts data structures over your choice of serialization format.
+</span><div class="source-container"><pre class="source rust"><code><span class="line">pub trait <b>Storable</b> {<span id="storable-trait"></span></span>
+<span class="line">    <em>/// Serializes a value of a storable type into bytes.</em></span>
+<span class="line">    fn <b>to_bytes</b>(&amp;self) -&gt; Cow&lt;'_, [u8]&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Deserializes a value of a storable type from a byte array.</em></span>
+<span class="line">    <em>///</em></span>
+<span class="line">    <em>/// <b>REQUIREMENT</b>: Self::from_bytes(self.to_bytes().to_vec()) == self</em></span>
+<span class="line">    fn <b>from_bytes</b>(bytes: Cow&lt;[u8]&gt;) -&gt; Self;</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>Some data structures, such as <a href="stable-vector">stable vectors</a>, need to know how much memory they must allocate for each instance of your storable type.
+Such types rely on an extension of this trait, providing this necessary metadata, <code>BoundedStorable</code>.
+<code>BoundedStorable</code> types are analogous in their function to <a href="https://doc.rust-lang.org/std/marker/trait.Sized.html"><code>Sized</code></a> types, except that the compiler cannot deduce serialized sizes for you.</p>
+<figure><label class="margin-toggle" for="mn-storable-trait">⊕</label><input type="checkbox" id="mn-storable-trait" class="margin-toggle"><span class="marginnote">
+  Some data structures require their values to implement <code>BoundedStorable</code> trait to know how much space they need to allocate for each item.
+</span><div class="source-container"><pre class="source rust"><code><span class="line">pub trait <span id="bounded-storable-trait"></span><b>BoundedStorable</b>: <a href="#storable-trait"><code><b>Storable</b></code></a> {</span>
+<span class="line">    <em>/// The maximum slice length that <b>to_bytes</b> can return.</em></span>
+<span class="line">    <em>///</em></span>
+<span class="line">    <em>/// <b>REQUIREMENT</b>: self.to_bytes().len() ≤ Self::MAX_SIZE as usize</em></span>
+<span class="line">    const <b>MAX_SIZE</b>: u32;<span id="max-size-attribute"></span></span>
+<span class="line"></span>
+<span class="line">    <em>/// Whether all values of this type have the same length (equal to Self::MAX_SIZE)</em></span>
+<span class="line">    <em>/// when serialized. If you are unsure about this flag, set it to <b>false</b>.</em></span>
+<span class="line">    <em>///</em></span>
+<span class="line">    <em>/// <b>REQUIREMENT</b>: Self::IS_FIXED_SIZE ⇒ self.to_bytes().len() == Self::MAX_SIZE as usize</em></span>
+<span class="line">    const <b>IS_FIXED_SIZE</b>: bool;<span id="is-fixed-size-attribute"></span></span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>The library implements these traits for a few basic types, such as integers, fixed-size arrays, and tuples, allowing you to get away without serialization libraries if you store only primitives.
+It also provides efficient variable-size bounded byte arrays, the <code>Blob&lt;N&gt;</code> type, where <code>N</code> is the maximal number of bytes this type can hold.
+For example, you can persist an IC <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec#principal">principal</a> as a <code>Blob&lt;29&gt;</code>.</p>
+</section>
+<section><h2 id="data-structures"><a href="#data-structures">Data structures</a></h2>
+<div class="epigraph"><blockquote><p>
+    One has an intuitive feeling that data precede algorithms: you must have some objects before you can perform operations on them.
+</p><footer>Niklaus Wirth, <q>Algorithms + Data Structures = Programs</q>, <span class="smallcaps">preface</span>, p. xiii</footer></blockquote></div>
+<p>The heart of the <code>stable-structures</code> library is a collection of data structures, each spanning one or more <a href="#memory">memories</a>.</p>
+<p>Stable structures do not compose<label class="margin-toggle sidenote-number" for="sn-nesting-restriction"></label><input type="checkbox" id="sn-nesting-restriction" class="margin-toggle"><span class="sidenote">
+  The reason for this restriction is simplicity: most data structures are significantly easier to implement correctly and efficiently, assuming they can span an entire <a href="#memory">memory</a>.
+</span>.
+For example, you cannot construct a stable map containing stable vectors as values.
+Many conventional storage systems impose the same restriction.
+For example, SQL databases do not allow tables to hold other tables as values, and Redis does not allow the nesting of its <a href="https://redis.io/docs/data-types/">data types</a>.</p>
+<p>Using <a href="https://en.wikipedia.org/wiki/Composite_key">composite keys</a> or defining several data structures linked with <a href="https://en.wikipedia.org/wiki/Foreign_key">foreign keys</a>, you can work around the restriction.</p>
+<figure><div class="source-container"><pre class="source bad"><code><span class="line"><em>// <b>BAD</b>: stable structures do not support nesting.</em></span>
+<span class="line">type BalanceMap = StableBTreeMap&lt;Principal, StableBTreeMap&lt;Subaccount, Tokens&gt;&gt;;</span>
+</code></pre></div>
+<div class="source-container"><pre class="source good"><code><span class="line"><em>// <b>GOOD</b>: use a composite key (a tuple) to avoid nesting.</em></span>
+<span class="line"><em>// Use a <a href="#range-scan-example"><b>range scan</b></a> to find all subaccounts of a principal.</em></span>
+<span class="line">type BalanceMap = StableBTreeMap&lt;(Principal, Subaccount), Tokens&gt;;</span>
+</code></pre></div>
+<div class="source-container"><pre class="source bad"><code><span class="line"><em>// <b>BAD</b>: stable structures do not support nesting.</em></span>
+<span class="line">type TxIndex = StableBTreeMap&lt;Principal, StableVector&lt;Transaction&gt;&gt;;</span>
+</code></pre></div>
+<div class="source-container"><pre class="source good"><code><span class="line"><em>// <b>GOOD</b>: use a composite key to avoid nesting.</em></span>
+<span class="line"><em>// Use a <a href="#range-scan-example"><b>range scan</b></a> to find all transactions of a principal.</em></span>
+<span class="line">type TxIndex = StableBTreeMap&lt;(Principal, TxId), Transaction&gt;;</span>
+</code></pre></div>
+</figure>
+<p>Let us examine the available data structures in detail.</p>
+<h3 id="stable-cell"><a href="#stable-cell">Stable cell</a></h3>
+<p>A <a href="https://docs.rs/ic-stable-structures/latest/ic_stable_structures/cell/struct.Cell.html">Cell</a> represents a single value stored in stable memory in serialized form.
+Cell’s contents in stable memory updates every time you change the underlying value.</p>
+<figure><label class="margin-toggle" for="mn-cell-interface">⊕</label><input type="checkbox" id="mn-cell-interface" class="margin-toggle"><span class="marginnote">
+  The core interface of the <code>Cell</code> stable structure.
+</span><div class="source-container"><pre class="source rust"><code><span class="line">impl&lt;T: <a href="#storable-trait"><code>Storable</code></a>, M: <a href="#memory"><code>Memory</code></a>&gt; struct <b>Cell</b>&lt;T, M&gt; {</span>
+<span class="line">    <em>/// Returns the current cell value.</em></span>
+<span class="line">    <em>/// Complexity: O(1).</em></span>
+<span class="line">    pub fn <b>get</b>(&amp;self) -&gt; Option&lt;&amp;T&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Updates the cell value.</em></span>
+<span class="line">    <em>/// Complexity: O(value size).</em></span>
+<span class="line">    pub fn <b>set</b>(&amp;mut self, value: T) -&gt; Result&lt;T, ValueError&gt;;</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-cell-figure">⊕</label><input type="checkbox" id="mn-cell-figure" class="margin-toggle"><span class="marginnote">
+    A <code>Cell</code> persists a single value in stable memory and caches it on the heap.
+    The serialized value and the value on the heap are always in sync.
+  </span><p class="svg"><img src="/images/14-cell.svg"></p>
+</figure>
+<p>The primary use case for cells is storing canister configuration:
+</p>
+<ul class="arrows"><li>The ICRC-1 Ledger Archive canister persists its initialization arguments in a <a href="https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L49">cell</a>.
+  </li><li>The Internet Identity Archive canister holds its init arguments in a <a href="https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L85">cell</a>.
+</li></ul>
+<h3 id="stable-vec"><a href="#stable-vec">Stable vector</a></h3>
+<p>A <code>Vec</code> is a growable mutable array similar to <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>std::vec::Vec</code></a>.
+A stable vector stores its items by value, so it must know how much space it needs to allocate for each item, hence the <a href="#bounded-storable-trait"><code>BoundedStorable</code></a> bound on the item type.</p>
+<p>Stable vector takes advantage of the <a href="#is-fixed-size-attribute"><code>T::IS_FIXED_SIZE</code></a> attribute of the item type.
+If the value size is not fixed, the actual value can occupy anything from zero to <a href="#max-size-attribute"><code>T::MAX_SIZE</code></a> bytes, so the vector allocates <a href="#max-size-attribute"><code>T::MAX_SIZE</code></a> and a few extra bytes per entry to store the actual entry size.
+If all the values are the same size, the vector implementation uses <a href="#max-size-attribute"><code>T::MAX_SIZE</code></a> for the item slot, saving up to 4 bytes per entry.
+This reduction is primarily helpful for vectors of primitives (e.g., <code>StableVec&lt;u64&gt;</code>).</p>
+<figure><label class="margin-toggle" for="mn-vec-interface">⊕</label><input type="checkbox" id="mn-vec-interface" class="margin-toggle"><span class="marginnote">
+  The core interface of the <code>Vec</code> stable structure.
+</span><div class="source-container"><pre class="source rust"><code><span class="line">impl&lt;T: <a href="#storable-types"><code>BoundedStorable</code></a>, Data: <a href="#memory"><code>Memory</code></a>&gt; struct <b>Vec</b>&lt;T, Memory&gt; {</span>
+<span class="line">    <em>/// Adds a new item at the vector's back.</em></span>
+<span class="line">    <em>/// Complexity: O(T::MAX_SIZE).</em></span>
+<span class="line">    pub fn <b>push</b>(&amp;self, item: &amp;T) -&gt; Result&lt;usize, GrowFailed&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Removes an item from the vector's back.</em></span>
+<span class="line">    <em>/// Complexity: O(T::MAX_SIZE).</em></span>
+<span class="line">    pub fn <b>pop</b>(&amp;self) -&gt; Option&lt;T&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Returns the item at the specified index.</em></span>
+<span class="line">    <em>/// Complexity: O(T::MAX_SIZE).</em></span>
+<span class="line">    pub fn <b>get</b>(&amp;self, index: usize) -&gt; Option&lt;T&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Updates the item at the specified index.</em></span>
+<span class="line">    <em>/// Complexity: O(T::MAX_SIZE).</em></span>
+<span class="line">    pub fn <b>set</b>(&amp;self, index: usize, item: &amp;T);</span>
+<span class="line"></span>
+<span class="line">    <em>/// Returns the number of items in the vector.</em></span>
+<span class="line">    <em>/// Complexity: O(1).</em></span>
+<span class="line">    pub fn <b>len</b>() -&gt; usize;</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-vec-figure">⊕</label><input type="checkbox" id="mn-vec-figure" class="margin-toggle"><span class="marginnote">
+    A <code>Vec</code> is a growable mutable array.
+    The data representation depends on the <code>IS_FIXED_WIDTH</code> attribute of the item type.
+    If the type’s representation is not fixed-width, the vector implementation must record each entry’s length.
+  </span><p class="svg"><img src="/images/14-vec.svg"></p>
+</figure>
+<p>The <a href="/posts/11-ii-stable-memory.html#ii-memory-layout">stable structure</a> powering the Internet Identity service is a stable vector in disguise, though a less generic one.</p>
+<h3 id="stable-log"><a href="#stable-log">Stable log</a></h3>
+<div class="epigraph"><blockquote><p>
+  Sometimes called write-ahead logs or commit logs or transaction logs, logs have been around almost as long as computers and are at the heart of many distributed data systems and real-time application architectures.
+</p><footer>Jay Kreps, <a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying">The Log</a></footer></blockquote></div>
+<p>A <a href="https://docs.rs/ic-stable-structures/latest/ic_stable_structures/log/struct.Log.html">Log</a> is an append-only list of arbitrary-sized values, similar to <a href="https://redis.io/docs/data-types/streams/">streams</a> in Redis.
+The log requires two memories: the <em>index</em> storing entry offsets and the <em>data</em> storing raw entry bytes.
+The number of instructions needed to access old and append new entries does not depend on the number of items in the log, only on the entry size.</p>
+<figure><label class="margin-toggle" for="mn-log-interface">⊕</label><input type="checkbox" id="mn-log-interface" class="margin-toggle"><span class="marginnote">
+  The core interface of the <code>Log</code> stable structure.
+</span><div class="source-container"><pre class="source rust"><code><span class="line">impl&lt;T, Index, Data&gt; struct <b>Log</b>&lt;T, Index, Data&gt;</span>
+<span class="line">where</span>
+<span class="line">  T: <a href="#storable-trait"><code>Storable</code></a>,</span>
+<span class="line">  Index: <a href="#memory"><code>Memory</code></a>,</span>
+<span class="line">  Data: <a href="#memory"><code>Memory</code></a>,</span>
+<span class="line">{</span>
+<span class="line">    <em>/// Adds a new entry to the log.</em></span>
+<span class="line">    <em>/// Complexity: O(entry size).</em></span>
+<span class="line">    pub fn <b>append</b>(&amp;self, bytes: &amp;T) -&gt; Result&lt;u64, WriteError&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Returns the entry at the specified index.</em></span>
+<span class="line">    <em>/// Complexity: O(entry size).</em></span>
+<span class="line">    pub fn <b>get</b>(&amp;self, idx: u64) -&gt; Option&lt;T&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Returns the number of entries in the log.</em></span>
+<span class="line">    <em>/// Complexity: O(1).</em></span>
+<span class="line">    pub fn <b>len</b>() -&gt; u64;</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-log-figure">⊕</label><input type="checkbox" id="mn-log-figure" class="margin-toggle"><span class="marginnote">
+    A <code>Log</code> is an append-only list of values.
+    Logs need two memories: the <em>index</em> memory storing value offsets and the <em>data</em> memory storing raw entries.
+    The image depicts a log with two values: the first entry is 100 bytes long, and the second entry is 200 bytes long.
+  </span><p class="svg"><img src="/images/14-log.svg"></p>
+</figure>
+<p>The log is a versatile data structure that can be helpful in almost any application:
+</p>
+<ul class="arrows"><li>
+    The ICRC-1 Ledger Archive canister stores archived transactions in a <a href="https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L58">stable log</a>.
+  </li><li>
+    The Internet Identity Archive canister holds events in a <a href="https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L90">stable log</a>.
+  </li><li>
+    The Chain-Key Bitcoin Minter canister persists all state modifications in a <a href="https://github.com/dfinity/ic/blob/6cc83edf2cad91ca1bdbe8f7965060a9ef1d1960/rs/bitcoin/ckbtc/minter/src/storage.rs#L21">stable log</a>.
+    Replaying events from the log is the minter’s primary upgrade mechanism.
+</li></ul>
+<h3 id="stable-btree"><a href="#stable-btree">Stable B-tree</a></h3>
+<div class="epigraph"><blockquote><p>
+    <em>Deletion</em> of items from a B-tree is fairly straightforward in principle, but it is complicated in the details.
+</p><footer>Niklaus Wirth, <q>Algorithms + Data Structures = Programs</q>, <span class="smallcaps">dynamic information structures</span>, p. 250</footer></blockquote></div>
+<p>The <a href="https://docs.rs/ic-stable-structures/0.4.0/ic_stable_structures/btreemap/struct.BTreeMap.html"><code>BTreeMap</code></a> stable structure is an associative container that can hold any <a href="#storable-types">bounded storable type</a>.
+  The map must know the sizes of the keys and values because it allocates nodes from a pool of fixed-size tree nodes<label class="margin-toggle sidenote-number" for="sn-"></label><input type="checkbox" id="sn-" class="margin-toggle"><span class="sidenote">
+The <a href="https://github.com/dfinity/stable-structures/blob/ed2fb6de50e56d2f93e67c2bfaa170fa4b1be60a/src/btreemap/allocator.rs#L13">tree allocator</a> is a <a href="https://en.wikipedia.org/wiki/Free_list">free-list</a> allocator, the <a href="#radical-simplicity">simplest allocator</a> capable of freeing memory.
+</span>.</p>
+<p>The interface of stable <code>BTreeMap</code> will look familiar to any seasoned Rust programmer.</p>
+<figure><label class="margin-toggle" for="mn-btreemap-interface">⊕</label><input type="checkbox" id="mn-btreemap-interface" class="margin-toggle"><span class="marginnote">
+  The core interface of the <code>BTreeMap</code> stable structure.
+</span><div class="source-container"><pre class="source rust"><code><span class="line">impl&lt;K, V, M&gt; struct <b>BTreeMap</b>&lt;K, V, M&gt;</span>
+<span class="line">where</span>
+<span class="line">  K: <a href="#bounded-storable-trait"><code>BoundedStorable</code></a> + Ord + Clone,</span>
+<span class="line">  V: <a href="#bounded-storable-trait"><code>BoundedStorable</code></a>,</span>
+<span class="line">  M: <a href="#memory"><code>Memory</code></a>,</span>
+<span class="line">{</span>
+<span class="line">    <em>/// Adds a new entry to the map.</em></span>
+<span class="line">    <em>/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).</em></span>
+<span class="line">    pub fn <b>insert</b>(&amp;self, key: K, value: V) -&gt; Option&lt;V&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Returns the value associated with the specified key.</em></span>
+<span class="line">    <em>/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).</em></span>
+<span class="line">    pub fn <b>get</b>(&amp;self, key: &amp;K) -&gt; Option&lt;V&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Removes an entry from the map.</em></span>
+<span class="line">    <em>/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).</em></span>
+<span class="line">    pub fn <b>remove</b>(&amp;self, key: &amp;K) -&gt; Option&lt;V&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Returns an iterator over the entries in the specified key range.</em></span>
+<span class="line">    pub fn <b>range</b>(&amp;self, range: impl RangeBounds&lt;K&gt;) -&gt; impl Iterator&lt;Item = (K, V)&gt;;</span>
+<span class="line"></span>
+<span class="line">    <em>/// Returns the number of entries in the map.</em></span>
+<span class="line">    <em>/// Complexity: O(1).</em></span>
+<span class="line">    pub fn <b>len</b>() -&gt; usize;</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-btree">⊕</label><input type="checkbox" id="mn-btree" class="margin-toggle"><span class="marginnote">
+    A <code>BTreeMap</code> is an associative container storing data in fixed-size dynamically-allocated <em>nodes</em>.
+    Each node stores an array of key-value mappings ordered by key.
+    The tree uses the <a href="https://en.wikipedia.org/wiki/Free_list">free-list</a> technique for allocating and freeing nodes.
+    Dotted boxes represent the logical tree structure.
+  </span><p class="svg"><img src="/images/14-btree.svg"></p>
+</figure>
+<p>If you need a <code>BTreeSet&lt;K&gt;</code>, you can use <code>BTreeMap&lt;K, ()&gt;</code> instead.</p>
+<p>The <code>range</code> method is handy for selecting relevant data from a large data set.</p>
+<figure><span id="range-scan-example"></span>
+<label class="margin-toggle" for="mn-range-scan-example">⊕</label><input type="checkbox" id="mn-range-scan-example" class="margin-toggle"><span class="marginnote">
+  Two examples of using the <code>StableBTreeMap::range</code> method.
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><em>/// Selects all subaccounts of the specified principal.</em></span>
+<span class="line">fn <b>principal_subaccounts</b>(</span>
+<span class="line">  balance_map: &amp;StableBTreeMap&lt;(Principal, Subaccount), Tokens&gt;,</span>
+<span class="line">  principal: Principal,</span>
+<span class="line">) -&gt; impl Iterator&lt;Item = (Subaccount, Tokens)&gt; + '_ {</span>
+<span class="line">  balance_map</span>
+<span class="line">    .<b>range</b>((principal, Subaccount::default())..)</span>
+<span class="line">    .take_while(|((p, _), )| p == principal)</span>
+<span class="line">    .map(|((_, s), t)| (s, t))</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><em>/// Selects a transaction range for the specified principal.</em></span>
+<span class="line">fn <b>principal_tx_range</b>(</span>
+<span class="line">  tx_index: &amp;StableBTreeMap&lt;(Principal, TxId), Transaction&gt;,</span>
+<span class="line">  principal: Principal,</span>
+<span class="line">  start: TxId,</span>
+<span class="line">  len: usize,</span>
+<span class="line">) -&gt; impl Iterator&lt;Item = Transaction&gt; + '_ {</span>
+<span class="line">  tx_index</span>
+<span class="line">    .<b>range</b>((principal, start)..)</span>
+<span class="line">    .take(len)</span>
+<span class="line">    .map(|((_, _), tx)| tx)</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>Stable B-tree maps are ideal for large sets of relatively small objects (hundreds of bytes).
+For example, the bitcoin canister uses this data structure to store bitcoin <a href="https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/block_header_store.rs#L13">block headers</a> and <a href="https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/utxo_set/utxos.rs">UTXOs</a>.</p>
+</section>
+<section><h2 id="constructing-ss"><a href="#constructing-ss">Constructing stable structures</a></h2>
+<div class="epigraph"><blockquote><p>
+  Make sure that objects are initialized before they’re used.
+</p><footer>Scott Meyers, <q>Effective C++</q>, third edition, Item 4, p. 26</footer></blockquote></div>
+<p>We have to declare stable structures before we can use them.
+Each data structure <code>T</code> in the library declares at least three constructors:
+</p>
+<ul class="arrows"><li><code>T::new</code> allocates a new copy of <code>T</code> in the given <a href="#memory">memory</a>, potentially overwriting previous memory content.
+  </li><li><code>T::load</code> recovers a previously constructed <code>T</code> from the given <a href="#memory">memory</a>.
+  </li><li><code>T::init</code> is a <a href="https://en.wikipedia.org/wiki/DWIM"><span class="smallcaps">dwim</span></a> constructor acting as <code>T::new</code> if the given <a href="#memory">memory</a> is empty and as <code>T::load</code> otherwise.
+</li></ul>
+<p>In practice, most canisters need only <code>T::init</code>.</p>
+<p>The most common way to create a stable structure is by declaring a global variable.
+This approach reminds me of the way we organize tables in relational databases.</p>
+<figure><label class="margin-toggle" for="mn-stable-init">⊕</label><input type="checkbox" id="mn-stable-init" class="margin-toggle"><span class="marginnote">
+  Declaring a stable data structure as a standalone global variable.
+</span><div class="source-container"><pre class="source rust"><code><span class="line">use ic_stable_structures::{StableBTreeMap, DefaultMemoryImpl};</span>
+<span class="line">use std::cell::RefCell;</span>
+<span class="line"></span>
+<span class="line">thread_local! {</span>
+<span class="line">  static <b>USERS</b>: RefCell&lt;<a href="#stable-btree"><code>StableBTreeMap</code></a>&lt;UserId, User, <a href="#default-memory-impl"><code>DefaultMemoryImpl</code></a>&gt;&gt; =</span>
+<span class="line">    RefCell::new(StableBTreeMap::init(DefaultMemoryImpl::default()));</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>The main benefit of this approach is that the runtime will automatically initialize the stable structure the first time you access it.
+<em>Ensure that you access all such variables in the <code>post_upgrade</code> hook.</em>
+Otherwise, you might only be able to catch a configuration error after the upgrade is complete.</p>
+<p>However, you do not have to declare each stable structure in a separate global variable.
+You can embed stable structures into regular structures if this helps you keep the code better organized.
+For example, the <a href="https://github.com/dfinity/bitcoin-canister">Bitcoin canister</a> stores <a href="https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/utxo_set/utxos.rs#L51">UTXOs</a> in multiple stable structures combined into a regular <code>struct</code>.</p>
+</section>
+<section><h2 id="tying-together"><a href="#tying-together">Tying it all together</a></h2>
+<p>This section contains an example of declaring several data structures for a ledger canister compatible with the <a href="https://github.com/dfinity/ICRC-1/blob/3c64844bc6219e1d07ce05e27ec636df1e562114/standards/ICRC-1/README.md">ICRC-1</a> specification.
+We will need three collections:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+    A <a href="#stable-cell"><code>Cell</code></a> to store the ledger metadata.
+  </li><li data-num-glyph="②">
+    A <a href="#stable-btree"><code>StableBTreeMap</code></a> to map accounts <label class="margin-toggle sidenote-number" for="sn-account"></label><input type="checkbox" id="sn-account" class="margin-toggle"><span class="sidenote">An <a href="https://github.com/dfinity/ICRC-1/blob/3c64844bc6219e1d07ce05e27ec636df1e562114/standards/ICRC-1/README.md#account">account</a> is a pair of a principal and a 32-byte subaccount.</span> to their current balance.
+  </li><li data-num-glyph="③">A <a href="#stable-log"><code>StableLog</code></a> for transaction history.
+</li></ol>
+<p>The ledger metadata is relatively small; it should fit into two megabytes or sixteen WebAssembly memory pages.
+We will allocate the metadata cell in a <a href="#restricted-memory">restricted memory</a>, partitioning the rest of the stable memory between the accounts map and the log using the <a href="#memory-manager">memory manager</a>.</p>
+<p>Let us put these ideas to code.
+First, we must import a few type definitions from the library.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line">use ic_stable_structures::{</span>
+<span class="line">  DefaultMemoryImpl as DefMem,</span>
+<span class="line">  RestrictedMemory,</span>
+<span class="line">  StableBTreeMap,</span>
+<span class="line">  StableCell,</span>
+<span class="line">  StableLog,</span>
+<span class="line">  Storable,</span>
+<span class="line">};</span>
+<span class="line">use ic_stable_structures::memory_manager::{</span>
+<span class="line">  MemoryId,</span>
+<span class="line">  MemoryManager as MM,</span>
+<span class="line">  VirtualMemory,</span>
+<span class="line">};</span>
+<span class="line">use ic_stable_structures::storable::Blob;</span>
+<span class="line">use std::borrow::Cow;</span>
+<span class="line">use std::cell::RefCell;</span>
+</code></pre></div>
+<p>Next, let us define the types of data we will store in our stable structures.
+I omit the field definitions because they are not essential for understanding the example.
+We derive serialization boilerplate for the <code>Metadata</code> and <code>Tx</code> types using the <a href="https://serde.rs/">serde</a> framework.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line">type Account = (Blob&lt;29&gt;, [u8; 32]);</span>
+<span class="line">type Amount = u64;</span>
+<span class="line"></span>
+<span class="line">#[derive(serde::Serialize, serde::Deserialize)]</span>
+<span class="line">struct <b>Metadata</b> { /* … */ }</span>
+<span class="line"></span>
+<span class="line">#[derive(serde::Serialize, serde::Deserialize)]</span>
+<span class="line">enum <b>Tx</b> {</span>
+<span class="line">  Mint { /* … */ },</span>
+<span class="line">  Burn { /* … */ },</span>
+<span class="line">  Transfer { /* … */ },</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The next step is to decide on the data serialization format.
+I use <a href="https://cbor.io/">Concise Binary Object Representation</a> in the example because this encoding served me well in production.
+Instead of implementing the <a href="#storable-trait"><code>Storable</code></a> trait for <code>Metadata</code> and <code>Tx</code>, I define a generic wrapper type <code>Cbor&lt;T&gt;</code> that I use for all types I want to encode as <span class="smallcaps">cbor</span> and implement <a href="#storable-trait"><code>Storable</code></a> only for the wrapper.
+I also implement <a href="https://doc.rust-lang.org/std/ops/trait.Deref.html"><code>std::ops::Deref</code></a> to improve the ergonomics of the wrapper type.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line"><em>/// A helper type implementing Storable for all</em></span>
+<span class="line"><em>/// serde-serializable types using the CBOR encoding.</em></span>
+<span class="line">#[derive(Default)]</span>
+<span class="line">struct <b>Cbor</b>&lt;T&gt;(pub T)</span>
+<span class="line">where T: serde::Serialize + serde::de::DeserializeOwned;</span>
+<span class="line"></span>
+<span class="line"><b>impl</b>&lt;T&gt; std::ops::Deref for <b>Cbor</b>&lt;T&gt;</span>
+<span class="line">where T: serde::Serialize + serde::de::DeserializeOwned</span>
+<span class="line">{</span>
+<span class="line">  type Target = T;</span>
+<span class="line"></span>
+<span class="line">  fn deref(&amp;self) -&gt; &amp;Self::Target { &amp;self.0 }</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><b>impl</b>&lt;T&gt; <a href="#storable-trait"><code>Storable</code></a> for <b>Cbor</b>&lt;T&gt;</span>
+<span class="line">where T: serde::Serialize + serde::de::DeserializeOwned</span>
+<span class="line">{</span>
+<span class="line">  fn to_bytes(&amp;self) -&gt; Cow&lt;[u8]&gt; {</span>
+<span class="line">    let mut buf = vec![];</span>
+<span class="line">    <a href="https://docs.rs/ciborium/0.2.0/ciborium/ser/fn.into_writer.html"><code>ciborium::ser::into_writer</code></a>(&amp;self.0, &amp;mut buf).unwrap();</span>
+<span class="line">    Cow::Owned(buf)</span>
+<span class="line">  }</span>
+<span class="line"></span>
+<span class="line">  fn from_bytes(bytes: Cow&lt;[u8]&gt;) -&gt; Self {</span>
+<span class="line">    Self(<a href="https://docs.rs/ciborium/0.2.0/ciborium/de/fn.from_reader.html"><code>ciborium::de::from_reader</code></a>(bytes.as_ref()).unwrap())</span>
+<span class="line">  }</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The final and most important part is defining stable structures as <a href="/posts/01-effective-rust-canisters.html#use-threadlocal">global canister variables</a>.
+Note the use of <a href="#restricted-memory"><code>RestrictedMemory</code></a> to split the canister memory into two non-intersecting regions and <a href="#memory-manager"><code>MemoryManager</code></a> (abbreviated as <code>MM</code>) to interleave multiple data structures in the second region.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line"><em>// NOTE: ensure that all memory ids are unique and</em></span>
+<span class="line"><em>// do not change across upgrades!</em></span>
+<span class="line">const <b>BALANCES_MEM_ID</b>: MemoryId = MemoryId::new(0);</span>
+<span class="line">const <b>LOG_INDX_MEM_ID</b>: MemoryId = MemoryId::new(1);</span>
+<span class="line">const <b>LOG_DATA_MEM_ID</b>: MemoryId = MemoryId::new(2);</span>
+<span class="line"></span>
+<span class="line"><em>// NOTE: we allocate the first 16 pages (about 2 MiB) of the</em></span>
+<span class="line"><em>// canister memory for the metadata.</em></span>
+<span class="line">const <b>METADATA_PAGES</b>: u64 = 16;</span>
+<span class="line"></span>
+<span class="line">type RM = RestrictedMemory&lt;DefMem&gt;;</span>
+<span class="line">type VM = VirtualMemory&lt;RM&gt;;</span>
+<span class="line"></span>
+<span class="line">thread_local! {</span>
+<span class="line">  static <b>METADATA</b>: RefCell&lt;<a href="#stable-cell"><code>StableCell</code></a>&lt;Cbor&lt;Option&lt;Metadata&gt;&gt;, RM&gt;&gt; =</span>
+<span class="line">    RefCell::new(StableCell::init(</span>
+<span class="line">        RM::new(DefMem::default(), 0..METADATA_PAGES),</span>
+<span class="line">        Cbor::default(),</span>
+<span class="line">      ).expect(&quot;failed to initialize the metadata cell&quot;)</span>
+<span class="line">    );</span>
+<span class="line"></span>
+<span class="line">  static <b>MEMORY_MANAGER</b>: RefCell&lt;MM&lt;RM&gt;&gt; = RefCell::new(</span>
+<span class="line">    MM::init(RM::new(DefMem::default(), METADATA_PAGES..u64::MAX))</span>
+<span class="line">  );</span>
+<span class="line"></span>
+<span class="line">  static <b>BALANCES</b>: RefCell&lt;<a href="#stable-btree"><code>StableBTreeMap</code></a>&lt;Account, Amount, VM&gt;&gt; =</span>
+<span class="line">    MEMORY_MANAGER.with(|mm| {</span>
+<span class="line">      RefCell::new(StableBTreeMap::init(mm.borrow().get(<b>BALANCES_MEM_ID</b>)))</span>
+<span class="line">    });</span>
+<span class="line"></span>
+<span class="line">  static <b>TX_LOG</b>: RefCell&lt;<a href="#stable-log"><code>StableLog</code></a>&lt;Cbor&lt;Tx&gt;, VM, VM&gt;&gt; =</span>
+<span class="line">    MEMORY_MANAGER.with(|mm| {</span>
+<span class="line">      RefCell::new(StableLog::init(</span>
+<span class="line">        mm.borrow().get(<b>LOG_INDX_MEM_ID</b>),</span>
+<span class="line">        mm.borrow().get(<b>LOG_DATA_MEM_ID</b>),</span>
+<span class="line">      ).expect(&quot;failed to initialize the tx log&quot;))</span>
+<span class="line">    });</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>We are all set to start working on the ledger!
+I left implementing the rest of the specification as an exercise for an attentive reader.</p>
+</section>
+<section><h2 id="next"><a href="#next">Where to go next</a></h2>
+<ul class="arrows"><li>Take a look at the library <a href="https://github.com/dfinity/stable-structures/tree/main/examples/src">usage examples</a>.
+  </li><li>Check out real-world usage examples in production-quality canisters<label class="margin-toggle sidenote-number" for="sn-outdated"></label><input type="checkbox" id="sn-outdated" class="margin-toggle"><span class="sidenote">
+    Note that these examples can use a slightly outdated library version.
+  </span>, such as <a href="https://github.com/dfinity/internet-identity/blob/97e8d968aba653c8857537ecd541b35de5085608/src/archive/src/main.rs">II archive</a> and <a href="https://github.com/dfinity/ic/blob/df57b720fd0ceed70f021f4812c797fb40d97503/rs/bitcoin/ckbtc/minter/src/storage.rs">ckBTC minter</a>, and <a href="https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/block_header_store.rs#L13">Bitcoin</a>.
+  </li><li>Read the <a href="https://docs.rs/ic-stable-structures/latest/ic_stable_structures/">official documentation</a>.
+</li></ul>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/01-effective-rust-canisters.html">Effective Rust canisters</a></li><li><a href="/posts/15-when-rust-hurts.html">When Rust hurts</a></li><li><a href="/posts/12-rust-error-handling.html">Designing error types in Rust</a></li><li><a href="/posts/20-candid-for-engineers.html">Candid for engineers</a></li><li><a href="/posts/08-ic-xnet.html">IC internals: XNet protocol</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/15-when-rust-hurts.html"> ←When Rust hurts</a></div><div id="older"><a href="/posts/13-icp-ledger.html">IC internals: the ICP ledger→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

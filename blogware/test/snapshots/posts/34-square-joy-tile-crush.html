@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="arrays,j,puzzles"><meta name="description" content="Exploding tiles in J."><title>Square joy: tile crush</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/34-square-joy-tile-crush.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/34-square-joy-tile-crush.html">Square joy: tile crush</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2024-12-16</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2024-12-16</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#problem">The problem: stabilize the game board</a></li><li class="toc toc-level-1"><a href="#board-representation">The board representation</a></li><li class="toc toc-level-1"><a href="#gravity">Implementing gravity</a></li><li class="toc toc-level-1"><a href="#matching-tiles">Matching tiles</a></li><li class="toc toc-level-1"><a href="#putting-together">Putting it all together</a></li><li class="toc toc-level-1"><a href="#exercises">Exercises</a></li></ul><hr>
+
+<section><p>This article presents a solution to a programming puzzle using the <a href="https://www.jsoftware.com/"><span class="smallcaps">j</span> programming language</a>.
+The challenge is implementing mechanics for a tile-matching game using a data-parallel array-oriented approach (no stinking loops).</p>
+<p>This article is not an introduction to the <span class="smallcaps">j</span> programming language,
+but it explains enough details to follow the solution even if you aren’t familiar with the language.</p>
+</section>
+<section><h2 id="problem"><a href="#problem">The problem: stabilize the game board</a></h2>
+<p>Our game is a simplified version of the popular <a href="https://en.wikipedia.org/wiki/Candy_Crush_Saga">Candy Crash Saga</a> game:
+</p>
+<ol class="circled"><li data-num-glyph="①">A rectangular board contains square tiles of different types.
+</li><li data-num-glyph="②">When three or more identical tiles appear next to one another in the same row or column, they explode and leave space.
+</li><li data-num-glyph="③">Tiles experience gravity: they fall if there is space below them.
+</li><li data-num-glyph="④">Moving tiles don’t explode.
+</li><li data-num-glyph="⑤">If there are multiple exploding sections, the explosions happen simultaneously.
+</li></ol>
+<p>The goal is to implement the board update mechanics after the player makes a move.
+The mechanics of the player moves are out of scope.</p>
+</section>
+<section><h2 id="board-representation"><a href="#board-representation">The board representation</a></h2>
+<p>I will represent the board as a numeric matrix.
+Zero indicates an empty tile, and integers <span class="math">1</span> through <span class="math">K</span> correspond to tile types.</p>
+<p>The board’s columns will require more transformations than rows (gravity works column-wise),
+so our board representation will be transposed compared to the user’s view.
+Matrix rows will correspond to columns in the interface and vice-versa.</p>
+<p>I will use a nine-by-nine board with five tile types for all examples.</p>
+<div class="source-container"><pre class="source j"><code><span class="line"><em>NB. The number of tiles types, including the empty zero tile.</em></span>
+<span class="line">   K =. 6</span>
+<span class="line"></span>
+<span class="line"><em>NB. The board I will use for examples (your board may vary).</em></span>
+<span class="line"><em>NB. 9 9 $ K creates a 9x9 board filled with integer K. </em></span>
+<span class="line"><em>NB. ?. 9 9 $ K fills that board with random integers in range 0..K. </em></span>
+<span class="line">   Board =. <a href="https://code.jsoftware.com/wiki/Vocabulary/querydot">?.</a> 9 9 <a href="https://code.jsoftware.com/wiki/Vocabulary/dollar#dyadic">$</a> K</span>
+<span class="line">0 2 4 0 5 4 4 4 2</span>
+<span class="line">1 3 2 1 5 1 2 3 4</span>
+<span class="line">1 5 5 3 1 1 0 4 3</span>
+<span class="line">2 4 3 5 0 4 3 5 5</span>
+<span class="line">0 1 2 0 4 5 3 5 5</span>
+<span class="line">0 3 4 4 0 4 3 1 0</span>
+<span class="line">0 0 1 5 1 2 4 0 4</span>
+<span class="line">3 2 4 4 4 1 3 1 3</span>
+<span class="line">5 1 2 5 1 5 0 5 2</span>
+</code></pre></div>
+<p>The numeric board is hard to look at, so let’s write a function to visualize it using our <a href="/posts/04-square-joy-trapped-rain-water.html#viewmat">old friend</a>, <a href="https://code.jsoftware.com/wiki/Studio/Viewmat">viewmat</a>.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   require 'viewmat'</span>
+<span class="line">   viewboard =. {{ (255 255 255 , 0 0 128 ,: 128 128 128) viewmat |: y }}</span>
+<span class="line">   viewboard Board</span>
+</code></pre></div>
+<figure><img src="/images/34-original-board.jpg">
+</figure>
+<p>Ah, much better.
+The whitespace corresponds to the space,
+and different colors correspond to tile types.</p>
+<p>Our tiles seem to float in the air; let’s make them fall.</p>
+</section>
+<section><h2 id="gravity"><a href="#gravity">Implementing gravity</a></h2>
+<p>The law of gravity requires heavy stuff to go down and light stuff to bubble.
+In our board representation, the gravity pulls to the right,
+so all the empty zero tiles must shift to the front of each row.
+In the algorithm speak, we need a <a href="https://en.cppreference.com/w/cpp/algorithm/stable_partition">stable partition</a>,
+where the partition predicate is equality to zero.</p>
+<div class="source-container"><pre class="source"><code><span class="line">   <em>NB. The first row before and after applying the stable partition.</em></span>
+<span class="line">0 2 4 0 5 4 4 4 2</span>
+<span class="line">0 0 2 4 5 4 4 4 2</span>
+</code></pre></div>
+<p>The simplest reincarnation of stable partition involves selecting matching and non-matching elements and gluing them together.
+The <a href="https://code.jsoftware.com/wiki/Vocabulary/number#dyadic">copy</a> function (<code>#</code>) will help us select items given a boolean mask,
+and <a href="https://code.jsoftware.com/wiki/Vocabulary/comma#dyadic">append</a> (<code>,</code>) will glue the results.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   <em>NB. {{ and }} <a href="https://code.jsoftware.com/wiki/Vocabulary/DirectDefinition">define an anonymous function</a></em></span>
+<span class="line">   <em>NB. where y is the implicitly defined right argument.</em></span>
+<span class="line">   <em>NB. We can also define the function tacitly as (#~ &lt;:&amp;0),(#~ &gt;&amp;0)&quot;1</em></span>
+<span class="line"></span>
+<span class="line">   gravity =. {{ ((y=0)#y),(y~:0)#y }}&quot;1</span>
+<span class="line">   gravity Board</span>
+<span class="line">0 0 2 4 5 4 4 4 2</span>
+<span class="line">1 3 2 1 5 1 2 3 4</span>
+<span class="line">0 1 5 5 3 1 1 4 3</span>
+<span class="line">0 2 4 3 5 4 3 5 5</span>
+<span class="line">0 0 1 2 4 5 3 5 5</span>
+<span class="line">0 0 0 3 4 4 4 3 1</span>
+<span class="line">0 0 0 1 5 1 2 4 4</span>
+<span class="line">3 2 4 4 4 1 3 1 3</span>
+<span class="line">0 5 1 2 5 1 5 5 2</span>
+<span class="line">   viewboard gravity Board</span>
+</code></pre></div>
+<figure><img src="/images/34-gravity-applied.jpg">
+</figure>
+<p>The <code>&quot;1</code> annotation tells the <span class="smallcaps">j</span> interpreter that we intended the <code>gravity</code> function to work on one-dimensional arrays.
+When we apply this function to a matrix, the interpreter automatically maps the function over each row.</p>
+<p>Let’s apply gravity to our example board to simplify further exploration.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   Board =. gravity Board</span>
+</code></pre></div>
+</section>
+<section><h2 id="matching-tiles"><a href="#matching-tiles">Matching tiles</a></h2>
+<p>We will first find tile matches in columns (rows of the board representation) and then extend the solution to work on both dimensions.</p>
+<p>The core idea is to annotate each tile with the size of the longest run it’s a member of.
+Let’s fix a specific row (the first board row) and the tile type (<code>4</code>) for now.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   R =. 0 0 2 4 5 4 4 4 2</span>
+</code></pre></div>
+<p>Let’s isolate the tiles we’re focused on.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   R=4</span>
+<span class="line">0 0 0 1 0 1 1 1 0</span>
+</code></pre></div>
+<p>Our life will be easy if we can replace each <code>1</code> with the length of the run in which this element appears.
+For example, <code>0 0 0 1 0 1 1 1 0</code> should become <code>0 0 0 1 0 3 3 3 0</code>.</p>
+<p>There are many ways to achieve this outcome; I will implement it in two passes over the boolean array.
+In the first pass, we compute the running sum within each run, resetting the counter as soon as we hit zero.
+In the second pass, we traverse the array backward and replace each item with the maximum within its run.</p>
+<div class="source-container"><pre class="source"><code><span class="line">0 0 0 1 0 1 1 1 0  <em>NB. the original mask</em></span>
+<span class="line">0 0 0 1 0 1 2 3 0  <em>NB. sum items left-to-right within each run </em></span>
+<span class="line">0 0 0 1 0 3 3 3 0  <em>NB. max items right-to-left within each run </em></span>
+</code></pre></div>
+<p>The <a href="https://code.jsoftware.com/wiki/Vocabulary/fcap">fold</a> operator is a convenient tool to implement the first scan.
+We will use its version that accepts three arguments: the initial accumulator value (<code>0</code>), the reduce function (<code>x * (x + y)</code>), and the post-processing step (the identity function, <a href="https://code.jsoftware.com/wiki/Vocabulary/squarert">same</a> <code>]</code>).</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   S =. 0 ] F:. {{x*x+y}} R=4</span>
+<span class="line">   S</span>
+<span class="line">0 0 0 1 0 1 2 3 0</span>
+</code></pre></div>
+<p>The second scan requires a fold that traverses the sequence in reverse (<code>F::</code>).
+This time, our reduce function takes the maximum of the accumulator and the current item unless the item is zero (<code>(x&gt;0) * (x &gt;. y)</code>).
+Since reverse fold produces items backward, we must <a href="https://code.jsoftware.com/wiki/Vocabulary/bardot">reverse</a> (<code>|.</code>) its result to get the sequence we need.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   0 ] F:: {{(x&gt;0)*x&gt;.y}} S</span>
+<span class="line">0 3 3 3 0 1 0 0 0</span>
+<span class="line"></span>
+<span class="line">   |. 0 ] F:: {{(x&gt;0)*x&gt;.y}} S</span>
+<span class="line">0 0 0 1 0 3 3 3 0</span>
+</code></pre></div>
+<p>Let’s capture our progress in the <code>runs</code> function.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   NB. Given a bool mask, compute the longest run for each item.</span>
+<span class="line">   NB. [*+ is a shorter way to write {{x*(x+y)}}.</span>
+<span class="line"></span>
+<span class="line">   runs =. {{ |. 0 ] F:: {{ (x&gt;0) * x&gt;.y }} 0 ] F:. ([*+) y }}&quot;1</span>
+</code></pre></div>
+<p>We solved the problem for a single tile type in a single row.
+We must extend our solution to handle each row, column, and tile type.
+<span class="smallcaps">j</span> gives us per-row application for free thanks to the <code>runs</code> <a href="https://code.jsoftware.com/wiki/Vocabulary/quote">rank specification</a> (<code>&quot;1</code>):</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   runs Board=4</span>
+<span class="line">0 0 0 1 0 3 3 3 0</span>
+<span class="line">0 0 0 0 0 0 0 0 1</span>
+<span class="line">0 0 0 0 0 0 0 1 0</span>
+<span class="line">0 0 1 0 0 1 0 0 0</span>
+<span class="line">0 0 0 0 1 0 0 0 0</span>
+<span class="line">0 0 0 0 3 3 3 0 0</span>
+<span class="line">0 0 0 0 0 0 0 2 2</span>
+<span class="line">0 0 3 3 3 0 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+</code></pre></div>
+<p>We handle columns by running <code>runs</code> on a transposed board and transposing the result.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   |: runs |: Board=4</span>
+<span class="line">0 0 0 1 0 1 1 1 0</span>
+<span class="line">0 0 0 0 0 0 0 0 1</span>
+<span class="line">0 0 0 0 0 0 0 1 0</span>
+<span class="line">0 0 1 0 0 1 0 0 0</span>
+<span class="line">0 0 0 0 2 0 0 0 0</span>
+<span class="line">0 0 0 0 2 1 1 0 0</span>
+<span class="line">0 0 0 0 0 0 0 1 1</span>
+<span class="line">0 0 1 1 1 0 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+</code></pre></div>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>transpose</mi><mo>∘</mo><mi>f</mi><mo>∘</mo><mi>transpose</mi></math> is a special case of the <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msup><mi>g</mi><mrow><mo stretchy="false">-</mo><mn>1</mn></mrow></msup><mo>∘</mo><mi>f</mi><mo>∘</mo><mi>g</mi></math> pattern<label class="margin-toggle sidenote-number" for="sn-self-inverse"></label><input type="checkbox" id="sn-self-inverse" class="margin-toggle"><span class="sidenote">
+  Transposition is an <a href="https://en.wikipedia.org/wiki/Involution_(mathematics)">involution</a>: it undoes itself.
+</span>
+that’s so ubiquitous in mathematics that <span class="smallcaps">j</span> defines a convenient operator to express it: <a href="https://code.jsoftware.com/wiki/Vocabulary/ampdot">under</a> (<code>&amp;.</code>).</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   runs &amp;. |: Board=4</span>
+<span class="line">0 0 0 1 0 1 1 1 0</span>
+<span class="line">0 0 0 0 0 0 0 0 1</span>
+<span class="line">0 0 0 0 0 0 0 1 0</span>
+<span class="line">0 0 1 0 0 1 0 0 0</span>
+<span class="line">0 0 0 0 2 0 0 0 0</span>
+<span class="line">0 0 0 0 2 1 1 0 0</span>
+<span class="line">0 0 0 0 0 0 0 1 1</span>
+<span class="line">0 0 1 1 1 0 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+</code></pre></div>
+<p>We can package the row-wise and column-wise transformations into a single function by taking the maximum of their outputs.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   ((runs &amp;. |:) &gt;. runs) Board=4</span>
+<span class="line">0 0 0 1 0 3 3 3 0</span>
+<span class="line">0 0 0 0 0 0 0 0 1</span>
+<span class="line">0 0 0 0 0 0 0 1 0</span>
+<span class="line">0 0 1 0 0 1 0 0 0</span>
+<span class="line">0 0 0 0 2 0 0 0 0</span>
+<span class="line">0 0 0 0 3 3 3 0 0</span>
+<span class="line">0 0 0 0 0 0 0 2 2</span>
+<span class="line">0 0 3 3 3 0 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+</code></pre></div>
+<p>To extend the solution to all tile types (not just <code>4</code>), we generate the list of non-zero tiles (<code>}. i. K</code>),
+match the board against every type, producing a list of disjoint boolean matrices (<code>Board =&quot;_ 0 }. i. K</code>),
+compute runs for each matrix,
+and sum the results.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   +/ ((runs &amp;. |:) &gt;. runs)&quot;2 Board =&quot;_ 0 }. i. K</span>
+<span class="line">0 0 2 1 2 3 3 3 1</span>
+<span class="line">1 1 2 1 2 2 1 1 1</span>
+<span class="line">0 1 2 2 1 2 2 1 1</span>
+<span class="line">0 1 1 1 1 1 2 2 2</span>
+<span class="line">0 0 1 1 2 1 2 2 2</span>
+<span class="line">0 0 0 1 3 3 3 1 1</span>
+<span class="line">0 0 0 1 1 3 1 2 2</span>
+<span class="line">1 1 3 3 3 3 1 1 1</span>
+<span class="line">0 1 1 1 1 3 2 2 1</span>
+</code></pre></div>
+<p>Comparing the result with the explosion threshold gives us the mask of tiles eligible for explosion.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   3 &lt;: +/ ((runs &amp;. |:) &gt;. runs)&quot;2 Board =&quot;_ 0 }. i. K</span>
+<span class="line">0 0 0 0 0 1 1 1 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+<span class="line">0 0 0 0 1 1 1 0 0</span>
+<span class="line">0 0 0 0 0 1 0 0 0</span>
+<span class="line">0 0 1 1 1 1 0 0 0</span>
+<span class="line">0 0 0 0 0 1 0 0 0</span>
+</code></pre></div>
+<figure><label class="margin-toggle" for="sn-explosion-mask">⊕</label><input type="checkbox" id="sn-explosion-mask" class="margin-toggle"><span class="marginnote">
+  Side by side: the board before the explosion (left) and the mask of tiles eligible for explosion (right).
+</span><img src="/images/34-gravity-applied.jpg">
+<img src="/images/34-explosion-mask.jpg">
+</figure>
+<p>One last annoyance is that our expression depends on the constant <code>K</code>.
+We can make it less context-dependent by computing the set of unique positive tile types on the board.
+The <a href="https://code.jsoftware.com/wiki/Vocabulary/tildedot">nub</a> (<code>~.</code>) and <a href="https://code.jsoftware.com/wiki/Vocabulary/comma">ravel</a> (<code>,</code>) verbs make it easy.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   <em>NB. compute the set of unique tiles on the board.</em></span>
+<span class="line">   ~.,Board</span>
+<span class="line">0 2 4 5 1 3</span>
+<span class="line"></span>
+<span class="line">   <em>NB. leave only positive values.</em></span>
+<span class="line">   (#~ &gt;&amp;0) ~.,Board</span>
+<span class="line">2 4 5 1 3</span>
+<span class="line"></span>
+<span class="line">   <em>NB. update the tile matching expression to use the tile types from the board.</em></span>
+<span class="line">   3 &lt;: +/ ((runs &amp;. |:) &gt;. runs)&quot;2 Board =&quot;_ 0 (#~ &gt;&amp;0) ~., Board</span>
+<span class="line">0 0 0 0 0 1 1 1 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+<span class="line">0 0 0 0 0 0 0 0 0</span>
+<span class="line">0 0 0 0 1 1 1 0 0</span>
+<span class="line">0 0 0 0 0 1 0 0 0</span>
+<span class="line">0 0 1 1 1 1 0 0 0</span>
+<span class="line">0 0 0 0 0 1 0 0 0</span>
+</code></pre></div>
+</section>
+<section><h2 id="putting-together"><a href="#putting-together">Putting it all together</a></h2>
+<p>It’s time to combine the gravity and tile matching into the board update function.
+This function should find matching tiles, <q>explode</q> them by replacing these tiles with zero tiles, and apply gravity.</p>
+<p>The expression from the previous section gives us a mask of all the tiles we need to explode.
+We implement the explosion by multiplying the board by the inverse of that mask.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   explode =. {{ y * 2&gt;: +/ ((runs &amp;. |:) &gt;. runs)&quot;2 y =&quot;_ 0 (#~ &gt;&amp;0) ~., y }}</span>
+<span class="line">   viewboard explode Board</span>
+</code></pre></div>
+<figure><label class="margin-toggle" for="sn-board-after-explosion">⊕</label><input type="checkbox" id="sn-board-after-explosion" class="margin-toggle"><span class="marginnote">
+  Side by side: the board before and after tile explosion.
+</span><img src="/images/34-gravity-applied.jpg">
+<img src="/images/34-exploded-board.jpg">
+</figure>
+<p>Let’s see what happens when we add gravity.
+</p>
+<figure><label class="margin-toggle" for="sn-explosion-gravity">⊕</label><input type="checkbox" id="sn-explosion-gravity" class="margin-toggle"><span class="marginnote">
+  Side by side: the board right after tile explosion and after the gravity action.
+</span><img src="/images/34-exploded-board.jpg">
+<img src="/images/34-exploded-gravity-board.jpg">
+</figure>
+<p>Look, there are more tiles to explode now!
+We shall keep updating the board until it stops changing.
+Luckily, <span class="smallcaps">j</span> gives us a perfect operator for that: <a href="https://code.jsoftware.com/wiki/Vocabulary/hatco#u.5E:_.28Converge.29">converge</a> (<code>^:_</code>)<label class="margin-toggle sidenote-number" for="sn-converge-chicken"></label><input type="checkbox" id="sn-converge-chicken" class="margin-toggle"><span class="sidenote">
+  The <code>^:_</code> glyph reminds me of a curious chicken lying on the grass and looking at the infinite sky.
+</span>. We compose gravity and tile explosion using the <a href="https://code.jsoftware.com/wiki/Vocabulary/atco">at</a> operator (<code>@:</code>)</p>
+<div class="source-container"><pre class="source j"><code><span class="line">   update =. (explode @: gravity) ^:_</span>
+<span class="line"></span>
+<span class="line">   viewboard update Board</span>
+</code></pre></div>
+<figure><label class="margin-toggle" for="sn-full-update">⊕</label><input type="checkbox" id="sn-full-update" class="margin-toggle"><span class="marginnote">
+  Side by side: the example board after the gravity applied and the stabilized final board.
+</span><img src="/images/34-gravity-applied.jpg">
+<img src="/images/34-board-final.jpg">
+</figure>
+<p>Before we close, let’s see what happens when we imitate the player’s move by swapping two tiles (the fifth row, the second, and the third columns).</p>
+<div class="source-container"><pre class="source"><code><span class="line">   <em>NB. swaps items in the right arg according to the spec in the left arg.</em></span>
+<span class="line">   swap =. {{ (|. x { y) x } y }}</span>
+<span class="line"></span>
+<span class="line">   viewboard (1 4; 2 4) swap update Board</span>
+<span class="line">   viewboard update (1 4; 2 4) swap update Board</span>
+</code></pre></div>
+<figure><label class="margin-toggle" for="sn-after-swap">⊕</label><input type="checkbox" id="sn-after-swap" class="margin-toggle"><span class="marginnote">
+  Side by side: the stabilized board with two tiles swapped and the updated board after the move.
+</span><img src="/images/34-swap-tiles.jpg">
+<img src="/images/34-update-after-swap.jpg">
+</figure>
+<p>That’s it!
+We implemented the core game mechanics with only four lines of code:</p>
+<div class="source-container"><pre class="source j"><code><span class="line">gravity =. {{ ((y=0)#y),(y~:0)#y }}&quot;1</span>
+<span class="line">runs    =. {{ |. 0 ] F:: {{ (x&gt;0) * x&gt;.y }} 0 ] F:. ([*+) y }}&quot;1</span>
+<span class="line">explode =. {{ y * 2 &gt;: +/ ((runs &amp;. |:) &gt;. runs)&quot;2 y =&quot;_ 0 (#~ &gt;&amp;0) ~., y }}</span>
+<span class="line">update  =. (explode @: gravity) ^:_</span>
+</code></pre></div>
+</section>
+<section><h2 id="exercises"><a href="#exercises">Exercises</a></h2>
+<p>If you enjoyed the puzzle and want to spend more time with it,
+here are a few suggestions on how to keep the fun going:</p>
+<ul class="arrows"><li>Add support for non-rectangular boards.
+<details><summary>Hint</summary>
+  Add a new tile type that doesn’t explode or move (I’d use <code>_1</code> to indicate this tile on the board).
+  When applying gravity to a column, <a href="https://code.jsoftware.com/wiki/Help/Primer/090_Cut_;.">cut</a> it into subarrays using the new tile type as a fret.
+  Apply the gravity rules to each subarray, then join them.
+</details>
+</li><li>Add horizontal gravity.
+If an explosion creates empty columns, let the non-empty columns gather.
+<details><summary>Hint</summary>
+  Replace empty columns with a new tile type (e.g., <code>_2</code>).
+  Apply the gravity to the transposed board using this new tile type as the space indicator.
+  The exact partitioning rules depend on the variation of gravity you want to implement.
+</details>
+</li></ul>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/07-square-joy-pre-order.html">Square joy: pre-order</a></li><li><a href="/posts/04-square-joy-trapped-rain-water.html">Square joy: trapped rainwater</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/35-aoc-2024.html"> ←Advent of Code 2024</a></div><div id="older"><a href="/posts/33-transposing-tensor-files.html">Transposing tensor files→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

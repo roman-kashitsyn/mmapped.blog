@@ -58,7 +58,7 @@ let tests : Test_framework.t list =
         (Render.render_block Render.empty_ctx (Ordered_list [[Plain [Str "a"]]]))
 
     ; t "image no class"
-        "<p><img class=\"\" src=\"p.png\"></p>\n"
+        "<p><img src=\"p.png\"></p>\n"
         (Render.render_block Render.empty_ctx (Image ([], "p.png")))
 
     ; t "image with class"
@@ -66,6 +66,6 @@ let tests : Test_framework.t list =
         (Render.render_block Render.empty_ctx (Image (["wide"], "p.png")))
 
     ; t "svg image wrapped in p.svg"
-        "<p class=\"svg\"><img class=\"\" src=\"diagram.svg\"></p>\n"
+        "<p class=\"svg\"><img src=\"diagram.svg\"></p>\n"
         (Render.render_block Render.empty_ctx (Image ([], "diagram.svg")))
     ]

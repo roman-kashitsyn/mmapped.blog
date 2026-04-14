@@ -60,16 +60,8 @@ let rec copy_directory_recursive src dst =
     else copy_file sp dp
   ) (list_dir src)
 
-let take_extension filename =
-  try
-    let i = String.rindex filename '.' in
-    String.sub filename i (String.length filename - i)
-  with Not_found -> ""
-
 let take_base_name filename =
-  let base = Filename.basename filename in
-  let ext = take_extension base in
-  String.sub base 0 (String.length base - String.length ext)
+  Filename.remove_extension (Filename.basename filename)
 
 (* --- Article loading --- *)
 
@@ -93,7 +85,7 @@ let load_articles (input_dir : string) : (article list, string) result =
   else begin
     let files = list_dir posts_dir in
     let tex_files =
-      List.filter (fun f -> take_extension f = ".tex") files
+      List.filter (fun f -> Filename.extension f = ".tex") files
     in
     (* Sort descending by filename to get newest-first (assuming the
        usual YYYY-MM-DD-slug.tex convention). *)
@@ -149,11 +141,7 @@ let strip_leading_slash s =
 
 (* Replace the ".html" suffix with ".tex". *)
 let html_to_tex path =
-  let ext = ".html" in
-  let n = String.length path and m = String.length ext in
-  if n >= m && String.sub path (n - m) m = ext
-  then String.sub path 0 (n - m) ^ ".tex"
-  else path ^ ".tex"
+  Filename.remove_extension path ^ ".tex"
 
 (* Render one article as its own post page, with neighbour links. *)
 let render_one_post ~root_url ~all_articles ~prev_post ~next_post article =
@@ -198,19 +186,96 @@ let copy_recursively src dst =
     copy_file src dst
   end
 
-let render_site (config : site_config) : unit =
-  let input_dir = config.site_input in
-  let output_dir = config.site_output in
-  let root_url = config.site_root in
-
-  mkdir_p output_dir;
-
+let generated_output_paths (input_dir : string) : (string list, string) result =
   match load_articles input_dir with
-  | Error err -> eprintln ("Error: " ^ err)
+  | Error _ as e -> e
+  | Ok articles ->
+    let paths =
+      List.concat
+        (List.map (fun { le_path; le_type } ->
+           match le_type with
+           | Static_files -> []
+           | TeX_articles ->
+             List.map (fun article -> strip_leading_slash article.art_url) articles
+           | Index_page
+           | Standalone_page
+           | Post_list
+           | Atom_xml_feed ->
+             [strip_leading_slash le_path]
+         ) site_layout)
+    in
+    Ok paths
+
+let rendered_outputs (config : site_config) : ((string * string) list, string) result =
+  let input_dir = config.site_input in
+  let root_url = config.site_root in
+  match load_articles input_dir with
+  | Error _ as e -> e
   | Ok articles ->
     let arr = Array.of_list articles in
     let n = Array.length arr in
+    let outputs = ref [] in
+    let emit path content =
+      outputs := (strip_leading_slash path, content) :: !outputs
+    in
+    let rec collect = function
+      | [] -> Ok (List.rev !outputs)
+      | { le_path; le_type } :: rest ->
+        (match le_type with
+         | Static_files -> Ok ()
+         | Index_page ->
+           (match articles with
+            | [] -> Ok ()
+            | article :: rest_articles ->
+              let next_post = match rest_articles with x :: _ -> Some x | [] -> None in
+              let page_html =
+                render_one_post ~root_url ~all_articles:articles
+                  ~prev_post:None ~next_post article
+              in
+              emit le_path page_html;
+              Ok ())
+         | TeX_articles ->
+           Array.iteri (fun i article ->
+             let prev_post = if i > 0 then Some arr.(i - 1) else None in
+             let next_post = if i < n - 1 then Some arr.(i + 1) else None in
+             let page_html =
+               render_one_post ~root_url ~all_articles:articles
+                 ~prev_post ~next_post article
+             in
+             emit article.art_url page_html
+           ) arr;
+           Ok ()
+         | Standalone_page ->
+           (match render_standalone_from ~input_dir le_path with
+            | Ok html ->
+              emit le_path html;
+              Ok ()
+            | Error _ as e -> e)
+         | Post_list ->
+           let html =
+             Html.render (Layout.render_post_list_page "All Posts" articles)
+           in
+           emit le_path html;
+           Ok ()
+         | Atom_xml_feed ->
+           let feed_xml = Feed.render_atom_feed root_url articles in
+           emit le_path feed_xml;
+           Ok ())
+        |> function
+        | Error _ as e -> e
+        | Ok () -> collect rest
+    in
+    collect site_layout
 
+let render_site (config : site_config) : unit =
+  let input_dir = config.site_input in
+  let output_dir = config.site_output in
+
+  mkdir_p output_dir;
+
+  match rendered_outputs config with
+  | Error err -> eprintln ("Error: " ^ err)
+  | Ok outputs ->
     List.iter (fun { le_path; le_type } ->
       let src = input_dir // strip_leading_slash le_path in
       let dst = output_dir // strip_leading_slash le_path in
@@ -227,44 +292,17 @@ let render_site (config : site_config) : unit =
       match le_type with
       | Static_files ->
         if Sys.file_exists src then copy_recursively src dst
-      | Index_page ->
-        eprintln ("Rendering " ^ le_path);
-        (match articles with
-         | [] -> ()
-         | article :: rest ->
-           let next_post = match rest with x :: _ -> Some x | [] -> None in
-           let page_html =
-             render_one_post ~root_url ~all_articles:articles
-               ~prev_post:None ~next_post article
-           in
-           write_file_contents dst page_html)
-      | TeX_articles ->
-        Array.iteri (fun i article ->
-          eprintln ("Rendering " ^ article.art_url);
-          let prev_post = if i > 0 then Some arr.(i - 1) else None in
-          let next_post = if i < n - 1 then Some arr.(i + 1) else None in
-          let page_html =
-            render_one_post ~root_url ~all_articles:articles
-              ~prev_post ~next_post article
-          in
-          let post_dst = output_dir // strip_leading_slash article.art_url in
-          write_file_contents post_dst page_html
-        ) arr
-      | Standalone_page ->
-        eprintln ("Rendering " ^ le_path);
-        (match render_standalone_from ~input_dir le_path with
-         | Ok html -> write_file_contents dst html
-         | Error err -> eprintln ("Error: " ^ err))
-      | Post_list ->
-        eprintln ("Rendering " ^ le_path);
-        let html =
-          Html.render (Layout.render_post_list_page "All Posts" articles)
-        in
-        write_file_contents dst html
-      | Atom_xml_feed ->
-        eprintln ("Rendering " ^ le_path);
-        let feed_xml = Feed.render_atom_feed root_url articles in
-        write_file_contents dst feed_xml
+      | Index_page
+      | TeX_articles
+      | Standalone_page
+      | Post_list
+      | Atom_xml_feed -> ()
     ) site_layout;
+    List.iter (fun (rel_path, content) ->
+      eprintln ("Rendering /" ^ rel_path);
+      let dst = output_dir // rel_path in
+      mkdir_p (Filename.dirname dst);
+      write_file_contents dst content
+    ) outputs;
 
     eprintln "Done."

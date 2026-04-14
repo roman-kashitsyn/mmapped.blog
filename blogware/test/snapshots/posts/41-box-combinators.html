@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="programming"><meta name="description" content="The most visual way to print a table."><title>Box combinators</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/41-box-combinators.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/41-box-combinators.html">Box combinators</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2025-06-01</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2025-06-01</span></span><span class="post-icons"><a class="icon-link" href="https://lobste.rs/s/vw3pwh/box_combinators" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#text-boxes">Text boxes</a></li><li class="toc toc-level-1"><a href="#examples">Examples</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#sierpinski-triangle">Sierpinski triangle</a></li><li class="toc toc-level-2"><a href="#spiral">Spiral</a></li><li class="toc toc-level-2"><a href="#table">Data table</a></li></ul></li><li class="toc toc-level-1"><a href="#closing-words">Closing words</a></li><li class="toc toc-level-1"><a href="#appendix-box-module">Appendix: the Box module</a></li></ul><hr>
+
+<section><div class="epigraph"><blockquote><p>
+  A combinator is a function which builds program fragments from program fragments.
+</p><footer>John Hughes, <q><a href="https://www.sciencedirect.com/science/article/pii/S0167642399000234">Generalising monads to arrows</a></q></footer></blockquote></div>
+<p>In functional programming,
+<em>combinator libraries</em> refer to a design style that emphasizes bottom-up program construction.
+Such libraries define a few core data types
+and provide <em>constructors</em>—functions that create initial objects—and <em>combinators</em>—functions that build larger objects from smaller pieces.</p>
+<p>Combinators enable the programmer to use intuitive visual and spatial reasoning
+that’s vastly more powerful than linear language processing.
+As a result, solving problems with combinators feels like playing with <span class="smallcaps">lego</span> pieces.</p>
+<p>This article describes a combinator library that deals with two-dimensional blocks of <span class="smallcaps">ascii</span> characters.
+I’ll use <a href="https://ocaml.org/">OCaml</a> to demonstrate the idea<label class="margin-toggle sidenote-number" for="sn-functional-language"></label><input type="checkbox" id="sn-functional-language" class="margin-toggle"><span class="sidenote">Functional languages are a perfect medium for combinator libraries.</span>,
+but you won’t have trouble translating it to any modern language.
+Box combinators are my go-to tool when I need to visualize data programmatically for debugging or exploration.</p>
+</section>
+<section><h2 id="text-boxes"><a href="#text-boxes">Text boxes</a></h2>
+<p>I stumbled on the idea of box combinators around 2012 while reading chapter 10 of <q><a href="https://www.goodreads.com/book/show/5680904-programming-in-scala">Programming in Scala</a></q>, 2nd edition.
+The chapter demonstrates how to use Scala’s object-oriented features to build a module for rendering rectangular text boxes (the authors called them <em>elements</em>).
+This section describes the underlying idea without the object-oriented fluff.</p>
+<p>The primary type in our library is the <em>box</em>: a two-dimensional array of <span class="smallcaps">ascii</span> characters<label class="margin-toggle sidenote-number" for="sn-ascii"></label><input type="checkbox" id="sn-ascii" class="margin-toggle"><span class="sidenote">
+  Single-byte characters aren’t a fundamental restriction;
+  we could also arrange Unicode glyphs in a grid.
+</span>.
+A box has a <a href="#ref-height"><code>height</code></a> (the number of rows) and a <a href="#ref-width"><code>width</code></a> (the number of columns).
+There are two primary ways to construct a box:
+<a href="#ref-of-string"><code>of_string</code></a> wraps a string into a unit-height grid<label class="margin-toggle sidenote-number" for="sn-multiline"></label><input type="checkbox" id="sn-multiline" class="margin-toggle"><span class="sidenote">
+  Handling multiline strings is an exercise for the reader.
+</span> and <a href="#ref-fill"><code>fill</code></a> fills a box of specified dimensions with a character.
+The <a href="#ref-space"><code>space</code></a> and <a href="#ref-of-char"><code>of_char</code></a> constructors are special cases of <code>fill</code>.
+An <a href="#ref-empty"><code>empty</code></a> box has zero dimensions and acts as a neutral element; combining it with other boxes has no effect.</p>
+<figure><label class="margin-toggle" for="mn-box-constructors">⊕</label><input type="checkbox" id="mn-box-constructors" class="margin-toggle"><span class="marginnote">
+  Primitive box constructors.
+</span><div class="source-container"><pre class="source text center"><code><span class="line">                            +-------------+</span>
+<span class="line"><a href="#ref-of-string">of_string</a> &quot;Hello, World!&quot; = |Hello, World!|</span>
+<span class="line">                            +-------------+</span>
+<span class="line"></span>
+<span class="line">               +----+</span>
+<span class="line">               |aaaa|</span>
+<span class="line"><a href="#ref-fill">fill</a> 'a' 3 4 = |aaaa|</span>
+<span class="line">               |aaaa|</span>
+<span class="line">               +----+</span>
+<span class="line"></span>
+<span class="line">            +--+</span>
+<span class="line">            |  |</span>
+<span class="line"><a href="#ref-space">space</a> 3 2 = |  |</span>
+<span class="line">            |  |</span>
+<span class="line">            +--+</span>
+<span class="line"></span>
+<span class="line">              +-+</span>
+<span class="line"><a href="#ref-of-char">of_char</a> 'a' = |a|</span>
+<span class="line">              +-+</span>
+<span class="line"></span>
+<span class="line"><a href="#ref-empty">empty</a> = ++</span>
+<span class="line">        ++</span>
+</code></pre></div>
+</figure>
+<p>Things get interesting when we start combining the primitives.
+We can compose two boxes in at least two ways:
+by stacking them horizontally (placing the first box <a href="#ref-beside"><code>beside</code></a> the second)
+or vertically (placing the first box <a href="#ref-above"><code>above</code></a> the second).</p>
+<figure><label class="margin-toggle" for="mn-box-combinators">⊕</label><input type="checkbox" id="mn-box-combinators" class="margin-toggle"><span class="marginnote">
+  Box combinators <a href="#ref-beside"><code>beside</code></a> and <a href="#ref-above"><code>above</code></a> stack boxes horizontally and vertically.
+</span><div class="source-container"><pre class="source text center"><code><span class="line">+--+        +--+   +----+</span>
+<span class="line">|aa|        |bb|   |aabb|</span>
+<span class="line">|aa| <a href="#ref-beside">beside</a> |bb| = |aabb|</span>
+<span class="line">|aa|        |bb|   |aabb|</span>
+<span class="line">+--+        +--+   +----+</span>
+<span class="line"></span>
+<span class="line">                    +--+</span>
+<span class="line">+--+         +--+   |aa|</span>
+<span class="line">|aa|         |bb|   |aa|</span>
+<span class="line">|aa|  <a href="#ref-above">above</a>  |bb| = |aa|</span>
+<span class="line">|aa|         |bb|   |bb|</span>
+<span class="line">+--+         +--+   |bb|</span>
+<span class="line">                    |bb|</span>
+<span class="line">                    +--+</span>
+</code></pre></div>
+</figure>
+<p>For the composite box to have well-defined height and width, the arguments must have compatible dimensions:
+vertically stacked boxes must have the same width, and horizontally stacked boxes must have the same height.</p>
+<p>We solve this issue by padding the smaller box with extra space:
+we <a href="#ref-widen"><code>widen</code></a> it for vertical composition
+and <a href="#ref-heighten"><code>heighten</code></a> it for horizontal composition.
+We can add the padding before, after, or around the smaller box.
+Since none of the options is inherently superior, we provide all three, using central alignment as the default.</p>
+<figure><div class="source-container"><pre class="source text center"><code><span class="line">        +---+   +-------+</span>
+<span class="line"><a href="#ref-widen">widen</a> 7 |aaa| = |  aaa  |</span>
+<span class="line">        +---+   +-------+</span>
+<span class="line"></span>
+<span class="line">                 +-+</span>
+<span class="line">           +-+   | |</span>
+<span class="line"><a href="#ref-heighten">heighten</a> 3 |b| = |b|</span>
+<span class="line">           +-+   | |</span>
+<span class="line">                 +-+</span>
+<span class="line"></span>
+<span class="line">+---+              +----+</span>
+<span class="line">|aaa|        +-+   |aaa |</span>
+<span class="line">|aaa| <a href="#ref-beside">beside</a> |b| = |aaab|</span>
+<span class="line">|aaa|        +-+   |aaa |</span>
+<span class="line">+---+              +----+</span>
+<span class="line"></span>
+<span class="line">+---+         +-+   +---+</span>
+<span class="line">|aaa|  <a href="#ref-above">above</a>  |b| = |aaa|</span>
+<span class="line">+---+         +-+   | b |</span>
+<span class="line">                    +---+</span>
+</code></pre></div>
+</figure>
+<p>The <a href="#ref-hconcat"><code>hconcat</code></a> (<em>concatenate horizontally</em>) and <a href="#ref-vconcat"><code>vconcat</code></a> (<em>concatenate vertically</em>)
+stack an array of boxes (<a href="#ref-beside"><code>beside</code></a> and <a href="#ref-above"><code>above</code></a> compose exactly two boxes).
+The <a href="#ref-grid"><code>grid</code></a> function takes a <span class="smallcaps">2-d</span> array of boxes,
+combines each row horizontally,
+and then combines the rows vertically.</p>
+<figure><label class="margin-toggle" for="mn-box-combinators">⊕</label><input type="checkbox" id="mn-box-combinators" class="margin-toggle"><span class="marginnote">
+  Box combinators operating on arrays of boxes.
+</span><div class="source-container"><pre class="source text center"><code><span class="line">           +-+  +-+  +-+      +---+</span>
+<span class="line"><a href="#ref-hconcat">hconcat</a> [| |a|; |b|; |c| |] = |abc|</span>
+<span class="line">           +-+  +-+  +-+      +---+</span>
+<span class="line"></span>
+<span class="line">                              +-+</span>
+<span class="line">           +-+  +-+  +-+      |a|</span>
+<span class="line"><a href="#ref-vconcat">vconcat</a> [| |a|; |b|; |c| |] = |b|</span>
+<span class="line">           +-+  +-+  +-+      |c|</span>
+<span class="line">                              +-+</span>
+<span class="line"></span>
+<span class="line">           +-+  +-+        +-+  +-+         +--+</span>
+<span class="line"><a href="#ref-grid">grid</a> [| [| |a|; |b| |]; [| |c|; |d| |] |] = |ab|</span>
+<span class="line">           +-+  +-+        +-+  +-+         |cd|</span>
+<span class="line">                                            +--+</span>
+</code></pre></div>
+</figure>
+</section>
+<section><h2 id="examples"><a href="#examples">Examples</a></h2>
+<h3 id="sierpinski-triangle"><a href="#sierpinski-triangle">Sierpinski triangle</a></h3>
+<p>Box combinators are a powerful tool for playing with fractals.
+Rendering a <a href="https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle">Sierpinski triangle</a> requires only a few lines of code.</p>
+<figure><label class="margin-toggle" for="mn-sierpinski-code">⊕</label><input type="checkbox" id="mn-sierpinski-code" class="margin-toggle"><span class="marginnote">
+A program drawing a Sierpinski triangle of order <code>n</code>.
+</span><div class="source-container"><pre class="source ocaml"><code><span class="line"><b>let rec</b> sierpinski n =</span>
+<span class="line">    if n == 0 then Box.of_char '*'</span>
+<span class="line">    else let s = sierpinski (n - 1) in</span>
+<span class="line">         Box.above s (Box.hconcat [| s; Box.of_char ' '; s |])</span>
+</code></pre></div>
+</figure>
+<figure><label class="margin-toggle" for="mn-sierpinski-rendered">⊕</label><input type="checkbox" id="mn-sierpinski-rendered" class="margin-toggle"><span class="marginnote">
+A Sierpinski triangle rendered using box combinators.
+</span><div class="source-container"><pre class="source text"><code><span class="line">$ sierpinski 5 |&gt; Box.print_box</span>
+<span class="line"></span>
+<span class="line">                               *</span>
+<span class="line">                              * *</span>
+<span class="line">                             *   *</span>
+<span class="line">                            * * * *</span>
+<span class="line">                           *       *</span>
+<span class="line">                          * *     * *</span>
+<span class="line">                         *   *   *   *</span>
+<span class="line">                        * * * * * * * *</span>
+<span class="line">                       *               *</span>
+<span class="line">                      * *             * *</span>
+<span class="line">                     *   *           *   *</span>
+<span class="line">                    * * * *         * * * *</span>
+<span class="line">                   *       *       *       *</span>
+<span class="line">                  * *     * *     * *     * *</span>
+<span class="line">                 *   *   *   *   *   *   *   *</span>
+<span class="line">                * * * * * * * * * * * * * * * *</span>
+<span class="line">               *                               *</span>
+<span class="line">              * *                             * *</span>
+<span class="line">             *   *                           *   *</span>
+<span class="line">            * * * *                         * * * *</span>
+<span class="line">           *       *                       *       *</span>
+<span class="line">          * *     * *                     * *     * *</span>
+<span class="line">         *   *   *   *                   *   *   *   *</span>
+<span class="line">        * * * * * * * *                 * * * * * * * *</span>
+<span class="line">       *               *               *               *</span>
+<span class="line">      * *             * *             * *             * *</span>
+<span class="line">     *   *           *   *           *   *           *   *</span>
+<span class="line">    * * * *         * * * *         * * * *         * * * *</span>
+<span class="line">   *       *       *       *       *       *       *       *</span>
+<span class="line">  * *     * *     * *     * *     * *     * *     * *     * *</span>
+<span class="line"> *   *   *   *   *   *   *   *   *   *   *   *   *   *   *   *</span>
+<span class="line">* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *</span>
+</code></pre></div>
+</figure>
+<h3 id="spiral"><a href="#spiral">Spiral</a></h3>
+<p>The following snippet is a modified version of the spiral renderer from section 10.15 of <q><a href="https://www.goodreads.com/book/show/5680904-programming-in-scala">Programming in Scala</a>.</q></p>
+<figure><label class="margin-toggle" for="mn-spiral-code">⊕</label><input type="checkbox" id="mn-spiral-code" class="margin-toggle"><span class="marginnote">
+  A program drawing a spiral with <code>n</code> turns.
+</span><div class="source-container"><pre class="source ocaml"><code><span class="line"><b>let rec</b> spiral n =</span>
+<span class="line">    let open Box in</span>
+<span class="line">    if n &lt;= 0</span>
+<span class="line">    then of_char '+'</span>
+<span class="line">    else let s = spiral (n - 1) in</span>
+<span class="line">         let h, w = dimensions s in</span>
+<span class="line">         let vbar = fill '|' h 1 in</span>
+<span class="line">         grid [| [| of_string &quot;| +&quot;; fill '-' 1 w; of_char '+' |]</span>
+<span class="line">               ; [| vbar; of_char ' '; s; of_char ' '; vbar |]</span>
+<span class="line">               ; [| of_char '+'; fill '-' 1 (w+2); of_char '+' |] |]</span>
+</code></pre></div>
+</figure>
+<div class="source-container"><pre class="source text"><code><span class="line">$ spiral 4 |&gt; Box.print_box</span>
+<span class="line"></span>
+<span class="line">| +-------------+</span>
+<span class="line">| | +---------+ |</span>
+<span class="line">| | | +-----+ | |</span>
+<span class="line">| | | | +-+ | | |</span>
+<span class="line">| | | | + | | | |</span>
+<span class="line">| | | +---+ | | |</span>
+<span class="line">| | +-------+ | |</span>
+<span class="line">| +-----------+ |</span>
+<span class="line">+---------------+</span>
+</code></pre></div>
+<h3 id="table"><a href="#table">Data table</a></h3>
+<p>Playing with fractals is fun, but it won’t pay our bills.
+Business loves tables, and box combinators are a powerful tool for rendering them.
+Let’s display an array of book metadata in a human-friendly way.</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><b>type</b> book = { title : string;</span>
+<span class="line">              author : string;</span>
+<span class="line">              rating : int;</span>
+<span class="line">              price : float }</span>
+<span class="line"></span>
+<span class="line"><b>let</b> books = [| { title = &quot;Waiting for Good Dough&quot;;</span>
+<span class="line">                 author = &quot;Samuel Biscuit&quot;;</span>
+<span class="line">                 rating = 4;</span>
+<span class="line">                 price = 23.86 };</span>
+<span class="line">               { title = &quot;The Bun Also Rises&quot;;</span>
+<span class="line">                 author = &quot;Ernest Hemingwaffle&quot;;</span>
+<span class="line">                 rating = 5;</span>
+<span class="line">                 price = 9.86 };</span>
+<span class="line">               { title = &quot;Yeast of Eden&quot;;</span>
+<span class="line">                 author = &quot;John Sconebeck&quot;;</span>
+<span class="line">                 rating = 2;</span>
+<span class="line">                 price = 6.00 };</span>
+<span class="line">               { title = &quot;One Hundred Years of Solid Food&quot;;</span>
+<span class="line">                 author = &quot;G. Gordita Marquez&quot;;</span>
+<span class="line">                 rating = 4;</span>
+<span class="line">                 price = 17.00 }</span>
+<span class="line">             |]</span>
+</code></pre></div>
+<p>The <a href="#ref-make-table"><code>make_table</code></a> function transforms records into a table in three steps:
+</p>
+<ol class="circled"><li data-num-glyph="①">Convert each field into a text box and stack related fields vertically, aligning them according to their data type (lines 6–9).
+</li><li data-num-glyph="②">Place a column header above each of the resulting columns (lines 11–15).
+</li><li data-num-glyph="③">Put vertical bars around the titled column boxes (line 17).
+</li></ol>
+<figure><label class="margin-toggle" for="mn-make-table">⊕</label><input type="checkbox" id="mn-make-table" class="margin-toggle"><span class="marginnote">
+  The <code>make_table</code> function renders a book metadata array as an <span class="smallcaps">ascii</span> table.
+</span><div class="source-container"><pre class="source ocaml linenumbers"><code><span class="line"><b>let</b> make_table t =<span id="ref-make-table"></span></span>
+<span class="line">    let open Box in</span>
+<span class="line">    let make_column f align =</span>
+<span class="line">        Array.map (fun b -&gt; f b |&gt; of_string) t |&gt; vconcat ~align in</span>
+<span class="line">    let cols = [|</span>
+<span class="line">        (&quot;Title&quot;,  make_column (fun b -&gt; b.title) `Left);</span>
+<span class="line">        (&quot;Author&quot;, make_column (fun b -&gt; b.author) `Left);</span>
+<span class="line">        (&quot;Rating&quot;, make_column (fun b -&gt; String.make (b.rating) '*') `Left);</span>
+<span class="line">        (&quot;Price&quot;,  make_column (fun b -&gt; Printf.sprintf &quot;%.2f&quot; b.price) `Right);</span>
+<span class="line">    |] in</span>
+<span class="line">    let titled = Array.map (fun (h, column) -&gt;</span>
+<span class="line">        let header = of_string h in</span>
+<span class="line">        let hbar = fill '-' 1 (max (width header) (width column) + 2)</span>
+<span class="line">        in vconcat [| header; hbar; column |]</span>
+<span class="line">    ) cols in</span>
+<span class="line">    let vbar = fill '|' (height titled.(0)) 1 in</span>
+<span class="line">    Array.fold_left (fun acc col -&gt; hconcat [| acc; col; vbar |]) vbar titled</span>
+</code></pre></div>
+</figure>
+<p>Rendering the book metadata results in a neat <span class="smallcaps">ascii</span> table.</p>
+<figure><label class="margin-toggle" for="mn-rendered-table">⊕</label><input type="checkbox" id="mn-rendered-table" class="margin-toggle"><span class="marginnote">
+  Rendered book metadata array.
+</span><div class="source-container"><pre class="source text"><code><span class="line">$ make_table books |&gt; Box.print_box</span>
+<span class="line"></span>
+<span class="line">|              Title              |       Author        | Rating | Price |</span>
+<span class="line">|---------------------------------|---------------------|--------|-------|</span>
+<span class="line">| Waiting for Good Dough          | Samuel Biscuit      | ****   | 23.86 |</span>
+<span class="line">| The Bun Also Rises              | Ernest Hemingwaffle | *****  |  9.86 |</span>
+<span class="line">| Yeast of Eden                   | John Sconebeck      | **     |  6.00 |</span>
+<span class="line">| One Hundred Years of Solid Food | G. Gordita Marquez  | ****   | 17.00 |</span>
+</code></pre></div>
+</figure>
+</section>
+<section><h2 id="closing-words"><a href="#closing-words">Closing words</a></h2>
+<p>If you found box combinators interesting and want to play with them:
+</p>
+<ul class="arrows"><li>Implement them in your preferred language.
+</li><li>Use them to visualize complex data.
+If you have no good ideas, <a href="https://wiki.dlang.org/Component_programming_with_ranges#Case_Study:_Formatting_a_Calendar">formatting a calendar</a>
+will stretch your box-welding skills.
+</li><li>
+Study their graphical counterparts that appear in both
+<q><a href="https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-15.html#%25_sec_2.2.4">Structure and Interpretation of Computer Programs</a></q>
+(section 2.2.4)
+and <q><a href="https://www.goodreads.com/book/show/53001511-algebra-driven-design">Algebra-Driven Design</a></q> by Sandy Maguire
+(chapter 2).
+</li></ul>
+</section>
+<section><h2 id="appendix-box-module"><a href="#appendix-box-module">Appendix: the Box module</a></h2>
+<p>This text box implementation is not the most efficient since combining boxes in a loop has quadratic complexity.
+A more sophisticated design would combine boxes lazily, delaying concatenations until the last moment or avoiding them entirely.
+However, the simple approach is good enough for data that fits on a screen.</p>
+<figure><label class="margin-toggle" for="mn-box-module">⊕</label><input type="checkbox" id="mn-box-module" class="margin-toggle"><span class="marginnote">
+A simple implementation of the box combinator library.
+This code belongs in the <code>box.ml</code> file.
+</span><div class="source-container"><pre class="source ocaml"><code><span class="line">type t = string array</span>
+<span class="line"></span>
+<span class="line">let height b = Array.length b<span id="ref-height"></span></span>
+<span class="line"></span>
+<span class="line">let width b = if Array.length b == 0 then 0 else String.length b.(0)<span id="ref-width"></span></span>
+<span class="line"></span>
+<span class="line"><em>(** Returns the box height and width. *)</em></span>
+<span class="line">let dimensions b = height b, width b</span>
+<span class="line"></span>
+<span class="line"><em>(** Prints box b to the standard output. *)</em></span>
+<span class="line">let print_box b = Array.iter print_endline b<span id="ref-print-box"></span></span>
+<span class="line"></span>
+<span class="line"><em>(** Creates a box large enough to hold string s. *)</em></span>
+<span class="line">let of_string s = [| s |]<span id="ref-of-string"></span></span>
+<span class="line"></span>
+<span class="line"><em>(** Creates an h×w box filled with character c. *)</em></span>
+<span class="line">let fill c h w = Array.make h (String.make w c)<span id="ref-fill"></span></span>
+<span class="line"></span>
+<span class="line"><em>(** Creates a 1×1 box containing character c. *)</em></span>
+<span class="line">let of_char c = fill c 1 1<span id="ref-of-char"></span></span>
+<span class="line"></span>
+<span class="line"><em>(** Creates an h×w box filled with spaces. *)</em></span>
+<span class="line">let space h w = fill ' ' h w<span id="ref-space"></span></span>
+<span class="line"></span>
+<span class="line"><em>(** An empty box. *)</em></span>
+<span class="line">let empty = space 0 0<span id="ref-empty"></span></span>
+<span class="line"></span>
+<span class="line"><em>(** The vertical alignment type. *)</em></span>
+<span class="line">type vertical   = [ `Top  | `Center | `Bottom ]</span>
+<span class="line"></span>
+<span class="line"><em>(** The horizontal alignment type. *)</em></span>
+<span class="line">type horizontal = [ `Left | `Center | `Right  ]</span>
+<span class="line"></span>
+<span class="line"><em>(** Stack box l to the left of box r. *)</em></span>
+<span class="line"><b>let rec</b> beside ?(align:vertical = `Center) l r =<span id="ref-beside"></span></span>
+<span class="line">    if width l == 0 then r else if width r == 0 then l</span>
+<span class="line">    else let hl = heighten ~align (height r) l in</span>
+<span class="line">         let hr = heighten ~align (height l) r in</span>
+<span class="line">         Array.map2 String.cat hl hr</span>
+<span class="line"></span>
+<span class="line"><em>(** Stack box t above of box b. *)</em></span>
+<span class="line"><b>and</b> above ?(align:horizontal = `Center) t b =<span id="ref-above"></span></span>
+<span class="line">    if height t == 0 then b else if height b == 0 then t</span>
+<span class="line">    else let wt = widen ~align (width b) t in</span>
+<span class="line">         let wb = widen ~align (width t) b in</span>
+<span class="line">         Array.append wt wb</span>
+<span class="line"></span>
+<span class="line"><em>(** Makes box b at least w units wide. *)</em></span>
+<span class="line"><b>and</b> widen ?(align:horizontal = `Center) w b =<span id="ref-widen"></span></span>
+<span class="line">    if width b &gt;= w then b</span>
+<span class="line">    else let bh, bw = height b, width b in</span>
+<span class="line">         let pw = w - bw in</span>
+<span class="line">         match align with</span>
+<span class="line">         | `Left   -&gt; beside b (space bh pw)</span>
+<span class="line">         | `Right  -&gt; beside (space bh pw) b</span>
+<span class="line">         | `Center -&gt; hconcat</span>
+<span class="line">                      [| space bh (pw/2); b; space bh (pw - pw/2) |]</span>
+<span class="line"></span>
+<span class="line"><em>(** Makes box b at least h units high. *)</em></span>
+<span class="line"><b>and</b> heighten ?(align:vertical = `Center) b h =<span id="ref-heighten"></span></span>
+<span class="line">    if height b &gt;= h then b</span>
+<span class="line">    else let bh, bw = height b, width b in</span>
+<span class="line">         let ph = h - bh in</span>
+<span class="line">         match align with</span>
+<span class="line">         | `Top    -&gt; above b (space ph bw)</span>
+<span class="line">         | `Bottom -&gt; above (space ph bw) b</span>
+<span class="line">         | `Center -&gt; vconcat [| space (ph/2) bw</span>
+<span class="line">                               ; b</span>
+<span class="line">                               ; space (ph - ph/2) bw |]</span>
+<span class="line"></span>
+<span class="line"><em>(** Stacks an array of boxes horizontally. *)</em></span>
+<span class="line"><b>and</b> hconcat ?(align:vertical = `Center) boxes =<span id="ref-hconcat"></span></span>
+<span class="line">    Array.fold_left (beside ~align) empty boxes</span>
+<span class="line"></span>
+<span class="line"><em>(** Stacks an array of boxes vertically. *)</em></span>
+<span class="line"><b>and</b> vconcat ?(align:horizontal = `Center) boxes =<span id="ref-vconcat"></span></span>
+<span class="line">    Array.fold_left (above ~align) empty boxes</span>
+<span class="line"></span>
+<span class="line"><em>(** Arranges a 2-D array of boxes. *)</em></span>
+<span class="line"><b>let</b> grid g = Array.map hconcat g |&gt; vconcat<span id="ref-grid"></span></span>
+<span class="line"></span>
+<span class="line"><em>(** Draws an ASCII art frame around box b. *)</em></span>
+<span class="line"><b>let</b> framed b =</span>
+<span class="line">    let h, w = dimensions b in</span>
+<span class="line">    let vbar = fill '|' h 1 in</span>
+<span class="line">    let hbar = fill '-' 1 w in</span>
+<span class="line">    let corner = of_char '+' in</span>
+<span class="line">    grid [| [| corner; hbar; corner |]</span>
+<span class="line">          ; [| vbar;   b;    vbar   |]</span>
+<span class="line">          ; [| corner; hbar; corner |] |]</span>
+</code></pre></div>
+</figure>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/44-tag-based-logging.html">Tag-based logging</a></li><li><a href="/posts/45-compilation-is-communication.html">Compilation is communication</a></li><li><a href="/posts/37-onnx-intro.html">ONNX introduction</a></li><li><a href="/posts/31-effective-design-docs.html">Effective design docs</a></li><li><a href="/posts/42-parasites-found.html">Parasites found</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/42-parasites-found.html"> ←Parasites found</a></div><div id="older"><a href="/posts/40-three-degress-of-validity.html">Three degrees of validity→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

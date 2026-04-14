@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="glasperlenspiel,programming"><meta name="description" content="A quest for defining what it means to name things well."><title>Good names form Galois connections</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/26-good-names-form-galois-connections.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/26-good-names-form-galois-connections.html">Good names form Galois connections</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2024-04-01</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2024-04-01</span></span><span class="post-icons"><a class="icon-link" href="https://www.reddit.com/r/programming/comments/1btal4m/good_names_form_galois_connections/" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#objects-concepts-expressions">Objects, concepts, and expressions</a></li><li class="toc toc-level-1"><a href="#maps-of-meaning">Maps of meaning</a></li><li class="toc toc-level-1"><a href="#channel">Names as communication channels</a></li><li class="toc toc-level-1"><a href="#names-as-galois-connections">Names as Galois connections</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li><li class="toc toc-level-1"><a href="#related-work">Related work</a></li></ul><hr>
+
+<section><div class="epigraph"><blockquote><p>
+  You can know the name of that bird in all the languages of the world,
+  but when you’re finished,
+  you’ll know absolutely nothing whatever about the bird.
+  You’ll only know about humans in different places,
+  and what they call the bird.
+  So let’s look at the bird and see what it’s doing—that’s what counts.
+</p><footer>Richard Feynman, <q>What Do You Care What Other People Think?</q></footer></blockquote></div>
+<p>I recently read a chapter on naming things in <q><a href="https://www.goodreads.com/book/show/57196550-the-programmer-s-brain">The Programmer’s Brain</a></q> by Felienne Hermans.
+There is a lot of research on the topic of names in programming.
+Researchers found that good names improve code comprehension and that <a href="https://oro.open.ac.uk/17007/1/butler09wcreshort_latest.pdf">poor names correlate with buggy code</a>
+and proposed a few heuristics for choosing good names<label class="margin-toggle sidenote-number" for="mn-naming-heuristics"></label><input type="checkbox" id="mn-naming-heuristics" class="margin-toggle"><span class="sidenote">
+  See, for example, <q><a href="https://arxiv.org/pdf/2103.07487.pdf">How Developers Choose Names</a></q> by Dror G. Feitelson et al.,
+  and <q><a href="https://ieeexplore.ieee.org/abstract/document/5090039">To camelcase or to under_score</a></q> by Dave Binkey et al.
+</span>.</p>
+<p>The book provides a few recommendations on how to create good names<label class="margin-toggle sidenote-number" for="mn-naming-books"></label><input type="checkbox" id="mn-naming-books" class="margin-toggle"><span class="sidenote">
+  There are many books with naming heuristics ranging from classics such as <q><a href="https://www.goodreads.com/book/show/4845.Code_Complete">Code Complete</a></q> by Steve McConnell and <q><a href="https://www.goodreads.com/book/show/3735293-clean-code">Clean Code</a></q> by Robert C. Martin
+  to more recent <q><a href="https://www.goodreads.com/book/show/123009242-naming-things">Naming things.</a></q> by Tom Benner.
+</span>, but it left me unsatisfied.
+I felt that I already knew <em>how</em> to choose good names,
+but I wanted to have a good mathematical model for what good names <em>are</em>.
+This article is the result of my exploration.</p>
+</section>
+<section><h2 id="objects-concepts-expressions"><a href="#objects-concepts-expressions">Objects, concepts, and expressions</a></h2>
+<div class="epigraph"><blockquote><p>
+  I will defend the thesis that thought has a kind of priority over words and that the concept has a kind of priority over its expression.
+</p><footer>Johan Granström, <q>Tretise on Intuitionistic Type Theory</q>, p. 2</footer></blockquote></div>
+<p>In the beginning was the Word.
+No, scratch that.
+There is overwhelming evidence that the world existed for billions of years before our ancestors uttered their first words.
+In the beginning was the Thing.</p>
+<p>But then came the Word, right? Nah.
+Living creatures created mental models of their environments long before the first language appeared.
+Even soulless and speechless neural networks seem to recognize concepts (such as <a href="https://github.com/rcgc/chihuahua-muffin"><q>Chihuahua</q> or <q>muffin</q></a>) in raw sensory input.
+The Concept came after the Thing.</p>
+<p>Unfortunately, concepts are internal to the mind holding them.
+Until we figure out how to make <a href="https://en.wikipedia.org/wiki/Telepathy">telepathy</a> work,
+we must use some encoding to communicate concepts between minds.
+That’s where the Word comes into the picture.
+Words are arbitrary symbols representing concepts.</p>
+<p>I’ll borrow terminology from <a href="https://link.springer.com/book/10.1007/978-94-007-1736-7">Tretise on Intuitionistic Type Theory</a> and use
+<em>object</em> to refer to things existing in the world
+(we won’t need them much, though),
+<em>concept</em> to refer to mental representations of these objects,
+and <em>expression</em> to refer to words or sentences used to communicate concepts.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-object-concept-expression">⊕</label><input type="checkbox" id="mn-object-concept-expression" class="margin-toggle"><span class="marginnote">
+    The relationship between an object (fluffy the cat),
+    a concept (the idea of a cat in mind),
+    and its expression (the word <q>cat</q>).
+  </span><p class="svg"><img src="/images/26-object-concept-expression.svg"></p>
+</figure>
+</section>
+<section><h2 id="maps-of-meaning"><a href="#maps-of-meaning">Maps of meaning</a></h2>
+<p>The distinction between objects,
+concepts, and expressions is almost as old as Western philosophy.
+Unfortunately, it misses one crucial point: concepts and their expressions don’t map one-to-one.
+Most concepts have multiple expressions;
+most words map to several concepts (any dictionary is living proof).
+For example, consuming food can be labeled as <q>eating</q> or <q>dining.</q>
+And the word <q>go</q> can refer to walking or a board game.
+More precisely, expressions and concepts form a <a href="https://en.wikipedia.org/wiki/Binary_relation">binary relation</a>.</p>
+<figure class="grayscale-diagram medium-size"><label class="margin-toggle" for="mn-concepts-words">⊕</label><input type="checkbox" id="mn-concepts-words" class="margin-toggle"><span class="marginnote">
+    The relationship between concepts and words is many-to-many: different words can express the same concept, and unrelated concepts can map to the same word.
+  </span><p class="svg"><img src="/images/26-concepts-words.svg"></p>
+</figure>
+<p>We must add another ingredient to the picture to tackle the problem of names: the <em>context</em>.
+Context refers to all the other things that influence the interpretation of an expression:
+surrounding words in the sentence,
+the task the reader is trying to accomplish,
+and the reader’s culture and background.
+The amount of information in the context is vast as it includes the strengths of all the neuron connections in the reader’s brain.</p>
+<p>The mismatch of the writer’s and the reader’s context,
+generally known as <a href="https://en.wikipedia.org/wiki/Curse_of_knowledge">the curse of knowledge</a>,
+is one of the reasons why writing is so hard.
+The writer must imagine being in the reader’s shoes when structuring the material,
+deciding which metaphors to use, and expressing herself.
+The narrower the reader’s profile, the better job a writer can do.
+That explains why there is no one perfect book for every subject.
+The reader’s identity is no less important than the book’s contents.</p>
+<figure class="grayscale-diagram medium-size"><label class="margin-toggle" for="mn-life-is-sad-without-cat">⊕</label><input type="checkbox" id="mn-life-is-sad-without-cat" class="margin-toggle"><span class="marginnote">
+    Four people with different backgrounds interpreting one phrase in various ways.
+    A cat lover thinks of fluffy the cat,
+    a construction worker thinks of the <a href="https://www.cat.com/en_US/company.html">Caterpillar</a> company,
+    a mathematician thinks of the <a href="https://en.wikipedia.org/wiki/Category_of_small_categories"><span class="math">Cat</span> category</a>,
+    and a programmer thinks of the <a href="https://www.man7.org/linux/man-pages/man1/cat.1.html"><code>cat</code> command-line tool</a>.
+  </span><p class="svg"><img src="/images/26-life-is-sad-without-cat.svg"></p>
+</figure>
+<p>The context turns the many-to-many relation between concepts and words into two maps.
+The first map,
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">encode</mo><mo stretchy="false">:</mo><mo stretchy="false">Concept</mo><mo>→</mo><mo stretchy="false">Expression</mo></math>,
+defines how the author picks words to communicate the concept.
+The second map,
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">decode</mo><mo stretchy="false">:</mo><mo stretchy="false">Expression</mo><mo>→</mo><mo stretchy="false">Concept</mo></math>
+defines how readers interpret these words.</p>
+</section>
+<section><h2 id="channel"><a href="#channel">Names as communication channels</a></h2>
+<p>No matter where you go, you usually find that <a href="https://en.wikipedia.org/wiki/Claude_Shannon">Claude Shannon</a> was there and solved your problem fundamentally and elegantly.
+Your only solace is that sometimes, his solution was not <a href="https://en.wikipedia.org/wiki/Constructive_proof">constructive</a>.</p>
+<p>In information theory,
+a channel is a theoretical construction that allows sending messages through time and space.
+A channel takes messages from a set <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>X</mi></math> as inputs and produces messages from a set <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>Y</mi></math> as outputs.
+Channels are <em>noisy</em>:
+they distort the messages passing them;
+that’s why the channel’s input and output sets might differ.
+We represent the noise mathematically by using <a href="https://en.wikipedia.org/wiki/Conditional_probability">conditional probabilities</a>:
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>p</mi><mo stretchy="false">(</mo><mi>y</mi><mo stretchy="false">|</mo><mi>x</mi><mo stretchy="false">)</mo></math> is the probability of receiving message <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>y</mi></math> if the sender sent message <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>x</mi></math>.</p>
+<p>When you think of a channel,
+you probably imagine a cable transmitting electrical signals or how the space around you buzzes with electromagnetic waves.
+Channels, however, take many forms.
+Any storage device,
+such as a hard drive, a notebook, or the brain’s memory system,
+is a channel transmitting messages through time.</p>
+<p>We can view words as communication channels passing concepts from one mind to another through time.
+As we saw in the <a href="#maps-of-meaning">Maps of meaning</a> section,
+these channels are fundamentally noisy:
+the output concept might differ from the sender’s input depending on the word choice and the receiver’s context.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-channel">⊕</label><input type="checkbox" id="mn-channel" class="margin-toggle"><span class="marginnote">
+    Words are noisy channels transmitting concepts across minds.
+    For example, when readers see the word <q>index</q>,
+    they can think of a pointer into an array instead of the <a href="https://en.wikipedia.org/wiki/Inverted_index">inverted index</a> concept the author sent.
+  </span><p class="svg"><img src="/images/26-index-channel.svg"></p>
+</figure>
+<p>One fundamental characteristic of a channel is how much its output resembles the input.
+<a href="https://en.wikipedia.org/wiki/Mutual_information">Mutual information</a> is the value quantifying this resemblance mathematically.</p>
+<p>This view gives us the criteria for a good name:
+it’s the channel maximizing mutual information.
+In the following formula,
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>C</mi><mi>s</mi></msub></math> is the sender’s concept,
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>C</mi><mi>r</mi></msub></math> is the receiver’s concept,
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>E</mi></math> is the set of all possible concept expressions,
+and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>I</mi><mo stretchy="false">(</mo><msub><mi>C</mi><mi>r</mi></msub><mo stretchy="false">;</mo><msub><mi>C</mi><mi>s</mi></msub><mo stretchy="false">)</mo></math> is the mutual information computed for expression <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>e</mi></math>.</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><mo stretchy="false">best-name</mo><mo>(</mo><msub><mi>C</mi><mi>s</mi></msub><mo>)</mo><mo stretchy="false">=</mo><msub><mo stretchy="false">argmax</mo><mrow><mi>e</mi><mo>∈</mo><mi>E</mi></mrow></msub><mo>{</mo><mi>I</mi><mo>(</mo><msub><mi>C</mi><mi>r</mi></msub><mo stretchy="false">;</mo><msub><mi>C</mi><mi>s</mi></msub><mo>)</mo><mo>}</mo></math></p>
+<p>The channel interpretation of names is quantitative but not particularly satisfying because it involves probabilities that are hard to compute.
+Furthermore, the only way to know you’ve found a good expression for your concept is to compare it with all other expressions.
+Could we find a more elegant way to capture the essence of a good name?</p>
+</section>
+<section><h2 id="names-as-galois-connections"><a href="#names-as-galois-connections">Names as Galois connections</a></h2>
+<div class="epigraph"><blockquote><p>
+  Galois connections do something really cool: they tell you the best possible way to recover data that can’t be recovered.
+  More precisely, they tell you the best approximation to reversing a computation that can’t be reversed.
+</p><footer>John Baez, <a href="https://math.ucr.edu/home/baez/act_course/lecture_5.html">Applied Category Theory Course</a></footer></blockquote></div>
+<p>We already know that <span class="math">encode</span> and <span class="math">decode</span> are not perfect inverses of each other.
+The next best thing we can hope for is that these maps form a relaxed version of inversion: a Galois connection.</p>
+<p><a href="https://en.wikipedia.org/wiki/Galois_connection">Galois connection</a>
+is a mathematical concept capturing a relationship between four objects:
+two partially ordered sets <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>A</mi></math> and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>B</mi></math>
+and two monotonic maps <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>F</mi></math> and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>G</mi></math> between these sets.
+<a href="https://en.wikipedia.org/wiki/Partially_ordered_set#Partial_orders">Partial order</a>
+means that we can compare some elements of each set using the <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo>≤</mo></math> operation that satisfies a few natural laws
+(<a href="https://en.wikipedia.org/wiki/Reflexive_relation">reflexivity</a>,
+<a href="https://en.wikipedia.org/wiki/Antisymmetric_relation">antisymmetry</a>,
+and <a href="https://en.wikipedia.org/wiki/Transitive_relation">transitivity</a>).
+Not all elements must be comparable.
+A function <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>F</mi></math> is monotonic if it preserves relative order:
+if <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>x</mi><mo>≤</mo><mi>y</mi></math>, then <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>F</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>≤</mo><mi>F</mi><mo stretchy="false">(</mo><mi>y</mi><mo stretchy="false">)</mo></math>.</p>
+<p>Functions <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>F</mi><mo stretchy="false">:</mo><mi>A</mi><mo>→</mo><mi>B</mi></math> and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>G</mi><mo stretchy="false">:</mo><mi>B</mi><mo>→</mo><mi>A</mi></math>
+form a Galois connection if they satisfy the following relation:
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>F</mi><mo stretchy="false">(</mo><mi>a</mi><mo stretchy="false">)</mo><mo>≤</mo><mi>b</mi><mo>⇔</mo><mi>a</mi><mo>≤</mo><mi>G</mi><mo stretchy="false">(</mo><mi>b</mi><mo stretchy="false">)</mo></math> for all <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>a</mi><mo>∈</mo><mi>A</mi></math> and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>b</mi><mo>∈</mo><mi>B</mi></math>.</p>
+<figure class="grayscale-diagram medium-size"><label class="margin-toggle" for="mn-galois-connection">⊕</label><input type="checkbox" id="mn-galois-connection" class="margin-toggle"><span class="marginnote">
+    A Galois connection between functions <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>F</mi></math> and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>G</mi></math>.
+  </span><p class="svg"><img src="/images/26-galois-connection.svg"></p>
+</figure>
+<p>This definition is abstract and took me a while to appreciate,
+so let’s apply it to the problem of good names step by step.
+We start with the sets in question and their orderings.</p>
+<p>Our first set is the set of expressions <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>E</mi></math>.
+For expressions <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>e</mi><mn>1</mn></msub><mo stretchy="false">,</mo><msub><mi>e</mi><mn>2</mn></msub><mo>∈</mo><mi>E</mi></math>
+we say that <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>e</mi><mn>1</mn></msub><mo>≤</mo><msub><mi>e</mi><mn>2</mn></msub></math>
+if <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>e</mi><mn>1</mn></msub></math> is at least as expressive as <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>e</mi><mn>2</mn></msub></math> <em>given the reader context</em>.
+If the expressions are equally expressive, we define the shorter element as smaller.
+The reader context is a crucial component of the <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo>≤</mo></math> operator.
+For example, <q>cat</q> is more expressive than <q>felis catus</q> in a regular conversation,
+but it might be the other way around in a scientific paper.
+This paragraph doesn’t do a good job at defining expression ordering,
+but it’s <span class="smallcaps">ok</span>:
+the whole point of the Galois connection is to make expression comparison precise through its connection with better-defined objects.</p>
+<p>Our second set is the set of concepts <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>C</mi></math>.
+If we have concepts <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>c</mi><mn>1</mn></msub><mo stretchy="false">,</mo><msub><mi>c</mi><mn>2</mn></msub><mo>∈</mo><mi>C</mi></math>
+we say that <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>c</mi><mn>1</mn></msub><mo>≤</mo><msub><mi>c</mi><mn>2</mn></msub></math> if <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>c</mi><mn>1</mn></msub></math> is at least as specific as <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>c</mi><mn>2</mn></msub></math>.
+For example, <q>cat</q> ≤ <q>animal</q>:
+since every cat is an animal,
+there are at least as many animals as cats.
+The idea of being more or less <q>specific</q> part might sound handwavy to you,
+but we can make it precise using methods of <a href="https://en.wikipedia.org/wiki/Formal_concept_analysis">formal concept analysis</a>.</p>
+<p>The functions forming the Galois connection are the concept decoding function
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">decode</mo><mo stretchy="false">:</mo><mi>E</mi><mo>→</mo><mi>C</mi></math>
+and the concept encoding function
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">encode</mo><mo stretchy="false">:</mo><mi>C</mi><mo>→</mo><mi>E</mi></math>.
+These functions are monotone because <span class="math">encode</span> maps more specific concepts to more expressive names,
+and <span class="math">decode</span> maps more expressive names to more specific concepts.
+The connection becomes
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">decode</mo><mo stretchy="false">(</mo><mi>e</mi><mo stretchy="false">)</mo><mo>≤</mo><mi>c</mi><mo>⇔</mo><mi>e</mi><mo>≤</mo><mo stretchy="false">encode</mo><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></math>.</p>
+<p>Even the specialized equivalence looks unintuitive,
+so let’s see how it holds with an example.
+Imagine we want to name a variable holding the amount of <span class="smallcaps">usd</span> in a bank account
+(that’s our concept <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>c</mi></math>).
+Would <span class="math">value</span> be an appropriate variable name?</p>
+<p>Let’s see what our connection tells us:
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">decode</mo><mo stretchy="false">(</mo><mo stretchy="false">value</mo><mo stretchy="false">)</mo></math>
+is a vague concept,
+less specific than the bank account balance.
+Hence,
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">decode</mo><mo stretchy="false">(</mo><mo stretchy="false">value</mo><mo stretchy="false">)</mo><mo stretchy="false">&gt;</mo><mi>c</mi></math>
+so <span class="math">value</span> is not a good name.
+I would prefer <span class="math">usd_balance</span>, which decodes to a more specific concept.</p>
+<p>But wait, wouldn’t <span class="math">bank_account_usd_balance</span> be an even better name?
+It depends on the context!
+A shorter name is preferable if the reader knows that we are dealing with bank accounts in a piece of code.
+At least, that’s how I defined the expression ordering; your mileage may vary.</p>
+</section>
+<section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
+<p>In this article, we explored the difference between concepts and their expressions,
+determined the crucial role of the reader’s context in the interpretation,
+and finished with heavy mathematical machinery that pinpoints good names using a variant of <a href="https://en.wikipedia.org/wiki/Occam's_razor">Occam’s razor</a>:
+A good name is as succinct as possible but still specific enough to convey the intended concept.</p>
+<p>How do we apply this knowledge?
+For me, the main lesson is that managing the reader’s context is crucial for effective communication:</p>
+<ul class="arrows"><li>
+  Many resources recommend that the variable name length should be proportional to the size of the scope containing it<label class="margin-toggle sidenote-number" for="mn-variable-length-scope"></label><input type="checkbox" id="mn-variable-length-scope" class="margin-toggle"><span class="sidenote">
+  See, for example, <a href="https://google.github.io/styleguide/go/decisions.html#variable-names">Google’s Go styleguide</a>.
+  Bob Martin mentions this rule of thumb in his book <q>Clean Code</q>.</span>.
+  This recommendation makes a lot of sense if we view it though the prism of context management: if the variable definition is in the view of sight, the reader won’t have any trouble decoding it, no matter how short it is.
+  The same idea applies to names that are part of the programming lore, such as <code>i</code> and <code>j</code> for loop counters.
+</li><li>
+  Create a project glossary and make it obligatory for all contributors to read.
+  Consistently use names from the glossary.
+</li><li>
+  Pause and review your variable identifiers once you finished writing your code.
+  What would be the decoding of each identifier if you saw it for the first time?
+  Would a newhire understand these names?
+</li></ul>
+<p>Happy naming!</p>
+</section>
+<section><h2 id="related-work"><a href="#related-work">Related work</a></h2>
+<p class="hanging-quote"><q><a href="https://teamscale.com/hubfs/26978363/Publications/2005-concise-and-consistent-naming.pdf">Concise and Consistent Naming</a></q> by Florian Deißenböck and Markus Pizka provides a similar, though slightly simpler, formal model of variable names in section 3.2.</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/38-static-types-perfectionism.html">Static types are for perfectionists</a></li><li><a href="/posts/05-debug-like-feynman.html">Debug like Feynman, test like Faraday</a></li><li><a href="/posts/48-the-third-hard-problem.html">The third hard problem</a></li><li><a href="/posts/18-if-composers-were-hackers.html">If composers were hackers</a></li><li><a href="/posts/31-effective-design-docs.html">Effective design docs</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/27-extending-https-outcalls.html"> ←Extending HTTPS outcalls</a></div><div id="older"><a href="/posts/25-domain-types.html">Universal domain types→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="arrays,j,puzzles"><meta name="description" content="Restoring a binary tree from its pre-order traversal."><title>Square joy: pre-order</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/07-square-joy-pre-order.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/07-square-joy-pre-order.html">Square joy: pre-order</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2022-06-05</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2022-06-05</span></span><span class="post-icons"><a class="icon-link" href="https://www.reddit.com/r/apljk/comments/v5cr09/blog_post_square_joy_preorder/" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#the-problem">The problem: recover a binary tree</a></li><li class="toc toc-level-1"><a href="#vectorizing-the-problem">Vectorizing the problem</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#depth-vector">Depth vector</a></li><li class="toc toc-level-2"><a href="#parent-vector">Parent vector</a></li></ul></li><li class="toc toc-level-1"><a href="#a-solution">A solution</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#left-children">Finding left children</a></li><li class="toc toc-level-2"><a href="#right-children">Finding right children</a></li><li class="toc toc-level-2"><a href="#computing-parent-vector">Computing the parent vector</a></li></ul></li><li class="toc toc-level-1"><a href="#c-solution">Bonus: stinking loop solution</a></li><li class="toc toc-level-1"><a href="#where-to-go-next">Where to go next</a></li></ul><hr>
+
+<section><p>
+In this article, we will solve another programming puzzle using an array programming language, <a href="https://www.jsoftware.com/">J</a>.
+We will play with a data structure that is rarely associated with arrays: a binary tree.
+Our goal is to solve the problem using only flat arrays and high-level array transformations.</p>
+</section>
+<section><h2 id="the-problem"><a href="#the-problem">The problem: recover a binary tree</a></h2>
+<p>Given two sequences of distinct values, <code>inorder</code> and <code>preorder</code>,
+where <code>inorder</code> is an <a href="https://en.wikipedia.org/wiki/Tree_traversal#In-order,_LNR">in-order traversal</a> of a binary tree,
+and <code>preorder</code> is a <a href="https://en.wikipedia.org/wiki/Tree_traversal#Pre-order,_NLR">pre-order traversal</a> of the <em>same</em> tree, recover the tree structure.</p>
+<p>For example, if our inputs are the following sequences</p>
+<table class="table-2 "><tbody><tr><td colspan="1" class="align-r">
+<code>inorder</code> </td><td colspan="1" class="align-l"> <code>A P L J K Q F U N</code> </td></tr><tr><td colspan="1" class="align-r">
+<code>preorder</code> </td><td colspan="1" class="align-l"> <code>Q P A J L K U F N</code> </td></tr></tbody></table>
+<p>then the corresponding tree has the shape depicted on the figure below.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-tree-example">⊕</label><input type="checkbox" id="mn-tree-example" class="margin-toggle"><span class="marginnote">
+  A tree corresponding to inputs <code>inorder = A P L J K Q F U N</code> and <code>preorder = Q P A J L K U F N</code>.
+  We will use this tree as our primary example throughout the article.
+</span><p class="svg"><img src="/images/07-problem-tree.svg"></p>
+</figure>
+</section>
+<section><h2 id="vectorizing-the-problem"><a href="#vectorizing-the-problem">Vectorizing the problem</a></h2>
+<div class="epigraph"><blockquote><p>
+  A problem well stated is a problem half solved.
+</p><footer>John Dewey</footer></blockquote></div>
+<p>The way we represent the inputs and outputs of our problem shapes our approach to a solution.</p>
+<p>Our inputs, <code>inorder</code> and <code>preorder</code>, are already arrays.
+However, there is something peculiar about these arrays: they contain the same values, or, in math terms, <code>preorder</code> is a <em>permutation</em> of <code>inorder</code>.
+We can eliminate this redundancy by compressing the inputs to a single numeric array: the permutation that turns <code>inorder</code> into <code>preorder</code>.
+A primitive J operation, dyadic <a href="https://code.jsoftware.com/wiki/Vocabulary/idot#dyadic"><code>i.</code> (index of)</a>, transforms the original inputs to the more convenient and compact permutation form.</p>
+<div class="source-container"><pre class="source j"><code>    'APLJKQFUN' i. 'QPAJLKUFN'
+5 1 0 3 2 4 7 6 8
+</code></pre></div>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-tree-perm">⊕</label><input type="checkbox" id="mn-tree-perm" class="margin-toggle"><span class="marginnote">
+  The example tree after we changed node labels to be integers corresponding to the in-order traversal.
+</span><p class="svg"><img src="/images/07-problem-tree-digits.svg"></p>
+</figure>
+<p>The next step is to decide on the tree representation.
+There are two popular representations in the array community: depth vector and parent vector.</p>
+<h3 id="depth-vector"><a href="#depth-vector">Depth vector</a></h3>
+<p>The depth vector is a tree representation that you often see in graphical user interfaces, such as text editors displaying the project file structure.
+This representation consists of the vector of nodes as they appear in the pre-order traversal and the vector of corresponding node depths.
+</p>
+<div class="source-container"><pre class="source j"><code>    T =. 5 1 0 3 2 4 7 6 8
+    D =. 0 1 2 2 3 3 1 2 2
+</code></pre></div>
+<p>The pre-order vector specifies the vertical order of the nodes; the depth vector specifies how far these nodes lie horizontally.
+</p>
+<div class="source-container"><pre class="source j"><code>   ((D&gt;:/H) + (T+1) * D=/ H =. i.1+&gt;./D) { ' .APLJKQFUN'
+Q
+.P
+..A
+..J
+...L
+...K
+.U
+..F
+..N
+</code></pre></div>
+<p>This representation has many benefits, but it is not convenient for our problem.</p>
+<h3 id="parent-vector"><a href="#parent-vector">Parent vector</a></h3>
+<p>The <a href="https://dl.acm.org/doi/10.1145/586058.586060">parent vector</a> is an array mapping nodes to their parents.
+Technically, the root node does not have a parent, but many algorithms become more elegant if we extend the definition of parent to work for the root node as well: we declare that the parent of the root node is the root node itself.</p>
+<p>Array <code>1 5 3 1 3 5 7 5 7</code> is the parent vector encoding for our example tree.
+</p>
+<div class="source-container"><pre class="source j"><code>    P =. 1 5 3 1 3 5 7 5 7
+</code></pre></div>
+<p>Let us play with this representation a bit to understand it better.
+We will use a couple of J primitives: <a href="https://code.jsoftware.com/wiki/Vocabulary/icapdot"><code>I.</code> (indices)</a> returning the indices of set bits in a boolean mask, and <a href="https://code.jsoftware.com/wiki/Vocabulary/edot#dyadic"><code>e.</code> (member in)</a> returning a boolean mask that has the shape of the left argument and has bits set for items that appear in the right argument.</p>
+<p>Let us find the<label class="margin-toggle sidenote-number" for="mn-forest"></label><input type="checkbox" id="mn-forest" class="margin-toggle"><span class="sidenote">Parent vector representation also works for <a href="https://en.wikipedia.org/wiki/Tree_(graph_theory)#Forest">forests</a>.</span> tree root, the node that is its parent.
+</p>
+<div class="source-container"><pre class="source j"><code>    P = i.#P
+0 0 0 0 0 1 0 0 0
+
+    I. (P = i.#P)
+5
+</code></pre></div>
+<p>How about finding direct children of node <code>3</code>?
+Those are nodes having <code>3</code> as their parent.
+</p>
+<div class="source-container"><pre class="source j"><code>    I. P = 3
+2 4
+</code></pre></div>
+<p>How about finding all leaves?
+Those are nodes that do not appear in the parent vector.
+</p>
+<div class="source-container"><pre class="source j"><code>    -. (i.#P) e. P
+1 0 1 0 1 0 1 0 1
+
+   I. -. (i.#P) e. P
+0 2 4 6 8
+</code></pre></div>
+<p>The parent vector representation does not distinguish right children from left children.
+However, we label our nodes in-order, so there is a simple way to tell the direction: nodes with indices lower than their parents are left children, and nodes with higher indices are right children.
+</p>
+<div class="source-container"><pre class="source j"><code>   NB. all left children
+   I. (i.#P) &lt; P
+0 1 2 6
+
+   NB. all right children
+   I. (i.#P) &gt; P
+3 4 7 8
+</code></pre></div>
+<p>Parent vector gives us a simple, elegant, and self-contained tree representation.
+It is perfect for solving the problem.</p>
+<p>We have decided on the form of our solution: a monadic function that accepts a permutation and returns a parent vector of the same shape.</p>
+</section>
+<section><h2 id="a-solution"><a href="#a-solution">A solution</a></h2>
+<h3 id="left-children"><a href="#left-children">Finding left children</a></h3>
+<p>Where should we start?
+I like to start by finding a way to visualize the data.
+One way to visualize a permutation is to draw a table showing how it scrambles items in space.</p>
+<div class="source-container"><pre class="source j"><code>    T =/ i.#T
+0 0 0 0 0 1 0 0 0
+0 1 0 0 0 0 0 0 0
+1 0 0 0 0 0 0 0 0
+0 0 0 1 0 0 0 0 0
+0 0 1 0 0 0 0 0 0
+0 0 0 0 1 0 0 0 0
+0 0 0 0 0 0 0 1 0
+0 0 0 0 0 0 1 0 0
+0 0 0 0 0 0 0 0 1
+</code></pre></div>
+<p>Look at the ones!
+If you squint a bit, you will see that they form a picture of the tree we started with<label class="margin-toggle sidenote-number" for="sn-ones-tree"></label><input type="checkbox" id="sn-ones-tree" class="margin-toggle"><span class="sidenote">The reason is obvious in hindsight, but I was quite surprised when I drew the picture for the first time.</span>.
+Let us use the <a href="https://code.jsoftware.com/wiki/Vocabulary/gtco#dyadic"><code>&gt;:</code> (greater or equal)</a> verb instead of equality in the table and multiply each column by T.</p>
+<div class="source-container"><pre class="source j"><code><span class="line">    T * T &gt;:/ i.#T</span>
+<span class="line">5 5 5 5 5 <u>5</u> 0 0 0</span>
+<span class="line">1 <u>1</u> 0 0 0 0 0 0 0</span>
+<span class="line"><u>0</u> 0 0 0 0 0 0 0 0</span>
+<span class="line">3 3 3 <u>3</u> 0 0 0 0 0</span>
+<span class="line">2 2 <u>2</u> 0 0 0 0 0 0</span>
+<span class="line">4 4 4 4 <u>4</u> 0 0 0 0</span>
+<span class="line">7 7 7 7 7 7 7 <u>7</u> 0</span>
+<span class="line">6 6 6 6 6 6 <u>6</u> 0 0</span>
+<span class="line">8 8 8 8 8 8 8 8 <u>8</u></span>
+</code></pre></div>
+<p>This table has an interesting property: if we look at the places where ones used to be (underscored), the value right above that place is either zero (for all right children) or the parent in the tree (for all left children).
+Why is that?</p>
+<p>Let us inspect the structure of a pre-order permutation vector.
+After adding a node index to the vector, we descend into the left child (if there is one).
+That left child will always follow the parent in the pre-order vector.
+Left children have indices lower than the index of their parent because we assign indices according to in-order traversal.
+A simple pattern emerges: if we see numbers <span class="math">a</span> and <span class="math">b</span> next to each other, and <span class="math">a &gt; b</span>, then <span class="math">a</span> is the parent of <span class="math">b</span>.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-left-children">⊕</label><input type="checkbox" id="mn-left-children" class="margin-toggle"><span class="marginnote">The left children follow a pattern in a pre-order vector: whenever a smaller node index follows a larger one, the larger index must be the parent of the smaller.</span><p class="svg"><img src="/images/07-left-children.svg"></p>
+</figure>
+<p>Let us put this observation into code.
+We shift the input vector to the right, filling the space on the left with the first value in the vector (the root node).
+We then compute <span class="math">Shifted × (T ≤ Shifted)</span>.</p>
+<div class="source-container"><pre class="source j"><code>    NB. get the head of the vector
+    {.T
+5
+</code></pre></div>
+<div class="source-container"><pre class="source j"><code>    NB. shift to the right, filling the space with the head
+   _1 |.!.({.T) T
+5 5 1 0 3 2 4 7 6
+</code></pre></div>
+<div class="source-container"><pre class="source j"><code>    NB. compute T &lt;= Shifted
+    T &lt;: _1 |.!.({.T) T
+1 1 1 0 1 0 0 1 0
+</code></pre></div>
+<div class="source-container"><pre class="source j"><code>    NB. L = Shifted * (T &lt;= Shifted)
+    ] L =. T (&lt;: * ]) _1 |.!.({.T) T
+5 5 1 0 3 0 0 7 0
+</code></pre></div>
+<div class="source-container"><pre class="source j"><code>    NB. the parent of node 5 is 5, the parent of node 1 is 5, etc.
+    T,:L
+5 1 0 3 2 4 7 6 8
+5 5 1 0 3 0 0 7 0
+</code></pre></div>
+<p>Array <code>L</code> is not the correct answer yet: the parents we computed for the right children are zero.</p>
+<h3 id="right-children"><a href="#right-children">Finding right children</a></h3>
+<p>To find the parents of the right children, we have to look closely at the pre-order vector again.
+When we construct the vector, we first append the parent, follow the whole left subtree, and then goes the right child.
+All nodes in the left subtree have indices smaller than the parent, and the right child has an index larger than the parent.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-left-children">⊕</label><input type="checkbox" id="mn-left-children" class="margin-toggle"><span class="marginnote">The right children follow a pattern in a pre-order vector: their parent node is the largest index earlier in the vector smaller than their index.</span><p class="svg"><img src="/images/07-right-children.svg"></p>
+</figure>
+<p>This observation gives us an algorithm: we need to find the largest value to the left smaller than the node for each position in the array.
+The simplest way to express this algorithm in J is to use the <a href="https://code.jsoftware.com/wiki/Vocabulary/bslash"><code>}</code></a> adverb (prefix scan).
+We look at each prefix and find the largest value in that prefix that is smaller than the last element of the prefix.
+Let us take the prefix <code>5 1 0 3</code> as an example.</p>
+<div class="source-container"><pre class="source j"><code>    NB. {: computes the last element of an array
+    {: 5 1 0 3
+3
+
+    NB. compute the boolean mask of items smaller than the last element
+    (] &lt; {:) 5 1 0 3
+0 1 1 0
+
+    NB. filter out elements according to the boolean mask
+    ((] &lt; {:) # ]) 5 1 0 3
+1 0
+
+    NB. find the maximum
+    (&gt;./ @ ((] &lt; {:) # ])) 5 1 0 3
+1
+</code></pre></div>
+<p>Let us now apply our composite verb to each successive prefix of the pre-order array.</p>
+<div class="source-container"><pre class="source j"><code>    NB. __ means &quot;negative infinity&quot;.
+    ] R =. (&gt;./ @ ((] &lt; {:) # ]))\ T
+__ __ __ 1 1 3 5 5 7
+</code></pre></div>
+<div class="source-container"><pre class="source j"><code>    NB. node 5 has no parent, the parent of node 3 is 1, etc.
+    T,:R
+ 5  1  0 3 2 4 7 6 8
+__ __ __ 1 1 3 5 5 7
+</code></pre></div>
+<p>Array <code>R</code> has incorrect values for parents of all left children.
+We shall deal with this issue in the next section.</p>
+<h3 id="computing-parent-vector"><a href="#computing-parent-vector">Computing the parent vector</a></h3>
+<p>We have two ways to compute the parents: one works for left children (let us call it the <em>L-algorithm</em>), and another works for right children (the <em>R-algorithm</em>).
+How do we combine these results?</p>
+<p>Note that array <code>L</code> had zeros for all right children.
+Also, note that the L-algorithm produces larger values than the R-algorithm: the L-algorithm looks for <em>larger</em> nodes to the left of each position, while the R-algorithm looks for <em>smaller</em> nodes.
+So taking the maximum of arrays <span class="math">L</span> and <span class="math">R</span> gives us the correct answer.</p>
+<div class="source-container"><pre class="source j"><code>    L &gt;. R
+5 5 1 1 3 3 5 7 7
+
+    NB. node 5 has parent 5, node 1 has parent 5, etc.
+    T ,: L &gt;. R
+5 1 0 3 2 4 7 6 8
+5 5 1 1 3 3 5 7 7
+</code></pre></div>
+<p>We are not there yet: the parent vector appears scrambled because it mirrors the pre-order permutation.
+We need to enumerate parents according to the in-order traversal by applying the inverse permutation to get the final answer.</p>
+<div class="source-container"><pre class="source j"><code>    NB. Compute the inverse permutation for T
+    T i. i.#T
+2 1 4 3 5 0 7 6 8
+</code></pre></div>
+<p>To apply a permutation, we use it as an index of the array we want to permute<label class="margin-toggle sidenote-number" for="sn-permute"></label><input type="checkbox" id="sn-permute" class="margin-toggle"><span class="sidenote">Applying permutations is a common operation in array programming, so J has a primitive function for that, <a href="https://code.jsoftware.com/wiki/Vocabulary/ccapdot#dyadic"><code>C.</code> (permute)</a>.</span>.
+</p>
+<div class="source-container"><pre class="source j"><code>    NB. apply the inverse permutation to the scrambled parents
+    (T i. i.#T) { L &gt;. R
+1 5 3 1 3 5 7 5 7
+</code></pre></div>
+<p>We got our answer.
+Let us extract our little exploration into a function.
+</p>
+<div class="source-container"><pre class="source j"><code>recover_tree =. {{
+  L =. y (&lt;: * ]) _1 |.!.({.y) y
+  R =. (&gt;./ @ ((] &lt; {:) # ]))\y
+  (y i. i.#y) { L &gt;. R
+}}
+</code></pre></div>
+<p>Same function in tacit form:
+</p>
+<div class="source-container"><pre class="source j"><code>recover_tree =. (i. i.@#) { ((&lt;: * ]) ({. , }:))~ &gt;. &gt;./@((] &lt; {:) # ])\
+</code></pre></div>
+</section>
+<section><h2 id="c-solution"><a href="#c-solution">Bonus: stinking loop solution</a></h2>
+<p>While playing with J, we learned that we need only one permutation as input, and that we can represent the result as a flat array of parents.
+Let us apply this knowledge to get an efficient and short solution in C.</p>
+<p>We will use recursion to solve the problem.
+Let us consider a traversal of a subtree spanning from node <span class="math">L</span> to node <span class="math">R</span> (<span class="math">R</span> excluded).
+The first item in the pre-order array gives the root <span class="math">P</span> of that subtree.
+<span class="math">P - L</span> nodes to the left of <span class="math">P</span> (indices <span class="math">L..P</span>) form the left subtree, and <span class="math">R - P</span> nodes to the right of <span class="math">P</span> (indices <span class="math">P+1..R</span>) constitute the right subtree.
+We handle those subtrees recursively, assigning <span class="math">P</span> as their root.</p>
+<p>Let us look at the example, <code>5 1 0 3 2 4 7 6 8</code>.
+The first node in the array is the root, <code>5</code>.
+It divides the rest of the vector into two sections forming the left and the right subtrees correspondingly: nodes <code>0 1 2 3 4</code> (five nodes in total) and nodes <code>6 7 8</code> (three nodes in total).
+We can compute these subtrees recursively and assign <code>5</code> as the root of these subtrees.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-loop-solution">⊕</label><input type="checkbox" id="mn-loop-solution" class="margin-toggle"><span class="marginnote">The run of the recursive parent search algorithm for the first two layers of the example tree.</span><p class="svg"><img src="/images/07-loop-solution.svg"></p>
+</figure>
+<figure><label class="margin-toggle" for="mn-loop-solution-code">⊕</label><input type="checkbox" id="mn-loop-solution-code" class="margin-toggle"><span class="marginnote">
+    A C implementation of the recursive algorithm for computing the parent vector.
+    <code>Pre</code> is the pre-order traversal array, <code>P</code> is the output array of parents, <code>N</code> is the number of tree nodes.
+  </span><div class="source-container"><pre class="source c"><code><span class="line">static void restore_range(int Pre[], int P[], int L, int R, int V) {</span>
+<span class="line">    if (L &gt;= R) return;</span>
+<span class="line">    P[Pre[0]] = V;</span>
+<span class="line">    restore_range(Pre + 1, P, L, Pre[0], Pre[0]);</span>
+<span class="line">    restore_range(Pre + Pre[0] - L + 1, P, Pre[0] + 1, R, Pre[0]);</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">void restore_tree(int Pre[], int P[], int N) {</span>
+<span class="line">    if (N &gt; 0) restore_range(Pre, P, 0, N, Pre[0]);</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>Note that this code is inherently polymorphic: it does not care about the type of elements we store in the tree.</p>
+</section>
+<section><h2 id="where-to-go-next"><a href="#where-to-go-next">Where to go next</a></h2>
+<ul class="arrows"><li>Discuss this article on <a href="https://www.reddit.com/r/apljk/comments/v5cr09/blog_post_square_joy_preorder/">Reddit</a>.
+  </li><li>Solve this problem on <a href="https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/">Leetcode</a>.
+  </li><li>
+    Solve a similar problem: recover a tree from its in-order and post-order traversals.
+    Hint: all of the tricks discussed in this article will work after changing the direction.
+  </li><li>Watch Aaron Hsu’s talk, <a href="https://www.youtube.com/watch?v=hzPd3umu78g">High-performance Tree Wrangling, the APL way</a>.
+  </li><li>Read Aaron Hsu’s dissertation, <a href="https://scholarworks.iu.edu/dspace/handle/2022/24749">A data parallel compiler hosted on GPU</a>.
+    It goes deep into tree representations and conversions between these representations.
+    There are many exciting algorithms on the parent vector representation, too.
+  </li><li>Listen to the <a href="https://arraycast.com/">Arraycast</a> podcast.
+</li></ul>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/04-square-joy-trapped-rain-water.html">Square joy: trapped rainwater</a></li><li><a href="/posts/34-square-joy-tile-crush.html">Square joy: tile crush</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/08-ic-xnet.html"> ←IC internals: XNet protocol</a></div><div id="older"><a href="/posts/06-ic-orthogonal-persistence.html">IC internals: orthogonal persistence→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

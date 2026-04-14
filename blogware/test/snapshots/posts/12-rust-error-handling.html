@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="rust"><meta name="description" content="An optinionated guide to designing humane error types in Rust."><title>Designing error types in Rust</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/12-rust-error-handling.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/12-rust-error-handling.html">Designing error types in Rust</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2022-11-15</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2022-11-16</span></span><span class="post-icons"><a class="icon-link" href="https://www.reddit.com/r/rust/comments/yvdz6l/blog_post_designing_error_types_in_rust" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#introduction">Introduction</a></li><li class="toc toc-level-1"><a href="#library-vs-apps">Libraries vs. applications</a></li><li class="toc toc-level-1"><a href="#design-heuristics">Design goals</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#prefer-specific-enums">Prefer specific enums</a></li><li class="toc toc-level-2"><a href="#avoid-panics">Reserve panics for bugs in your code</a></li><li class="toc toc-level-2"><a href="#lift-input-validation">Lift input validation</a></li><li class="toc toc-level-2"><a href="#implement-std-error">Implement std::error::Error</a></li><li class="toc toc-level-2"><a href="#errors-problem-vs-solution">Define errors in terms of the problem, not a solution</a></li><li class="toc toc-level-2"><a href="#embed-not-wrap">Do not wrap errors, embed them</a></li></ul></li><li class="toc toc-level-1"><a href="#resources">Resources</a></li></ul><hr>
+
+<section><h2 id="introduction"><a href="#introduction">Introduction</a></h2>
+<p>If I had to pick my favorite <a href="https://www.rust-lang.org/">Rust language</a> feature, that would be its systematic approach to error handling.
+Sum types, generics (such as <a href="https://doc.rust-lang.org/std/result/enum.Result.html"><code>Result&lt;T, E&gt;</code></a>), and a holistic standard library design perfectly<label class="margin-toggle sidenote-number" for="sn-polimorphic-variants"></label><input type="checkbox" id="sn-polimorphic-variants" class="margin-toggle"><span class="sidenote"><em>Almost</em> perfectly: I miss <a href="https://dev.realworldocaml.org/variants.html#scrollNav-4">polymorphic variants</a> badly.</span> match my obsession with edge cases.
+Rust error handling is so good that even <a href="https://haskell.org/">Haskell</a> looks bleak and woefully unsafe<label class="margin-toggle sidenote-number" for="sn-haskell-exceptions"></label><input type="checkbox" id="sn-haskell-exceptions" class="margin-toggle"><span class="sidenote">
+  Haskell can replicate Rust’s approach to error handling, but the standard library chose the route of runtime exceptions, and <a href="https://www.fpcomplete.com/haskell/tutorial/exceptions/">practitioners</a> followed the lead.
+</span>.
+This article explains how I approach errors when I design library interfaces in Rust.</p>
+</section>
+<section><h2 id="library-vs-apps"><a href="#library-vs-apps">Libraries vs. applications</a></h2>
+<p>My approach to errors differs depending on whether I am writing a general-purpose library, a background daemon, or a command-line tool.</p>
+<p>Applications interface humans.
+Applications do their job well when they resolve issues without human intervention or, if automatic recovery is impossible or undesirable, provide the user with a clear explanation of how to resolve the issue.</p>
+<p>Library code interfaces other code.
+Libraries do their job well when they recover from errors transparently and provide programmers with a complete list of error cases from which they cannot recover.</p>
+<p>This guide targets library design because that is the area with which I am most familiar.
+However, the core <a href="#empathy">principle of empathy</a> applies equally well to designing machine-machine, human-machine, and human-human interfaces.</p>
+</section>
+<section><h2 id="design-heuristics"><a href="#design-heuristics">Design goals</a></h2>
+<div class="epigraph"><blockquote><p>
+  I didn’t want to call these guidelines, and I didn’t want to call these rules.
+  I wanted them to be goals.
+  These are the things that you should strive for in your code, that are not always easy to accomplish.
+  And maybe you can’t always pull them off.
+  But the closer you come, the better your code will be.
+</p><footer>Sean Parent, <q><a href="https://youtu.be/W2tWOdzgXHA?t=107">C++ Seasoning</a></q></footer></blockquote></div>
+<p>Most issues in the error type design stem from the same root: making error cases easy for the code author at the expense of the caller.
+All the strategies I describe in this article are applications of the following mantra:</p>
+<div class="advice" id="empathy"><p><a class="anchor" href="#empathy">☛</a>Be empathetic to your user.</p></div>
+<p>Imagine yourself having to handle the error.
+Could you write robust code given the error type and its documentation?
+Could you translate the error into a message the end user can understand?</p>
+<h3 id="prefer-specific-enums"><a href="#prefer-specific-enums">Prefer specific enums</a></h3>
+<p>Applying familiar error-handling techniques is tempting if you come to Rust from another language.
+A single error type might seem natural if you wrote a lot of <a href="https://go.dev">Go</a>.</p>
+<figure><label class="margin-toggle" for="mn-anyhow">⊕</label><input type="checkbox" id="mn-anyhow" class="margin-toggle"><span class="marginnote">
+  Implementing a Go-like approach to error handling using the <a href="https://crates.io/crates/anyhow"><code>anyhow</code></a> package.
+</span><div class="source-container"><pre class="source bad"><code><span class="line">pub fn frobnicate(n: u64) -&gt; anyhow::Result&lt;String&gt; { /* … */ }</span>
+</code></pre></div>
+</figure>
+<p>If you hardened your character with C++ or spent a lot of time working with <a href="https://grpc.github.io/grpc/core/md_doc_statuscodes.html">grpc</a>, having a humongous global error type might seem like a good idea.</p>
+<figure><label class="margin-toggle" for="mn-typical-cpp">⊕</label><input type="checkbox" id="mn-typical-cpp" class="margin-toggle"><span class="marginnote">
+  A typical approach to error handling in large C and C++ codebases that do not rely on exceptions is to define a humongous enum with all possible error cases.
+</span><div class="source-container"><pre class="source bad"><code><span class="line">pub enum ProjectWideError {</span>
+<span class="line">  InvalidInput,</span>
+<span class="line">  DatabaseConnectionError,</span>
+<span class="line">  Unauthorized,</span>
+<span class="line">  FileNotFound,</span>
+<span class="line">  <em>// …</em></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">pub fn frobnicate(n: u64) -&gt; Result&lt;String, ProjectWideError&gt; { /* … */ }</span>
+</code></pre></div>
+</figure>
+<p>These approaches might work fine for you, but I found them unsatisfactory for library design<label class="margin-toggle sidenote-number" for="sn-anyhow"></label><input type="checkbox" id="sn-anyhow" class="margin-toggle"><span class="sidenote">
+  However, I often use the <code>anyhow</code> approach to simplify structuring errors in command-line tools and daemons.
+</span> in the long run: they facilitate <em>propagating</em> errors (often with little context about the operation that caused the error), not <em>handling</em> errors.</p>
+<p>When it comes to interface clarity and simplicity, nothing beats <a href="https://en.wikipedia.org/wiki/Algebraic_data_type">algebraic data types</a> (<span class="smallcaps">adt</span>s).
+Let us use the power of <span class="smallcaps">adt</span>s to fix the <code>frobnicate</code> function interface.</p>
+<figure><label class="margin-toggle" for="mn-adt-frobnicate">⊕</label><input type="checkbox" id="mn-adt-frobnicate" class="margin-toggle"><span class="marginnote">
+  Idiomatic error types for the <code>frobnicate</code> function example.
+</span><div class="source-container"><pre class="source good"><code><span class="line">pub enum FrobnicateError {</span>
+<span class="line">  <em>/// Frobnicate does not accept inputs above this number.</em></span>
+<span class="line">  InputExceeds(u64),</span>
+<span class="line">  <em>/// Frobnicate cannot work on mondays. Court order.</em></span>
+<span class="line">  CannotFrobnicateOnMondays,</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">pub fn frobnicate(n: u64) -&gt; Result&lt;String, FrobnicateError&gt; { /* … */ }</span>
+</code></pre></div>
+</figure>
+<p>
+Now the type system tells the readers what exactly can go wrong, making <em>handling</em> the errors a breeze.</p>
+<p>You might think, <q>I will never finish my project if I define a new enum for each function that can fail.</q>
+In my experience, expressing failures using the type system takes less work than documenting all the quirks of the interface.
+Specific types make writing good documentation easier.
+They repay their weight in gold when you start testing your code.</p>
+<p>Feel free to introduce distinct error types for each function you implement.
+I am still looking for Rust code that went overboard with distinct error types.</p>
+<figure><label class="margin-toggle" for="mn-testing-frobnicate">⊕</label><input type="checkbox" id="mn-testing-frobnicate" class="margin-toggle"><span class="marginnote">
+  Specific error types at work: writing test cases becomes more enjoyable.
+</span><div class="source-container"><pre class="source good"><code><span class="line">#[test]</span>
+<span class="line">fn test_unfrobnicatable() {</span>
+<span class="line">  assert_eq!(FrobnicateError::InputExceeds(MAX_FROB_INPUT), frobnicate(u64::MAX));</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">#[test]</span>
+<span class="line">fn test_frobnicate_on_mondays() {</span>
+<span class="line">  sleep_until(next_monday());</span>
+<span class="line">  assert_eq!(FrobnicateError::CannotFrobnicateOnMondays, frobnicate(0));</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<h3 id="avoid-panics"><a href="#avoid-panics">Reserve panics for bugs in your code</a></h3>
+<div class="epigraph"><blockquote><p>
+  The <code>panic!</code> macro is used to construct errors that represent a bug that has been detected in your program.
+</p><footer>The Rust Standard Library, <a href="https://doc.rust-lang.org/std/macro.panic.html#when-to-use-panic-vs-result">When to use <code>panic!</code> vs <code>Result</code></a>.</footer></blockquote></div>
+<p>The primary purpose of <a href="https://doc.rust-lang.org/std/macro.panic.html"><code>panics</code></a> in Rust is to indicate bugs in your program.
+Resist the temptation to use panics for input validation if there is a chance that the inputs come from the end user, even if you document panics meticulously.
+People rarely read documentation; they can easily miss your warnings.
+Use the type system to guide them.</p>
+<figure><label class="margin-toggle" for="mn-panic-doc">⊕</label><input type="checkbox" id="mn-panic-doc" class="margin-toggle"><span class="marginnote">
+  A library function relying on documentation to specify correct inputs.
+</span><div class="source-container"><pre class="source bad"><code><span class="line"><em>/// Frobnicates an integer.</span>
+<span class="line">///</span>
+<span class="line">/// <b># Panics</b></span>
+<span class="line">///</span>
+<span class="line">/// This function panics if</span>
+<span class="line">/// * the `n` argument is greater than [`MAX_FROB_INPUT`].</span>
+<span class="line">/// * you call it on Monday.</em></span>
+<span class="line">pub fn frobnicate(n: u64) -&gt; String { /* … */ }</span>
+</code></pre></div>
+</figure>
+<p>Feel free to use panics and assertions to check invariants that must hold in <em>your</em> code.</p>
+<figure><label class="margin-toggle" for="mn-panic-doc">⊕</label><input type="checkbox" id="mn-panic-doc" class="margin-toggle"><span class="marginnote">
+  Using assertions to check invariants and post-conditions.
+</span><div class="source-container"><pre class="source good"><code><span class="line">pub fn remove_from_tree&lt;K: Ord, V&gt;(tree: &amp;mut Tree&lt;K, V&gt;, key: &amp;K) -&gt; Option&lt;V&gt; {</span>
+<span class="line">  let maybe_value = /* … */;</span>
+<span class="line">  <b>debug_assert!</b>(tree.balanced());</span>
+<span class="line">  <b>debug_assert!</b>(!tree.contains(key));</span>
+<span class="line">  maybe_value</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>You can panic on invalid inputs if the failure indicates a severe bug in the caller’s program.
+Good examples are <a href="https://doc.rust-lang.org/1.62.0/std/ops/trait.Index.html#panics">out-of-bound indices</a> or trait implementations that do not obey laws (e.g., if an <a href="https://doc.rust-lang.org/1.62.0/std/cmp/trait.Ord.html"><code>Ord</code></a> type violates the <a href="https://en.wikipedia.org/wiki/Total_order">total order</a> requirements).</p>
+<h3 id="lift-input-validation"><a href="#lift-input-validation">Lift input validation</a></h3>
+<p>Good functions do not panic on invalid inputs.
+Great functions do not have to validate inputs.
+Let us consider the following interface of a function that sends an email.</p>
+<figure><label class="margin-toggle" for="mn-input-validation">⊕</label><input type="checkbox" id="mn-input-validation" class="margin-toggle"><span class="marginnote">
+  The <code>send_mail</code> function validates email addresses and sends emails.
+</span><div class="source-container"><pre class="source bad"><code><span class="line">pub enum SendMailError {</span>
+<span class="line">  <em>/// One of the addresses passed to <code>send_mail</code> is invalid.</em></span>
+<span class="line">  <b>MalformedAddress</b> { address: String, reason: String },</span>
+<span class="line">  <em>/// Failed to connect to the mail server.</em></span>
+<span class="line">  FailedToConnect { source: std::io::Error, reason: String },</span>
+<span class="line">  /* … */</span>
+<span class="line">}</span>
+<span class="line">pub fn send_mail(to: &amp;str, cc: &amp;[&amp;str], body: &amp;str) -&gt; SendMailError { /* … */ }</span>
+</code></pre></div>
+</figure>
+<p>Note that our <code>send_mail</code> function does at least two things: validating email addresses and sending emails.
+Such a state of affairs becomes tiresome if you have many functions that expect valid addresses as inputs.
+One solution is to pepper the code with more types.
+In this case, we can introduce the <code>EmailAddress</code> type that holds only valid email addresses.</p>
+<figure><label class="margin-toggle" for="mn-input-validation-type">⊕</label><input type="checkbox" id="mn-input-validation-type" class="margin-toggle"><span class="marginnote">
+  Introducing a new type to make <code>send_mail</code> inputs valid by construction.
+</span><div class="source-container"><pre class="source good"><code><span class="line"><em>/// Represents valid email addresses</em>.</span>
+<span class="line">pub struct EmailAddress(String);</span>
+<span class="line"></span>
+<span class="line">impl std::str::FromStr for EmailAddress {</span>
+<span class="line">  type Err = <b>MalformedEmailAddress</b>;</span>
+<span class="line">  fn from_str(s: &amp;str) -&gt; Result&lt;Self, Self::Err&gt; { /* … */ }</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">pub enum SendMailError {</span>
+<span class="line">  <em>// no more InvalidAddress!</em></span>
+<span class="line">  FailedToConnect { source: std::io::Error, reason: String },</span>
+<span class="line">  /* … */</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">pub fn send_mail(</span>
+<span class="line">    to: &amp;EmailAddress,</span>
+<span class="line">    cc: &amp;[&amp;EmailAddress],</span>
+<span class="line">    body: &amp;str,</span>
+<span class="line">) -&gt; SendMailError { /* … */ }</span>
+</code></pre></div>
+</figure>
+<p>If we add more functions working with valid addresses, these functions will not have to run the validation logic and return address validation errors.
+We also enable the caller to perform address validation earlier, closer to where the program receives that address.</p>
+<h3 id="implement-std-error"><a href="#implement-std-error">Implement std::error::Error</a></h3>
+<p>Implementing the <a href="https://doc.rust-lang.org/std/error/trait.Error.html"><code>std::error::Error</code></a> trait for error types is like being polite.
+You should do it even if you do not mean it.</p>
+<p>Some callers might care about something other than your beautiful design, shoveling your errors into a <code>Box&lt;Error&gt;</code> or <code>anyhow::Result</code> and moving on.
+They may be building a little command line tool that does not need to handle <a href="https://xkcd.com/619/">machines with 4096 CPUs</a>.
+If you implement <code>std::error::Error</code> for your error types, you will make their lives easier.</p>
+<p>If you find that implementing the <code>std::error::Error</code> trait is too much work, try using the <a href="https://crates.io/crates/thiserror"><code>thiserror</code></a> package.</p>
+<figure><label class="margin-toggle" for="mn-thiserror">⊕</label><input type="checkbox" id="mn-thiserror" class="margin-toggle"><span class="marginnote">
+  Using the <a href="https://crates.io/crates/thiserror"><code>thiserror</code></a> package to simplify the implementation of the <a href="https://doc.rust-lang.org/std/error/trait.Error.html"><code>std::error::Error</code></a> trait.
+</span><div class="source-container"><pre class="source good"><code><span class="line">use thiserror::Error;</span>
+<span class="line"></span>
+<span class="line">#[derive(Error, Debug)]</span>
+<span class="line">pub enum FrobnicateError {</span>
+<span class="line">  #[error(&quot;cannot frobnicate numbers above {0}&quot;)]</span>
+<span class="line">  InputExceeds(u64),</span>
+<span class="line"></span>
+<span class="line">  #[error(&quot;thy shall not frobnicate on mondays (court order)&quot;)]</span>
+<span class="line">  CannotFrobnicateOnMondays,</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<h3 id="errors-problem-vs-solution"><a href="#errors-problem-vs-solution">Define errors in terms of the problem, not a solution</a></h3>
+<p>The most common shape of errors I see looks like the following:</p>
+<figure><label class="margin-toggle" for="mn-fetch-tx-nested">⊕</label><input type="checkbox" id="mn-fetch-tx-nested" class="margin-toggle"><span class="marginnote">
+  A common approch to error handling for functions with complex call graphs:
+  the result error type wraps error types of all dependencies.
+</span><div class="source-container"><pre class="source bad"><code><span class="line">pub enum FetchTxError {</span>
+<span class="line">  IoError(std::io::Error),</span>
+<span class="line">  HttpError(http2::Error),</span>
+<span class="line">  SerdeError(serde_cbor::Error),</span>
+<span class="line">  OpensslError(openssl::ssl::Error),</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">pub fn fetch_signed_transaction(</span>
+<span class="line">  id: Txid,</span>
+<span class="line">  pk: &amp;[u8],</span>
+<span class="line">) -&gt; Result&lt;Option&lt;Tx&gt;, FetchTxError&gt; { /* … */ }</span>
+</code></pre></div>
+</figure>
+<p>This error type does not tell the caller <em>what</em> problem you are solving but <em>how</em> you solve it.
+Implementation details leak into the caller’s code, causing much pain:
+</p>
+<ul class="arrows"><li>
+   Such error types encourage unhealthy coding patterns when low-level errors travel up the call stack with minimal context attached.
+   The following error message comes from one program I have to use that often leaves me puzzled and depressed.
+   <div class="source-container"><pre class="source bad"><code><span class="line">IO error: Os { code: 2, kind: NotFound, message: &quot;No such file or directory&quot; }</span>
+</code></pre></div>
+</li><li>
+   Your clients must read the leaked dependencies documentation to learn about possible error cases.
+   Look at <a href="https://docs.rs/openssl/0.10.42/openssl/ssl/struct.Error.html"><code>openssl::ssl::Error</code></a>, for example.
+   Can you devise a good recovery strategy without knowing which <code>openssl</code> library function returned this error?
+ </li><li>
+   Your clients must add <code>openssl</code> and <code>serde_cbor</code> to direct dependencies to handle your errors.
+   If you decide to switch from <code>openssl</code> to <code>libressl</code> or from <code>serde_cbor</code> to <code>ciborium</code>, your clients will have to adapt their code.
+</li></ul>
+<p>Let us redesign the <code>FetchTxError</code> type, focusing on the well-being of fellow programmers calling that code.</p>
+<figure><label class="margin-toggle" for="mn-fetch-tx-refactoring">⊕</label><input type="checkbox" id="mn-fetch-tx-refactoring" class="margin-toggle"><span class="marginnote">
+  Idiomatic error types for the <code>fetch_signed_transaction</code> function example.
+  <code>FetchTxError</code> type constructors express failure cases in terms of the problem domain, not a specific solution.
+  Note the lack of external dependencies in the types.
+</span><div class="source-container"><pre class="source good"><code><span class="line">pub enum FetchTxError {</span>
+<span class="line">  <em>/// Could not connect to the server.</em></span>
+<span class="line">  ConnectionFailed {</span>
+<span class="line">    url: String,</span>
+<span class="line">    reason: String,</span>
+<span class="line">    cause: Option&lt;std::io::Error&gt;, // <span class="circled-ref">①</span></span>
+<span class="line">  },</span>
+<span class="line"></span>
+<span class="line">  <em>/// Cannot find transaction with the specified txid.</em></span>
+<span class="line">  TxNotFound(Txid), // <span class="circled-ref">②</span></span>
+<span class="line"></span>
+<span class="line">  <em>/// The object data is not valid CBOR.</em></span>
+<span class="line">  InvalidEncoding { // <span class="circled-ref">③</span></span>
+<span class="line">    data: Bytes,</span>
+<span class="line">    error_offset: Option&lt;usize&gt;,</span>
+<span class="line">    error_message: String,</span>
+<span class="line">  },</span>
+<span class="line"></span>
+<span class="line">  <em>/// The public key is malformed.</em></span>
+<span class="line">  MalformedPublicKey { // <span class="circled-ref">④</span></span>
+<span class="line">    key_bytes: Vec&lt;u8&gt;,</span>
+<span class="line">    reason: String,</span>
+<span class="line">  },</span>
+<span class="line"></span>
+<span class="line">  <em>/// The transaction signature does not match the public key.</em></span>
+<span class="line">  SignatureVerificationFailed { // <span class="circled-ref">④</span></span>
+<span class="line">    txid: Txid,</span>
+<span class="line">    pk: Pubkey,</span>
+<span class="line">    sig: Signature,</span>
+<span class="line">  },</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">pub fn fetch_signed_transaction(</span>
+<span class="line">  id: Txid,</span>
+<span class="line">  pk: &amp;[u8],</span>
+<span class="line">) -&gt; Result&lt;Tx, FetchTxError&gt; { /* … */ }</span>
+</code></pre></div>
+</figure>
+<p>The new design offers several of improvements:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+    The <code>ConnectionFailed</code> constructor wraps a low-level <code>std::io::Error</code> error.
+    Wrapping works fine here because there is enough context to understand what went wrong.
+  </li><li data-num-glyph="②">
+    We replaced the <code>Option</code> type with an explicit error constructor, <code>TxNotFound</code>, clarifying the meaning of the <code>None</code> case.
+  </li><li data-num-glyph="③">
+    The <code>InvalidEncoding</code> constructor hides the details of the decoding library we use.
+    We can now replace <code>serde_cbor</code> without breaking other people’s code.
+  </li><li data-num-glyph="④">
+    We replaced generic crypto errors with two specific cases: <code>MalformedPublicKey</code> and <code>SignatureVerificationFailed</code>.
+    Our fellow programmer has more context to make rational decisions: the <code>MalformedPublicKey</code> case indicates that the user supplied the wrong key.
+    The <code>SignatureVerificationFailed</code> case can indicate that the peer tampered with the data, so we should try connecting to another peer.
+</li></ol>
+<p>If I needed to call <code>fetch_signed_transaction</code>, I prefer the latter interface.
+Which interface would you choose?
+Which interface will be easier to test?</p>
+<h3 id="embed-not-wrap"><a href="#embed-not-wrap">Do not wrap errors, embed them</a></h3>
+<p>We have already seen the tactic of embedding error cases in the previous section.
+This tactic eases interface comprehension so much that it deserves more attention.</p>
+<p>Imagine that we are working on a little library that verifies cryptographic signatures.
+We want to support <a href="https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm">ECDSA</a> and <a href="https://en.wikipedia.org/wiki/BLS_digital_signature">BLS</a> signatures.
+We start from the path of the least resistance.</p>
+<figure><label class="margin-toggle" for="mn-verify-sig-bad">⊕</label><input type="checkbox" id="mn-verify-sig-bad" class="margin-toggle"><span class="marginnote">
+  The signature verification function interface that wraps errors from third-party libraries.
+</span><div class="source-container"><pre class="source bad"><code><span class="line">pub enum Algorithm { Ecdsa, Bls12381 };</span>
+<span class="line"></span>
+<span class="line">pub enum VerifySigError {</span>
+<span class="line">  EcdsaError { source: ecdsa::Error, context: String },</span>
+<span class="line">  BlsError { source: bls12_381_sign::Error, context: String },</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">pub fn verify_sig(</span>
+<span class="line">  algorithm: Algorithm,</span>
+<span class="line">  pk: Bytes,</span>
+<span class="line">  sig: Bytes,</span>
+<span class="line">  msg_hash: Hash,</span>
+<span class="line">) -&gt; Result&lt;(), VerifySigError&gt; { /* … */ }</span>
+</code></pre></div>
+</figure>
+<p>There are a few issues with that <code>verify_sig</code> function design.
+</p>
+<ul class="arrows"><li>
+    There is an implicit assumption that if the caller passes the <code>Ecdsa</code> as the <code>algorithm</code>, the error can be only <code>EcdsaError</code>.
+    It should be clear from the semantics, but the type system does not enforce this invariant.
+  </li><li>
+    The error type leaks implementation details to the caller.
+  </li><li>
+    If we extend the list of supported algorithms, the caller might have to modify all call sites.
+</li></ul>
+<p>We can address these issues by removing one layer of nesting and embedding error cases from <code>ecdsa::Error</code> and <code>bls12_381_sign::Error</code> into the <code>VerifySigError</code> error type.
+The result is a clear and self-descriptive error type conveying to your callers that you care about them.</p>
+<figure><label class="margin-toggle" for="mn-verify-sig-good">⊕</label><input type="checkbox" id="mn-verify-sig-good" class="margin-toggle"><span class="marginnote">
+  The signature verification function interface embedding and deduplicating error cases coming from third-party libraries.
+</span><div class="source-container"><pre class="source good"><code><span class="line">pub enum Algorithm { Ecdsa, Bls12381 };</span>
+<span class="line"></span>
+<span class="line">pub enum VerifySigError {</span>
+<span class="line">  MalformedPublicKey { pk: Bytes, reason: String },</span>
+<span class="line">  MalformedSignature { sig: Bytes, reason: String },</span>
+<span class="line">  SignatureVerificationFailed {</span>
+<span class="line">    algorithm: Algorithm,</span>
+<span class="line">    pk: Bytes,</span>
+<span class="line">    sig: Bytes,</span>
+<span class="line">    reason: String</span>
+<span class="line">  },</span>
+<span class="line">  // …</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">pub fn verify_sig(</span>
+<span class="line">  algorithm: Algorithm,</span>
+<span class="line">  pk: Bytes,</span>
+<span class="line">  sig: Bytes,</span>
+<span class="line">  msg_hash: Hash,</span>
+<span class="line">) -&gt; Result&lt;(), VerifySigError&gt; { /* … */ }</span>
+</code></pre></div>
+</figure>
+<p>There are a few cases when wrapping errors makes sense:
+</p>
+<ul class="arrows"><li>
+    Wrapping <code>std::io::Error</code> is acceptable if you include enough context, such as the attempted operation and the paths involved.
+    <code>std::io::Error</code> does not bring extra dependencies and is familiar to any seasoned Rust programmer, so it adds little cognitive load.
+    <code>std::io::Error</code>s also can contain low-level <a href="https://doc.rust-lang.org/std/io/struct.Error.html#method.raw_os_error">OS error codes</a> that can help diagnose tricky cases.
+  </li><li>
+    It is often acceptable to convert a lower-level error to a string and attach that string to your errors, as long as the containing error type constructor is descriptive enough.
+    However, you should check that these strings do not contain sensitive information, such as email addresses or secret keys.
+</li></ul>
+<p>You might prefer to wrap a <code>Box&lt;dyn Error&gt;</code> instead of converting the error to string so the caller can <a href="https://doc.rust-lang.org/1.62.0/std/error/trait.Error.html#method.downcast">downcast</a> the error, delay the conversion to string, and traverse the error stack using the <a href="https://doc.rust-lang.org/1.62.0/std/error/trait.Error.html#method.source"><code>source</code></a> method.
+I found that boxing errors does not help me much in practice:
+</p>
+<ul class="arrows"><li>
+    If the caller needs to access information from the original error programmatically, embed the relevant bits or add more type constructors.
+    Downcasting is a short-term solution.
+  </li><li>
+    The client must depend on the same semantic version of the transitive dependency to downcast the error.
+    The client code can silently break if the versions diverge (<code>0.3</code> in the client code vs. <code>0.4</code> in your code, for example).
+  </li><li>
+    The error types become impossible to clone and serialize (my errors often cross process boundaries).
+</li></ul>
+</section>
+<section><h2 id="resources"><a href="#resources">Resources</a></h2>
+<p>There is a lot of research on error-handling approaches.
+Yet the practical application of those ideas in real-world programming interfaces is an art requiring good taste and human compassion.
+The following resources made the most profound imprint on my thinking about errors.</p>
+<ol class="circled"><li data-num-glyph="①"><a href="https://web.archive.org/web/20110818020758/http://www.univ-orleans.fr/lifo/Members/David.Teller/publications/ml2008.pdf">Catch me if you can: Looking for type-safe, hierarchical, lightweight, polymorphic and efficient error management in OCaml</a> by David Teller, Arnaud Spiwack, and Till Varoquaux.
+    This article demonstrates how features of a high-level functional language give rise to a powerful new way of dealing with errors.
+  </li><li data-num-glyph="②">
+    The <a href="https://wiki.haskell.org/Error_vs._Exception">Error vs. Exception</a> article on Haskell Wiki has a few through-provoking parallels between <code>panic</code>s (called <q>errors</q> in the article) and recoverable errors (called <q>exceptions</q>).
+  </li><li data-num-glyph="③"><a href="https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/">Parse, don’t validate</a> by Alexis King is a beautiful introduction to type-driven design and error handling.
+  </li><li data-num-glyph="④"><a href="https://www.parsonsmatt.org/2018/11/03/trouble_with_typed_errors.html">The Trouble with Typed Errors</a> by Matt Parsons.
+    I share Matt’s passion for precisely expressing errors in types, even though I would not try to replicate his Haskell-specific ideas in Rust.
+</li></ol>
+<p>You can discuss this article on <a href="https://www.reddit.com/r/rust/comments/yvdz6l/blog_post_designing_error_types_in_rust">Reddit</a>.
+</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/15-when-rust-hurts.html">When Rust hurts</a></li><li><a href="/posts/03-rust-packages-crates-modules.html">Rust at scale: packages, crates, and modules</a></li><li><a href="/posts/14-stable-structures.html">Tutorial: stable-structures</a></li><li><a href="/posts/17-scaling-rust-builds-with-bazel.html">Scaling Rust builds with Bazel</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/13-icp-ledger.html"> ←IC internals: the ICP ledger</a></div><div id="older"><a href="/posts/11-ii-stable-memory.html">IC internals: Internet Identity storage→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

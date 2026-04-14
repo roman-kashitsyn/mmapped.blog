@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="canisters,ic,rust"><meta name="description" content="A compilation of useful patterns for developing IC canisters in Rust."><title>Effective Rust canisters</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/01-effective-rust-canisters.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/01-effective-rust-canisters.html">Effective Rust canisters</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2021-10-25</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2022-10-16</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#how-to-read">How to read this document</a></li><li class="toc toc-level-1"><a href="#code-organization">Code organization</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#canister-state">Canister state</a></li><li class="toc toc-level-2"><a href="#async">Asynchrony</a></li><li class="toc toc-level-2"><a href="#canister-interfaces">Canister interfaces</a></li></ul></li><li class="toc toc-level-1"><a href="#optimization">Optimization</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#cycle-consumption">Reducing cycle consumption</a></li><li class="toc toc-level-2"><a href="#module-size">Reducing module size</a></li></ul></li><li class="toc toc-level-1"><a href="#infra">Infrastructure</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#builds">Builds</a></li><li class="toc toc-level-2"><a href="#upgrades">Upgrades</a></li><li class="toc toc-level-2"><a href="#observability">Observability</a></li></ul></li><li class="toc toc-level-1"><a href="#references">References</a></li><li class="toc toc-level-1"><a href="#changelog">Changelog</a></li></ul><hr>
+
+<section><h2 id="how-to-read"><a href="#how-to-read">How to read this document</a></h2>
+<p>This document is a compilation of useful patterns and typical pitfalls I observed in the Rust code running on the <a href="https://internetcomputer.org/">Internet Computer</a> (IC).
+Take everything in this document with a grain of salt: solutions that worked well for my problems might be suboptimal for yours.
+Every piece of advice comes with explanations to help you form your judgment.</p>
+<p>Some recommendations might change if I discover better patterns or if the state of the ecosystem improves.
+I will try to keep this document up to date.</p>
+</section>
+<section><h2 id="code-organization"><a href="#code-organization">Code organization</a></h2>
+<h3 id="canister-state"><a href="#canister-state">Canister state</a></h3>
+<p>The standard IC canister organization forces developers to use a mutable global state.
+Rust intentionally makes using global mutable variables hard, giving you a few options for organizing your code.
+Which option is the best?</p>
+<div class="advice" id="use-threadlocal"><p><a class="anchor" href="#use-threadlocal">☛</a>Use <code>thread_local!</code> with <code>Cell</code>/<code>RefCell</code> for state variables.</p></div>
+<p>This option is the safest.
+It will help you avoid memory corruption and issues with asynchrony.</p>
+<div class="source-container"><pre class="source good"><code><span class="line">thread_local! {</span>
+<span class="line">    static NEXT_USER_ID: Cell&lt;u64&gt; = Cell::new(0);</span>
+<span class="line">    static ACTIVE_USERS: RefCell&lt;UserMap&gt; = RefCell::new(UserMap::new());</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Let us look at other options you might find in the wild and see what is wrong with them.</p>
+<ol class="circled"><li data-num-glyph="①"><div class="source-container"><pre class="source bad"><code><span class="line">let state = ic_cdk::storage::get_mut&lt;MyState&gt;;</span>
+</code></pre></div>
+<p>The Rust CDK used to provide a <a href="https://docs.rs/ic-cdk/0.3.2/ic_cdk/storage/index.html">storage</a> abstraction that allows you to <a href="https://docs.rs/ic-cdk/0.3.2/ic_cdk/storage/fn.get_mut.html">get</a> a value indexed by a type.
+The interface lets you obtain multiple non-exclusive mutable references to the same object, breaking language guarantees.
+The CDK team <a href="https://github.com/dfinity/cdk-rs/blob/c7aaaddaaf5e39c90a51035f87be68a0215c8c10/src/ic-cdk/CHANGELOG.md#changed-2">removed</a> the storage API in version 0.5.0.</p>
+</li><li data-num-glyph="②"><div class="source-container"><pre class="source bad"><code><span class="line">static mut STATE: Option&lt;State&gt; = None;</span>
+</code></pre></div>
+<p>Plain old global variables.
+This approach forces you to write boilerplate code to access the global state and suffers from the same safety issues as legacy <code>storage</code> API.</p>
+</li><li data-num-glyph="③"><div class="source-container"><pre class="source bad"><code><span class="line">lazy_static! {</span>
+<span class="line">    static STATE: RwLock&lt;MyState&gt; = RwLock::new(MyState::new());</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>This approach is memory-safe, although I find it confusing.
+Canisters cannot run multiple threads, so it is not obvious what happens if you try to obtain a lock twice.
+A failure to obtain a lock makes your canister trap, not block, as you might expect on most platforms.
+This distinction means your program’s meaning changes depending on the compilation target (<code>wasm32-unknown-unknown</code> vs. native code).
+<a href="#target-independent">We do not want that</a>.
+</p>
+</li></ol>
+<p>Let us see how non-exclusive mutable references can lead to hard-to-track bugs.</p>
+<div class="source-container"><pre class="source bad"><code><span class="line">#[update]</span>
+<span class="line">fn register_friend(uid: UserId, friend: User) -&gt; Result&lt;UserId, Error&gt; {</span>
+<span class="line">    let mut_user_ref = storage::get_mut&lt;Users&gt;() <span class="circled-ref">①</span></span>
+<span class="line">                           .find_mut(uid)</span>
+<span class="line">                           .ok_or(Error::NotFound)?;</span>
+<span class="line"></span>
+<span class="line">    let friend_id = storage::get_mut&lt;Users&gt;().add_user(&amp;friend); <span class="circled-ref">②</span></span>
+<span class="line"></span>
+<span class="line">    mut_user_ref.friends.insert(friend_id); <span class="circled-ref">③</span></span>
+<span class="line"></span>
+<span class="line">    Ok(friend_id)</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The example shows a function that uses the storage API, but plain old mutable globals cause the same issue.
+</p>
+<ol class="circled"><li data-num-glyph="①">We get a mutable reference pointing into our data structure.
+</li><li data-num-glyph="②">
+  We call a function that modifies the data structure.
+  This call might have invalidated the reference we obtained in step <span class="circled-ref">①</span>.
+  The reference could now be pointing to garbage or into the middle of another valid object.
+</li><li data-num-glyph="③">
+  We use the original mutable reference to modify the object, potentially corrupting the heap.
+</li></ol>
+<p>The real-life code might be more complicated.
+The undesired mutation might happen deep in the function call stack.
+The issue can stay undetected until your canister is in active use, storing (and corrupting) user data.
+If we used a <code>RefCell</code>, the code would panic before we shipped it.</p>
+<p>It should now be clear <em>how</em> to declare global variables.
+Let us discuss <em>where</em> to put them.</p>
+<div class="advice" id="clear-state"><p><a class="anchor" href="#clear-state">☛</a>Put all your globals in one basket.</p></div>
+<p>Consider making all the global variables private and placing them in a single file, the canister main file.
+This approach has a few benefits:</p>
+<ul class="arrows"><li>Testing becomes easier because most of your code does not touch the globals.
+ </li><li>
+   You can see global state usage patterns at a glance.
+   For example, you can quickly validate that the canister persists all the stable data across upgrades.
+</li></ul>
+<p>Consider also adding comments clarifying which variables are stable, like in the following example:</p>
+<div class="source-container"><pre class="source good"><code><span class="line">thread_local! {</span>
+<span class="line">    /* <b>stable</b>   <span class="circled-ref">①</span> */ static USERS: RefCell&lt;Users&gt; = ... ;</span>
+<span class="line">    /* <b>flexible</b> <span class="circled-ref">②</span> */ static LAST_ACTIVE: Cell&lt;UserId&gt; = ...;</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>I borrowed <a href="https://sdk.dfinity.org/docs/language-guide/upgrades.html#_declaring_stable_variables">Motoko terminology</a> here:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+    The system preserves <em>stable</em> variables across upgrades.
+    For example, a user database should probably be stable.
+  </li><li data-num-glyph="②">
+    The system discards <em>flexible</em> variables on code upgrades.
+    For example, you can make a cache flexible if it is not crucial for your canister.
+</li></ol>
+<p>If you have tried to test canister code, you probably noticed that this part of the development workflow is not polished yet.
+A quick way to make your life easier is to piggyback on the existing Rust infrastructure.
+This trick is possible only if you can compile the same canister code to a native target and WebAssembly.</p>
+<div class="advice" id="target-independent"><p><a class="anchor" href="#target-independent">☛</a>Make most of the canister code target-independent.</p></div>
+<p>It pays off to factor most of the canister code into loosely coupled modules and packages and to test them independently.
+Most of the code that depends on the System API should live in the main file.</p>
+<p>You can also create thin abstractions for the System API and test your code with a fake but faithful implementation.
+For example, you could use the following trait to abstract the <a href="https://sdk.dfinity.org/docs/interface-spec/index.html#system-api-stable-memory">Stable Memory API</a></p>
+<div class="source-container"><pre class="source good"><code><span class="line">pub trait Memory {</span>
+<span class="line">    fn size(&amp;self) -&gt; WasmPages;</span>
+<span class="line">    fn grow(&amp;self, pages: WasmPages) -&gt; WasmPages;</span>
+<span class="line">    fn read(&amp;self, offset: u64, dst: &amp;mut [u8]);</span>
+<span class="line">    fn write(&amp;self, offset: u64, src: &amp;[u8]);</span>
+<span class="line">}</span>
+</code></pre></div>
+<h3 id="async"><a href="#async">Asynchrony</a></h3>
+<p>If a canister traps or panics, the system rolls back the state of the canister to the latest working snapshot<label class="margin-toggle sidenote-number" for="sn-op"></label><input type="checkbox" id="sn-op" class="margin-toggle"><span class="sidenote">
+  This system behavior is part of the <a href="/posts/06-ic-orthogonal-persistence.html#actors">orthogonal persistence</a> feature.
+</span>.
+If a canister makes a call and then traps in the callback, the canister might never release the resources allocated for the call.</p>
+<div class="advice" id="panic-await"><p><a class="anchor" href="#panic-await">☛</a>Avoid panics after <code>await</code>.</p></div>
+<p>Let us start with an example.</p>
+<div class="source-container"><pre class="source bad"><code><span class="line">#[update]</span>
+<span class="line">async fn update_avatar(user_id: UserId, <b>pic: ByteBuf</b> <span class="circled-ref">①</span> ) {</span>
+<span class="line">    let key = store_async(user_id, &amp;pic)</span>
+<span class="line">                  <b>.await</b>      <span class="circled-ref">②</span></span>
+<span class="line">                  <b>.unwrap()</b>;  <span class="circled-ref">③</span></span>
+<span class="line">    USERS.with(|users| set_avatar_key(user_id, key));</span>
+<span class="line">}</span>
+</code></pre></div>
+<ol class="circled"><li data-num-glyph="①">The method receives a byte buffer with an avatar picture.
+</li><li data-num-glyph="②">
+  The method issues a call to the storage canister.
+  The call allocates a future on the heap, capturing the byte buffer.
+</li><li data-num-glyph="③">
+  If the call fails, the canister panics.
+  The system rolls back the canister state to the snapshot it created right before the callback invocation.
+  From the canister’s point of view, it still waits for the reply and keeps the future and the buffer on the heap.
+</li></ol>
+<p>Note that there is no memory corruption.
+The canister is still in a valid state but will not release the buffer memory until the next upgrade.</p>
+<p>The System API provides the <a href="https://sdk.dfinity.org/docs/interface-spec/index.html"><code>ic0.call_on_cleanup</code></a> function to address this issue.
+Rust CDK versions <a href="https://github.com/dfinity/cdk-rs/blob/c7aaaddaaf5e39c90a51035f87be68a0215c8c10/src/ic-cdk/CHANGELOG.md#fixed-4">0.5.1</a> and higher take advantage of this mechanism and release resources across await boundaries.
+I still recommend using explicit error handling instead of panics whenever possible.</p>
+<p>Another problem you might experience with asynchrony and miss in tests is a future that has exclusive access to a resource for a long time.</p>
+<div class="advice" id="dont-lock"><p><a class="anchor" href="#dont-lock">☛</a>Don’t lock shared resources across await boundaries.</p></div>
+<div class="source-container"><pre class="source bad"><code><span class="line">#[update]</span>
+<span class="line">async fn refresh_profile_bad(user_id: UserId) {</span>
+<span class="line">   let users = <b>USERS_LOCK.write().unwrap()</b>; <span class="circled-ref">①</span></span>
+<span class="line">   if let Some(user) = users.find_mut(user_id) {</span>
+<span class="line">       if let Ok(profile) = async_get_profile(user_id)<b>.await</b> { <span class="circled-ref">②</span></span>
+<span class="line">           user.profile = profile;</span>
+<span class="line">       }</span>
+<span class="line">   }</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">#[update]</span>
+<span class="line">fn add_user(user: User) {</span>
+<span class="line">    let users = <b>USERS_LOCK.write().unwrap()</b>; <span class="circled-ref">③</span></span>
+<span class="line">    // …</span>
+<span class="line">}</span>
+</code></pre></div>
+<ol class="circled"><li data-num-glyph="①">We obtain exclusive access to the <code>users</code> map and make an async call.
+</li><li data-num-glyph="②">The system commits the canister state after the call suspends. The user map stays locked.
+</li><li data-num-glyph="③">Other methods accessing the map will panic until the call started in step <span class="circled-ref">②</span> completes.
+</li></ol>
+<p>This issue becomes quite nasty when combined with panics.
+If you lock a resource and panic after the <code>await</code>, the resource might stay locked forever<label class="margin-toggle sidenote-number" for="sn-fixed-0.5.1"></label><input type="checkbox" id="sn-fixed-0.5.1" class="margin-toggle"><span class="sidenote">As noted in the previous section, Rust CDK version 0.5.1 addresses this issue.</span>.</p>
+<p>We’re now ready to appreciate another benefit of <a href="#use-threadlocal">using <code>thread_local!</code> for global variables</a>.
+The code above wouldn’t have compiled if we used <code>thread_local!</code>.
+You cannot <code>await</code> in closure accessing thread-local variables:</p>
+<div class="source-container"><pre class="source bad"><code><span class="line">#[update]</span>
+<span class="line">async fn refresh_profile(user_id: UserId) {</span>
+<span class="line">    <b>USERS.with</b>(|users| {</span>
+<span class="line">        if let Some(user) = users.borrow_mut().find_mut(user_id) {</span>
+<span class="line">            if let Ok(profile) = async_get_profile(user_id)<b>.await</b> {</span>
+<span class="line">                <b>// The closure is synchronous, cannot await ^^^</b></span>
+<span class="line">                // …</span>
+<span class="line">            }</span>
+<span class="line">        }</span>
+<span class="line">    });</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The compiler nudges you to write a less elegant but correct version:</p>
+<div class="source-container"><pre class="source good"><code><span class="line">#[update]</span>
+<span class="line">async fn refresh_profile(user_id: UserId) {</span>
+<span class="line">    if !USERS.with(|users| users.borrow().has_user(user_id)) {</span>
+<span class="line">        return;</span>
+<span class="line">    }</span>
+<span class="line">    if let Ok(profile) = async_get_profile(user_id).await {</span>
+<span class="line">        USERS.with(|users| {</span>
+<span class="line">            if let Ok(user) = users.borrow_mut().find_user(user_id) {</span>
+<span class="line">                user.profile = profile;</span>
+<span class="line">            }</span>
+<span class="line">        })</span>
+<span class="line">    }</span>
+<span class="line">}</span>
+</code></pre></div>
+<h3 id="canister-interfaces"><a href="#canister-interfaces">Canister interfaces</a></h3>
+<p>Many people enjoy the Motoko compiler’s code-first approach: you write an actor with public functions, and the compiler automatically generates the corresponding Candid file.
+This feature is indispensable in the early stages of development.</p>
+<p>Canister with clients should follow the reverse pattern: the Candid file should be the source of truth, not the canister implementation.</p>
+<div class="advice" id="candid-file"><p><a class="anchor" href="#candid-file">☛</a>Make your .did file the source of truth.</p></div>
+<p>Your Candid file is the primary documentation source for people interacting with your canister (including your team members working on the front end).
+The interface should be stable, easy to find, and well-documented.</p>
+<div class="source-container"><pre class="source good"><code><span class="line">type TransferError = variant {</span>
+<span class="line">  // The debit account didn't have enough funds</span>
+<span class="line">  // for completing the transaction.</span>
+<span class="line">  InsufficientFunds : Balance;</span>
+<span class="line">  // …</span>
+<span class="line">};</span>
+<span class="line"></span>
+<span class="line">type TransferResult =</span>
+<span class="line">  variant { Ok : BlockHeight; Err : TransferError; };</span>
+<span class="line"></span>
+<span class="line">service {</span>
+<span class="line">  // Transfer funds between accounts.</span>
+<span class="line">  transfer : (TransferArgs) -&gt; (TransferResult);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The Candid package provides tools to help you keep your implementation and the public interface in sync:</p>
+<ol class="circled"><li data-num-glyph="①">
+  Annotate your canister methods with the <a href="https://docs.rs/candid/0.8.2/candid/attr.candid_method.html"><code>candid_method</code></a> macro.
+</li><li data-num-glyph="②">
+  Use the <a href="https://docs.rs/candid/0.8.2/candid/macro.export_service.html"><code>export_service</code></a> macro to extract your canister’s effective Candid interface.
+</li><li data-num-glyph="③">
+  Call the <a href="https://docs.rs/candid/0.8.2/candid/utils/fn.service_compatible.html"><code>service_compatible</code></a> function to check whether the effective interface is a subtype of the interface from the .did file.
+</li></ol>
+<div class="source-container"><pre class="source good"><code><span class="line">use candid::candid_method;</span>
+<span class="line">use ic_cdk_macros::update;</span>
+<span class="line"></span>
+<span class="line">#[update]</span>
+<span class="line">#[candid_method(update)] <span class="circled-ref">①</span></span>
+<span class="line">async fn transfer(arg: TransferArg) -&gt; Result&lt;Nat, TransferError&gt; {</span>
+<span class="line">  // …</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">#[test]</span>
+<span class="line">fn check_candid_interface() {</span>
+<span class="line">  use candid::utils::{service_compatible, CandidSource};</span>
+<span class="line">  use std::path::Path;</span>
+<span class="line"></span>
+<span class="line">  candid::export_service!(); <span class="circled-ref">②</span></span>
+<span class="line">  let new_interface = __export_service();</span>
+<span class="line"></span>
+<span class="line">  service_compatible( <span class="circled-ref">③</span></span>
+<span class="line">    CandidSource::Text(&amp;new_interface),</span>
+<span class="line">    CandidSource::File(Path::new(&quot;interface.did&quot;)),</span>
+<span class="line">  ).unwrap();</span>
+<span class="line">}</span>
+</code></pre></div>
+<div class="advice" id="errors-variant"><p><a class="anchor" href="#errors-variant">☛</a>Use variant types to indicate error cases.</p></div>
+<p>Just as Rust error types simplify error handling, Candid variants can help your clients gracefully handle edge cases.
+Variant types are also the <a href="https://sdk.dfinity.org/docs/language-guide/errors.html#_prefer_optionresult_over_exceptions_where_possible">preferred</a> way of reporting errors in Motoko.</p>
+<div class="source-container"><pre class="source good"><code><span class="line">type CreateEntityResult = variant {</span>
+<span class="line">  Ok  : record { entity_id : EntityId; };</span>
+<span class="line">  Err : opt variant {</span>
+<span class="line">    EntityAlreadyExists : null;</span>
+<span class="line">    NoSpaceLeftInThisShard : null;</span>
+<span class="line">  }</span>
+<span class="line">};</span>
+<span class="line"></span>
+<span class="line">service : {</span>
+<span class="line">  create_entity : (EntityParams) -&gt; (CreateEntityResult);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Note that even if a service method returns a result type, it can still <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec/#reject-codes">reject</a> the call.
+There is not much benefit from adding error variants such as <code>InvalidArgument</code> or <code>Unauthorized</code>.
+There is no meaningful way to recover from such errors programmatically.
+In most cases, rejecting malformed, invalid, or unauthorized requests is the right thing to do.</p>
+<p>So you followed the advice and represented your errors as a <code>variant</code>.
+How do you add more error constructors as your interface evolves?</p>
+<div class="advice" id="candid-variant-extensibility"><p><a class="anchor" href="#candid-variant-extensibility">☛</a>Make your variant types extensible.</p></div>
+<p>Candid variant types are tricky to evolve in a backward-compatible manner.
+One approach is to make the variant field optional:</p>
+<div class="source-container"><pre class="source good"><code><span class="line">type CreateEntityResult = variant {</span>
+<span class="line">  Ok : record { /* */ };</span>
+<span class="line">  Err : <b>opt</b> variant { /* * /}</span>
+<span class="line">};</span>
+</code></pre></div>
+<p>If some clients of your canister use an outdated version of your interface, the Candid decoder could replace unknown constructors with a <code>null</code>.
+This approach has two main issues:
+</p>
+<ul class="arrows"><li>The Candid decoder does not yet implement this magic (see <a href="https://github.com/dfinity/candid/issues/295">dfinity/candid#295</a>).
+  </li><li>Diagnosing a problem if all you see is <code>null</code> is daunting.
+</li></ul>
+<p>An alternative is to make your error type immutable and rely on a loosely typed catch-all case (and documentation) for extensibility.</p>
+<div class="source-container"><pre class="source good"><code><span class="line">type CreateEntityResult = variant {</span>
+<span class="line">  Ok : record { /* */ };</span>
+<span class="line">  Err : variant {</span>
+<span class="line">    EntityAlreadyExists : null;</span>
+<span class="line">    NoSpaceLeftInThisShard : null;</span>
+<span class="line">    // Currently defined errors</span>
+<span class="line">    // ========================</span>
+<span class="line">    // error_code = 401 : Unauthorized.</span>
+<span class="line">    // error_code = 429 : Too many requests.</span>
+<span class="line">    // error_code = 503 : Canister overloaded.</span>
+<span class="line">    Other : record { error_code : nat; error_message : text }</span>
+<span class="line">  }</span>
+<span class="line">};</span>
+</code></pre></div>
+<p>If you follow this approach, your clients will see a nice textual description if they experience a newly introduced error.
+Unfortunately, programmatically handling generic errors is more cumbersome and error-prone than well-typed extensible variants.</p>
+</section>
+<section><h2 id="optimization"><a href="#optimization">Optimization</a></h2>
+<h3 id="cycle-consumption"><a href="#cycle-consumption">Reducing cycle consumption</a></h3>
+<p>The first step towards an optimized system is profiling.</p>
+<div class="advice" id="instruction-counter"><p><a class="anchor" href="#instruction-counter">☛</a>Measure the number of instructions your endpoints consume.</p></div>
+<p>The <a href="https://docs.rs/ic-cdk/0.5.3/ic_cdk/api/fn.instruction_counter.html"><code>instruction_counter</code></a> API will tell you the number of <em>instructions</em> your code consumed since the last <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec/#entry-points">entry point</a>.
+Instructions are the internal currency of the IC runtime.
+One IC instruction is the <a href="https://en.wikipedia.org/wiki/Quantum">quantum</a> of work that the system can do, such as loading a 32-bit integer from a memory address.
+The system assigns an instruction cost equivalent to each <a href="https://sourcegraph.com/github.com/dfinity/ic@cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156/-/blob/rs/embedders/src/wasm_utils/instrumentation.rs?L155-177">WebAssembly instruction</a> and <a href="https://sourcegraph.com/github.com/dfinity/ic@cfdbbf5/-/blob/rs/embedders/src/wasmtime_embedder/system_api_complexity.rs?L40-107">system call</a>.
+It also defines all its limits in terms of instructions.
+As of July 2022, these limits are:</p>
+<ul class="arrows"><li>One message execution: <a href="https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L19">5 billion</a> instructions.
+</li><li>One round<label class="margin-toggle sidenote-number" for="sn-round"></label><input type="checkbox" id="sn-round" class="margin-toggle"><span class="sidenote">Each block produced by consensus initiates a round of execution.</span>: <a href="https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L46">7 billion</a> instructions.
+</li><li>Canister upgrade: <a href="https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L56">200 billion</a> instructions.
+</li></ul>
+<p>Instructions are not cycles, but there is a <a href="https://github.com/dfinity/ic/blob/c01d7d1b2e18490a2f70d2fdf5b6aceccab5860c/rs/cycles_account_manager/src/lib.rs#L730-L738">simple linear function</a> that converts instructions to cycles.
+As of July 2022, ten instructions are equivalent to four cycles on an <a href="https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L288-L289">application</a> subnet.</p>
+<p>Note that the value that <code>performance_counter</code> returns has meaning only within a single execution.
+You should not compare values of the instruction counter measured across async boundaries.</p>
+<div class="source-container"><pre class="source bad"><code><span class="line">#[update]</span>
+<span class="line">async fn transfer(from: Account, to: Account, amount: Nat) -&gt; Result&lt;TxId, Error&gt; {</span>
+<span class="line">  let start = ic_cdk::api::instruction_counter();</span>
+<span class="line"></span>
+<span class="line">  let tx = apply_transfer(from, to, amount)?;</span>
+<span class="line">  let tx_id = archive_transaction(tx).<b>await</b>?;</span>
+<span class="line"></span>
+<span class="line">  <em>// <b>BAD</b>: the await point above resets the instruction counter.</em></span>
+<span class="line">  let end = ic_cdk::api::instruction_counter();</span>
+<span class="line">  record_measurement(end - start);</span>
+<span class="line"></span>
+<span class="line">  Ok(tx_id)</span>
+<span class="line">}</span>
+</code></pre></div>
+<div class="advice" id="serde-bytes"><p><a class="anchor" href="#serde-bytes">☛</a>Encode byte arrays using the <a href="https://crates.io/crates/serde_bytes"><code>serde_bytes</code></a> package.</p></div>
+<p><a href="https://github.com/dfinity/candid">Candid</a> is the standard interface definition language on the IC.
+The Rust implementation of Candid relies on a popular <a href="https://serde.rs/">serde</a> framework and inherits all of serde’s quirks.
+One such quirk is the inefficient encoding of byte arrays (<code>Vec&lt;u8&gt;</code> and <code>[u8]</code>) in most serialization formats.
+Due to Rust <a href="https://rust-lang.github.io/rfcs/1210-impl-specialization.html">limitations</a>, serde cannot treat byte arrays specially and encodes each byte as a separate element in a generic array, increasing the number of instructions required to encode or decode the message (often by a factor of ten or more).</p>
+<p>The <code>HttpResponse</code> from the canister http protocol is a good example.</p>
+<div class="source-container"><pre class="source bad"><code><span class="line">#[derive(CandidType, Deserialize)]</span>
+<span class="line">struct HttpResponse {</span>
+<span class="line">    status_code: u16,</span>
+<span class="line">    headers: Vec&lt;(String, String)&gt;,</span>
+<span class="line">    <em>// <b>BAD</b>: inefficient</em></span>
+<span class="line">    body: Vec&lt;u8&gt;,</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The <code>body</code> field can be large; let us tell serde to encode this field more efficiently using the <a href="https://serde.rs/field-attrs.html#with"><code>with</code></a> attribute.</p>
+<div class="source-container"><pre class="source good"><code><span class="line">#[derive(CandidType, Deserialize)]</span>
+<span class="line">struct HttpResponse {</span>
+<span class="line">    status_code: u16,</span>
+<span class="line">    headers: Vec&lt;(String, String)&gt;,</span>
+<span class="line">    <em>// <b>OK</b>: encoded efficiently</em></span>
+<span class="line">    #[serde(with = &quot;serde_bytes&quot;)]</span>
+<span class="line">    body: Vec&lt;u8&gt;,</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Alternatively, we can use the <a href="https://docs.serde.rs/serde_bytes/struct.ByteBuf.html"><code>ByteBuf</code></a> type for this field.</p>
+<div class="source-container"><pre class="source good"><code><span class="line">#[derive(CandidType, Deserialize)]</span>
+<span class="line">struct HttpResponse {</span>
+<span class="line">    status_code: u16,</span>
+<span class="line">    headers: Vec&lt;(String, String)&gt;,</span>
+<span class="line">    <em>// <b>OK</b>: also efficient</em></span>
+<span class="line">    body: serde_bytes::ByteBuf,</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>I wrote a tiny canister to measure the savings.</p>
+<figure><label class="margin-toggle" for="mn-http-response-canister">⊕</label><input type="checkbox" id="mn-http-response-canister" class="margin-toggle"><span class="marginnote">
+  A canister endpoint measuring the number of instructions required to encode an HTTP response.
+  We have to use a <a href="https://docs.rs/ic-cdk/latest/ic_cdk/api/call/struct.ManualReply.html"><code>ManualReply</code></a> to measure the encoding time.
+</span><div class="source-container"><pre class="source rust"><code><span class="line">#[query(manual_reply = true)]</span>
+<span class="line">fn http_response() -&gt; ManualReply&lt;HttpResponse&gt; {</span>
+<span class="line">    let start = ic_cdk::api::instruction_counter();</span>
+<span class="line">    let reply = ManualReply::one(HttpResponse {</span>
+<span class="line">        status_code: 200,</span>
+<span class="line">        headers: vec![(&quot;Content-Length&quot;.to_string(), &quot;1000000&quot;.to_string())],</span>
+<span class="line">        body: vec![0; 1_000_000],</span>
+<span class="line">    });</span>
+<span class="line">    let end = ic_cdk::api::instruction_counter();</span>
+<span class="line">    ic_cdk::api::print(format!(&quot;Consumed {} instructions&quot;, end - start));</span>
+<span class="line">    reply</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>The unoptimized version consumes 130 million instructions to encode one megabyte, and the version with <code>serde_bytes</code> needs only 12 million instructions.</p>
+<p>In the case of the <a href="https://github.com/dfinity/internet-identity/">Internet Identity</a> canister, this change alone reduced the instruction consumption in HTTP queries by <a href="https://github.com/dfinity/internet-identity/pull/184">order of magnitude</a>.
+You should apply the same technique for all types deriving serde’s <code>Serialize</code> and <code>Deserialize</code> traits, not just for types you encode as Candid.
+A <a href="https://github.com/dfinity/ic/commit/1b98a5d984176b1c948d0cb92227d88ad5ee8044">similar change</a> boosted the ICP ledger archive upgrades (the canister uses <a href="https://cbor.io">CBOR</a> for state serialization).</p>
+<div class="advice" id="avoid-copies"><p><a class="anchor" href="#avoid-copies">☛</a>Avoid copying large values.</p></div>
+<p>Experience shows that canisters spend a lot of their instructions copying bytes<label class="margin-toggle sidenote-number" for="sn-bulk-ops"></label><input type="checkbox" id="sn-bulk-ops" class="margin-toggle"><span class="sidenote">
+  Spending a lot of time in <code>memcpy</code> and <code>memset</code> is a common trait of many WebAssembly programs.
+  That observation led to the <a href="https://github.com/WebAssembly/bulk-memory-operations/blob/dcaa1b6791401c29b67e8cd7929ec80949f1f849/proposals/bulk-memory-operations/Overview.md">bulk memory operations</a> proposal included in the <a href="https://webassembly.github.io/spec/core/appendix/changes.html?highlight=proposals#bulk-memory-and-table-instructions">WebAssembly 2.0 release</a>.</span>.
+Reducing the number of unnecessary copies often affects cycle consumption.</p>
+<p>Let us imagine that we work on a canister that serves a single dynamic asset.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line">thread_local!{</span>
+<span class="line">    static ASSET: RefCell&lt;Vec&lt;u8&gt;&gt; = RefCell::new(init_asset());</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">#[derive(CandidType, Deserialize)]</span>
+<span class="line">struct HttpResponse {</span>
+<span class="line">    status_code: u16,</span>
+<span class="line">    headers: Vec&lt;(String, String)&gt;,</span>
+<span class="line">    #[serde(with = &quot;serde_bytes&quot;)]</span>
+<span class="line">    body: Vec&lt;u8&gt;,</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">#[query]</span>
+<span class="line">fn http_request(_request: HttpRequest) -&gt; HttpResponse {</span>
+<span class="line">    <em>// <b>NOTE</b>: we are making a full copy of the asset.</em></span>
+<span class="line">    let body = ASSET.with(|cell| cell.borrow().clone());</span>
+<span class="line"></span>
+<span class="line">    HttpResponse {</span>
+<span class="line">        status_code: 200,</span>
+<span class="line">        headers: vec![(&quot;Content-Length&quot;.to_string(), body.len().to_string())],</span>
+<span class="line">        body</span>
+<span class="line">    }</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The <code>http_request</code> endpoint makes a deep copy of the asset for every request.
+This copy is unnecessary because the CDK encodes the response into the reply buffer as soon as the endpoint returns.
+There is no need for the encoder to own the body.
+The current macro API makes it unnecessarily hard to eliminate copies: the type of reply must have <code>'static</code> lifetime.
+There are a few ways to work around this issue.</p>
+<p>One solution is to wrap the asset body into a <a href="https://doc.rust-lang.org/std/sync/struct.Arc.html">reference-counting smart pointer</a>.</p>
+<figure><label class="margin-toggle" for="mn-rc-bytes">⊕</label><input type="checkbox" id="mn-rc-bytes" class="margin-toggle"><span class="marginnote">
+  Using a reference-counting pointer for large values.
+  Note that the type of the <code>ASSET</code> variable has to change: all copies of the data must be behind the smart pointer.
+</span><div class="source-container"><pre class="source rust"><code><span class="line">thread_local!{</span>
+<span class="line">    static ASSET: RefCell&lt;RcBytes&gt; = RefCell::new(init_asset());</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">struct RcBytes(Arc&lt;serde_bytes::ByteBuf&gt;);</span>
+<span class="line"></span>
+<span class="line">impl CandidType for RcBytes { /* */ }</span>
+<span class="line">impl Deserialize for RcBytes { /* */ }</span>
+<span class="line"></span>
+<span class="line">#[derive(CandidType, Deserialize)]</span>
+<span class="line">struct HttpResponse {</span>
+<span class="line">    status_code: u16,</span>
+<span class="line">    headers: Vec&lt;(String, String)&gt;,</span>
+<span class="line">    body: RcBytes,</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>With this approach, you can save on copies without changing the overall structure of your code.
+A <a href="https://github.com/dfinity/certified-assets/commit/47804eb70f44d2e5c73da26f0009540330293eb2">similar change</a> cut instruction consumption in the certified assets canister by 30%.</p>
+<p>Another solution is to enrich your types with lifetimes and use the <a href="https://docs.rs/ic-cdk/latest/ic_cdk/api/call/struct.ManualReply.html"><code>ManualReply</code></a> API.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line">use std::borrow::Cow;</span>
+<span class="line">use serde_bytes::Bytes;</span>
+<span class="line"></span>
+<span class="line">#[derive(CandidType, Deserialize)]</span>
+<span class="line">struct HttpResponse&lt;'a&gt; {</span>
+<span class="line">    status_code: u16,</span>
+<span class="line">    headers: Vec&lt;(Cow&lt;'a, str&gt;, Cow&lt;'a, str&gt;)&gt;,</span>
+<span class="line">    body: Cow&lt;'a, serde_bytes::Bytes&gt;,</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">#[query(manual_reply = true)]</span>
+<span class="line">fn http_response(_request: HttpRequest) -&gt; ManualReply&lt;HttpResponse&lt;'static&gt;&gt; {</span>
+<span class="line">    ASSET.with(|asset| {</span>
+<span class="line">        let asset = &amp;*asset.borrow();</span>
+<span class="line">        ic_cdk::api::call::reply((&amp;HttpResponse {</span>
+<span class="line">            status_code: 200,</span>
+<span class="line">            headers: vec![(</span>
+<span class="line">                Cow::Borrowed(&quot;Content-Length&quot;),</span>
+<span class="line">                Cow::Owned(asset.len().to_string()),</span>
+<span class="line">            )],</span>
+<span class="line">            body: Cow::Borrowed(Bytes::new(asset)),</span>
+<span class="line">        },));</span>
+<span class="line">    });</span>
+<span class="line">    ManualReply::empty()</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>This approach allows you to get rid of all the unnecessary copies, but it complicates the code significantly.
+You should prefer the reference-counting approach unless you have to work with data structures that already have explicit lifetimes (<a href="https://docs.rs/ic-certified-map/0.3.0/ic_certified_map/enum.HashTree.html"><code>HashTree</code></a> from the <a href="https://crates.io/crates/ic-certified-map"><code>ic-certified-map</code></a> package is a good example).</p>
+<p>I experimented with a one-megabyte asset and measured that the original code relying on a deep copy consumed 16 million instructions.
+At the same time, versions with reference counting and explicit lifetimes needed only 12 million instructions<label class="margin-toggle sidenote-number" for="sn-candid-copy"></label><input type="checkbox" id="sn-candid-copy" class="margin-toggle"><span class="sidenote">
+  The 25% improvement shows that our code does little but copy bytes.
+  The code did at least <em>three</em> copies: <span class="circled-ref">①</span> from a <code>thread_local</code> to an <code>HttpResponse</code>, <span class="circled-ref">②</span> from the <code>HttpResponse</code> to candid’s <a href="https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L28">value buffer</a>, and <span class="circled-ref">③</span> from candid’s <a href="https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L61">value buffer</a> to the call’s <a href="https://sourcegraph.com/github.com/dfinity/cdk-rs@39cd49a3b2ca6736d7c3d3bf3605e567302825b7/-/blob/src/ic-cdk/src/api/call.rs?L481-500">argument buffer</a>.
+  We removed ⅓ of copies and got ¼ improvement in instruction consumption.
+  So only ¼ of our instructions contributed to work unrelated to copying the asset’s byte array.
+</span>.</p>
+<h3 id="module-size"><a href="#module-size">Reducing module size</a></h3>
+<p>By default, <code>cargo</code> spits out huge WebAssembly modules.
+Even the tiny <a href="https://github.com/dfinity/cdk-rs/tree/58d276340c2592aa9dcbc4a3e79ef4ac4fca023b/examples/counter/src/counter_rs">counter</a> canister compiles to a whopping 2.2MiB monster under the default cargo <code>release</code> profile.
+This section presents simple techniques for reducing canister sizes.</p>
+<div class="advice" id="compile-size"><p><a class="anchor" href="#compile-size">☛</a>Compile canister modules with size and link-time optimizations.</p></div>
+<p>The code that the Rust compiler considers fast is not always the most compact code.
+We can ask the compiler to optimize our code for size with the <code>opt-level = 'z'</code> <a href="https://doc.rust-lang.org/cargo/reference/profiles.html#opt-level">option</a>.
+Unfortunately, that option alone does not affect the counter canister module size.</p>
+<p><a href="https://doc.rust-lang.org/cargo/reference/profiles.html#lto">Link-time optimization</a> is a more aggressive option that asks the compiler to apply optimizations across module boundaries.
+This optimization slows down the compilation but its ability to prune unnecessary code is crucial for obtaining compact canister modules.
+Adding <code>lto = true</code> to the build profile shrinks the counter canister module from 2.2MiB to 820KiB.
+Add the following section to the <code>Cargo.toml</code> file at the root of your Rust project to enable size optimizations:</p>
+<div class="source-container"><pre class="source good"><code><span class="line">[profile.release]</span>
+<span class="line">lto = true</span>
+<span class="line">opt-level = 'z'</span>
+</code></pre></div>
+<p>Another option you can play with is <a href="https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units"><code>codegen-units</code></a>.
+Decreasing this option reduces the parallelism in the code generation pipeline but enables the compiler to optimize even harder.
+Setting <code>codegen-units = 1</code> in the cargo release profile shrinks the counter module size from 820KiB to 777KiB.</p>
+<div class="advice" id="size-optimizer"><p><a class="anchor" href="#size-optimizer">☛</a>Strip off unused custom sections.</p></div>
+<p>By default, the Rust compiler emits debugging information allowing tools to link back WebAssembly instructions to source-level constructs such as function names.
+This information spans several <a href="https://webassembly.github.io/spec/core/binary/modules.html#custom-section">custom WebAssembly sections</a> that the Rust compiler attaches to the module.
+Currently, there is no use for debugging information on the IC.
+You can safely remove unused sections using the <a href="https://github.com/dfinity/ic-wasm"><code>ic-wasm</code></a> tool.</p>
+<div class="source-container"><pre class="source shell"><code>$ cargo install ic-wasm
+$ ic-wasm -o counter_optimized.wasm counter.wasm shrink
+</code></pre></div>
+<p>The <code>ic-admin shrink</code> step shrinks the counter canister size from 820KiB to 340KiB.
+<code>ic-wasm</code> is clever enough to preserve custom sections that the <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec/#state-tree-canister-information">IC understands</a>.</p>
+<div class="advice" id="twiggy"><p><a class="anchor" href="#twiggy">☛</a>Use the <a href="https://rustwasm.github.io/twiggy/"><code>twiggy</code></a> tool to find the source of code bloat.</p></div>
+<p>Some Rust language design choices (for example, <a href="https://rustc-dev-guide.rust-lang.org/backend/monomorph.html">monomorphization</a>) trade execution speed for binary size.
+Sometimes changing the design of your code or switching a library can significantly reduce of the module size.
+As with any optimization process, you need a profiler to guide your experiments.
+The <a href="https://rustwasm.github.io/twiggy/"><code>twiggy</code></a><label class="margin-toggle sidenote-number" for="sn-twiggy-order"></label><input type="checkbox" id="sn-twiggy-order" class="margin-toggle"><span class="sidenote">
+  <code>twiggy</code> needs debug info to display function names.
+  Run it <em>before</em> you shrink your module with <code>ic-wasm</code>.
+</span> tool is excellent for finding the largest functions in your WebAssembly modules.</p>
+<figure><label class="margin-toggle" for="mn-counter-twiggy">⊕</label><input type="checkbox" id="mn-counter-twiggy" class="margin-toggle"><span class="marginnote">
+  Top contributors to the size of the WebAssembly module of the <a href="https://github.com/dfinity/cdk-rs/tree/58d276340c2592aa9dcbc4a3e79ef4ac4fca023b/examples/counter/src/counter_rs">counter</a> canister.
+  Custom sections with debugging information dominate the output, but we have to keep these sections to see function names in twiggy’s output.
+  Serde-based candid deserializer is the worst offender when it comes to code size.
+</span><div class="source-container"><pre class="source shell"><code>  $ cargo install twiggy
+  $ twiggy top -n 12 counter.wasm
+ Shallow Bytes │ Shallow % │ Item
+───────────────┼───────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────
+        130610 ┊    16.42% ┊ custom section '.debug_str'
+        101788 ┊    12.80% ┊ &quot;function names&quot; subsection
+         75270 ┊     9.46% ┊ custom section '.debug_info'
+         60862 ┊     7.65% ┊ custom section '.debug_line'
+         52522 ┊     6.60% ┊ data[0]
+         46581 ┊     5.86% ┊ custom section '.debug_pubnames'
+         34800 ┊     4.38% ┊ custom section '.debug_ranges'
+         15721 ┊     1.98% ┊ &lt;&amp;mut candid::de::Deserializer as serde::de::Deserializer&gt;::deserialize_any::h6f19d3c43b6b4e95
+         12878 ┊     1.62% ┊ &lt;candid::binary_parser::ConsType as binread::BinRead&gt;::read_options::hb957a7f286706947
+         12546 ┊     1.58% ┊ candid::de::IDLDeserialize::new::h3afa758d80a71068
+         11974 ┊     1.51% ┊ &lt;&amp;mut candid::de::Deserializer as serde::de::Deserializer&gt;::deserialize_ignored_any::hb61449316ff3dae4
+          9015 ┊     1.13% ┊ core::fmt::float::float_to_decimal_common_shortest::h1e6cfda96af3f1c0
+        230729 ┊    29.01% ┊ ... and 1195 more.
+        795296 ┊   100.00% ┊ Σ [1207 Total Rows]
+</code></pre></div>
+</figure>
+<p>Once you have identified the library that contributes to the code bloat the most, you can try to find a less bulky alternative.
+For example, I shrank the ICP ledger canister module by 600KiB by <a href="https://github.com/dfinity/ic/commit/6f79736085f85dfd01493319816c9a3c9a563b73">switching</a> from <a href="https://crates.io/crates/serde_cbor"><code>serde_cbor</code></a> to <a href="https://crates.io/crates/ciborium"><code>ciborium</code></a> for <a href="https://cbor.io">CBOR</a> deserialization.</p>
+<div class="advice" id="compress-modules"><p><a class="anchor" href="#compress-modules">☛</a>GZip-compress canister modules.</p></div>
+<p>The IC has the concept of a <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec/#ic-install_code">canister module</a>, the equivalent of an executable file in operating systems.
+  Starting from <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec/#0_18_4">version 0.18.4</a> of the IC specification, canister modules can be not only binary-encoded WebAssembly files but also GZip-compressed WebAssembly files.</p>
+<p>For typical WebAssembly files that do not embed compressed assets, GZip-compression can often cut the module size in half.
+Compressing the counter canister shrinks the module size from 340KiB to 115KiB (about 5% of the 2.2MiB module we started with!).</p>
+</section>
+<section><h2 id="infra"><a href="#infra">Infrastructure</a></h2>
+<h3 id="builds"><a href="#builds">Builds</a></h3>
+<p>People using your canister might want to verify that it does what it claims to do (especially if the canister moves people’s tokens around).
+The Internet Computer allows anyone to inspect the <span class="smallcaps">sha256</span> hash sum of the canister WebAssembly module.
+However, there are no good tools yet to review the canister’s source code.
+The developer is responsibile for providing a reproducible way of building a WebAssembly module from the published source code.</p>
+<div class="advice" id="reproducible-builds"><p><a class="anchor" href="#reproducible-builds">☛</a>Make canister builds reproducible.</p></div>
+<p>Getting a reproducible build by chance is about as likely as constructing a living organism by throwing random molecules together.
+At least two popular technologies can help you make your builds more reproducible: <a href="https://linuxcontainers.org/">Linux containers</a> and <a href="https://nixos.org/">Nix</a>.
+Containers are a more mainstream technology and are usually easier to set up, but Nix also has its share of fans.
+In my experience, Nix builds tend to be more reproducible.
+Use the technology with which you are most comfortable.
+It is the result that matters.</p>
+<p>It also helps if you build your module using a public Continuous Integration system, making it easy to follow the module build steps and download the final artifact.</p>
+<p>Finally, if your code is still evolving, make it easy for people to correlate module hashes with source code versions.
+You can mention the module hash in release notes, for example.</p>
+<p>Read the <a href="https://smartcontracts.org/docs/developers-guide/tutorials/reproducible-builds.html">Reproducible Canister Builds</a> article for more advice on reproducible builds.</p>
+<h3 id="upgrades"><a href="#upgrades">Upgrades</a></h3>
+<p>Let me remind you how upgrades work:
+</p>
+<ol class="circled"><li data-num-glyph="①">The system calls the <code>pre_upgrade</code> hook if your canister defines it.
+</li><li data-num-glyph="②">
+  The system discards canister memory and instantiates the new version of your module.
+  The system preserves stable memory and makes it available to the next version.
+</li><li data-num-glyph="③">
+  The system calls the <code>post_upgrade</code> hook on the newly created instance if your canister defines it.
+  The system does not execute the <code>init</code> function.
+</li></ol>
+<p>If the canister traps in any of the steps above, the system reverts the canister to the pre-upgrade state.</p>
+<div class="advice" id="plan-for-upgrades"><p><a class="anchor" href="#plan-for-upgrades">☛</a>Plan for upgrades from day one.</p></div>
+<p>You can live without upgrades during the initial development cycle, but even then losing state on each test deployment becomes annoying quickly.
+As soon as you deploy your canister to the mainnet, the only way to ship new code versions is to plan the upgrades carefully.</p>
+<div class="advice" id="version-stable-memory"><p><a class="anchor" href="#version-stable-memory">☛</a>Version your stable memory.</p></div>
+<p>You can view stable memory as a communication channel between your canister’s old and new versions.
+All proper communication protocols have a version.
+One day, you might want to change the stable data layout or serialization format radically.
+The code becomes messy and brittle if the stable memory decoding procedure needs to <em>guess</em> the data format.</p>
+<p>Save your nerve cells and think about versioning in advance.
+It is as easy as declaring, <q>the first byte of my stable memory is the version number.</q></p>
+<div class="advice" id="test-upgrades"><p><a class="anchor" href="#test-upgrades">☛</a>Always test your upgrade hooks.</p></div>
+<p>Testing upgrades is crucial.
+If they go wrong, you can lose your data irrevocably.
+Make sure that upgrade tests are an integral part of your infrastructure.</p>
+<p>One approach to testing upgrades is to add an extra optional upgrade step before you execute the state validation part of your test.
+The following pseudo-code is in Rust, but the idea does not depend on the language.</p>
+<div class="source-container"><pre class="source good"><code><span class="line">let canister_id = install_canister(WASM);</span>
+<span class="line">populate_data(canister_id);</span>
+<span class="line"><b>if should_upgrade { upgrade_canister(canister_id, WASM); }</b></span>
+<span class="line">let data = query_canister(canister_id);</span>
+<span class="line">assert_eq!(data, expected_value);</span>
+</code></pre></div>
+<p>You then run your tests twice in different modes:</p>
+<ol class="circled"><li data-num-glyph="①">In the <q>no upgrades</q> mode, your tests run without executing any upgrades.
+</li><li data-num-glyph="②">In the <q>upgrade</q> mode, your tests <q>self-upgrade</q> the canister before each assertion.
+</li></ol>
+<p>This pattern can give you some confidence that canister upgrades preserve the state: the users cannot tell whether there was an upgrade or not.
+Testing that you can safely upgrade the canister from the previous version is also a good idea.</p>
+<div class="advice" id="upgrade-hook-panics"><p><a class="anchor" href="#upgrade-hook-panics">☛</a>Do not trap in the <code>pre_upgrade</code> hook.</p></div>
+<p>The <code>pre_upgrade</code> and <code>post_upgrade</code> hooks appear to be symmetrical.
+The canister returns to the pre-upgrade state if either of these hooks traps.
+This symmetry is deceptive.</p>
+<p>The hope is not lost if your <code>pre_upgrade</code> hook succeeds but the <code>post_upgrade</code> hook traps.
+You can figure out what went wrong and build another version of your canister that will not trap on upgrade.
+You might need to devise a complex multi-stage upgrade procedure, but at least there is a way out.</p>
+<p>On the other hand, if your <code>pre_upgrade</code> hook traps, there is not much you can do about it.
+Changing canister behavior needs an upgrade, but that is what a broken <code>pre_upgrade</code> hook prevents you from doing.</p>
+<p>The <code>pre_upgrade</code> hook will not let you down if you do not have one.
+The following advice will help you get rid of that hook.</p>
+<div class="advice" id="stable-memory-main"><p><a class="anchor" href="#stable-memory-main">☛</a>Consider using stable memory as your main storage.</p></div>
+<p>There is a cap on how many cycles a canister can burn during an upgrade.
+If your canister exceeds that limit, the system cancels the upgrade and reverts the canister state.
+If you serialize your whole state to stable memory in the <code>pre_upgrade</code> hook and the state grows large, you might not be able to upgrade your canister again.</p>
+<p>One way of dealing with this issue is not to serialize the entire state in one go.
+You can use stable memory as your <q>disk store</q>, updating it incrementally with every update call.
+This way, you might not need the <code>pre_upgrade</code> hook, and your <code>post_upgrade</code> hook will burn few cycles.</p>
+<p>There are a few downsides to this approach, however:
+</p>
+<ul class="arrows"><li>
+  Organizing the flat address space of stable storage into a data structure is challenging, especially if your state consists of several interlinked data structures.
+  The <a href="https://github.com/dfinity/stable-structures">ic-stable-structures</a> and <a href="https://github.com/seniorjoinu/ic-stable-memory">ic-stable-memory</a> packages attempt to alleviate the pain.
+</li><li>
+  Changing the layout of your data might be infeasible.
+  It will simply be too much work for a canister to complete the data migration in one go.
+  Imagine writing a program that reformats an eight-gigabyte disk from <span class="smallcaps">fat32</span> to <span class="smallcaps">ntfs</span> without losing any data.
+  By the way, that program must complete in under 5 seconds.
+</li><li>
+  You must think carefully about the backward compatibility of your data structures.
+  The latest version of your canister might have to read data that the version installed a few months ago wrote.
+</li></ul>
+<p>There is a tough trade-off between service scalability and code simplicity.
+If you plan to store gigabytes of state and upgrade the code, consider using stable memory as the primary storage.</p>
+<h3 id="observability"><a href="#observability">Observability</a></h3>
+<p>
+At <a href="https://dfinity.org/"><span class="smallcaps">dfinity</span></a>, we use metrics extensively and monitor all our production services.
+Metrics are indispensable for understanding the behaviors of a complex distributed system.
+Canisters are not unique in this regard.</p>
+<div class="advice" id="expose-metrics"><p><a class="anchor" href="#expose-metrics">☛</a>Expose metrics from your canister.</p></div>
+<p>Let us look at two specific approaches you can take.</p>
+<ol class="circled"><li data-num-glyph="①">
+  Expose a query call returning a data structure containing metrics.
+  If you do not want to make the metrics public, you can reject queries based on the caller’s principal.
+  The main benefit of this approach is that the response is highly structured and easy to parse.
+  I often use this approach in integration tests.<div class="source-container"><pre class="source good"><code><span class="line">pub struct MyMetrics {</span>
+<span class="line">  pub stable_memory_size: u32,</span>
+<span class="line">  pub allocated_bytes: u32,</span>
+<span class="line">  pub my_user_map_size: u64,</span>
+<span class="line">  pub last_upgraded_ts: u64,</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">#[query]</span>
+<span class="line">fn metrics() -&gt; MyMetrics {</span>
+<span class="line">  check_acl();</span>
+<span class="line">  MyMetrics {</span>
+<span class="line">    // ...</span>
+<span class="line">  }</span>
+<span class="line">}</span>
+</code></pre></div>
+</li><li data-num-glyph="②">  Expose the metrics in a format that your monitoring system can slurp through the canister HTTP gateway.
+  For example, we use Prometheus for monitoring, so our canisters dump metrics in <a href="https://prometheus.io/docs/instrumenting/exposition_formats/#text-based-format">Prometheus text-based exposition format</a>.<div class="source-container"><pre class="source good"><code><span class="line">fn http_request(req: HttpRequest) -&gt; HttpResponse {</span>
+<span class="line">  match path(&amp;req) {</span>
+<span class="line">    &quot;/metrics&quot; =&gt; HttpResponse {</span>
+<span class="line">        status_code: 200,</span>
+<span class="line">        body: format!(r#&quot;<b>stable_memory_bytes {}</b></span>
+<span class="line">                         <b>allocated_bytes {}</b></span>
+<span class="line">                         <b>registered_users_total {}</b>&quot;#,</span>
+<span class="line">                      stable_memory_bytes, allocated_bytes, num_users),</span>
+<span class="line">        // ...</span>
+<span class="line">    }</span>
+<span class="line">  }</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>  You do not have to link any heavy libraries, the format is brutally simple.
+  The <code>format</code> macro will do if you need only simple counters and gauges.
+  Histograms and labels require a bit more work, but you can get quite far with simple tools.
+</p>
+</li></ol>
+<p>Some things you might want to keep an eye on:
+</p>
+<ul class="arrows"><li>The size of stable memory.
+</li><li>The size of the objects allocated on the heap (this size is relatively easy to get if you define a <a href="https://doc.rust-lang.org/1.50.0/std/alloc/struct.System.html">custom allocator</a>).
+</li><li>The lengths of internal data structures (queques, maps, etc.).
+</li><li>The canister’s cycle balance.
+</li><li>The time of the last canister upgrade.
+</li></ul>
+</section>
+<section><h2 id="references"><a href="#references">References</a></h2>
+<p>The following are some of the heavily used Rust canisters for inspiration:
+</p>
+<ul class="arrows"><li><a href="https://github.com/dfinity/internet-identity/tree/main/src/internet_identity">Internet Identity Backend</a> is an excellent example of a canister that uses <a href="/posts/11-ii-stable-memory.html">stable memory as the primary storage</a>, obtains secure randomness from the system, and exposes Prometheus metrics.
+</li><li><a href="https://github.com/dfinity/sdk/tree/57006b55df0594a0f6925212048c09e6a7bc3397/src/canisters/frontend/ic-certified-assets">Certified Assets Canister</a> is an example of a canister that produces certified HTTP responses.
+</li></ul>
+</section>
+<section><h2 id="changelog"><a href="#changelog">Changelog</a></h2>
+<table class="table-2 "><tbody><tr><td colspan="1" class="align-l">
+2022-10-16 </td><td colspan="1" class="align-l"> Another complete editorial pass. Mentioned a few CDK improvements. </td></tr><tr><td colspan="1" class="align-l">
+2022-07-18 </td><td colspan="1" class="align-l"> Add a new section on <a href="#optimization">canister optimization</a>. </td></tr><tr><td colspan="1" class="align-l">
+2022-02-19 </td><td colspan="1" class="align-l"> Add notes on <a href="#errors-variant">candid variant extensibility</a> and <a href="#upgrade-hook-panics">panics in upgrade hooks</a>. </td></tr><tr><td colspan="1" class="align-l">
+2021-10-25 </td><td colspan="1" class="align-l"> The first version. </td></tr></tbody></table>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/11-ii-stable-memory.html">IC internals: Internet Identity storage</a></li><li><a href="/posts/14-stable-structures.html">Tutorial: stable-structures</a></li><li><a href="/posts/19-eventlog.html">ckBTC internals: event log</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/02-ic-state-machine-replication.html"> ←IC internals: replicated state machine</a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>
