@@ -6,6 +6,9 @@ module StringSet = Set.Make(String)
 
 let source_root () = Sys.getcwd ()
 
+let excluded_snapshots =
+  StringSet.of_list ["feed.xml"; "index.html"; "posts.html"]
+
 let snapshot_root () =
   source_root () // "blogware" // "test" // "snapshots"
 
@@ -84,6 +87,9 @@ let existing_snapshot_paths root =
   |> List.map (relative_to ~root)
   |> List.sort String.compare
 
+let included_snapshot_path rel =
+  not (StringSet.mem rel excluded_snapshots)
+
 let update_snapshots expected actual_map =
   let root = snapshot_root () in
   mkdir_p root;
@@ -150,6 +156,10 @@ let () =
   let input_root = input_root () in
   match Site.generated_output_paths input_root, rendered_outputs input_root with
   | Ok expected, Ok actual_map ->
+    let expected = List.filter included_snapshot_path expected in
+    let actual_map =
+      List.filter (fun (rel, _) -> included_snapshot_path rel) actual_map
+    in
     if Sys.getenv_opt "UPDATE_SNAPSHOTS" = Some "1" then
       update_snapshots expected actual_map;
     let exit_code =
