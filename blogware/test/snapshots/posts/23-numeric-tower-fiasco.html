@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="oop,personal,programming"><meta name="description" content="OOP inheritance had one job to do."><title>The numeric tower fiasco</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/23-numeric-tower-fiasco.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/23-numeric-tower-fiasco.html">The numeric tower fiasco</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2023-11-22</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2023-11-22</span></span><span class="post-icons"><a class="icon-link" href="https://news.ycombinator.com/item?id=40425161" title="Discuss on Hacker News" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/y18.svg" alt="Hacker News"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#introduction">Introduction</a></li><li class="toc toc-level-1"><a href="#the-numeric-tower">The numeric tower</a></li><li class="toc toc-level-1"><a href="#oop-design">The OOP design</a></li><li class="toc toc-level-1"><a href="#the-functional-design">The functional design</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
+
+<div class="epigraph"><blockquote><p>Object-oriented programming is an exceptionally bad idea which could only have originated in California.</p><footer>Edsger Dijkstra</footer></blockquote></div>
+<section><h2 id="introduction"><a href="#introduction">Introduction</a></h2>
+<p>Object-oriented programming<label class="margin-toggle sidenote-number" for="sn-oop"></label><input type="checkbox" id="sn-oop" class="margin-toggle"><span class="sidenote">
+    <q>Object-oriented</q> is a vague term that means different things to different people.
+    This article focuses on the class-based flavor that the most popular programming languages (Java, Python, C++, C#) implement.
+</span> is still the dominant paradigm in the software industry.
+The typical advice on modeling the problem domain is to fit your entities into hierarchies where specific types inherit common attributes and behaviors from <q>base</q> classes.</p>
+<p>That idea looked intuitive and attractive to me when I first encountered it.
+I spent countless hours learning about the <q>good</q> object-oriented design and trying to apply these ideas in practice.</p>
+<p>The practice showed that real engineering problems rarely fit into rigid class hierarchies.
+I grew more frustrated with object-oriented programming and eventually entirely gave up on it.
+This article describes one example that stuck with me from the start of my programming career: modeling the hierarchy of number types.</p>
+</section>
+<section><h2 id="the-numeric-tower"><a href="#the-numeric-tower">The numeric tower</a></h2>
+<div class="epigraph"><blockquote><p>God made the integers, all the rest is the work of man.</p><footer>Leopold Kronecker</footer></blockquote></div>
+<p>I like math, so one of the first structures I tried to model with classes was the most precisely specified and well-studied hierarchy in human history: the <a href="https://en.wikipedia.org/wiki/Numerical_tower">numerical tower</a>.</p>
+<p>Mathematicians discovered<label class="margin-toggle sidenote-number" for="sn-motivation"></label><input type="checkbox" id="sn-motivation" class="margin-toggle"><span class="sidenote">
+  The primary motivation for introducing integers was to create a numeric space where equations of the form <span class="math">a + x = c</span>, where <span class="math">a</span> and <span class="math">c</span> are naturals, always have a solution.
+  Rationals play the same role for equations of the form <span class="math">a × x = c</span>.
+</span> quite a few types of numbers; usually, each new type is the most natural extension of the previous one:</p>
+<ul class="arrows"><li>Naturals (<span class="math">ℕ</span>) are the numbers we use for counting: <span class="math">0, 1, 2, …</span>.
+  </li><li>Integers (<span class="math">ℤ</span>) extend naturals to include negative whole numbers: <span class="math">0, 1, -1, 2, -2, …</span>.
+  </li><li>Rational numbers (<span class="math">ℚ</span>) add common fractions where the numerator and denumerator are whole numbers: <span class="math">1</span>, <span class="math">½</span>, <span class="math">-½</span>, <span class="math">⅓</span>, <span class="math">-⅓</span>, ….
+</li></ul>
+<figure class="grayscale-diagram medium-size"><label class="margin-toggle" for="mn-numeric-tower">⊕</label><input type="checkbox" id="mn-numeric-tower" class="margin-toggle"><span class="marginnote">
+    A few floors of the <a href="https://en.wikipedia.org/wiki/Number">numeric</a> tower represented as a <a href="https://en.wikipedia.org/wiki/Venn_diagram">Venn diagram</a>.
+  </span><p class="svg"><img src="/images/23-numeric-tower.svg"></p>
+</figure>
+<p>The tower goes up and includes real numbers, complex numbers, quaternions, etc.</p>
+</section>
+<section><h2 id="oop-design"><a href="#oop-design">The OOP design</a></h2>
+<p>In this section, we’ll design a class hierarchy modeling the numbers using an imaginary object-oriented programming language.
+We’ll limit the tower to only two number types to keep the example simple: <code>Naturals</code> and <code>Integers</code>.</p>
+<p>Most people (me included) will instinctively reach for the class structure where <code>Natural</code> is the base class, and <code>Integer</code> extends that base.</p>
+<figure><label class="margin-toggle" for="mn-nat-base-hierarchy">⊕</label><input type="checkbox" id="mn-nat-base-hierarchy" class="margin-toggle"><span class="marginnote">
+  Pseudocode of a class hierarchy in which the <code>Natural</code> class is the base and the <code>Integer</code> class extends it.
+</span><div class="source-container"><pre class="source pseudo-code"><code><span class="line">class Natural</span>
+<span class="line">  value : UInt</span>
+<span class="line"></span>
+<span class="line">  def make(value : UInt) : Natural = …</span>
+<span class="line">  def +(other : Natural) : Natural = Natural.make(self.value + other.value)</span>
+<span class="line">end</span>
+<span class="line"></span>
+<span class="line">class Integer &lt;: Natural</span>
+<span class="line">  negative? : Bool</span>
+<span class="line"></span>
+<span class="line">  def make(value : Natural, negative? : Bool) : Integer = …</span>
+<span class="line">  def magnitude() : Natural = self.value</span>
+<span class="line">  def +(other : Integer) : Integer = …</span>
+<span class="line">end</span>
+</code></pre></div>
+</figure>
+<p>I’m sure you immediately spotted a problem with this design: we inverted the hierarchy, breaking the <q>is a</q> relationship!
+We claim that all integers are also naturals, but that’s false.
+The design violates the <a href="https://en.wikipedia.org/wiki/Liskov_substitution_principle">Liskov substitution principle</a>: passing an <code>Integer</code> to a function that expects a <code>Natural</code> can produce incorrect results:</p>
+<div class="source-container"><pre class="source pseudo-code"><code><span class="line">&gt; Natural.make(5) + Integer.make(10, true) // 5 + -10</span>
+<span class="line">15 // ouch</span>
+</code></pre></div>
+<p>Enlightened by this failure, we reverse the inheritance hierarchy.
+<code>Integer</code> becomes our base class, and <code>Natural</code> extends it.</p>
+<figure><label class="margin-toggle" for="mn-integer-base">⊕</label><input type="checkbox" id="mn-integer-base" class="margin-toggle"><span class="marginnote">
+  Pseudocode of a class hierarchy in which the <code>Integer</code> class is the base and the <code>Natural</code> class extends it.
+</span><div class="source-container"><pre class="source pseudo-code"><code><span class="line">class Integer</span>
+<span class="line">  value : UInt</span>
+<span class="line">  negative? : Bool</span>
+<span class="line"></span>
+<span class="line">  def make(value : Natural, negative? : Bool) = …</span>
+<span class="line">  def magnitude() : Natural = self.value</span>
+<span class="line">  def +(other : Integer) : Integer = …</span>
+<span class="line">end</span>
+<span class="line"></span>
+<span class="line">class Natural &lt;: Integer</span>
+<span class="line">  def make(value : UInt) : Natural = super.make(value, false)</span>
+<span class="line">  def +(other : Natural) : Natural = …</span>
+<span class="line">end</span>
+</code></pre></div>
+</figure>
+<p>Once the initial excitement dissipates, we face a new issue.
+The simplest case, the <code>Natural</code> numbers, must have the same representation as the more complex type, <code>Integers</code>.
+The problem becomes more apparent if we add more types to the tower, such as <code>Rational</code>.
+Instead of starting with the simplest case and building from it, we started with the most complicated one and made everything else a special case.
+That’s why the original incorrect design was so compelling: we moved from simpler to more complex types, not the other way around!</p>
+<p>Another design option is to give up concrete type hierarchies and clamp all number types under a single interface.</p>
+<figure><label class="margin-toggle" for="mn-number-interface">⊕</label><input type="checkbox" id="mn-number-interface" class="margin-toggle"><span class="marginnote">
+  Pseudocode of a type hierarchy where all numeric types implement the same interface.
+</span><div class="source-container"><pre class="source pseudo-code"><code><span class="line">interface Number</span>
+<span class="line">  def +(n : Natural) : Number</span>
+<span class="line">  def -(n : Natural) : Number</span>
+<span class="line">  // …</span>
+<span class="line">  def +(i : Integer) : Number</span>
+<span class="line">  def -(i : Integer) : Number</span>
+<span class="line">  // …</span>
+<span class="line">end</span>
+<span class="line"></span>
+<span class="line">class Natural &lt;: Number</span>
+<span class="line">  // a lot of boring code …</span>
+<span class="line">end</span>
+<span class="line"></span>
+<span class="line">class Integer &lt;: Number</span>
+<span class="line">  // a lot of boring code …</span>
+<span class="line">end</span>
+</code></pre></div>
+</figure>
+<p>This approach is the most versatile, but it has many drawbacks:
+</p>
+<ul class="arrows"><li>The programmer must write a lot of boilerplate code.
+  </li><li>All types in the hierarchy need to know about one another.
+  Adding a new type requires changing all other types.
+  </li><li>Adding a new operation on numbers requires modifying all the classes.
+</li></ul>
+<p>It’s time to abandon our blunt OOP tools and start from the first principles.</p>
+</section>
+<section><h2 id="the-functional-design"><a href="#the-functional-design">The functional design</a></h2>
+<p>The object-oriented tradition obsesses with encoding <q>is a</q> relations among types as a class hierarchy.
+In this section, we’ll use the approach mathematicians employ: we start with simple structures and combine them to form more complex objects.
+This approach is similar to using composition instead of inheritance in the OOP world.</p>
+<p>Our tool of choice will be the <a href="https://haskell.org/">Haskell</a> programming language, but the same principles will work in all languages supporting <a href="https://en.wikipedia.org/wiki/Algebraic_data_type">algebraic data types</a> and functions (even <a href="https://www.rust-lang.org/">Rust</a> would do, though it would be less pretty).</p>
+<p>In our first attempt, we will model each numeric type with a separate Haskell type.</p>
+<figure><label class="margin-toggle" for="mn-functional-nums">⊕</label><input type="checkbox" id="mn-functional-nums" class="margin-toggle"><span class="marginnote">
+  Modeling the <code>Natural</code> and <code>Integer</code> numeric types in Haskell.
+</span><div class="source-container"><pre class="source haskell"><code><span class="line">-- Each natural is either zero or a successor of a smaller number.</span>
+<span class="line">data Natural = Zero | Succ Natural -- <span class="circled-ref">①</span></span>
+<span class="line"></span>
+<span class="line">-- There are two disjoint classes of integers:</span>
+<span class="line">-- <span class="math">n</span> and <span class="math">-1 - n</span> for all natural values of <span class="math">n</span>.</span>
+<span class="line">data Integer = NonNegative Natural | MinusOneMinus Natural -- <span class="circled-ref">②</span></span>
+<span class="line"></span>
+<span class="line">-- We model the `is a' relation as a pure total function</span>
+<span class="line">-- mapping naturals to integers.</span>
+<span class="line">int_of_nat :: Natural -&gt; Integer -- <span class="circled-ref">③</span></span>
+<span class="line">int_of_nat = NonNegative</span>
+<span class="line"></span>
+<span class="line">-- We can model the reverse relation as a partial function</span>
+<span class="line">-- mapping integers to naturals.</span>
+<span class="line">nat_of_int :: Integer -&gt; Maybe Natural</span>
+<span class="line">nat_of_int (NonNegative n) = Just n</span>
+<span class="line">nat_of_int (MinusOneMinus _) = Nothing</span>
+<span class="line"></span>
+<span class="line">plus_nat :: Natural -&gt; Natural -&gt; Natural</span>
+<span class="line">plus_nat n Zero = n</span>
+<span class="line">plus_nat n (Succ m) = Succ (plus_nat n m)</span>
+<span class="line"></span>
+<span class="line">plus_int :: Integer -&gt; Integer -&gt; Integer</span>
+<span class="line">plus_int = …</span>
+<span class="line"></span>
+<span class="line">minus_int :: Integer -&gt; Integer -&gt; Integer</span>
+<span class="line">minus_int = …</span>
+</code></pre></div>
+</figure>
+<ol class="circled"><li data-num-glyph="①">
+    According to <a href="https://en.wikipedia.org/wiki/Peano_axioms">Peano</a>, a natural number is either a zero or a successor of a smaller natural number.
+    This definition is equivalent to the <a href="https://en.wikipedia.org/wiki/Unary_numeral_system">unary numeral system</a>, which is inefficient for computation but convenient for demonstration.
+  </li><li data-num-glyph="②">
+    An integer number is either a non-negative natural number <span class="math">n</span> or a negative number <span class="math">-1 - n</span>, where <span class="math">n</span> is a natural number.
+    Note that with this definition, each integer has a unique representation.
+  </li><li data-num-glyph="③">
+    We encode the <q>is a</q> relation between numeric types as a pure total function.
+    OOP languages usually generate these type-casting functions automatically and apply them implicitly.
+</li></ol>
+<p>Note how modular this implementation is.
+Naturals can live in a separate module and don’t need to know about the existence of integers.
+We can easily change the implementation of naturals (e.g., use the more efficient <a href="https://en.wikipedia.org/wiki/Binary_number">binary representation</a>) or add more numeric types (e.g., <code>Rational</code>s) without breaking other code.</p>
+<p>However, the design is not yet satisfactory: we lost the ability to operate uniformly on numbers of different types.
+We can add a universal <code>Number</code> type to reclaim this property.</p>
+<figure><label class="margin-toggle" for="mn-universal-number">⊕</label><input type="checkbox" id="mn-universal-number" class="margin-toggle"><span class="marginnote">
+  Modeling the numeric tower in Haskell with a sum type.
+</span><div class="source-container"><pre class="source haskell"><code><span class="line">-- The sum type encoding all number types.</span>
+<span class="line">data Number = Nat Natural | Int Integer</span>
+<span class="line"></span>
+<span class="line">-- Adds arbitrary numbers.</span>
+<span class="line">plus :: Number -&gt; Number -&gt; Number</span>
+<span class="line">plus = …</span>
+<span class="line"></span>
+<span class="line">-- Subtracts arbitrary numbers.</span>
+<span class="line">minus :: Number -&gt; Number -&gt; Number</span>
+<span class="line">minus = …</span>
+</code></pre></div>
+</figure>
+<p>This design might seem like a re-iteration of the <code>Number</code> interface story from the OO world, but it’s not:</p>
+<ul class="arrows"><li>
+    We have many opportunities to reduce the boilerplate code to the bare minimum.
+    We will discuss these opportunities shortly.
+  </li><li>
+    The module implementing <code>Naturals</code> doesn’t need to know about <code>Integers</code> or <code>Numbers</code>.
+  </li><li>
+    We don’t need to modify existing types when we add new functions operating on numbers.
+</li></ul>
+<p>To address the boilerplate issue, we’ll introduce the numeric type <em>promotion</em> operation.
+When we add two numbers of different types, we convert the simpler type to the more complex one using the previously discussed type conversion functions.
+We then apply the binary operator dealing with numbers of the same promoted type.
+Finally, we demote the result to the simplest type that can hold the value.</p>
+<figure><label class="margin-toggle" for="mn-universal-number">⊕</label><input type="checkbox" id="mn-universal-number" class="margin-toggle"><span class="marginnote">
+  Reducing the boilerplate with type promotion.
+</span><div class="source-container"><pre class="source haskell"><code><span class="line">data Number = Nat Natural | Int Integer</span>
+<span class="line"></span>
+<span class="line">-- Promotes the arguments to the largest common type.</span>
+<span class="line">promote :: (Number, Number) -&gt; (Number, Number)</span>
+<span class="line">promote (Nat n, Int m) = (Int (int_of_nat n), Int m) </span>
+<span class="line">promote (Int n, Nat m) = (Int n, Int (int_of_nat m))</span>
+<span class="line">promote x = x</span>
+<span class="line"></span>
+<span class="line">-- Reduces the number to its most canonical form.</span>
+<span class="line">simplify :: Number -&gt; Number</span>
+<span class="line">simplify (Int (NonNegative n)) = Nat n</span>
+<span class="line">simplify x = x</span>
+<span class="line"></span>
+<span class="line">type BinaryOp = Number -&gt; Number -&gt; Number</span>
+<span class="line"></span>
+<span class="line">-- Implements a total binary operation given a kernel defined</span>
+<span class="line">-- only on numbers of the same type.</span>
+<span class="line">impl_binary_op :: BinaryOp -&gt; BinaryOp</span>
+<span class="line">impl_binary_op kernel x y = let (x', y') = promote (x, y)</span>
+<span class="line">                            in simplify (kernel x' y')</span>
+<span class="line"></span>
+<span class="line">-- Adds arbitrary numbers.</span>
+<span class="line">plus :: Number -&gt; Number -&gt; Number</span>
+<span class="line">plus x y = impl_binary_op plus_simple x y</span>
+<span class="line">  where plus_simple (Nat n) (Nat m) = Nat (plus_nat n m)</span>
+<span class="line">        plus_simple (Int n) (Int m) = Int (plus_int n m)</span>
+<span class="line">        plus_simple _ _ = undefined</span>
+<span class="line"></span>
+<span class="line">-- Subtracts arbitrary numbers.</span>
+<span class="line">minus :: Number -&gt; Number -&gt; Number</span>
+<span class="line">minus x y = impl_binary_op minus_simple x y</span>
+<span class="line">  where minus_simple (Nat n) (Nat m) = Int (minus_int (int_of_nat n) (int_of_nat m))</span>
+<span class="line">        minus_simple (Int n) (Int m) = Int (minus_int n m)</span>
+<span class="line">        minus_simple _ _ = undefined</span>
+</code></pre></div>
+</figure>
+<p>The <code>impl_binary_op</code> function captures the promote/execute/simplify pattern.
+Concrete binary operators (<code>plus</code>, <code>minus</code>, etc.) must deal only with numbers of the same type.</p>
+<p>With this, we get a clean and concise model of numbers on a computer.
+The code is easy to extend to support more numeric types, which is left as an exercise for the reader<label class="margin-toggle sidenote-number" for="sn-complex"></label><input type="checkbox" id="sn-complex" class="margin-toggle"><span class="sidenote">
+  I find adding the <code>Complex</code> type particularly interesting.
+  Hint: you might need two different generic <code>Number</code> types.
+</span>.</p>
+</section>
+<section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
+<div class="epigraph"><blockquote><p>I find OOP technically unsound… I find OOP philosophically unsound… I find OOP methodologically wrong.</p><footer>From <a href="http://stlport.org/resources/StepanovUSA.html">An Interview with A. Stepanov</a></footer></blockquote></div>
+<p>When I use a tool and get unsatisfactory results, I blame myself for not using the tool correctly.
+At first, I felt the same about the numeric tower case, but now I’m sure the problem is not me; it’s the class hierarchies.</p>
+<p>The approach of piling classes on top of one another and trying to make this stack coherent is fundamentally flawed.
+It fails spectacularly even on tiny examples where the problem domain is <em>mathematically</em> specified.
+The numeric tower is one example, but there are more.
+The <a href="https://en.wikipedia.org/wiki/Circle%E2%80%93ellipse_problem">circle-ellipse problem</a> is a good one,
+but my favorite is how inheriting <code>ColorPoint</code> from <code>Point</code> breaks the transitivity property of the <code>equals</code> method:</p>
+<blockquote><p>
+    There is no way to extend an instantiable class and add a value component while preserving the <code>equals</code> contract,
+    unless you’re willing to forgo the benefits of object-oriented abstraction.
+</p><footer>Joshua Bloch, <q>Effective Java</q>, 3rd edition, item 10, p. 42</footer></blockquote>
+<p>If something doesn’t work on small examples, why do we expect it to work in large codebases?
+When was the last time you looked in a complex class hierarchy and admired how easy to understand the code was?</p>
+<p>Experts often recommend <q>favor composition over inheritance</q><label class="margin-toggle sidenote-number" for="sn-composition-over-inheritance"></label><input type="checkbox" id="sn-composition-over-inheritance" class="margin-toggle"><span class="sidenote">
+  E.g., Joshua Bloch, <q>Effective Java</q>, third edition, item 18, p. 87.
+</span>.
+I agree with them and favor algebraic data types and simple functions as the ultimate form of composition.</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/28-enlightenmentware.html">Enlightenmentware</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/24-ocr.html"> ←The off-chain reporting protocol</a></div><div id="older"><a href="/posts/22-flat-in-order-trees.html">Flat in-order binary trees→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

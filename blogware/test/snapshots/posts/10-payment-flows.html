@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="fi,ic,ledger"><meta name="description" content="Payment flows for fungible tokens on the Internet Computer."><title>Fungible tokens: payment flows</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/10-payment-flows.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/10-payment-flows.html">Fungible tokens: payment flows</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2022-09-21</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2022-09-21</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#introduction">Introduction</a></li><li class="toc toc-level-1"><a href="#prerequisites">Prerequisites</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#the-payment-scenario">The payment scenario</a></li><li class="toc toc-level-2"><a href="#participants">Participants</a></li><li class="toc toc-level-2"><a href="#payment-phases">Payment phases</a></li></ul></li><li class="toc toc-level-1"><a href="#invoice-account">Invoice account</a></li><li class="toc toc-level-1"><a href="#approve-transfer-from">Approve-transfer-from</a></li><li class="toc toc-level-1"><a href="#transfer-notify">Transfer-notify</a></li><li class="toc toc-level-1"><a href="#transfer-notify">Transfer-fetch</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
+
+<section><h2 id="introduction"><a href="#introduction">Introduction</a></h2>
+<p>In the previous article, <a href="/posts/09-fungible-tokens-101.html">Fungible tokens 101</a>, I introduced the concept of a ledger and various extensions that can help us solve practical problems.
+In this article, we shall analyze a few <em>payment flows</em>—protocols built on top of a ledger allowing clients to exchange tokens for a service—in the context of the <a href="https://internetcomputer.org">Internet Computer</a>.</p>
+</section>
+<section><h2 id="prerequisites"><a href="#prerequisites">Prerequisites</a></h2>
+<h3 id="the-payment-scenario"><a href="#the-payment-scenario">The payment scenario</a></h3>
+<p>Abstract protocols can be dull and hard to comprehend, so let us model a specific payment scenario: me buying a new laptop online and paying for it in <span class="smallcaps">wxdr</span> (wrapped <a href="https://en.wikipedia.org/wiki/Special_drawing_rights"><span class="smallcaps">sdr</span></a>) tokens locked in a ledger hosted on the Internet Computer.</p>
+<p>I open the website of the hardware vendor I trust, select the configuration (the memory capacity, the number of cores, etc.) that suits my needs, fill in the shipment details, and go to the payment page.
+I choose an option to pay in <span class="smallcaps">wxdr</span>.</p>
+<p>In the rest of the article, we will fantasize about what the payment page can look like and how it can interact with the shop.</p>
+<h3 id="participants"><a href="#participants">Participants</a></h3>
+<p>Each flow will involve the following participants:</p>
+<table class="table-2 "><tbody><tr><td colspan="1" class="align-l">
+<img class="grayscale" src="/images/10-me.png"> </td><td colspan="1" class="align-l"> <em>Me</em>: a merry human sitting in front of a computer and ordering a new laptop. </td></tr><tr><td colspan="1" class="align-l">
+<img class="grayscale" src="/images/10-shop.png"> </td><td colspan="1" class="align-l"> <em>Shop</em>: an Internet Computer smart contract accepting orders. </td></tr><tr><td colspan="1" class="align-l">
+<img class="grayscale" src="/images/10-webpage.png"> </td><td colspan="1" class="align-l"> <em>Web page</em>: a spaghetti of markup, styling, and scripts serving the <em>shop</em> UI. </td></tr><tr><td colspan="1" class="align-l">
+<img class="grayscale" src="/images/10-wallet.png"> </td><td colspan="1" class="align-l"> <em>Wallet</em>: a trusty hardware wallet device, such as <a href="https://www.ledger.com/">Ledger</a> or <a href="https://trezor.io/">Trezor</a>, with a corresponding UI for interacting with the ledger, such as <a href="https://www.ledger.com/ledger-live">Ledger Live</a>. A more sophisticated wallet can smoothen the UX, but the ideas remain the same. </td></tr><tr><td colspan="1" class="align-l">
+<img class="grayscale" src="/images/10-ledger.png"> </td><td colspan="1" class="align-l"> <em>Ledger</em>: an Internet Computer smart contract processing payments. </td></tr></tbody></table>
+<h3 id="payment-phases"><a href="#payment-phases">Payment phases</a></h3>
+<p>All the payment flows we will analyze have three phases:
+</p>
+<ol class="circled"><li data-num-glyph="①"><em>The negotiation phase</em>.
+    After I place my order and fill in the shipment details, the shop creates a unique order identifier, <em>Invoice ID</em>.
+    The <em>web page</em> displays the payment details (e.g., as a <span class="smallcaps">qr</span> code of the request I need to sign) and instructions on how to proceed with the order.
+  </li><li data-num-glyph="②"><em>The payment phase</em>.
+    I use my <em>wallet</em> to execute the transaction as instructed on the <em>web page</em>.
+    This phase is essentially the same in all flows; only the transaction type varies.
+  </li><li data-num-glyph="③"><em>The notification phase</em>.
+    The shop receives a payment notification for the Invoice ID, validates the payment, and updates the order status.
+    The <em>web page</em> displays an upbeat message, completing the flow.
+</li></ol>
+</section>
+<section><h2 id="invoice-account"><a href="#invoice-account">Invoice account</a></h2>
+<p>The first payment flow we will analyze relies on the <a href="/posts/09-fungible-tokens-101.html#subaccounts">subaccounts</a> ledger feature.
+The idea behind the flow is quite clever: the shop can use its subaccount identified by the <em>Invoice ID</em> as a temporary <q>cell</q> for the payment.
+I can transfer my tokens to this cell, and the shop can move tokens out because the cell belongs to the shop.</p>
+<p>The happy case of the flow needs only one primitive from the ledger, the <code>transfer</code> method specified below.</p>
+<div class="source-container"><pre class="source candid"><code><span class="line">service : {</span>
+<span class="line">  <em>// Transfers token <b>amount</b> from the account of the (implicit) <b>caller</b></em></span>
+<span class="line">  <em>// to the account specified by the principal and the subaccount.</em></span>
+<span class="line">  <em>// Arguments:</em></span>
+<span class="line">  <em>//   <b>amount</b> - the token amount to transfer.</em></span>
+<span class="line">  <em>//   <b>from_subaccount</b> - the subaccount of the caller to transfer tokens from.</em></span>
+<span class="line">  <em>//   <b>to</b> - the receiver of the tokens.</em></span>
+<span class="line">  <em>//   <b>to_subaccount</b> - which subaccount of the receiver the tokens will land on.</em></span>
+<span class="line">  <b>transfer</b>(record {</span>
+<span class="line">    amount : nat;</span>
+<span class="line">    from_subaccount : opt blob;</span>
+<span class="line">    to : principal;</span>
+<span class="line">    to_subaccount : opt blob;</span>
+<span class="line">  }) -&gt; (TxReceipt);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The flow proceeds as follows:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+    In the negotiation phase, the webpage instructs me to transfer tokens to the shop’s <em>Invoice ID</em> subaccount and displays a big green <q>Done</q> button that I need to press after the payment succeeds.
+  </li><li data-num-glyph="②">
+    In the payment phase, I use my wallet to execute the <code>transfer({ amount = Price, to = Shop, to_subaccount = InvoiceId})</code> call on the ledger.
+  </li><li data-num-glyph="③">
+    In the notification phase, I click on the <q>Done</q> button dispatching a notification to the <em>shop</em> indicating that I paid the invoice (the webpage can remember the <em>Invoice ID</em> on the client side, so I do not have to type it in).
+    Upon receiving the notification, the shop attempts to transfer the amount from its <em>Invoice ID</em> subaccount to its default account, calling <code>transfer({ amount = Price - Fee, from_subaccount = InvoiceID, to = Shop })</code> on the ledger.
+    If that final transfer succeeds, the order is complete.
+</li></ol>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-invoice-account-seq">⊕</label><input type="checkbox" id="mn-invoice-account-seq" class="margin-toggle"><span class="marginnote">
+  A sequence diagram for the invoice account payment flow.
+</span><img src="/images/10-invoice-id-flow.png">
+</figure>
+<p>The invoice account flow has a few interesting properties:
+</p>
+<ul class="arrows"><li>The ledger must process at least two messages: one transfer from me and another from the shop.
+  </li><li>Two transfers mean that the ledger charges <em>two</em> fees for each flow: one from me and another from the shop.
+  </li><li>
+    The ledger needs to remember one additional <code>(principal, subaccount, amount)</code> tuple for the duration of the flow.
+    The tuple occupies at least 70 bytes.
+  </li><li>The flow supports unlimited concurrency: I can make multiple payments to the same shop in parallel as long as each payment uses a unique invoice identifier.
+  </li><li>
+    The ledger implementation is straightforward: the subaccounts feature is the only requirement for the flow.
+</li></ul>
+<p>What happens if I transfer my <span class="smallcaps">wxdr</span>s but never click the <q>Done</q> button?
+Or what if my browser loses network connection right before it sends the shop notification?
+The shop will not receive any notifications, likely never making progress with my order.
+One strategy that the shop could use to improve the user experience in such cases is to monitor balances for unpaid invoices and complete transactions automatically if the notification does not arrive in a reasonable amount of time.</p>
+</section>
+<section><h2 id="approve-transfer-from"><a href="#approve-transfer-from">Approve-transfer-from</a></h2>
+<p>The approve-transfer-from pattern relies on the <a href="/posts/09-fungible-tokens-101.html#approvals">approvals</a> ledger feature, first appearing in the <a href="https://ethereum.org/en/developers/docs/standards/tokens/erc-20/">ERC-20</a> token standard.
+The flow uses two new ledger primitives, <code>approve</code> and <code>transfer_from</code>, and involves three parties:
+</p>
+<ol class="circled"><li data-num-glyph="①">The <em>owner</em> holds tokens on the ledger. The owner can <em>approve</em> transfers from its account to a <em>delegate</em>.
+  </li><li data-num-glyph="②">The <em>delegate</em> can <em>transfer</em> tokens <em>from</em> the owner’s account within the approved cap.
+  </li><li data-num-glyph="③">The <em>beneficiary</em> receives tokens from the delegate as if the owner sent them.
+</li></ol>
+<p>In our <a href="#payment-scenario">scenario</a>, the delegate and the beneficiary are the same entity—the <em>shop</em>.</p>
+<p>We can capture the required ledger primitives in the following Candid interface:
+</p>
+<div class="source-container"><pre class="source candid"><code><span class="line">service : {</span>
+<span class="line">  <em>// Entitles the <b>delegate</b> to spend at most the specified token <b>amount</b> on behalf</em></span>
+<span class="line">  <em>// of the (implicit) <b>caller</b>.</em></span>
+<span class="line">  <em>// Arguments:</em></span>
+<span class="line">  <em>//   <b>amount</b> - the cap on the amount the delegate can transfer from the caller's account.</em></span>
+<span class="line">  <em>//   <b>delegate</b> - the actor entitled to make payments on behalf of the caller.</em></span>
+<span class="line">  <b>approve</b>(record {</span>
+<span class="line">    amount : nat;</span>
+<span class="line">    delegate : principal;</span>
+<span class="line">  }) -&gt; ();</span>
+<span class="line"></span>
+<span class="line">  <em>// Transfers the specified token <b>amount</b> from the <b>owner</b> account to the</em></span>
+<span class="line">  <em>// specified account.</em></span>
+<span class="line">  <em>// Arguments:</em></span>
+<span class="line">  <em>//   <b>amount</b> - the token amount to transfer.</em></span>
+<span class="line">  <em>//   <b>owner</b> - the account to transfer tokens from.</em></span>
+<span class="line">  <em>//   <b>to</b> - the receiver of the tokens (the beneficiary).</em></span>
+<span class="line">  <em>//</em></span>
+<span class="line">  <em>// PRECONDITION: the <b>owner</b> has approved at least the <b>amount</b> to the (implicit) <b>caller</b>.</em></span>
+<span class="line">  <em>// POSTCONDITION: the caller's allowance decreases by the <b>amount</b>.</em></span>
+<span class="line">  <b>transfer_from</b>(record {</span>
+<span class="line">    amount : nat;</span>
+<span class="line">    owner : principal;</span>
+<span class="line">    to : principal;</span>
+<span class="line">  }) -&gt; (nat) query;</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The flow proceeds as follows:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+    In the negotiation phase, the webpage instructs me to approve a transfer to the shop, displaying the shop’s account.
+    One difference from the <a href="#invoice-account">invoice account</a> flow is that the shop needs to know my wallet’s address on the ledger to make a transfer on my behalf.
+    The webpage displays a text field for my account and the familiar <q>Done</q> button.
+  </li><li data-num-glyph="②">In the payment phase, I use my wallet to execute the <code>approve({to = Shop, amount = Price})</code> call on the ledger.
+  </li><li data-num-glyph="③">
+    In the notification phase, I paste my ledger address into the text field and press the button.
+    Once the shop receives the notification with my address and the <em>Invoice ID</em>, it executes <code>transfer_from({ amount = Price; owner = Wallet; to = Shop })</code> call on the ledger.
+    If that transfer is successful, the order is complete.
+</li></ol>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-approve-transfer-from-seq">⊕</label><input type="checkbox" id="mn-approve-transfer-from-seq" class="margin-toggle"><span class="marginnote">
+  A sequence diagram for the approve-transfer-from payment flow.
+</span><img src="/images/10-approve-flow.png">
+</figure>
+<p>Let us see how this flow compares to the <a href="#invoice-account">invoice account</a> flow:
+</p>
+<ul class="arrows"><li>The ledger must process at least two messages: approval from the owner and a transfer from the shop.
+  </li><li>The ledger charges <em>two</em> fees for each payment: one for my approval and another for the shop’s transfer.
+  </li><li>
+    The ledger needs to remember one additional <code>(principal, principal, amount)</code> tuple for the duration of the flow.
+    The tuple occupies at least 68 bytes.
+  </li><li>
+    The flow does not support concurrency: if I execute two payments to the same shop asynchronously, only one of the payments will likely succeed (the exact outcome depends on the message scheduling order).
+  </li><li>
+    The ledger needs to maintain a data structure to track allowances, adding complexity to the implementation.
+  </li><li>
+    I still have the tokens on my account if the shop never gets the notification due to a bug or a networking issue.
+</li></ul>
+<p>One strong side of the approve-transfer-from flow is that it supports recurring payments.
+For example, if I were buying a subscription with monthly installments, I could have approved transfers for the entire year, allowing the shop to transfer from my account once a month.
+Of course, I must trust the shop not to charge the whole yearly amount in one go.</p>
+</section>
+<section><h2 id="transfer-notify"><a href="#transfer-notify">Transfer-notify</a></h2>
+<p>Note that the failure of the frontend to send a notification is a prevalent error in the previous flows.
+What if the ledger automatically delivered the notification to the receiver over the reliable channel that the Internet Computer provides?
+That is the idea behind the transfer-notify flow.</p>
+<p>There is one issue we need to sort out, however.
+When we relied on the webpage to send the notification, we could include the <em>Invoice ID</em> into the payload, making it possible for the shop to identify the relevant order.
+If we ask the ledger to send the payment notification, we must pass the <em>Invoice ID</em> in that message.
+The common way to address this issue is to add the <code>memo</code> argument to the transfer arguments, allowing the caller to attach an arbitrary payload to the transaction details.</p>
+<div class="source-container"><pre class="source candid"><code><span class="line">service : {</span>
+<span class="line">  <em>// Transfers token <b>amount</b> from the account of the (implicit) <b>caller</b></em></span>
+<span class="line">  <em>// to the account specified by the principal.</em></span>
+<span class="line">  <em>// If the transfer is successful, sends a notification to the receiver.</em></span>
+<span class="line">  <em>// Arguments:</em></span>
+<span class="line">  <em>//   <b>amount</b> - the token amount to transfer.</em></span>
+<span class="line">  <em>//   <b>to</b> - the receiver of the tokens.</em></span>
+<span class="line">  <em>//   <b>memo</b> - an opaque identifier attached to the notification.</em></span>
+<span class="line">  <b>transfer_notify</b>(record {</span>
+<span class="line">    amount : nat;</span>
+<span class="line">    to : principal;</span>
+<span class="line">    memo : opt blob;</span>
+<span class="line">  }) -&gt; (TxReceipt);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The flow proceeds as follows:
+</p>
+<ol class="circled"><li data-num-glyph="①">In the negotiation phase, the webpage displays the payment details and starts polling the shop for payment confirmation.
+  </li><li data-num-glyph="②">In the payment phase, I use my wallet to execute the <code>transfer_notify({to = Shop, amount = Price, memo = InvoiceID})</code> call on the ledger.
+  </li><li data-num-glyph="③">
+    Once the transfer succeeds, the ledger notifies the shop about the payment, providing the amount and the <code>memo</code> containing the <em>Invoice ID</em>.
+    The shop consumes the notification and changes the order status.
+    The next time the webpage polls the shop, the shop replies with a confirmation, and I see a positive message.
+</li></ol>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-transfer-notify-seq">⊕</label><input type="checkbox" id="mn-transfer-notify-seq" class="margin-toggle"><span class="marginnote">
+  A sequence diagram for the transfer-notify payment flow.
+</span><img src="/images/10-notify-flow.png">
+</figure>
+<p>Let us check how this flow compares to the previous ones:
+</p>
+<ul class="arrows"><li>The ledger must process at least two messages: a transfer from the owner and a notification to the shop.
+  </li><li>
+    The ledger charges a combined fee for my transfer and notification.
+    Whether the ledger charges two fees or gives a discount depends on the implementation.
+    Let us assume that the ledger charges 1½ fees.
+  </li><li>
+    The ledger needs to hold a notification in memory until the flow completes.
+    The notification must contain at least the payer principal, the memo (up to 32 bytes), and the amount, which amounts to at least 70 bytes per flow.
+  </li><li>The flow support unlimited concurrency.
+  </li><li>
+    The notification feature adds a lot of complexity to the ledger implementation.
+    The ledger might need to deal with unresponsive destinations and implement a retry policy for delivering notifications.
+  </li><li>
+    The ledger sends the notification on-chain, making it very likely that the shop will receive the notification.
+    Still, there is a possibility that the notification will not get through if the destination is overloaded.
+</li></ul>
+</section>
+<section><h2 id="transfer-notify"><a href="#transfer-notify">Transfer-fetch</a></h2>
+<p>The transfer-fetch flow relies on the ability to request details of past transactions from the ledger.
+After I transfer tokens to the shop, specifying the <em>Invoice ID</em> as the transaction memo, the ledger issues a unique transaction identifier.
+I can then pass this identifier to the shop as proof of my payment.
+The shop can fetch transaction details directly from the ledger to validate the payment.
+Below is the interface we expect from the ledger.</p>
+<div class="source-container"><pre class="source candid"><code><span class="line">service : {</span>
+<span class="line">  <em>// Transfers token <b>amount</b> from the account of the (implicit) <b>caller</b></em></span>
+<span class="line">  <em>// to the account specified by the principal.</em></span>
+<span class="line">  <em>// Returns a unique transaction identifier.</em></span>
+<span class="line">  <em>// Arguments:</em></span>
+<span class="line">  <em>//   <b>amount</b> - the token amount to transfer.</em></span>
+<span class="line">  <em>//   <b>to</b> - the receiver of the tokens.</em></span>
+<span class="line">  <em>//   <b>memo</b> - an opaque identifier attached to the transaction.</em></span>
+<span class="line">  <b>transfer</b>(record {</span>
+<span class="line">    amount : nat;</span>
+<span class="line">    to : principal;</span>
+<span class="line">    memo : opt blob;</span>
+<span class="line">  }) -&gt; (nat);</span>
+<span class="line"></span>
+<span class="line">  <em>// Retrieves details of the transaction with the specified identifier.</em></span>
+<span class="line">  <em>// Arguments:</em></span>
+<span class="line">  <em>//   <b>txid</b> - a unique transaction identifier.</em></span>
+<span class="line">  <b>fetch</b>(txid : nat) -&gt; (opt record {</span>
+<span class="line">    from : principal;</span>
+<span class="line">    to : principal;</span>
+<span class="line">    amount : nat;</span>
+<span class="line">    memo : opt blob;</span>
+<span class="line">  });</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The flow proceeds as follows:
+</p>
+<ol class="circled"><li data-num-glyph="①">In the negotiation phase, the webpage displays the payment details, a text field for the transaction identifier, and a big green <q>Done</q> button.
+  </li><li data-num-glyph="②">
+    In the payment phase, I use my wallet to execute the <code>transfer({to = Shop, amount = Price, memo = InvoiceID})</code> call on the ledger.
+    If the transfer is successful, the transaction receipt contains a unique transaction identifier.
+  </li><li data-num-glyph="③">
+    I paste the transaction identifier into the text field and press the green button.
+    Once the shop receives the notification with the transaction identifier, it fetches the transaction from the ledger and validates the amount and the memo.
+    If the validation passes, the order is complete.
+</li></ol>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-transfer-fetch-seq">⊕</label><input type="checkbox" id="mn-transfer-fetch-seq" class="margin-toggle"><span class="marginnote">
+  A sequence diagram for the transfer-fetch payment flow.
+</span><img src="/images/10-fetch-flow.png">
+</figure>
+<ul class="arrows"><li>The ledger must process at least two messages: a <code>transfer</code> from me and a <code>fetch</code> request from the shop.
+  </li><li>
+    The ledger charges one fee for my transfer.
+    The transaction details are usually publicly available and require no access fee.
+  </li><li>The ledger does not need to store any additional information for the payment flow.
+  </li><li>The flow support unlimited concurrency.
+  </li><li>
+    Transaction access interfaces are handy and ubiquitous.
+    Little additional complexity is usually required to enable the flow.
+  </li><li>
+    The failure cases are very similar to the <a href="#invoice-account">invoice-account</a> flow, except that there is no easy way to monitor outstanding invoices.
+    One possible recovery is constructing an index of all the ledger transactions and scanning for transfers matching the open orders.
+</li></ul>
+</section>
+<section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
+<p>We analyzed several payment flows for ledgers hosted on the Internet Computer.
+All the flows we discussed had <a href="#payment-phases">three phases</a>: negotiation, payment, and notification.</p>
+<p>Below is a table comparing the payment flows.</p>
+<table class="table-5 "><thead><thead><tr><th colspan="1" class="align-l">
+ </th><th colspan="1" class="align-l"> <a href="#invoice-account"><span class="normal">invoice account</span></a> </th><th colspan="1" class="align-l"> <a href="#approve-transfer-from"><span class="normal">approve-transfer-from</span></a> </th><th colspan="1" class="align-l"> <a href="#transfer-notify"><span class="normal">transfer-notify</span></a> </th><th colspan="1" class="align-l"> <a href="#transfer-fetch"><span class="normal">transfer-fetch</span></a> </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+
+Ledger messages </td><td colspan="1" class="align-l"> 2 </td><td colspan="1" class="align-l"> 2 </td><td colspan="1" class="align-l"> 2 </td><td colspan="1" class="align-l"> 2 </td></tr><tr><td colspan="1" class="align-l">
+Fees </td><td colspan="1" class="align-l"> 2 </td><td colspan="1" class="align-l"> 2 </td><td colspan="1" class="align-l"> 1½ </td><td colspan="1" class="align-l"> 1 </td></tr><tr><td colspan="1" class="align-l">
+Ledger memory (bytes) </td><td colspan="1" class="align-l"> 70 </td><td colspan="1" class="align-l"> 68 </td><td colspan="1" class="align-l"> 70 </td><td colspan="1" class="align-l"> 0 </td></tr><tr><td colspan="1" class="align-l">
+Concurrent payments </td><td colspan="1" class="align-l"> ✔ </td><td colspan="1" class="align-l"> ✗ </td><td colspan="1" class="align-l"> ✔ </td><td colspan="1" class="align-l"> ✔ </td></tr><tr><td colspan="1" class="align-l">
+Recurrent payments </td><td colspan="1" class="align-l"> ✗ </td><td colspan="1" class="align-l"> ✔ </td><td colspan="1" class="align-l"> ✗ </td><td colspan="1" class="align-l"> ✗ </td></tr><tr><td colspan="1" class="align-l">
+Ledger complexity </td><td colspan="1" class="align-l"> simple </td><td colspan="1" class="align-l"> moderate </td><td colspan="1" class="align-l"> complex </td><td colspan="1" class="align-l"> simple </td></tr><tr><td colspan="1" class="align-l">
+Failure recovery </td><td colspan="1" class="align-l"> not easy </td><td colspan="1" class="align-l"> ok </td><td colspan="1" class="align-l"> hard but rare </td><td colspan="1" class="align-l"> hard </td></tr></tbody></table>
+<p>So which flow is the best one?
+None of them is a clear winner on all fronts.
+You might prefer different flows based on your design goals and the application needs.
+</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/09-fungible-tokens-101.html">Fungible tokens 101</a></li><li><a href="/posts/13-icp-ledger.html">IC internals: the ICP ledger</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/11-ii-stable-memory.html"> ←IC internals: Internet Identity storage</a></div><div id="older"><a href="/posts/09-fungible-tokens-101.html">Fungible tokens 101→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

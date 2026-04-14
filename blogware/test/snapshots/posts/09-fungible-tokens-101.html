@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="fi,ic,ledger"><meta name="description" content="An introduction to fungible tokens and ledgers."><title>Fungible tokens 101</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/09-fungible-tokens-101.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/09-fungible-tokens-101.html">Fungible tokens 101</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2022-08-05</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2022-08-05</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#intro">Introduction</a></li><li class="toc toc-level-1"><a href="#fungible-tokens">Fungible tokens</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#asset-ledgers">Asset ledgers</a></li><li class="toc toc-level-2"><a href="#minting-burning">Minting and burning</a></li><li class="toc toc-level-2"><a href="#subaccounts">Subaccounts</a></li><li class="toc toc-level-2"><a href="#approvals">Approvals</a></li><li class="toc toc-level-2"><a href="#fees">Fees</a></li></ul></li><li class="toc toc-level-1"><a href="#summary">Summary</a></li></ul><hr>
+
+<section><h2 id="intro"><a href="#intro">Introduction</a></h2>
+<p>I am currently involved in the effort to deliver the <a href="https://github.com/dfinity/ICRC-1">ICRC-1</a> fungible token standard for the <a href="https://internetcomputer.org">Internet Computer</a>.
+The two topics the <a href="https://forum.dfinity.org/t/announcing-token-standard-as-topic-of-the-first-meeting-of-the-ledger-tokenization-working-group/11925">Ledger &amp; Tokenization</a> working group discussed most heatedly are the use of <a href="#subaccounts">subaccounts</a> and the core payment flow for smart contracts (in particular, the <code>approve</code>/<code>transferFrom</code> flow popularized by the <a href="https://eips.ethereum.org/EIPS/eip-20">ERC-20</a> token standard).
+At first glance, these issues seemed unrelated, but surprising connections revealed themselves under closer scrutiny, begging for analysis and exploration.</p>
+<p>This article is a gentle introduction to fungible tokens and ledgers.
+We shall frame the concept of the ledger and options available when designing a practical accounting system, laying the ground for more subtle technical topics that will come in future articles.</p>
+</section>
+<section><h2 id="fungible-tokens"><a href="#fungible-tokens">Fungible tokens</a></h2>
+<div class="epigraph"><blockquote><p>
+Gold is gold everywhere, fungible and indifferent.
+But when a disk of gold is stamped by a coiner with certain pompous words and the picture of a King, it takes on added value—seigneurage. It has that value only in that people believe that it does—it is a shared phant’sy.
+</p><footer>Neal Stephenson, The Confusion</footer></blockquote></div>
+<p>The concept of <a href="https://www.investopedia.com/terms/f/fungibility.asp">fungible</a> tokens is ancient and intimately familiar to us, though we rarely use this learned term of <a href="https://en.wiktionary.org/wiki/fungible">latin origin</a> in everyday life.
+Fungible tokens are interchangeable items you can trade, such as coins of equal value or gold pieces of identical form, weight, and purity.</p>
+<p>When you bought ice cream as a kid, you traded one fungible token (<a href="https://www.investopedia.com/terms/f/fiatmoney.asp">fiat money</a>) for another (ice cream).
+The salesperson at the store <a href="https://en.wikipedia.org/wiki/Pecunia_non_olet">did not care</a> where your coins came from.
+Maybe your aunt gave you some to buy a treat, or perhaps you saved some from your lunch money.
+You did not care which instance of the desired sort of ice cream<label class="margin-toggle sidenote-number" for="plombieres"></label><input type="checkbox" id="plombieres" class="margin-toggle"><span class="sidenote">My absolute favorite is <a href="https://en.wikipedia.org/wiki/Plombi%C3%A8res-les-Bains#Plombir_ice_cream">Plombières</a>.</span> you would get.</p>
+<h3 id="asset-ledgers"><a href="#asset-ledgers">Asset ledgers</a></h3>
+<p>The most prominent examples of fungible tokens in the digital world are digital assets such as <a href="https://bitcoin.org/">Bitcoin</a>, <a href="https://ethereum.org/en/eth/">Ether</a>, and <a href="https://wiki.internetcomputer.org/wiki/ICP_token">ICP</a> utility tokens.
+An <a href="https://www.investopedia.com/terms/a/asset-ledger.asp">asset ledger</a> is a concept lying at the heart of these systems.
+Ledgers are journals of transactions the system executed; they keep track of fund movements between accounts.
+Each purchase you make using bitcoin becomes a record in the Bitcoin ledger packed into a block in the blockchain.</p>
+<p>My nerdy ex-colleagues from <a href="https://ya.ru">Yandex</a> used to use a simple ledger to keep track of tip money.
+I will use and evolve their scheme to demonstrate the concept of a ledger and its variations.</p>
+<p>Geneviève works in a small accounting firm.
+One day she goes into a small restaurant with two of her colleagues, Allen and Meriam.
+They get a fantastic meal and decide to tip <span class="math">$20</span>.
+Unfortunately, Allen and Meriam do not have <span class="math">$6.66</span> to share the burden equally.
+So they get a notebook, write <q>Ledger</q> on the cover, and split the first page into three columns.
+Then Allen and Meriam transfer Geneviève imaginary money on that ledger.</p>
+<table class="table-3 "><thead><thead><tr><th colspan="1" class="align-l">
+From </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Amount </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+
+Allen Brook </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$6.66</span> </td></tr><tr><td colspan="1" class="align-l">
+Meriam Bone </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$6.66</span> </td></tr></tbody></table>
+<p>Now Allen and Meriam have <span class="math">-$6.66</span> on their <q>accounts</q>, and Geneviève has <span class="math">$13.32</span>.
+The next day, they go to a coffee shop and tip <span class="math">$15</span>.
+This time Allen pays for everyone, and Geneviève and Meriam add new entries to the ledger.</p>
+<table class="table-3 "><thead><thead><tr><th colspan="1" class="align-l">
+From </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Amount </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+
+Allen Brook </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$6.66</span> </td></tr><tr><td colspan="1" class="align-l">
+Meriam Bone </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$6.66</span> </td></tr><tr><td colspan="1" class="align-l">
+Geneviève Bardot </td><td colspan="1" class="align-l"> Allen Brook </td><td colspan="1" class="align-r"> <span class="math">$5.00</span> </td></tr><tr><td colspan="1" class="align-l">
+Meriam Bone </td><td colspan="1" class="align-l"> Allen Brook </td><td colspan="1" class="align-r"> <span class="math">$5.00</span> </td></tr></tbody></table>
+<p>Now Allen has <span class="math">$3.34</span> on his account, Geneviève has <span class="math">$8.32</span>, and Meriam has <span class="math">-$11.66</span><label class="margin-toggle sidenote-number" for="sn-compute-balance"></label><input type="checkbox" id="sn-compute-balance" class="margin-toggle"><span class="sidenote">
+  To compute a person’s balance, go over all the records in the log from top to bottom.
+  If the person appears in the <em>from</em> column, subtract the <em>amount</em> from their balance;
+  if the person appears in the <em>to</em> column, add the <em>amount</em> to their balance.
+</span>.
+This ledger has an interesting property: the sum of all balances is always zero because we started with no funds, and each record only moves funds.</p>
+<p>This simple scheme describes a fully functional and practical ledger that helps balance the financial burden of tipping.
+The person with the lowest balance on the ledger pays for the whole company when they go out.</p>
+<p>The tip ledger is unusual because it allows negative balances like credit cards.
+This setup works well when all the participants know and trust one another.
+Digital ledgers such as Bitcoin are like debit cards: you must have enough tokens on your account before transferring them.
+But how do the first tokens get into the system?</p>
+<h3 id="minting-burning"><a href="#minting-burning">Minting and burning</a></h3>
+<p>All ledgers have a way to produce, or <em>mint</em><label class="margin-toggle sidenote-number" for="sn-newton-ming"></label><input type="checkbox" id="sn-newton-ming" class="margin-toggle"><span class="sidenote">Did you know that Sir Isaac Newton worked at the <a href="https://newtonandthemint.history.ox.ac.uk/">Royal Mint</a> for three decades?</span>, tokens out of thin air.
+Bitcoin network mints tokens as a reward for participants that help the ledger grow.
+The IC mints ICP utility tokens to reward participants in the network governance and node providers.</p>
+<p>Another popular scheme is <em>wrapped tokens</em>, where the ledger mints tokens as proxies for other assets.
+Let us extend the tip ledger example to make it operate on wrapped dollars.</p>
+<p>Imagine now that Geneviève does not trust the folks she hangs out with, but she wants to continue enjoying the convenience of virtual money.
+Whenever someone transfers her virtual tokens on a piece of paper, she wants to be sure she can claim her buck back.</p>
+<p>One way to approach the issue is to set up a piggy bank at the office.
+Anyone who puts <span class="math">$1</span> into the bank gets a <em>wrapped</em> <span class="math">$1</span> on the ledger.
+The transaction converting a physical bill into a virtual token is a <em>mint</em> transaction.</p>
+<p>One day Geneviève, Allen, and Meriam put <span class="math">$10</span> each into the piggy and mint their wrapped money on the ledger.</p>
+<table class="table-4 "><thead><thead><tr><th colspan="1" class="align-l">
+From </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Amount </th><th colspan="1" class="align-r"> Piggy bank </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+
+— </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td></tr><tr><td colspan="1" class="align-l">
+— </td><td colspan="1" class="align-l"> Allen Brook </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td><td colspan="1" class="align-r"> <span class="math">$20.00</span> </td></tr><tr><td colspan="1" class="align-l">
+— </td><td colspan="1" class="align-l"> Meriam Bone </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td><td colspan="1" class="align-r"> <span class="math">$30.00</span> </td></tr></tbody></table>
+<p>Then they all go to a coffee shop where Geneviève tips <span class="math">$6</span> for the group.
+Allen and Meriam transfer their shares to Geneviève on the ledger.</p>
+<table class="table-4 "><thead><thead><tr><th colspan="1" class="align-l">
+From </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Amount </th><th colspan="1" class="align-r"> Piggy bank </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+
+— </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td></tr><tr><td colspan="1" class="align-l">
+— </td><td colspan="1" class="align-l"> Allen Brook </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td><td colspan="1" class="align-r"> <span class="math">$20.00</span> </td></tr><tr><td colspan="1" class="align-l">
+— </td><td colspan="1" class="align-l"> Meriam Bone </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td><td colspan="1" class="align-r"> <span class="math">$30.00</span> </td></tr><tr><td colspan="1" class="align-l">
+Allen Brook </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$&numsp;2.00</span> </td><td colspan="1" class="align-r"> <span class="math">$30.00</span> </td></tr><tr><td colspan="1" class="align-l">
+Meriam Bone </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$&numsp;2.00</span> </td><td colspan="1" class="align-r"> <span class="math">$30.00</span> </td></tr></tbody></table>
+<p>The main difference with the original scheme is that now Geneviève can exit the group and get her money back at any point.
+All she needs is to open the piggy under a supervision of a trusted party, get her <span class="math">$14</span>, and record a <em>burn</em> transaction on the ledger by sending her tokens to the void (sometimes called the <em>minting account</em>).
+The sum of all balances on the ledger is always equal to the amount of money in the piggy bank.</p>
+<table class="table-4 "><thead><thead><tr><th colspan="1" class="align-l">
+From </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Amount </th><th colspan="1" class="align-r"> Piggy bank </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+
+— </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td></tr><tr><td colspan="1" class="align-l">
+— </td><td colspan="1" class="align-l"> Allen Brook </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td><td colspan="1" class="align-r"> <span class="math">$20.00</span> </td></tr><tr><td colspan="1" class="align-l">
+— </td><td colspan="1" class="align-l"> Meriam Bone </td><td colspan="1" class="align-r"> <span class="math">$10.00</span> </td><td colspan="1" class="align-r"> <span class="math">$30.00</span> </td></tr><tr><td colspan="1" class="align-l">
+Allen Brook </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$&numsp;2.00</span> </td><td colspan="1" class="align-r"> <span class="math">$30.00</span> </td></tr><tr><td colspan="1" class="align-l">
+Meriam Bone </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-r"> <span class="math">$&numsp;2.00</span> </td><td colspan="1" class="align-r"> <span class="math">$30.00</span> </td></tr><tr><td colspan="1" class="align-l">
+Geneviève Bardot </td><td colspan="1" class="align-l"> — </td><td colspan="1" class="align-r"> <span class="math">$14.00</span> </td><td colspan="1" class="align-r"> <span class="math">$16.00</span> </td></tr></tbody></table>
+<p>Wrapped tokens are not a recent invention: the U.S. dollar <a href="https://en.wikipedia.org/wiki/Gold_standard">was</a> a wrapped token for 1.50463 grams of gold in <a href="https://en.wikipedia.org/wiki/Coinage_Act_of_1873">1873</a>.</p>
+<h3 id="subaccounts"><a href="#subaccounts">Subaccounts</a></h3>
+<p>Geneviève and her colleagues have a tradition: when someone has a birthday, other colleagues raise funds to buy a little present.
+Next week Allen turns thirty-three, so the department asked Geneviève to buy something nice for him.
+This time they decided to use the piggy bank ledger discussed in the previous section to transfer funds for the present.
+However, there is one little issue: if everyone transfers gift money to Geneviève directly, how will she separate her money from the gift money?</p>
+<p>Our clever office folks decided to add a new feature to the ledger to address the fund separation problem.
+Everyone can hold multiple disjoint accounts on the ledger and move funds from any of those accounts.
+A <a href="https://www.investopedia.com/terms/s/sub-account.asp">subaccount</a> will be a label demarcating independent accounts belonging to the same person.</p>
+<p>Geneviève asks colleagues to transfer funds to her <code>NYYRA OVEGUQNL</code><label class="margin-toggle sidenote-number" for="nm-subaccount-crypto"></label><input type="checkbox" id="nm-subaccount-crypto" class="margin-toggle"><span class="sidenote">Geneviève applied advanced cryptography to hide the purpose of the subaccount from Allen.</span> subaccount until the end of the day.
+She burns the tokens on her <code>NYYRA OVEGUQNL</code> subaccount and withdraws <span class="math">$42.00</span> from the piggy bank right before leaving the office.</p>
+<table class="table-5 "><thead><thead><tr><th colspan="1" class="align-l">
+  From </th><th colspan="1" class="align-l"> Subaccount </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-l"> Subaccount </th><th colspan="1" class="align-r"> Amount </th></tr></thead><tbody><tr class="border-top"><td colspan="5" class="align-c">⋯</td><td colspan="1" class="align-l"> </td></tr><tr><td colspan="1" class="align-l">
+  Geneviève Bardot </td><td colspan="1" class="align-l">  — </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-l"> NYYRA OVEGUQNL </td><td colspan="1" class="align-r"> <span class="math">$15.00</span> </td></tr><tr><td colspan="1" class="align-l">
+  Meriam Bone </td><td colspan="1" class="align-l">  — </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-l"> NYYRA OVEGUQNL </td><td colspan="1" class="align-r"> <span class="math">$15.00</span> </td></tr><tr><td colspan="1" class="align-l">
+  Rüdiger Bachmann </td><td colspan="1" class="align-l">  — </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-l"> NYYRA OVEGUQNL </td><td colspan="1" class="align-r"> <span class="math">$12.00</span> </td></tr><tr><td colspan="1" class="align-l">
+  Geneviève Bardot </td><td colspan="1" class="align-l"> NYYRA OVEGUQNL </td><td colspan="1" class="align-l">  — </td><td colspan="1" class="align-l">  — </td><td colspan="1" class="align-r"> <span class="math">$42.00</span> </td></tr></tbody></table>
+<p>Geneviève heads to the book store and buys the latest edition of <a href="https://www.amazon.com/-/en/dp/0884271951">The Goal</a> by Eliyahu M. Goldratt.
+What a great birthday present!</p>
+<p>Overall, subaccounts are a helpful feature allowing you not to put all your tokens in a single basket.
+Your bank likely opened more than one account for you, such as a salary and a savings account.</p>
+<h3 id="approvals"><a href="#approvals">Approvals</a></h3>
+<p>One day Geneviève’s nephew, Alex, comes to visit her at work.
+Geneviève has an important call with a customer and could not take Alex out for lunch.
+Her colleagues were happy to go out with Alex, but there was a little problem: Alex did not have money.</p>
+<p>Luckily, Geneviève accumulated quite some balance on the ledger, so someone could pay for Alex and get her ledger money back in exchange.
+All that was left is to formalize this arrangement on the ledger.</p>
+<p>Geneviève could transfer some budget to Alex before he goes out, and he could transfer her the leftover when he is back.
+That solves the problem, but Geneviève cannot use the locked funds herself during that time because, technically, they belong to Alex.</p>
+<p>Another approach popularized by the Ethereum community is to introduce the notion of <em>approvals</em>.
+The ledger could have another table with spending allowances between two people.</p>
+<table class="table-3 "><thead><thead><tr><th colspan="1" class="align-l">
+  From </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Allowance </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+  
+  Geneviève Bardot </td><td colspan="1" class="align-l"> Alex Schiller </td><td colspan="1" class="align-r"> <span class="math">$25.00</span> </td></tr></tbody></table>
+<p>With this record, Alex can transfer money on behalf of Geneviève up to the allowance.</p>
+<p>Alex had a lot of fun with Geneviève’s colleagues and spent <span class="math">$16.00</span> at a coffee shop.
+Allen paid for Alex, and Alex transferred some of Geneviève’s tokens to Allen in return.
+This arrangement resulted in two updates to the ledger.
+The first update is the new transaction in the log.
+Note that we need a new column in the table, <span class="smallcaps">on behalf of</span>, to indicate that Alex initiated the transaction, but Geneviève is the effective payer.</p>
+<table class="table-4 "><thead><thead><tr><th colspan="1" class="align-l">
+  From </th><th colspan="1" class="align-l"> On behalf of </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Amount </th></tr></thead><tbody><tr class="border-top"><td colspan="4" class="align-c">⋯</td><td colspan="1" class="align-l"> </td></tr><tr><td colspan="1" class="align-l">
+  Alex Schiller </td><td colspan="1" class="align-l"> Geneviève Bardot </td><td colspan="1" class="align-l"> Allen Brook </td><td colspan="1" class="align-r"> <span class="math">$16.00</span> </td></tr></tbody></table>
+<p>The second update lowers the allowance in the approval table by the amount Alex spent.</p>
+<table class="table-3 "><thead><thead><tr><th colspan="1" class="align-l">
+  From </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Allowance </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+  
+  <span class="strikethrough">Geneviève Bardot</span> </td><td colspan="1" class="align-l"> <span class="strikethrough">Alex Schiller</span> </td><td colspan="1" class="align-r"> <span class="strikethrough"><span class="math">$25.00</span></span> </td></tr><tr><td colspan="1" class="align-l">
+  Geneviève Bardot </td><td colspan="1" class="align-l"> Alex Schiller </td><td colspan="1" class="align-r"> <span class="math">$&numsp;9.00</span> </td></tr></tbody></table>
+<h3 id="fees"><a href="#fees">Fees</a></h3>
+<p>Peppy was a lovely five-year-old girl who came to the office space to see how her mother, Meriam, spends her days.
+Peppy loved numbers, could write her name, and was unusually rational for her age.
+Her favorite game was finding holes in ad-hoc rules that grown-ups invent all day.
+Her eyes caught a little devilish fire when she saw how her mother used the ledger notebook.</p>
+<p class="hanging-quote"><q>How much can I send you, Mom?</q> asked Peppy.</p>
+<p class="hanging-quote"><q>No more than you have on your account,</q> replied Meriam.</p>
+<p class="hanging-quote"><q>I don’t have anything yet. Can I send <em>nothing</em>?</q></p>
+<p class="hanging-quote"><q>Ahm… Well, there are no rules prohibiting <em>that</em>, I suppose.</q></p>
+<p>Peppy grabbed a pen and started filling the lines with blocky letters.</p>
+<table class="table-3 "><thead><thead><tr><th colspan="1" class="align-l">
+From </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Amount </th></tr></thead><tbody><tr class="border-top"><td colspan="3" class="align-c">⋯</td><td colspan="1" class="align-l"> </td></tr><tr><td colspan="1" class="align-l">
+<span class="fun">PEPPY</span> </td><td colspan="1" class="align-l"> <span class="fun">MOM</span> </td><td colspan="1" class="align-r"> <span class="fun">$0</span> </td></tr><tr><td colspan="1" class="align-l">
+<span class="fun">PEPPY</span> </td><td colspan="1" class="align-l"> <span class="fun">MR ALLEN</span> </td><td colspan="1" class="align-r"> <span class="fun">$0</span> </td></tr><tr><td colspan="1" class="align-l">
+<span class="fun">PEPPY</span> </td><td colspan="1" class="align-l"> <span class="fun">MOM</span> </td><td colspan="1" class="align-r"> <span class="fun">$0</span> </td></tr></tbody></table>
+<p class="hanging-quote"><q>OK, Peppy, stop. There is a new rule: you cannot transfer <em>nothing</em>. Only a positive amount.</q></p>
+<p>Peppy stopped.
+A few wrinkles appeared on her forehead, and then her lips curled into a smile.
+She opened her little backpack with tiger stripes and fetched a nickel she found on the street a few days ago.
+She put the nickel into the piggy bank and recorded a mint.
+She did not stop there, however.</p>
+<table class="table-3 "><thead><thead><tr><th colspan="1" class="align-l">
+From </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Amount </th></tr></thead><tbody><tr class="border-top"><td colspan="3" class="align-c">⋯</td><td colspan="1" class="align-l"> </td></tr><tr><td colspan="1" class="align-l">
+<span class="fun">—</span> </td><td colspan="1" class="align-l"> <span class="fun">PEPPY</span> </td><td colspan="1" class="align-r"> <span class="fun">$0.05</span> </td></tr><tr><td colspan="1" class="align-l">
+<span class="fun">PEPPY</span> </td><td colspan="1" class="align-l"> <span class="fun">PEPPY</span> </td><td colspan="1" class="align-r"> <span class="fun">$0.05</span> </td></tr><tr><td colspan="1" class="align-l">
+<span class="fun">PEPPY</span> </td><td colspan="1" class="align-l"> <span class="fun">PEPPY</span> </td><td colspan="1" class="align-r"> <span class="fun">$0.05</span> </td></tr></tbody></table>
+<p class="hanging-quote"><q>OK, Peppy, a new rule: you can’t transfer to yourself. There is no reason to do that!</q></p>
+<p>Peppy knit her brows, struggling to come up with a counter-action.
+Ten seconds later, she was scribbling again.
+She was so focused that the tip of her tongue stuck from her mouth.</p>
+<table class="table-3 "><thead><thead><tr><th colspan="1" class="align-l">
+From </th><th colspan="1" class="align-l"> To </th><th colspan="1" class="align-r"> Amount </th></tr></thead><tbody><tr class="border-top"><td colspan="3" class="align-c">⋯</td><td colspan="1" class="align-l"> </td></tr><tr><td colspan="1" class="align-l">
+<span class="fun">PEPPY</span> </td><td colspan="1" class="align-l"> <span class="fun">MOM</span> </td><td colspan="1" class="align-r"> <span class="fun">$0.0001</span> </td></tr><tr><td colspan="1" class="align-l">
+<span class="fun">PEPPY</span> </td><td colspan="1" class="align-l"> <span class="fun">MR ALLEN</span> </td><td colspan="1" class="align-r"> <span class="fun">$0.0001</span> </td></tr></tbody></table>
+<p class="hanging-quote"><q>It’s not funny, Peppy. From now on, every record will cost the sender a penny.</q></p>
+<p>Peppy pursed her lips, wrote four more records to the notebook, and visited Mrs. Geneviève, who had a chocolate bar in her upper drawer.</p>
+<p>Fees are an essential instrument in ledger design.
+The bitcoin network uses fees to protect the system against spam transactions and incentivize the nodes to include transactions into blocks.
+The higher the fee the transaction sender is willing to pay, the more likely the nodes to process the transaction.
+The ICP ledger also uses fees as a mechanism for spam prevention.</p>
+</section>
+<section><h2 id="summary"><a href="#summary">Summary</a></h2>
+<p>We have seen that fungible tokens are an essential part of our daily life.
+We learned that <a href="#asset-ledgers">ledger</a> is a robust accounting mechanism that we can adapt to the task at hand by adopting various features: <a href="#minting-burning">mints</a>, <a href="#subaccounts">subaccounts</a>, <a href="#approvals">approvals</a>, and <a href="#fees">transfer fees</a>.
+In <a href="/posts/10-payment-flows.html">the following article</a>, we will discuss protocols allowing clients to exchange tokens for service, known as <em>payment flows</em>.</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/10-payment-flows.html">Fungible tokens: payment flows</a></li><li><a href="/posts/13-icp-ledger.html">IC internals: the ICP ledger</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/10-payment-flows.html"> ←Fungible tokens: payment flows</a></div><div id="older"><a href="/posts/08-ic-xnet.html">IC internals: XNet protocol→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

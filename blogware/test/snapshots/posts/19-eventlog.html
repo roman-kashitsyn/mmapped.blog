@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="canisters,ic"><meta name="description" content="The storage scheme securing ckBTC assets."><title>ckBTC internals: event log</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/19-eventlog.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/19-eventlog.html">ckBTC internals: event log</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2023-05-01</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2023-05-01</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#intro">Introduction</a></li><li class="toc toc-level-1"><a href="#motivation">Motivation</a></li><li class="toc toc-level-1"><a href="#solution">Solution</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#what-is-an-event">What is an event?</a></li><li class="toc toc-level-2"><a href="#testing">Testing</a></li></ul></li><li class="toc toc-level-1"><a href="#resources">Resources</a></li></ul><hr>
+
+<section><h2 id="intro"><a href="#intro">Introduction</a></h2>
+<p>
+  
+The <a href="https://medium.com/dfinity/chain-key-bitcoin-a-decentralized-bitcoin-twin-ceb8f4ddf95e">chain-key Bitcoin</a> (ckBTC) project became <a href="https://twitter.com/dfinity/status/1642887821731004418">publicly available</a> on April 3, 2023.
+The ckBTC <em>minter</em> smart contract is the most novel part of the product responsible for converting Bitcoin to ckBTC tokens and back.
+This contract features several design choices that some developers might find insightful.
+This article describes how the ckBTC minter, which I will further refer to as <q>the minter</q>, organizes its storage.</p>
+</section>
+<section><h2 id="motivation"><a href="#motivation">Motivation</a></h2>
+<p>
+The minter is a complicated system that must maintain a lot of state variables:</p>
+<ul class="arrows"><li><a href="https://en.wikipedia.org/wiki/Unspent_transaction_output">Unspent Transaction Outputs</a> (<span class="smallcaps">utxo</span>s) the minter owns on the Bitcoin network, indexed and sliced in various ways (by account, state, etc.).
+    </li><li>
+    ckBTC to Bitcoin conversion requests, indexed by state and the arrival time.
+    </li><li>
+    Pending Bitcoin transactions fulfilling the withdrawal requests.
+    </li><li>
+    Fees owed to the <a href="https://thepaypers.com/expert-opinion/know-your-transaction-kyt-the-key-to-combating-transaction-laundering--1246231">Know Your Transaction</a> (KYT) service providers.
+</li></ul>
+<p>How to preserve this state across canister upgrades?</p>
+<p>On the one hand, we<label class="margin-toggle sidenote-number" for="sn-we"></label><input type="checkbox" id="sn-we" class="margin-toggle"><span class="sidenote">Here and further, I’ll use <q>we</q> to indicate the ckBTC development team.</span> didn’t want to <a href="/posts/11-ii-stable-memory.html#conventional-memory-management">marshal the entire state</a> through stable memory.
+We preferred to avoid pre-upgrade hooks altogether to eliminate the possibility that the minter becomes <a href="/posts/01-effective-rust-canisters.html#upgrade-hook-panics">non-upgradable</a> due to a bug in the hook.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-traditional-upgrade">⊕</label><input type="checkbox" id="mn-traditional-upgrade" class="margin-toggle"><span class="marginnote">
+    The traditional canister state management scheme.
+    The canister applies <em>state transitions</em> <span class="math">T<sub>i</sub></span> to its states <span class="math">S<sub>i</sub></span> on the Wasm heap (designated with a circle) and marshals the state through stable memory on upgrades.
+    This approach requires state representations to be backward compatible only within the scope of a single upgrade.
+    The number of instructions needed for an upgrade is proportional to the state size.
+  </span><p class="svg"><img src="/images/19-traditional-upgrade.svg"></p>
+</figure>
+<p>  On the other hand, we didn’t want to invest much time crafting an efficient data layout using the <a href="/posts/14-stable-structures.html"><code>stable-structures</code></a> package.
+  All our data structures were in flux; we didn’t want to commit to a specific representation too early.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-stable-memory">⊕</label><input type="checkbox" id="mn-stable-memory" class="margin-toggle"><span class="marginnote">
+    Managing the canister state in directly stable memory.
+    The canister applies <em>state transitions</em> <span class="math">T<sub>i</sub></span> to its states <span class="math">S<sub>i</sub></span> persisted in stable memory.
+    This approach trades the flexibility of state representation for the predictability and safety of upgrades.
+    The number of instructions needed for an upgrade is constant.
+  </span><p class="svg"><img src="/images/19-stable-memory-only.svg"></p>
+</figure>
+<p>Luckily, the problem has peculiarities we could exploit.
+All of the minter’s state modifications are expensive: minting ckBTC requires the caller to invest at least a few dollars into a transaction on the Bitcoin network.
+Withdrawal requests involve paying transaction fees.
+In addition, the volume of modifications is relatively low because of the Bitcoin network limitations.</p>
+</section>
+<section><h2 id="solution"><a href="#solution">Solution</a></h2>
+<p>The minter employs the <a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing">event sourcing</a> pattern to organize its stable storage.
+It declares a single stable data structure: an append-only <a href="https://sourcegraph.com/github.com/dfinity/ic@5c0af72426c7eca863201c4853cb18dab504a140/-/blob/rs/bitcoin/ckbtc/minter/src/storage.rs?L21">log</a> of events affecting the canister state.</p>
+<p>Each time the minter modifies its state, it appends an event to the log.
+The event carries enough context to allow us to reproduce the state modification later.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-event-log-upgrade">⊕</label><input type="checkbox" id="mn-event-log-upgrade" class="margin-toggle"><span class="marginnote">
+    Managing the canister state using the event log.
+    As in the traditional scheme, the canister applies state transitions <span class="math">T<sub>i</sub></span> to its states on the Wasm heap, but it also records the state transitions to an append-only log data structure in stable memory.
+    The <code>post_upgrade</code> hook applies all recorded transitions to the initial state to recompute the last snapshot.
+    The number of instructions required for an upgrade is proporional to the number of state transitions.
+    Note the absense of <code>pre_upgrade</code> hook.
+  </span><p class="svg"><img src="/images/19-event-log-upgrade.svg"></p>
+</figure>
+<p>On upgrade, the minter starts from an empty state and replays events from the log.
+This approach might sound inefficient, but it works great in our case:</p>
+<ul class="arrows"><li>
+    The number of events is relatively low because most involve a transfer on the Bitcoin network.
+    </li><li>
+    The cost of replaying an event is low.
+    Replaying twenty-five thousand events consumes less than one billion instructions, which is cheaper than submitting a single Bitcoin transaction.
+    </li><li>
+    We can pause and resume the replay process to spread the work across multiple executions if the number of events goes out of hand.
+</li></ul>
+<p>Furthermore, the event-sourcing approach offers additional benefits beyond the original motivation:</p>
+<ul class="arrows"><li>
+    The event log provides an audit trace for all state modifications, making the system more transparent and easier to debug.
+    </li><li>
+    The event log is easy to replicate to other canisters and off-chain.
+    It’s a perfect incremental backup solution.
+    </li><li>
+    We can change the state representation without worrying about backward compatibility.
+    Only the event types stored in stable memory must be backward-compatible.
+</li></ul>
+<h3 id="what-is-an-event"><a href="#what-is-an-event">What is an event?</a></h3>
+<p>One crucial aspect of the design is the log record’s content.</p>
+<p>The brute-force approach is to record as events the arguments of all incoming update calls, all outgoing inter-canister calls, and the corresponding replies.
+This approach might work, but it takes a lot of work to implement and requires a complicated log replay procedure.</p>
+<p>Differentiating between <em>requests</em> (sometimes called <em>commands</em>) and <em>events</em> is a better option.
+<em>Requests</em> come from the outside world (ingress messages, replies, timers) and <em>might</em> trigger canister state changes.
+<em>Events</em> record effects of productive requests on the canister state.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-request-event">⊕</label><input type="checkbox" id="mn-request-event" class="margin-toggle"><span class="marginnote">
+    Requests such as ingress messages come from the outside world and can trigger zero or more events.
+  </span><p class="svg"><img src="/images/19-request-event.svg"></p>
+</figure>
+<p>Let’s use the minter’s <a href="https://sourcegraph.com/github.com/dfinity/ic@1cbf1f39d31bc426c1e15b073c4ac86d75056bb2/-/blob/rs/bitcoin/ckbtc/minter/ckbtc_minter.did?L253"><code>update_balance</code></a> flow as an example:</p>
+<ol class="circled"><li data-num-glyph="①">
+    A user calls the <a href="https://sourcegraph.com/github.com/dfinity/ic@1cbf1f39d31bc426c1e15b073c4ac86d75056bb2/-/blob/rs/bitcoin/ckbtc/minter/ckbtc_minter.did?L246"><code>get_btc_address</code></a> the obtains a Bitcoin address corresponding to the user’s <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec#principal">principal</a>.
+  </li><li data-num-glyph="②">
+    The user transfers Bitcoin to that address and waits for the transaction to get enough confirmations on the Bitcoin network (as of May 2023, the minter requires at least twelve confirmations).
+  </li><li data-num-glyph="③">
+    The user calls the <code>update_balance</code> endpoint on the minter.
+  </li><li data-num-glyph="④">
+    The minter fetches the list of its <span class="smallcaps">utxo</span>s matching the user account from the <a href="https://github.com/dfinity/bitcoin-canister">Bitcoin canister</a> and checks whether there are new items in the list.
+  </li><li data-num-glyph="⑤">
+    The minter mints ckBTC tokens on the ledger smart contract for each new <span class="smallcaps">utxo</span> and reports the results to the user.
+</li></ol>
+<p>That’s a lot of interactions!
+Luckily, the only significant outcome of these actions is the minter acquiring a new <span class="smallcaps">utxo</span>.
+That’s our event type: <code>minted(utxo, account)</code>.</p>
+<p>If any of the intermediate steps fails or there are no new <span class="smallcaps">utxo</span>s in the list, the original request doesn’t affect the minter state.
+Thus a malicious user cannot fill the minter’s memory with unproductive events.
+Creating an event requires sending funds on the Bitcoin network, and that’s a slow and expensive operation.</p>
+<h3 id="testing"><a href="#testing">Testing</a></h3>
+<p>Event sourcing introduces new sources of bugs:</p>
+<ul class="arrows"><li>
+   The programmer can implement the state transition logic but forget to emit the corresponding event.
+   </li><li>
+   The event replay logic can produce different results than the original state update.
+</li></ul>
+<p>We run our integration tests on a debug version of the minter canister to address this issue.
+After each update call, the debug version replays the log and compares the resulting state to the current canister state.
+If the log becomes inconsistent with the internal state, the test causing the divergence must fail.</p>
+<figure><label class="margin-toggle" for="mn-debug-replay-log">⊕</label><input type="checkbox" id="mn-debug-replay-log" class="margin-toggle"><span class="marginnote">
+  Enabling self-checks in the debug canister version to ensure that the event log captures all state transitions.
+</span><div class="source-container"><pre class="source rust"><code><span class="line">#[update]</span>
+<span class="line">fn update_balance(arg: UpdateBalanceArg) -&gt; UpdateBalanceResult {</span>
+<span class="line">    let result = update_balance_impl(arg);</span>
+<span class="line"></span>
+<span class="line">    #[cfg(feature = &quot;debug_version&quot;)]</span>
+<span class="line">    if let Err(msg) = replay_event_log().check_equals_to(&amp;canister_state) {</span>
+<span class="line">      ic_cdk::trap(&amp;msg);</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    result</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>The minter’s self-checking feature helped us catch a few severe bugs early in development.</p>
+</section>
+<section><h2 id="resources"><a href="#resources">Resources</a></h2>
+<ul class="arrows"><li>
+    Minter’s <a href="https://sourcegraph.com/github.com/dfinity/ic@1cbf1f39d31bc426c1e15b073c4ac86d75056bb2/-/blob/rs/bitcoin/ckbtc/minter/src/state/eventlog.rs"><code>eventlog.rs</code></a> module contains even type definitions and the log replay procedure.
+    </li><li><a href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/"><q>Designing Data-Intensive Applications</q></a> by Martin Kleppmann has an in-depth explanation of the event sourcing pattern (Chapter 11: Stream Processing, p. 457).
+    </li><li>
+    The <a href="https://wiki.internetcomputer.org/wiki/Main_Page">Internet Computer Wiki</a> has a detailed article about <a href="https://wiki.internetcomputer.org/wiki/Chain-key_Bitcoin#ckBTC_Minter">ckBTC minter</a>.
+</li></ul>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/11-ii-stable-memory.html">IC internals: Internet Identity storage</a></li><li><a href="/posts/01-effective-rust-canisters.html">Effective Rust canisters</a></li><li><a href="/posts/20-candid-for-engineers.html">Candid for engineers</a></li><li><a href="/posts/27-extending-https-outcalls.html">Extending HTTPS outcalls</a></li><li><a href="/posts/08-ic-xnet.html">IC internals: XNet protocol</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/20-candid-for-engineers.html"> ←Candid for engineers</a></div><div id="older"><a href="/posts/18-if-composers-were-hackers.html">If composers were hackers→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

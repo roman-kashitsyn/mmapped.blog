@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="chainlink"><meta name="description" content="An overview of the Chainlink OCR protocol."><title>The off-chain reporting protocol</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/24-ocr.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/24-ocr.html">The off-chain reporting protocol</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2024-01-30</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2024-01-30</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#abstract">Abstract</a></li><li class="toc toc-level-1"><a href="#components">Protocol components</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#aggregator-contract">The aggregator contract</a></li><li class="toc toc-level-2"><a href="#pacemaker">Pacemaker</a></li><li class="toc toc-level-2"><a href="#report-generation">Report generation</a></li><li class="toc toc-level-2"><a href="#transmission">Transmission</a></li></ul></li><li class="toc toc-level-1"><a href="#iterations">Protocol version iterations</a></li><li class="toc toc-level-1"><a href="#resources">Resources</a></li></ul><hr>
+
+<section><h2 id="abstract"><a href="#abstract">Abstract</a></h2>
+<p>This article is a high-level overview of the Off-Chain Reporting protocol (<span class="smallcaps">ocr</span>) powering most of <a href="https://chain.link/">Chainlink</a> products.
+The protocol allows a group of <span class="math">n</span> nodes called <em>oracles</em>, up to <span class="math">f</span> of which could be <a href="https://en.wikipedia.org/wiki/Byzantine_fault">byzantine</a> (<span class="math">f &lt; n⁄3</span>), to agree on a data point and record it on a blockchain supporting smart contracts (e.g., Ethereum).</p>
+</section>
+<section><h2 id="components"><a href="#components">Protocol components</a></h2>
+<p>All <span class="smallcaps">ocr</span> deployments have two parts with different execution models: the on-chain part, implemented as a smart contract called the <em>aggregator</em>, and the off-chain part, implemented as a peer-to-peer network of oracles.
+The off-chain communication protocol, in turn, consists of three sub-protocols layered on top of one another: the <a href="#pacemaker">pacemaker</a>, the <a href="#report-generation">report generation</a>, and the <a href="#transmission">transmission</a> protocols. </p>
+<h3 id="aggregator-contract"><a href="#aggregator-contract">The aggregator contract</a></h3>
+<p>The aggregator contract is deployed on the blockchain and serves multiple roles:
+</p>
+<ol class="circled"><li data-num-glyph="①">It stores the oracle network configuration, such as public keys of nodes participating in the protocol and report generation parameters.
+    </li><li data-num-glyph="②">It records the oracle network’s reports on the blockchain and makes them available to other smart contracts.
+    </li><li data-num-glyph="③">It distributes rewards to the oracles signing and transmitting reports.
+</li></ol>
+<p>The contract owner has administrative privileges, such as adding or removing nodes from the network, changing billing settings, and updating the report generation configuration.</p>
+<h3 id="pacemaker"><a href="#pacemaker">Pacemaker</a></h3>
+<p>The <em>pacemaker</em> algorithm of the <span class="smallcaps">ocr</span> protocol periodically assigns a node to be a <em>leader</em> coordinating the rest of the protocol functions.
+The period between two consecutive leader assignments is called an <em>epoch</em>.
+Within each epoch, the leader initiates <em>rounds</em> of the <a href="#report-generation">report generation</a> algorithm.
+The tuple <span class="math">(e, r)</span>, where <span class="math">e</span> is the epoch number and <span class="math">r</span> is the round number, serves as a logical clock for the protocol.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-figure-pacemaker">⊕</label><input type="checkbox" id="mn-figure-pacemaker" class="margin-toggle"><span class="marginnote">
+        Leader rotation in the pacemaker algorithm.
+        Note that the leader is also a follower.
+    </span><p class="svg"><img src="/images/24-pacemaker.svg"></p>
+</figure>
+<p>The protocol can advance the epoch in two circumstances:
+</p>
+<ol class="circled"><li data-num-glyph="①">The current epoch duration exceeded the configured time amount.
+    </li><li data-num-glyph="②">The protocol didn’t progress for the configured time amount.
+</li></ol>
+<p>The function mapping epoch numbers to leader nodes is a <a href="https://crypto.stanford.edu/pbc/notes/crypto/prf.html">cryptographic pseudo-random function</a> parameterized by a secret key (called the <em>seed</em> key) known only to the oracles.
+Thus, oracles know the exact sequence of all leader assignments in advance, but to all outside observers, the assignments are indistinguishable from random.</p>
+<h3 id="report-generation"><a href="#report-generation">Report generation</a></h3>
+<p>The report generation algorithm produces a data point for the <a href="#aggregator-contract">aggregator contract</a>.
+For example, if the aggregator contract records an asset price in <span class="smallcaps">usd</span>, the algorithm produces a price that faulty oracles can’t manipulate.</p>
+<p>First, the leader initiates a new round by picking a <em>query</em> describing the task the followers need to execute and sending it to all the followers.
+</p>
+<figure class="grayscale-diagram medium-size"><p class="svg"><img src="/images/24-report-1.svg"></p>
+</figure>
+<p>The followers execute the query (usually by observing an external data source) and send a signed <em>observation</em> back to the leader.
+In the asset price example, the observation will be their guess of the asset price.
+</p>
+<figure class="grayscale-diagram medium-size"><p class="svg"><img src="/images/24-report-2.svg"></p>
+</figure>
+<p>If the leader receives at least <span class="math">2f+1</span> observations, it distributes these signed (or <em>attributed</em>) observations among the followers.
+</p>
+<figure class="grayscale-diagram medium-size"><p class="svg"><img src="/images/24-report-3.svg"></p>
+</figure>
+<p>Next, the followers distill attributed observations into a <em>report</em>, sign it, and send it to the leader.
+In the asset price example, the report is the median price.
+The observation aggregation function must consider any <span class="math">f</span> out of at least <span class="math">2f+1</span> observations untrustworthy for the protocol to be byzantine-fault-tolerant.
+For example, the asset price application must not pick one of the top or bottom <span class="math">f</span> prices.
+</p>
+<figure class="grayscale-diagram medium-size"><p class="svg"><img src="/images/24-report-4.svg"></p>
+</figure>
+<p>If at least <span class="math">f+1</span> followers signed the same report, the leader aggregates the report and the signatures into an <em>attested</em> report and transmits it to all the followers.
+</p>
+<figure class="grayscale-diagram medium-size"><p class="svg"><img src="/images/24-report-5.svg"></p>
+</figure>
+<p>Once the followers receive an attested report, they initiate the transmission algorithm.</p>
+<h3 id="transmission"><a href="#transmission">Transmission</a></h3>
+<p>The goal of the transmission algorithm is to record an attested report on the blockchain.</p>
+<p>The algorithm has the following steps:
+</p>
+<ol class="circled"><li data-num-glyph="①">The nodes check the aggregator contract’s state and skip the transmission if the state matches the report data or deviates insignificantly.
+    </li><li data-num-glyph="②">Every node sets a timer with a pseudo-random delay depending on the node’s ranking in the current round.
+    After the timer expires, the node rechecks the contract state to account for other nodes sending a transaction earlier.
+    If the contract state is still stale, the node submits a blockchain transaction to update it.
+    </li><li data-num-glyph="③">Once the aggregator contract receives an attested report, it validates the signatures, updates its state accordingly, and distributes rewards to the report signers and the transaction transmitter.
+</li></ol>
+<figure class="grayscale-diagram medium-size"><p class="svg"><img src="/images/24-transmission.svg"></p>
+</figure>
+<p>The transmission algorithm guarantees the correctness and freshness of data on the blockchain but not the fairness of transmission rewards.
+A malicious node can reap transmission rewards in every round if it ignores the randomized transmission schedule.
+The aggregator contract owner can mitigate this issue by monitoring the transmission order and punishing misbehaving nodes.</p>
+</section>
+<section><h2 id="iterations"><a href="#iterations">Protocol version iterations</a></h2>
+<ul class="arrows"><li><span class="smallcaps">ocr 1.0</span> specifically targeted data feeds for <span class="smallcaps">evm</span> blockchains.
+    </li><li><span class="smallcaps">ocr 2.0</span> is a major iteration that introduced a plugin architecture, significantly extending the protocol’s capabilities.
+    This version also features reduced gas costs, a more secure <span class="smallcaps">p2p</span> networking stack based on <span class="smallcaps">tls1.3</span>, and better performance characteristics (lower latency, higher throughput).
+    </li><li><span class="smallcaps">ocr 3.0</span> made the plugin interface more flexible, introduced the observation history chain, reduced the latency, and improved throughput using the report batching feature.
+</li></ul>
+</section>
+<section><h2 id="resources"><a href="#resources">Resources</a></h2>
+<ul class="arrows"><li>The <a href="https://research.chain.link/ocr.pdf">Chainlink Off-chain Reporting Protocol</a> whitepaper by Lorenz Breidenbach et al. describes the first protocol version in great detail and contains proofs of its security properties.
+    </li><li>The <a href="https://github.com/smartcontractkit/libocr/blob/6359502d2ff1165c7e6b77b9eff2c5a46a7a4fbb/offchainreporting2plus/ocr3types/plugin.go#L94"><span class="smallcaps">ocr3</span> plugin interface</a> documents the general flow and extention points.
+    </li><li>In the <a href="https://youtu.be/XKiLkmwVaYA">Looking under the hood of <span class="smallcaps">ocr</span> 2.0</a> video, Lorenz Breidenbach explains the protocol evolution and the plugin architecture.
+    </li><li>In the <a href="https://youtu.be/VPVH3QCwc0U"><span class="smallcaps">ocr3</span> protocol overview</a> video, Chrysa Stathakopoulou outlines the protocol structure and mentions features added in its third iteration.
+</li></ul>
+</section>
+
+<div id="next-prev-nav"><div id="newer"><a href="/posts/25-domain-types.html"> ←Universal domain types</a></div><div id="older"><a href="/posts/23-numeric-tower-fiasco.html">The numeric tower fiasco→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

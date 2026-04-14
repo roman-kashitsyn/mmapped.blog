@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="programming,puzzles,rust"><meta name="description" content="My favorite puzzles from AoC 2025."><title>Advent of Code 2025</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/46-aoc-2025.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/46-aoc-2025.html">Advent of Code 2025</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2025-12-27</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2025-12-27</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#day-03">Day 3: Lobby</a></li><li class="toc toc-level-1"><a href="#day-07">Day 7: Laboratories</a></li><li class="toc toc-level-1"><a href="#day-08">Day 8: Playground</a></li><li class="toc toc-level-1"><a href="#day-09">Day 9: Movie theater</a></li><li class="toc toc-level-1"><a href="#day-10">Day 10: Factory</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#tenthmascot-solution">Divide and conquer</a></li></ul></li><li class="toc toc-level-1"><a href="#day-11">Day 11: Reactor</a></li><li class="toc toc-level-1"><a href="#day-12">Day 12: Christmas tree farm</a></li></ul><hr>
+
+<section><figure><label class="margin-toggle" for="mn-aoc-screen">⊕</label><input type="checkbox" id="mn-aoc-screen" class="margin-toggle"><span class="marginnote">A screenshot of the 2025 event page.</span><img src="/images/46-aoc-2025.webp">
+</figure>
+<p>Advent of Code 2025 lasted only <a href="https://adventofcode.com/2025/about#faq_num_days">12 days</a>.
+I liked the shorter format since keeping up with puzzles for over three weeks in previous years was challenging.</p>
+<p>This year, I solved the puzzles in <a href="https://rust-lang.org/">Rust</a>
+since I didn’t have the capacity to practice a new language.
+Rust is an excellent fit for Advent of Code:
+the tooling is mature,
+and the standard library is rich,
+so I didn’t need external dependencies<label class="margin-toggle sidenote-number" for="sn-z3-dependency"></label><input type="checkbox" id="sn-z3-dependency" class="margin-toggle"><span class="sidenote">
+  I used <a href="https://crates.io/crates/z3"><code>z3</code></a> to solve part two of <a href="#day-10">day 10</a>,
+  which was painful,
+  but then I found <a href="#tenthmascot-solution">a way</a> to solve it without external dependencies.
+</span>.</p>
+<p>This article explains solutions to the puzzles I liked the most.</p>
+</section>
+<section><h2 id="day-03"><a href="#day-03">Day 3: Lobby</a></h2>
+<p><a href="https://adventofcode.com/2025/day/3">This puzzle</a> asks us to find a string subsequence of length <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>k</mi></math> that has the largest numeric value. For example,
+if <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>k</mi><mo stretchy="false">=</mo><mn>2</mn></math> and the input is <code>818181<b>9</b>1111<b>2</b>111</code>, the output is <code>92</code>.</p>
+<p>In the first part, <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>k</mi><mo stretchy="false">=</mo><mn>2</mn></math> and the string length is <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>n</mi><mo stretchy="false">=</mo><mn>100</mn></math>,
+so a brute-force <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>O</mi><mo stretchy="false">(</mo><msup><mi>n</mi><mn>2</mn></msup><mo stretchy="false">)</mo></math> algorithm is fast enough.
+The second part increases <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>k</mi></math> to <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mn>12</mn></math>,
+so a brute-force algorithm needs to check <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mrow><mn>100</mn></mrow></mrow><mrow><mrow><mn>12</mn></mrow></mrow></mfrac><mo>)</mo></mrow><mo stretchy="false">=</mo><mn>1</mn><mo stretchy="false">,</mo><mn>050</mn><mo stretchy="false">,</mo><mn>421</mn><mo stretchy="false">,</mo><mn>051</mn><mo stretchy="false">,</mo><mn>106</mn><mo stretchy="false">,</mo><mn>700</mn></math> <a href="https://en.wikipedia.org/wiki/Binomial_coefficient">combinations</a>.
+Even if it processes a combination in 100 nanoseconds,
+it still requires over three years to solve a single instance.</p>
+<p>The shape of this combinatorial explosion is also a clue to the solution.
+Binomial coefficients obey a recurrence relation that can be computed using <a href="https://en.wikipedia.org/wiki/Dynamic_programming">dynamic programming</a>.</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mrow><mi>n</mi></mrow></mrow><mrow><mrow><mi>k</mi></mrow></mrow></mfrac><mo>)</mo></mrow><mo stretchy="false">=</mo><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mrow><mi>n</mi><mo stretchy="false">-</mo><mn>1</mn></mrow></mrow><mrow><mrow><mi>k</mi></mrow></mrow></mfrac><mo>)</mo></mrow><mo stretchy="false">+</mo><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mrow><mi>n</mi><mo stretchy="false">-</mo><mn>1</mn></mrow></mrow><mrow><mrow><mi>k</mi><mo stretchy="false">-</mo><mn>1</mn></mrow></mrow></mfrac><mo>)</mo></mrow></math></p>
+<p>Similarly,
+if we define <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>B</mi></math> to be the input string
+and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>M</mi><mo>[</mo><mi>k</mi><mo stretchy="false">,</mo><mi>i</mi><mo>]</mo></math> to be the maximum numeric value of length <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>k</mi></math>
+we can draw from <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>B</mi><mo>[</mo><mn>0</mn><mo>…</mo><mi>i</mi><mo>]</mo></math>,
+we get the following recurrence:</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><mi>M</mi><mo>[</mo><mi>k</mi><mo stretchy="false">,</mo><mi>i</mi><mo>]</mo><mo stretchy="false">=</mo><mo stretchy="false">max</mo><mo>{</mo><mi>M</mi><mo>[</mo><mi>k</mi><mo stretchy="false">,</mo><mi>i</mi><mo stretchy="false">-</mo><mn>1</mn><mo>]</mo><mo stretchy="false">,</mo><mn>10</mn><mo>×</mo><mi>M</mi><mo>[</mo><mi>k</mi><mo stretchy="false">-</mo><mn>1</mn><mo stretchy="false">,</mo><mi>i</mi><mo stretchy="false">-</mo><mn>1</mn><mo>]</mo><mo stretchy="false">+</mo><mi>B</mi><mo>[</mo><mi>i</mi><mo stretchy="false">-</mo><mn>1</mn><mo>]</mo><mo>}</mo></math></p>
+<p>Together with boundary conditions <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>M</mi><mo>[</mo><mi>k</mi><mo stretchy="false">,</mo><mn>0</mn><mo>]</mo><mo stretchy="false">=</mo><mn>0</mn></math> and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>M</mi><mo>[</mo><mn>0</mn><mo stretchy="false">,</mo><mi>i</mi><mo>]</mo><mo stretchy="false">=</mo><mn>0</mn></math>, this translates to the following <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>O</mi><mo stretchy="false">(</mo><mi>n</mi><mo>×</mo><mi>k</mi><mo stretchy="false">)</mo></math> solution:</p>
+<figure><div class="source-container"><pre class="source rust"><code><span class="line">fn max_numeric_subsequence(b: &amp;[u8], max_k: usize) -&gt; u64 {</span>
+<span class="line">    let n = b.len();</span>
+<span class="line">    let mut m = vec![vec![0; n + 1]; max_k + 1];</span>
+<span class="line">    for k in 1..=max_k {</span>
+<span class="line">        for i in 1..=n {</span>
+<span class="line">            m[k][i] = m[k][i-1].max(10 * m[k-1][i-1] + b[i-1] as u64);</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    m[k][n]</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+</section>
+<section><h2 id="day-07"><a href="#day-07">Day 7: Laboratories</a></h2>
+<p><a href="https://adventofcode.com/2025/day/7">This puzzle</a> asks us to simulate beam propagation.
+The beam starts at the top and splits into two beams each time it reaches a <em>splitter</em>.
+The first part asks us to count how many splitters the beam reaches;
+the second part asks how many paths the beam can take through the maze.</p>
+<figure class="center"><img src="/images/46-day07.gif">
+</figure>
+<p>My programming career started with physics simulations,
+which remain close to my heart.
+I also like how the second part connects to <a href="#day-11">day 11</a>.</p>
+<p>My solution computes answers to both parts in one grid traversal.
+It treats the grid as a <a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">directed acyclic graph</a>
+in which each space is a parent of the space below it,
+and a space above a splitter is a parent of the two spaces on the splitter’s sides.
+The number of paths to a space is the sum of paths to its parents.</p>
+<figure><div class="source-container"><pre class="source"><code><span class="line">fn count_splits_and_timelines(g: &amp;[Vec&lt;char&gt;]) -&gt; (usize, usize) {</span>
+<span class="line">    let n = g.len();</span>
+<span class="line">    let m = g[0].len();</span>
+<span class="line">    let mut ts = vec![vec![0; m]; n];</span>
+<span class="line">    let s = g[0]</span>
+<span class="line">        .iter()</span>
+<span class="line">        .position(|c| *c == 'S')</span>
+<span class="line">        .expect(&quot;the first row should have the starting position&quot;);</span>
+<span class="line">    ts[0][s] = 1;</span>
+<span class="line"></span>
+<span class="line">    let mut splits = 0;</span>
+<span class="line">    for i in 1..n {</span>
+<span class="line">        for (j, c) in g[i].iter().enumerate() {</span>
+<span class="line">            let t = ts[i - 1][j];</span>
+<span class="line">            if *c == '^' &amp;&amp; t &gt; 0 {</span>
+<span class="line">                splits += 1;</span>
+<span class="line">                if j &gt; 0 {</span>
+<span class="line">                    ts[i][j - 1] += t;</span>
+<span class="line">                }</span>
+<span class="line">                if j &lt; m - 1 {</span>
+<span class="line">                    ts[i][j + 1] += t;</span>
+<span class="line">                }</span>
+<span class="line">            } else {</span>
+<span class="line">                ts[i][j] += t;</span>
+<span class="line">            }</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    let timelines = ts[n - 1].iter().sum::&lt;usize&gt;();</span>
+<span class="line">    (splits, timelines)</span>
+<span class="line">}</span>
+<span class="line"></span>
+</code></pre></div>
+</figure>
+</section>
+<section><h2 id="day-08"><a href="#day-08">Day 8: Playground</a></h2>
+<p><a href="https://adventofcode.com/2025/day/8">This puzzle</a> gives us a set of <span class="smallcaps">3d</span> points
+and asks us to repeatedly add an edge between the pair of closest unconnected points.
+In the first part,
+we must compute the sizes of the three largest
+<a href="https://en.wikipedia.org/wiki/Component_(graph_theory)">connected components</a>
+after adding a thousand edges.
+In the second part,
+we must stop at the first edge that makes the graph fully connected.</p>
+<p>I like this puzzle because it’s a perfect use case for one of my favorite data structures:
+<a href="https://en.wikipedia.org/wiki/Disjoint-set_data_structure">union-find forest</a><label class="margin-toggle sidenote-number" for="sn-fenwick-tree"></label><input type="checkbox" id="sn-fenwick-tree" class="margin-toggle"><span class="sidenote">
+  My best-loved data structure is <a href="https://en.wikipedia.org/wiki/Fenwick_tree">Fenwick tree</a>.
+</span>.
+This data structure maintains disjoint set partitions and allows merging them.
+In this problem,
+the set is the collection of points,
+the partitions are connected components,
+and merging joins components by adding an edge.</p>
+<p>Here is my simple implementation of union-find:</p>
+<div class="source-container"><pre class="source rust"><code><span class="line">struct UnionFind {</span>
+<span class="line">    parent: Vec&lt;usize&gt;,</span>
+<span class="line">    size: Vec&lt;usize&gt;,</span>
+<span class="line">    trees: usize,</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">impl UnionFind {</span>
+<span class="line">    fn new(n: usize) -&gt; Self {</span>
+<span class="line">        Self {</span>
+<span class="line">            parent: (0..n).collect(),</span>
+<span class="line">            size: vec![1; n],</span>
+<span class="line">            trees: n,</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    <em>/// Returns the root node of node X.</em></span>
+<span class="line">    <em>/// Nodes that belong to the same partition share the root.</em></span>
+<span class="line">    fn find(&amp;self, mut x: usize) -&gt; usize {</span>
+<span class="line">        while self.parent[x] != x {</span>
+<span class="line">            x = self.parent[x];</span>
+<span class="line">        }</span>
+<span class="line">        x</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    <em>/// Joins partitions to which nodes X and Y belong.</em></span>
+<span class="line">    <em>/// Returns the root of the resulting partition.</em></span>
+<span class="line">    fn union(&amp;mut self, x: usize, y: usize) -&gt; usize {</span>
+<span class="line">        let root_x = self.find(x);</span>
+<span class="line">        let root_y = self.find(y);</span>
+<span class="line">        if root_x != root_y {</span>
+<span class="line">            let (p, c) = if self.size[root_x] &gt;= self.size[root_y] {</span>
+<span class="line">                (root_x, root_y)</span>
+<span class="line">            } else {</span>
+<span class="line">                (root_y, root_x)</span>
+<span class="line">            };</span>
+<span class="line">            self.trees -= 1;</span>
+<span class="line">            self.parent[c] = p;</span>
+<span class="line">            self.size[p] += self.size[c];</span>
+<span class="line">            p</span>
+<span class="line">        } else {</span>
+<span class="line">            root_x</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    <em>/// Returns the size of the partition to which X belongs. </em></span>
+<span class="line">    fn size(&amp;self, x: usize) -&gt; usize {</span>
+<span class="line">        self.size[self.find(x)]</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    <em>/// Returns the partition count.</em></span>
+<span class="line">    fn tree_count(&amp;self) -&gt; usize {</span>
+<span class="line">        self.trees</span>
+<span class="line">    }</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Both parts require computing all edges between points
+and sorting them by distance.</p>
+<div class="source-container"><pre class="source"><code><span class="line">type Point = (i64, i64, i64);</span>
+<span class="line">type Dist = i64;</span>
+<span class="line">type Node = usize;</span>
+<span class="line"></span>
+<span class="line"><em>/// Returns the squared distance between two points.</em></span>
+<span class="line">fn dist2(a: &amp;Point, b: &amp;Point) -&gt; Dist {</span>
+<span class="line">    let dx = a.0 - b.0;</span>
+<span class="line">    let dy = a.1 - b.1;</span>
+<span class="line">    let dz = a.2 - b.2;</span>
+<span class="line">    dx * dx + dy * dy + dz * dz</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><em>/// Returns the graph edges sorted by distance.</em></span>
+<span class="line">fn sorted_edges(boxes: &amp;[Point]) -&gt; Vec&lt;(Dist, Node, Node)&gt; {</span>
+<span class="line">    let n = boxes.len();</span>
+<span class="line">    let mut edges = vec![];</span>
+<span class="line">    for i in 0..n {</span>
+<span class="line">        for j in i + 1..n {</span>
+<span class="line">            edges.push((dist2(&amp;boxes[i], &amp;boxes[j]), i, j))</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    edges.sort_by_key(|e| e.0);</span>
+<span class="line">    edges</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>In the first part,
+we must compute the sizes of the three largest connected components
+after adding <code>top_k</code> edges.
+We don’t have to traverse the graph
+because union-find already tracks all the information we need.</p>
+<div class="source-container"><pre class="source"><code><span class="line">fn part1(boxes: &amp;[Point], top_k: usize) -&gt; usize {</span>
+<span class="line">    let edges = sorted_edges(boxes);</span>
+<span class="line">    let n = boxes.len();</span>
+<span class="line">    let mut uf = UnionFind::new(n);</span>
+<span class="line"></span>
+<span class="line">    for (_, i, j) in &amp;edges[0..top_k] {</span>
+<span class="line">        uf.union(*i, *j);</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    let mut sizes: Vec&lt;_&gt; = (0..n)</span>
+<span class="line">        .filter_map(|i| (i == uf.find(i)).then_some(uf.size(i)))</span>
+<span class="line">        .collect();</span>
+<span class="line">    sizes.sort_by(|a, b| b.cmp(a));</span>
+<span class="line"></span>
+<span class="line">    sizes[0..3].iter().product::&lt;usize&gt;()</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>In the second part,
+we must multiply the x-coordinates of the first edge that makes the graph connected.
+Union-find makes this trivial.</p>
+<div class="source-container"><pre class="source"><code><span class="line">fn part2(boxes: &amp;[Point]) -&gt; i64 {</span>
+<span class="line">    let mut uf = UnionFind::new(boxes.len());</span>
+<span class="line">    let edges = sorted_edges(boxes);</span>
+<span class="line">    for (_, i, j) in &amp;edges {</span>
+<span class="line">        uf.union(*i, *j);</span>
+<span class="line">        if uf.tree_count() == 1 {</span>
+<span class="line">            return boxes[*i].0 * boxes[*j].0;</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    unreachable!()</span>
+<span class="line">}</span>
+</code></pre></div>
+</section>
+<section><h2 id="day-09"><a href="#day-09">Day 9: Movie theater</a></h2>
+<p>In <a href="https://adventofcode.com/2025/day/9">this puzzle</a>,
+we work with a <span class="smallcaps">2d</span> polygon whose edges are either vertical or horizontal.
+In the first part,
+we must find the largest rectangle
+whose opposite corners coincide with polygon corners.
+In the second part,
+we must restrict our search to rectangles fully contained within the polygon.</p>
+<p>My computational geometry skills are weak,
+so I struggled with the second part,
+but I also learned a lot in the process.</p>
+<p>I used the same driver function for both parts.
+It enumerates all candidate rectangles,
+checks that they satisfy a predicate passed as an argument,
+and selects the one with the largest area.
+For the first part,
+the predicate always returns <code>true</code>.
+For the second part,
+the predicate checks whether the polygon contains the rectangle.</p>
+<div class="source-container"><pre class="source"><code><span class="line">type Point = (i64, i64);</span>
+<span class="line"></span>
+<span class="line">fn largest_rectangle(</span>
+<span class="line">    coords: &amp;[Point],</span>
+<span class="line">    p: impl Fn(usize, usize, &amp;[Point]) -&gt; bool,</span>
+<span class="line">) -&gt; i64 {</span>
+<span class="line">    let n = coords.len();</span>
+<span class="line">    let mut max_area = 0;</span>
+<span class="line">    for i in 0..n {</span>
+<span class="line">        for j in (i + 1)..n {</span>
+<span class="line">            if !p(i, j, coords) {</span>
+<span class="line">                continue;</span>
+<span class="line">            }</span>
+<span class="line">            let (x1, y1) = coords[i];</span>
+<span class="line">            let (x2, y2) = coords[j];</span>
+<span class="line">            let area = ((x2 - x1).abs() + 1) * ((y2 - y1).abs() + 1);</span>
+<span class="line">            max_area = max_area.max(area);</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    max_area</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Now the juicy part:
+how do we check whether a polygon contains a rectangle?
+We must verify two conditions:
+</p>
+<ol class="circled"><li data-num-glyph="①">The polygon contains all the rectangle’s corners.
+  Since two corners come from the polygon,
+  we only need to check the other two.
+</li><li data-num-glyph="②">None of the rectangle’s edges cross any polygon edge.
+</li></ol>
+<div class="source-container"><pre class="source"><code><span class="line">fn rect_in_polygon(a: usize, b: usize, coords: &amp;[Point]) -&gt; bool {</span>
+<span class="line">    let (x1, y1) = coords[a];</span>
+<span class="line">    let (x2, y2) = coords[b];</span>
+<span class="line">    let c = (x1, y2);</span>
+<span class="line">    let d = (x2, y1);</span>
+<span class="line">    point_in_polygon(c, coords)</span>
+<span class="line">        &amp;&amp; point_in_polygon(d, coords)</span>
+<span class="line">        &amp;&amp; !line_crosses_polygon(coords[a], c, coords)</span>
+<span class="line">        &amp;&amp; !line_crosses_polygon(coords[a], d, coords)</span>
+<span class="line">        &amp;&amp; !line_crosses_polygon(coords[b], c, coords)</span>
+<span class="line">        &amp;&amp; !line_crosses_polygon(coords[b], d, coords)</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>To check whether a polygon contains a point,
+I used a simplified version of the <a href="https://en.wikipedia.org/wiki/Point_in_polygon#Ray_casting_algorithm">ray casting algorithm</a>.
+It casts a horizontal ray from the point
+and counts the number of polygon edges it crosses.
+If this number is odd,
+the point lies within the polygon.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-ray-intersection">⊕</label><input type="checkbox" id="mn-ray-intersection" class="margin-toggle"><span class="marginnote">
+   A horizontal ray from point <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">,</mo><mi>y</mi><mo stretchy="false">)</mo></math> intersecting a vertical polygon edge.
+</span><p class="svg"><img src="/images/46-ray-intersection.svg"></p>
+</figure>
+<div class="source-container"><pre class="source"><code><span class="line"><em>/// Checks whether a point lies in a polygon.</em></span>
+<span class="line">fn point_in_polygon(p: Point, vertices: &amp;[Point]) -&gt; bool {</span>
+<span class="line">    let mut inside = false;</span>
+<span class="line">    let n = vertices.len();</span>
+<span class="line">    let (x, y) = p;</span>
+<span class="line">    for i in 0..n {</span>
+<span class="line">        let (x1, y1) = vertices[i];</span>
+<span class="line">        let (_,  y2) = vertices[(i + 1) % n];</span>
+<span class="line">        if (y &lt; y1) != (y &lt; y2) &amp;&amp; x1 &gt;= x {</span>
+<span class="line">            inside = !inside;</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    inside</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The <code>(y &lt; y1) != (y &lt; y2)</code> condition is subtle and somewhat cryptic.
+It’s equivalent to the more verbose <code>y1.min(y2) &lt;= y &amp;&amp; y &lt; y1.max(y2)</code>.
+The asymmetric inequality (only one bound is inclusive) ensures
+that the edge is vertical (<code>y1 != y2</code>)
+and that we don’t double-count intersections at polygon corners.</p>
+<p>To test whether two lines cross,
+we check that the x-coordinate of a vertical line lies between the x-coordinates of a horizontal line, and vice versa.
+Note that the lines must <em>cross</em>, not just <em>touch</em>
+(hence the strong inequalities in <code>lines_cross</code>).</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-lines-cross">⊕</label><input type="checkbox" id="mn-lines-cross" class="margin-toggle"><span class="marginnote">
+   Horizontal line a-b crossing vertical line c-d.
+</span><p class="svg"><img src="/images/46-lines-cross.svg"></p>
+</figure>
+<div class="source-container"><pre class="source"><code><span class="line"><em>/// Checks whether line a-b crosses line c-d.</em></span>
+<span class="line"><em>/// Both lines must be parallel to one of the axis.</em></span>
+<span class="line">fn lines_cross(a: Point, b: Point, c: Point, d: Point) -&gt; bool {</span>
+<span class="line">    match (a.0 == b.0, c.0 == d.0) {</span>
+<span class="line">        (true, true) =&gt; false, <em>// both vertical</em></span>
+<span class="line">        (true, false) =&gt; {</span>
+<span class="line">            <em>// a-b is vertical, c-d is horizontal</em></span>
+<span class="line">            assert_eq!(c.1, d.1);</span>
+<span class="line">            let xmin = c.0.min(d.0);</span>
+<span class="line">            let xmax = c.0.max(d.0);</span>
+<span class="line">            let ymin = a.1.min(b.1);</span>
+<span class="line">            let ymax = a.1.max(b.1);</span>
+<span class="line">            xmin &lt; a.0 &amp;&amp; a.0 &lt; xmax &amp;&amp; ymin &lt; c.1 &amp;&amp; c.1 &lt; ymax</span>
+<span class="line">        }</span>
+<span class="line">        (false, true) =&gt; lines_cross(c, d, a, b),</span>
+<span class="line">        (false, false) =&gt; false, <em>// both horizontal</em></span>
+<span class="line">    }</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><em>/// Checks whether line a-b crosses any of the polygon edges.</em></span>
+<span class="line">fn line_crosses_polygon(a: Point, b: Point, vertices: &amp;[Point]) -&gt; bool {</span>
+<span class="line">    let n = vertices.len();</span>
+<span class="line">    for i in 0..n {</span>
+<span class="line">        let c = vertices[i];</span>
+<span class="line">        let d = vertices[(i + 1) % n];</span>
+<span class="line">        if lines_cross(a, b, c, d) {</span>
+<span class="line">            return true;</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    false</span>
+<span class="line">}</span>
+</code></pre></div>
+</section>
+<section><h2 id="day-10"><a href="#day-10">Day 10: Factory</a></h2>
+<p><a href="https://adventofcode.com/2025/day/10">This puzzle</a> is the most elaborate of the entire event.
+I think of it in terms of vectors.
+We start with a set of <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>n</mi></math> <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>m</mi></math>-dimensional bit vectors <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>B</mi><mo stretchy="false">=</mo><mo>{</mo><msub><mi>b</mi><mn>1</mn></msub><mo stretchy="false">,</mo><mo>…</mo><mo stretchy="false">,</mo><msub><mi>b</mi><mi>n</mi></msub><mo>}</mo></math><label class="margin-toggle sidenote-number" for="sn-b-buttons"></label><input type="checkbox" id="sn-b-buttons" class="margin-toggle"><span class="sidenote">
+  <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>B</mi></math> stands for <q>buttons</q>.
+</span>.</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><msub><mi>b</mi><mi>i</mi></msub><mo stretchy="false">=</mo><mo>(</mo><msub><mi>x</mi><mn>1</mn></msub><mo stretchy="false">,</mo><mo>…</mo><mo stretchy="false">,</mo><msub><mi>x</mi><mi>m</mi></msub><mo>)</mo><mo stretchy="false">,</mo><msub><mi>x</mi><mi>j</mi></msub><mo>∈</mo><mo>{</mo><mn>0</mn><mo stretchy="false">,</mo><mn>1</mn><mo>}</mo></math></p>
+<p>The first part of the puzzle gives us a target <em>binary</em> vector <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>t</mi></math>
+and asks us to find integer coefficients <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>k</mi><mi>i</mi></msub></math> such that:</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><msub><mi>k</mi><mn>1</mn></msub><msub><mi>b</mi><mn>1</mn></msub><mo>⊕</mo><mo>…</mo><mo>⊕</mo><msub><mi>k</mi><mi>n</mi></msub><msub><mi>b</mi><mi>n</mi></msub><mo stretchy="false">=</mo><mi>t</mi></math></p>
+<p>Furthermore, we must minimize the sum <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><munder><mo>∑</mo><mrow><mn>1</mn><mo>≤</mo><mi>i</mi><mo>≤</mo><mi>n</mi></mrow></munder><msub><mi>k</mi><mi>i</mi></msub></math>.
+In other words,
+we must find the smallest subset of vectors <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>b</mi><mi>i</mi></msub></math>
+that yields <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>t</mi></math> when <a href="https://en.wikipedia.org/wiki/Exclusive_or">xored</a>.</p>
+<p>My first instinct was to treat this as a shortest path problem in a state graph.
+The vertices correspond to current xor sums,
+and edges correspond to vector additions (<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo>⊕</mo><msub><mi>b</mi><mi>i</mi></msub></math>).
+The search starts at the zero vector and must reach <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>t</mi></math>.
+Since the number of dimensions is small (up to ten),
+I represent vectors as 64-bit integers.</p>
+<div class="source-container"><pre class="source"><code><span class="line">fn lights_min_presses(buttons: &amp;[u64], target: u64) -&gt; usize {</span>
+<span class="line">    if target == 0 {</span>
+<span class="line">        return 0;</span>
+<span class="line">    }</span>
+<span class="line">    let mut visited: HashSet&lt;u64&gt; = HashSet::new();</span>
+<span class="line">    let mut q = VecDeque::new();</span>
+<span class="line">    let start = 0;</span>
+<span class="line">    visited.insert(start);</span>
+<span class="line">    q.push_back((start, 0));</span>
+<span class="line">    while let Some((v, dist)) = q.pop_front() {</span>
+<span class="line">        for b in buttons {</span>
+<span class="line">            let s = v ^ *b;</span>
+<span class="line">            if visited.contains(&amp;s) {</span>
+<span class="line">                continue;</span>
+<span class="line">            }</span>
+<span class="line">            if s == target {</span>
+<span class="line">                return dist + 1;</span>
+<span class="line">            }</span>
+<span class="line">            visited.insert(s);</span>
+<span class="line">            q.push_back((s, dist + 1));</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    panic!(&quot;Target state is unreachable: {buttons:?} {target}&quot;);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The second part has the same structure,
+but uses normal addition instead of xor,
+and the target vector can contain arbitrary non-negative integers.
+The objective remains minimizing the sum of coefficients <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>k</mi><mi>i</mi></msub></math>.</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><msub><mi>k</mi><mn>1</mn></msub><msub><mi>b</mi><mn>1</mn></msub><mo stretchy="false">+</mo><mo>…</mo><mo stretchy="false">+</mo><msub><mi>k</mi><mi>n</mi></msub><msub><mi>b</mi><mi>n</mi></msub><mo stretchy="false">=</mo><mi>t</mi></math></p>
+<p>I tried adapting the graph-search solution
+and exploring dynamic programming techniques,
+but nothing worked.
+The values in the target vector were too large (over 50 on average in my input) for my programs to finish in a reasonable time.</p>
+<p>Like <a href="https://www.reddit.com/r/adventofcode/comments/1pivlyh/2025_day_10_every_time_a_problem_looks_remotely/">many solvers</a>,
+I resorted to the <span class="smallcaps">smt</span> solver <a href="https://github.com/Z3Prover/z3">z3</a>.
+Rust has <a href="https://crates.io/crates/z3">nice bindings</a>,
+and my code worked on the first try.</p>
+<div class="source-container"><pre class="source"><code><span class="line">fn joltage_min_presses_z3</span>
+<span class="line">    ndims: usize,</span>
+<span class="line">    buttons: &amp;[u64],</span>
+<span class="line">    target: &amp;[u16],</span>
+<span class="line">) -&gt; usize {</span>
+<span class="line">    use z3::{ast::Int, Optimize, SatResult};</span>
+<span class="line">    let opt = Optimize::new();</span>
+<span class="line"></span>
+<span class="line">    <em>// Define the k_i variables.</em></span>
+<span class="line">    let mut vars = vec![];</span>
+<span class="line">    for i in 0..buttons.len() {</span>
+<span class="line">        let k_i = Int::fresh_const(format!(&quot;k_{}&quot;, i).as_str());</span>
+<span class="line">        opt.assert(&amp;k_i.ge(0));</span>
+<span class="line">        vars.push(k_i);</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    <em>// Define a constraint for every dimension.</em></span>
+<span class="line">    for d in 0..ndims {</span>
+<span class="line">        let mut vals = vec![];</span>
+<span class="line">        for (i, b) in buttons.iter().enumerate() {</span>
+<span class="line">            if *b &amp; (1 &lt;&lt; d) &gt; 0 {</span>
+<span class="line">                vals.push(vars[i].clone());</span>
+<span class="line">            }</span>
+<span class="line">        }</span>
+<span class="line">        opt.assert(&amp;Int::add(&amp;vals).eq(target[d]));</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    <em>// Minimize the sum of k_i.</em></span>
+<span class="line">    opt.minimize(&amp;Int::add(&amp;vars));</span>
+<span class="line"></span>
+<span class="line">    let mut result = 0;</span>
+<span class="line">    match opt.check(&amp;[]) {</span>
+<span class="line">        SatResult::Sat =&gt; {</span>
+<span class="line">            let model = opt.get_model().unwrap();</span>
+<span class="line">            for v in vars.iter() {</span>
+<span class="line">                let val = model</span>
+<span class="line">                    .get_const_interp(v)</span>
+<span class="line">                    .unwrap()</span>
+<span class="line">                    .as_i64()</span>
+<span class="line">                    .unwrap();</span>
+<span class="line">                result += val as usize;</span>
+<span class="line">            }</span>
+<span class="line">        }</span>
+<span class="line">        _ =&gt; {</span>
+<span class="line">            panic!(&quot;No solution found.&quot;);</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    result</span>
+<span class="line">}</span>
+</code></pre></div>
+<h3 id="tenthmascot-solution"><a href="#tenthmascot-solution">Divide and conquer</a></h3>
+<p>The z3 solution feels unsatisfactory:
+I didn’t become any wiser<label class="margin-toggle sidenote-number" for="sn-z3-is-awesome"></label><input type="checkbox" id="sn-z3-is-awesome" class="margin-toggle"><span class="sidenote">
+  Except for learning that z3 is awesome, of course.
+</span>, and my compile times exploded.
+Luckily, Reddit user <a href="https://www.reddit.com/user/tenthmascot/">u/tenthmascot</a>
+<a href="https://www.reddit.com/r/adventofcode/comments/1pk87hl/2025_day_10_part_2_bifurcate_your_way_to_victory/">posted an ingenious solution</a>
+that was fast and didn’t require any dependencies.</p>
+<p>The solution relies on this observation:
+if all <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>k</mi><mi>i</mi></msub></math> are even (<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>k</mi><mi>i</mi></msub><mo stretchy="false">=</mo><mn>2</mn><msubsup><mi>k</mi><mi>i</mi><mo>′</mo></msubsup></math>),
+then each component in the target vector must also be even.
+We can halve both the coefficients and the target
+to get a smaller instance of the same problem,
+reducing the search space.</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><mo>(</mo><mn>2</mn><msubsup><mi>k</mi><mn>1</mn><mo>′</mo></msubsup><msub><mi>b</mi><mn>1</mn></msub><mo stretchy="false">+</mo><mo>…</mo><mo stretchy="false">+</mo><mn>2</mn><msubsup><mi>k</mi><mi>n</mi><mo>′</mo></msubsup><msub><mi>b</mi><mi>n</mi></msub><mo stretchy="false">=</mo><mn>2</mn><msup><mi>t</mi><mo>′</mo></msup><mo>)</mo><mo>⇒</mo><mo>(</mo><msubsup><mi>k</mi><mn>1</mn><mo>′</mo></msubsup><msub><mi>b</mi><mn>1</mn></msub><mo stretchy="false">+</mo><mo>…</mo><mo stretchy="false">+</mo><msubsup><mi>k</mi><mi>n</mi><mo>′</mo></msubsup><msub><mi>b</mi><mi>n</mi></msub><mo stretchy="false">=</mo><msup><mi>t</mi><mo>′</mo></msup><mo>)</mo></math></p>
+<p>We can’t be sure all <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>k</mi><mi>i</mi></msub></math> are even,
+but we can make them even by subtracting at most one.
+Which <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>k</mi><mi>i</mi></msub></math> should we decrement?
+We don’t know, so we try all <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msup><mn>2</mn><mi>n</mi></msup></math> combinations and pick the best result!</p>
+<p>Unfortunately, testing all combinations every time is still too slow.
+Naive approaches must evaluate around <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msup><mn>50</mn><mi>n</mi></msup></math> combinations
+(where <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mn>50</mn></math> is a typical value from the target vector).
+Our <q>clever</q> way probes… <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">(</mo><msup><mn>2</mn><mi>n</mi></msup><msup><mo stretchy="false">)</mo><mrow><msub><mo>log</mo><mn>2</mn></msub><mn>50</mn></mrow></msup><mo stretchy="false">=</mo><msup><mn>50</mn><mi>n</mi></msup></math> combinations.</p>
+<p>Luckily, we can do better:
+restrict the search to combinations matching the target’s parity.
+If an equation holds under normal arithmetic,
+it must also hold modulo two.</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><mo>(</mo><msub><mi>k</mi><mn>1</mn></msub><msub><mi>b</mi><mn>1</mn></msub><mo stretchy="false">+</mo><mo>…</mo><mo stretchy="false">+</mo><msub><mi>k</mi><mi>n</mi></msub><msub><mi>b</mi><mi>n</mi></msub><mo stretchy="false">=</mo><mi>t</mi><mo>)</mo><mo>⇒</mo><mo>(</mo><mo>(</mo><msub><mi>k</mi><mn>1</mn></msub><mo>⊕</mo><mn>2</mn><mo>)</mo><msub><mi>b</mi><mn>1</mn></msub><mo>⊕</mo><mo>…</mo><mo>⊕</mo><mo>(</mo><msub><mi>k</mi><mi>n</mi></msub><mo>⊕</mo><mn>2</mn><mo>)</mo><msub><mi>b</mi><mi>n</mi></msub><mo stretchy="false">=</mo><mi>t</mi><mo>⊕</mo><mn>2</mn><mo>)</mo></math></p>
+<p>
+For example, if the target vector is <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo>(</mo><mn>32</mn><mo stretchy="false">,</mo><mn>93</mn><mo stretchy="false">,</mo><mn>66</mn><mo stretchy="false">,</mo><mn>72</mn><mo stretchy="false">,</mo><mn>61</mn><mo>)</mo></math>,
+its parity vector is <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo>(</mo><mn>0</mn><mo stretchy="false">,</mo><mn>1</mn><mo stretchy="false">,</mo><mn>0</mn><mo stretchy="false">,</mo><mn>0</mn><mo stretchy="false">,</mo><mn>1</mn><mo>)</mo></math>,
+and we need to consider only those combinations of <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>b</mi><mi>i</mi></msub></math>
+that yield the same parity when xored.
+Now we deal with Boolean variables just like we did in the first part,
+but this time we must look at all solutions,
+not only the optimal one.</p>
+<p>If combinations of input vectors <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>b</mi><mi>i</mi></msub></math> cover the parity space uniformly,
+we only evaluate about <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mrow><mfrac><mrow><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow></mrow><mrow><mrow><msup><mn>2</mn><mi>m</mi></msup></mrow></mrow></mfrac></mrow><mo stretchy="false">=</mo><msup><mn>2</mn><mrow><mi>n</mi><mo stretchy="false">-</mo><mi>m</mi></mrow></msup></math> candidates at each step.
+All instances in my input exhibit near-perfect distribution<label class="margin-toggle sidenote-number" for="sn-distribution"></label><input type="checkbox" id="sn-distribution" class="margin-toggle"><span class="sidenote">
+  I wrote a program that generates random vectors and prints their parity group size distributions.
+  Uniform coverage seems to be the norm.
+</span>.
+To exploit this reduction,
+we precompute parity groups and consult them at every recursion level.</p>
+<p>Here is my implementation of <code>u/tenthmascot</code>’s idea:</p>
+<div class="source-container"><pre class="source"><code><span class="line"></span>
+<span class="line">type ParityGroups = HashMap&lt;u64, Vec&lt;u64&gt;&gt;;</span>
+<span class="line"></span>
+<span class="line">fn parity_groups(ndims: usize, buttons: &amp;[u64]) -&gt; ParityGroups {</span>
+<span class="line">    let n = buttons.len();</span>
+<span class="line">    assert!(n &lt;= 64);</span>
+<span class="line">    let mut groups = ParityGroups::new();</span>
+<span class="line">    <em>// Use a 64-bit integer to represent subsets.</em></span>
+<span class="line">    for mask in 0..(1 &lt;&lt; ndims) {</span>
+<span class="line">        let mut parity_bits = 0;</span>
+<span class="line">        for i in 0..n {</span>
+<span class="line">            if mask &amp; (1 &lt;&lt; i) == 0 {</span>
+<span class="line">                continue;</span>
+<span class="line">            }</span>
+<span class="line">            for d in 0..ndims {</span>
+<span class="line">                if buttons[i] &amp; (1 &lt;&lt; d) &gt; 0 {</span>
+<span class="line">                    parity_bits ^= 1 &lt;&lt; d;</span>
+<span class="line">                }</span>
+<span class="line">            }</span>
+<span class="line">        }</span>
+<span class="line">        groups.entry(parity_bits).or_default().push(mask);</span>
+<span class="line">    }</span>
+<span class="line">    groups</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">fn joltage_min_presses</span>
+<span class="line">    groups: &amp;ParityGroups,</span>
+<span class="line">    buttons: &amp;[u64],</span>
+<span class="line">    target: &amp;[u16],</span>
+<span class="line">) -&gt; Option&lt;usize&gt; {</span>
+<span class="line">    if target.iter().sum::&lt;u16&gt;() == 0 {</span>
+<span class="line">        return Some(0);</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    <em>// Compute parity vector of the target.</em></span>
+<span class="line">    let mut parity = 0u64;</span>
+<span class="line">    for (d, t_d) in target.iter().enumerate() {</span>
+<span class="line">        if t_d &amp; 1 &gt; 0 {</span>
+<span class="line">            parity |= 1u64 &lt;&lt; d;</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    let mut best: Option&lt;usize&gt; = None;</span>
+<span class="line"></span>
+<span class="line">    <em>// Loop over subsets that give the desired parity.</em></span>
+<span class="line">    'outer: for subset in groups.get(&amp;parity)? {</span>
+<span class="line">        <em>// Compute the arguments for a smaller problem.</em></span>
+<span class="line">        let mut new_target = target.to_vec();</span>
+<span class="line">        let mut presses = 0;</span>
+<span class="line">        for i in 0..buttons.len() {</span>
+<span class="line">            if subset &amp; (1 &lt;&lt; i) == 0 {</span>
+<span class="line">                continue;</span>
+<span class="line">            }</span>
+<span class="line">            presses += 1;</span>
+<span class="line">            for d in 0..target.len() {</span>
+<span class="line">                if buttons[i] &amp; (1 &lt;&lt; d) &gt; 0 {</span>
+<span class="line">                    if new_target[d] == 0 {</span>
+<span class="line">                        continue 'outer;</span>
+<span class="line">                    }</span>
+<span class="line">                    new_target[d] -= 1;</span>
+<span class="line">                }</span>
+<span class="line">            }</span>
+<span class="line">        }</span>
+<span class="line">        for v in new_target.iter_mut() {</span>
+<span class="line">            assert_eq!(*v % 2, 0);</span>
+<span class="line">            *v /= 2;</span>
+<span class="line">        }</span>
+<span class="line"></span>
+<span class="line">        <em>// Solve the smaller problem recursively.</em></span>
+<span class="line">        if let Some(x) = joltage_min_presses(groups, buttons, &amp;new_target) {</span>
+<span class="line">            let total = presses + 2 * x;</span>
+<span class="line">            best = Some(best.map_or(total, |v| v.min(total)));</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    best</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Parity groups also yield a simple algorithm for part one:
+pick the smallest subset in the target’s parity group.</p>
+<div class="source-container"><pre class="source"><code><span class="line">fn lights_min_presses_parity(groups: &amp;ParityGroups, target: u64) -&gt; usize {</span>
+<span class="line">    groups</span>
+<span class="line">        .get(&amp;target)</span>
+<span class="line">        .expect(&quot;no solution found&quot;)</span>
+<span class="line">        .iter()</span>
+<span class="line">        .map(|mask| mask.count_ones() as usize)</span>
+<span class="line">        .min()</span>
+<span class="line">        .unwrap()</span>
+<span class="line">}</span>
+</code></pre></div>
+</section>
+<section><h2 id="day-11"><a href="#day-11">Day 11: Reactor</a></h2>
+<p><a href="https://adventofcode.com/2025/day/11">This puzzle</a> asks us to count paths between two vertices in a <a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">directed acyclic graph</a>.
+That’s the same problem as <a href="#day-07">day seven</a>, part two,
+but this time the graph is general, not grid-embedded.
+On day seven, the grid structure provided a natural topological order.
+Here, we must compute it ourselves.</p>
+<div class="source-container"><pre class="source"><code><span class="line">type Graph = Vec&lt;Vec&lt;usize&gt;&gt;;</span>
+<span class="line"></span>
+<span class="line"><em>/// Returns the vertices of a graph in a topological order.</em></span>
+<span class="line">fn toposort(g: &amp;Graph, start: usize) -&gt; Vec&lt;usize&gt; {</span>
+<span class="line">    fn go(</span>
+<span class="line">        g: &amp;Graph,</span>
+<span class="line">        v: usize,</span>
+<span class="line">        visited: &amp;mut Vec&lt;bool&gt;,</span>
+<span class="line">        out: &amp;mut Vec&lt;usize&gt;,</span>
+<span class="line">    ) {</span>
+<span class="line">        if visited[v] {</span>
+<span class="line">            return;</span>
+<span class="line">        }</span>
+<span class="line">        visited[v] = true;</span>
+<span class="line">        for w in &amp;g[v] {</span>
+<span class="line">            go(g, *w, visited, out);</span>
+<span class="line">        }</span>
+<span class="line">        out.push(v);</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    let mut out = vec![];</span>
+<span class="line">    let mut visited = vec![false; g.len()];</span>
+<span class="line">    go(g, start, &amp;mut visited, &amp;mut out);</span>
+<span class="line">    out.reverse();</span>
+<span class="line">    out</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><em>/// Computes the number of paths between two vertices.</em></span>
+<span class="line">fn count_paths(g: &amp;Graph, start: usize, end: usize) -&gt; usize {</span>
+<span class="line">    let mut d = vec![0; g.len()];</span>
+<span class="line">    d[start] = 1;</span>
+<span class="line">    for p in toposort(g, start) {</span>
+<span class="line">        for c in &amp;g[p] {</span>
+<span class="line">            d[*c] += d[p];</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    d[end]</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>In the second part,
+we must count paths from <code>svr</code> to <code>out</code>
+that pass through both <code>fft</code> and <code>dac</code> (in any order).
+The straightforward solution multiplies path counts for segments
+<code>svr -&gt; fft -&gt; dac -&gt; out</code> and <code>svr -&gt; dac -&gt; fft -&gt; out</code>.</p>
+<div class="source-container"><pre class="source"><code><span class="line">let fft_dac =</span>
+<span class="line">    count_paths(&amp;g, svr, fft) *</span>
+<span class="line">    count_paths(&amp;g, fft, dac) *</span>
+<span class="line">    count_paths(&amp;g, dac, out);</span>
+<span class="line">let dac_fft =</span>
+<span class="line">    count_paths(&amp;g, svr, dac) *</span>
+<span class="line">    count_paths(&amp;g, dac, fft) *</span>
+<span class="line">    count_paths(&amp;g, fft, out);</span>
+<span class="line">println!(&quot;{}&quot;, fft_dac + dac_fft);</span>
+</code></pre></div>
+<p>Of course, only one of <code>count_paths(&amp;g, dac, fft)</code> and <code>count_paths(&amp;g, fft, dac)</code>
+can be non-zero.</p>
+</section>
+<section><h2 id="day-12"><a href="#day-12">Day 12: Christmas tree farm</a></h2>
+<p><a href="https://adventofcode.com/2025/day/12">This puzzle</a> asks
+whether a rectangle of given dimensions can fit a set of irregular tiles.
+The problem seemed overwhelmingly complex,
+and the input sizes were large,
+so I suspected a trick.
+After all, the final day is often cheesy.</p>
+<p>One smoke test for whether a rectangle can fit a set of tiles
+is checking whether its area is large enough.
+If the rectangle’s area is 360 units
+and the tiles occupy 365 units,
+the instance is clearly unsolvable.</p>
+<p>I printed area ratios for all instances in my input.
+They fell into two groups:
+ratios &lt;80% and ratios &gt;100%.
+I assumed that if a rectangle <em>could</em> fit the tiles,
+it did.
+Luckily, this guess was correct.</p>
+<p>My solution boils down to the following humble heuristic:</p>
+<div class="source-container"><pre class="source"><code><span class="line">let tiles_per_shape: Vec&lt;usize&gt; =</span>
+<span class="line">    shapes.iter().map(|g| grid_count(g, &amp;'#')).collect();</span>
+<span class="line"></span>
+<span class="line">let mut total = 0usize;</span>
+<span class="line">for instance in instances {</span>
+<span class="line">    let tile_count = tiles_per_shape</span>
+<span class="line">        .iter()</span>
+<span class="line">        .zip(instance.shape_counts.iter())</span>
+<span class="line">        .map(|(x, y)| x * y)</span>
+<span class="line">        .sum::&lt;usize&gt;();</span>
+<span class="line"></span>
+<span class="line">    if tile_count &lt;= instance.w * instance.h {</span>
+<span class="line">        total += 1;</span>
+<span class="line">    }</span>
+<span class="line">}</span>
+<span class="line">println!(&quot;{total}&quot;);</span>
+</code></pre></div>
+<p>If you want to dig deeper and solve the problem exactly,
+Knuth’s <a href="https://en.wikipedia.org/wiki/Dancing_links">dancing links algorithm</a> seems to be a promising direction to explore.</p>
+<p>Happy holidays!</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/35-aoc-2024.html">Advent of Code 2024</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/47-2025-retro.html"> ←2025 retrospective</a></div><div id="older"><a href="/posts/45-compilation-is-communication.html">Compilation is communication→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

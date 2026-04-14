@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="machine-learning,programming"><meta name="description" content="Where does file metadata belong?"><title>Transposing tensor files</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/33-transposing-tensor-files.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/33-transposing-tensor-files.html">Transposing tensor files</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2024-11-22</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2024-11-22</span></span><span class="post-icons"><a class="icon-link" href="https://news.ycombinator.com/item?id=42217617" title="Discuss on Hacker News" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/y18.svg" alt="Hacker News"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#safe-tensors">The safetensors file format</a></li><li class="toc toc-level-1"><a href="#tensor-safes">Tensor safes</a></li><li class="toc toc-level-1"><a href="#alternative-designs">Alternative designs</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#chunked-metadata">Chunked metadata</a></li><li class="toc toc-level-2"><a href="#floating-metadata">Floating metadata</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li><li class="toc toc-level-1"><a href="#checklist">Appendix: binary format checklist</a></li></ul><hr>
+
+<div class="epigraph"><blockquote><p>
+  Here is a problem related to yours and solved before.
+  Could you use it?
+</p><footer>G. Pólya, <q>How to Solve It</q>, second edition, p. 9</footer></blockquote></div>
+<section><p>I recently spent much time working with machine learning serialization formats,
+especially <a href="https://onnx.ai/"><span class="smallcaps">onnx</span></a>.
+This file format uses <a href="https://protobuf.dev/">Protocol Buffers</a> for its binary representation
+and inherits the <a href="https://protobuf.dev/programming-guides/proto-limits/#total">two-gigabyte restriction on the file format size</a>.
+Bypassing this restriction requires storing raw tensor bytes
+in another file and referencing them from the <span class="smallcaps">onnx</span> file.</p>
+<p>But what should the tensor file format be?
+The <a href="https://huggingface.co/docs/safetensors/index">safetensors</a> library from Huggingface is popular for representing tensors on disk,
+and its data layout is fully compatible with the <span class="smallcaps">onnx</span> raw tensor data format.</p>
+<p>This article describes the safetensors file structure,
+points out its minor design flaws,
+and explains how changing the metadata location can address them.</p>
+</section>
+<section><h2 id="safe-tensors"><a href="#safe-tensors">The safetensors file format</a></h2>
+<p>A <code>safetensors</code> file stores a collection of multi-dimensional arrays.
+Its first eight bytes indicate the header size as an unsigned 64-bit integer,
+follows the header describing each tensor’s type and shape,
+and then comes the data section containing flat arrays.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-safetensors-structure">⊕</label><input type="checkbox" id="mn-safetensors-structure" class="margin-toggle"><span class="marginnote">
+    The structure of a safetensors file.
+    The first eight bytes indicate the header size in bytes.
+    The header is a <span class="smallcaps">json</span> object describing the tensor metadata.
+    The last section contains raw array elements.
+  </span><p class="svg"><img src="/images/33-safetensors-structure.svg"></p>
+</figure>
+<p>The header is a <span class="smallcaps">json</span> object,
+where the key is the tensor name, and the value is an object describing the tensor shape, element type, and offsets from the start of the data section.</p>
+<figure><label class="margin-toggle" for="mn-safetensors-header-example">⊕</label><input type="checkbox" id="mn-safetensors-header-example" class="margin-toggle"><span class="marginnote">
+  An example of the safetensors file header.
+  The header is a <span class="smallcaps">json</span> object mapping tensor names to their metadata: shape, element type, and offsets from the beginning of the data section.
+</span><div class="source-container"><pre class="source json"><code><span class="line">{ &quot;fc.weight&quot;: {</span>
+<span class="line">    &quot;dtype&quot;: &quot;F32&quot;,</span>
+<span class="line">    &quot;shape&quot;: [10, 784],</span>
+<span class="line">    &quot;offsets&quot;: [0, 31360]</span>
+<span class="line">  },</span>
+<span class="line">  &quot;fc.bias&quot;: {</span>
+<span class="line">    &quot;dtype&quot;: &quot;F32&quot;,</span>
+<span class="line">    &quot;shape&quot;: [10],</span>
+<span class="line">    &quot;offsets&quot;: [31360, 31400]</span>
+<span class="line">  }</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>This simple file organization makes it easy to implement and use in most environments.
+Unfortunately, it also has a few flaws:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+  Constructing a safetensors file requires two passes over the dataset:
+  one pass to gather the tensor metadata and write the header
+  and another to append the raw tensor data to the file.
+</li><li data-num-glyph="②">
+  The tensor data offsets described in the metadata section are relative to the data section, not absolute within a file.
+  This design choice makes working with these files more cumbersome:
+  We must add the header size (and the size of this size, eight bytes) to tensor offsets before we can read the tensor data.
+  The reason for this inconvenience is a chicken-and-egg problem:
+  the absolute offsets depend on the header size,
+  and the header size depends on the offsets.
+  Safetensors designers used relative offsets in the header to break this cycle.
+</li><li data-num-glyph="③">
+  The work required to add a new tensor or change the header is proportional to the entire file size,
+  not the change size.
+</li></ol>
+</section>
+<section><h2 id="tensor-safes"><a href="#tensor-safes">Tensor safes</a></h2>
+<p>I like to imagine a tensor file as a safe with gold ingots (tensors) inside.
+The metadata section is a slip of paper describing each ingot’s weight, purity, and location in the safe.
+The safetensors layout requires us to fill out the paper first,
+place it at the back of the safe,
+and assemble the ingots as described.</p>
+<p>Luckily, there is an easier way.
+Put the ingots first, jotting down the size and location on the paper as you go.
+Once all the gold is in the safe, put the paper in front of it and seal it.
+In the world of binary files, this idea corresponds to placing the metadata block at the end of the file<label class="margin-toggle sidenote-number" for="sn-leveldb"></label><input type="checkbox" id="sn-leveldb" class="margin-toggle"><span class="sidenote">
+  I learned this trick from the <a href="https://github.com/google/leveldb/blob/main/doc/table_format.md">LevelDB table format</a>.
+</span>.
+Let’s call this derived format <em>tensorsafe</em>.</p>
+<p>The format makes two minor adjustments to the <code>safetensors</code> structure:
+</p>
+<ol class="circled"><li data-num-glyph="①">The metadata block lives at the end of the file, followed by the metadata size<label class="margin-toggle sidenote-number" for="sn-metadata-size-u32"></label><input type="checkbox" id="sn-metadata-size-u32" class="margin-toggle"><span class="sidenote">
+  I limited the metadata section size to four bytes on the figure,
+  enough to store more than 10,000,000 tensors in a single file, assuming a single entry is under 400 bytes.
+</span>.
+</li><li data-num-glyph="②">The file starts with a fixed-size header containing <a href="https://en.wikipedia.org/wiki/Magic_number_(programming)#In_files">magic bytes</a> and the version.
+  All self-respecting file formats need versioning.
+</li></ol>
+<br><figure class="grayscale-diagram"><label class="margin-toggle" for="mn-tensorsafe-structure">⊕</label><input type="checkbox" id="mn-tensorsafe-structure" class="margin-toggle"><span class="marginnote">
+    The structure of a tensorsafe file.
+    The header has a fixed size and includes magic bytes and the version.
+    The variable-size metadata block moved to the end of the file.
+  </span><p class="svg"><img src="/images/33-tensorsafe-structure.svg"></p>
+</figure>
+<p>These changes address all my issues with <code>safetensors</code>:
+</p>
+<ol class="circled"><li data-num-glyph="①">The encoder needs only one pass over the data.
+  It can accumulate the metadata while writing tensors to the file and add the metadata section at the end.
+</li><li data-num-glyph="②">
+  The metadata section becomes self-contained and can use absolute offsets for tensor boundaries.
+  The reader doesn’t need to massage the offsets anymore.
+</li><li data-num-glyph="③">
+  We don’t have to move the data to append new tensors:
+  We can write over the old metadata section and append the new one.
+</li></ol>
+<p>Are there any new downsides to the <code>tensorsafe</code> approach?
+None that I can think of.</p>
+</section>
+<section><h2 id="alternative-designs"><a href="#alternative-designs">Alternative designs</a></h2>
+<p>Dumping the entire metadata section at the beginning or the end of a file are not the only options available.
+This section explores other popular approaches for metadata encoding,
+such as spreading it across the file or making it float freely.</p>
+<h3 id="chunked-metadata"><a href="#chunked-metadata">Chunked metadata</a></h3>
+<p>We can represent a collection of items by packaging each item’s metadata and data into a distinct chunk.
+For example,
+<a href="https://en.wikipedia.org/wiki/PNG#File_format"><span class="smallcaps">png</span></a> encodes various aspects of the image as separate chunks,
+and the <a href="https://webassembly.github.io/spec/core/binary/index.html">WebAssembly binary format</a> represents a module as a collection of sections (types, imports, memory, etc.).</p>
+<p>When we apply this approach to tensor encoding,
+we interleave tensor attributes with the tensor data.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-chunked-metadata">⊕</label><input type="checkbox" id="mn-chunked-metadata" class="margin-toggle"><span class="marginnote">
+  The chunked metadata approach: the tensor file contains a self-contained section for each tensor.
+</span><p class="svg"><img src="/images/33-chunked-metadata.svg"></p>
+</figure>
+<p>This approach also addresses the original design issues:
+</p>
+<ul class="arrows"><li>The encoder no longer needs to accumulate metadata;
+  producing a file requires a single straightforward loop over the tensors.
+</li><li>The metadata section doesn’t need to contain tensor offsets:
+  The decoder can compute them by scanning the file.
+</li><li>We can append new tensors to the file without touching existing items.
+</li></ul>
+<p>Unfortunately, this design also has a severe disadvantage:
+The decoder has to scan the entire file even if the caller is interested in accessing only a specific tensor.
+Furthermore, metadata decoding becomes slower because it involves many file seeks.</p>
+<h3 id="floating-metadata"><a href="#floating-metadata">Floating metadata</a></h3>
+<p>We explored options where metadata occupies the file’s beginning and end
+and is spread thinly across it.
+Are there any more options?
+There are!
+The metadata block can float freely within the file<label class="margin-toggle sidenote-number" for="sn-floating-wad"></label><input type="checkbox" id="sn-floating-wad" class="margin-toggle"><span class="sidenote">
+I first encountered this idea when dealing with <a href="https://doomwiki.org/wiki/WAD"><span class="smallcaps">wad</span></a> files.
+I later learned that <a href="https://en.wikipedia.org/wiki/PDF#File_format"><span class="smallcaps">pdf</span></a> uses a similar trick for its cross-reference tables.
+</span>.</p>
+<p>With this design, a fixed-size file header contains an offset of the metadata block location.
+The encoder writes a default header at first,
+encodes the entire dataset,
+appends the metadata block,
+and finally goes back to the header to update the metadata offset.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-floating-metadata">⊕</label><input type="checkbox" id="mn-floating-metadata" class="margin-toggle"><span class="marginnote">
+  The floating metadata approach: a fixed-size header contains the metadata offset.
+</span><p class="svg"><img src="/images/33-floating-metadata.svg"></p>
+</figure>
+<p>This design has all the benefits of the <a href="#tensor-safes">tensorsafe</a> format,
+and the extra level of indirection adds another feature: <em>atomic in-place updates</em>.
+You can add, remove, or edit tensors using the following procedure:
+</p>
+<ol class="circled"><li data-num-glyph="①">Append the new data and a new metadata section to the file.
+</li><li data-num-glyph="②"><a href="https://www.man7.org/linux/man-pages/man2/fsync.2.html">Sync</a> the changes to disk.
+</li><li data-num-glyph="③">Update the header to point to the new metadata entry.
+</li></ol>
+<p>This approach guarantees that the file will stay consistent
+even if the writing process crashes before completing the update,
+but it can lead to extra space usage.
+The writer can detect and reuse that space in subsequent updates.</p>
+<p>Given modern advances in hardware and file systems,
+atomic updates might not be worth the extra complexity.</p>
+</section>
+<section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
+<p>This article covered a few alternative designs for the <code>safetensors</code> file format
+and argued that moving the metadata section at the end of the file would make the format easier to use.
+The following table summarizes the design space.</p>
+<figure class="fullwidth"><table class="table-5 "><thead><thead><tr><th colspan="1" class="align-r">
+</th><th colspan="1" class="align-c"> safetensors </th><th colspan="1" class="align-c"> tensorsafe </th><th colspan="1" class="align-c"> chunked </th><th colspan="1" class="align-c"> floating </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-r">
+
+Zero-copy decoding </td><td colspan="1" class="align-c"> ✔ </td><td colspan="1" class="align-c"> ✔ </td><td colspan="1" class="align-c"> ✔ </td><td colspan="1" class="align-c"> ✔ </td></tr><tr><td colspan="1" class="align-r">
+Fast metadata decoding </td><td colspan="1" class="align-c"> ✔ </td><td colspan="1" class="align-c"> ✔ </td><td colspan="1" class="align-c"> ✗ </td><td colspan="1" class="align-c"> ✔ </td></tr><tr><td colspan="1" class="align-r">
+Data passes required for encoding </td><td colspan="1" class="align-c"> 2 </td><td colspan="1" class="align-c"> 1 </td><td colspan="1" class="align-c"> 1 </td><td colspan="1" class="align-c"> 1 </td></tr><tr><td colspan="1" class="align-r">
+Absolute file offsets in metadata </td><td colspan="1" class="align-c"> ✗ </td><td colspan="1" class="align-c"> ✔ </td><td colspan="1" class="align-c"> n/a </td><td colspan="1" class="align-c"> ✔ </td></tr><tr><td colspan="1" class="align-r">
+Atomic in-place updates </td><td colspan="1" class="align-c"> ✗ </td><td colspan="1" class="align-c"> ✗ </td><td colspan="1" class="align-c"> ✗ </td><td colspan="1" class="align-c"> ✔ </td></tr></tbody></table>
+</figure>
+</section>
+<section><h2 id="checklist"><a href="#checklist">Appendix: binary format checklist</a></h2>
+<ul class="checklist"><li>I can explain why I need to design a new binary format.
+</li><li>I studied design choices that similar formats made.
+</li><li>The file metadata has a version number.
+</li><li>I requested a design review from the community.
+</li><li>I wrote a detailed specification of my format.
+</li></ul>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/31-effective-design-docs.html">Effective design docs</a></li><li><a href="/posts/37-onnx-intro.html">ONNX introduction</a></li><li><a href="/posts/41-box-combinators.html">Box combinators</a></li><li><a href="/posts/44-tag-based-logging.html">Tag-based logging</a></li><li><a href="/posts/45-compilation-is-communication.html">Compilation is communication</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/34-square-joy-tile-crush.html"> ←Square joy: tile crush</a></div><div id="older"><a href="/posts/32-programming-avant-garde.html">Programming avant-garde→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="ic"><meta name="description" content="A practical guide to the world’s most advanced interface definition language."><title>Candid for engineers</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/20-candid-for-engineers.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/20-candid-for-engineers.html">Candid for engineers</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2023-06-14</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2023-06-22</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#introduction">Introduction</a></li><li class="toc toc-level-1"><a href="#candid-overview">Candid overview</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#service-definitions">Service definitions</a></li><li class="toc toc-level-2"><a href="#types">Types</a></li><li class="toc toc-level-2"><a href="#records-and-variants">Records and variants</a></li><li class="toc toc-level-2"><a href="#tuples">Tuples</a></li><li class="toc toc-level-2"><a href="#structural-typing">Structural typing</a></li><li class="toc toc-level-2"><a href="#subtyping">Subtyping</a></li><li class="toc toc-level-2"><a href="#binary-message-anatomy">Binary message anatomy</a></li><li class="toc toc-level-2"><a href="#encoding-an-empty-tuple">Example: encoding an empty tuple</a></li><li class="toc toc-level-2"><a href="#encoding-a-tree">Example: encoding a tree</a></li></ul></li><li class="toc toc-level-1"><a href="#faq">FAQ</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#faq-remove-field">Can I remove a record field?</a></li><li class="toc toc-level-2"><a href="#faq-remove-field">Can I add a record field?</a></li><li class="toc toc-level-2"><a href="#faq-remove-alternative">Can I remove a variant alternative?</a></li><li class="toc toc-level-2"><a href="#faq-remove-alternative">Can I add a variant alternative?</a></li><li class="toc toc-level-2"><a href="#faq-change-init-args">Can I change init args?</a></li><li class="toc toc-level-2"><a href="#faq-add-result">Can I extend return values?</a></li><li class="toc toc-level-2"><a href="#faq-post-upgrade-arg">How do I specify the post_upgrade arg?</a></li><li class="toc toc-level-2"><a href="#faq-deterministic">Is Candid binary encoding deterministic?</a></li></ul></li><li class="toc toc-level-1"><a href="#resources">Resources</a></li></ul><hr>
+
+<section><h2 id="introduction"><a href="#introduction">Introduction</a></h2>
+<p><a href="https://github.com/dfinity/candid">Candid</a> is the primary interface definition language for smart contracts hosted on the <a href="https://internetcomputer.org/">Internet Computer</a>.</p>
+<p>Most prevalent data-interchange formats, such as <a href="https://protobuf.dev/">Protocol Buffers</a> and <a href="https://thrift.apache.org/">Thrift</a>, come straight from <a href="https://reasonablypolymorphic.com/blog/protos-are-wrong/#ad-hoc-and-built-by-amateurs">engineering departments</a>.</p>
+<p>Candid is different.
+Candid is a child of programming language designers who grew it from <a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md#design-goals">first principles</a>.
+As a result, Candid <a href="https://github.com/dfinity/candid/blob/master/spec/IDL-Soundness.md">makes sense</a> but might feel alien to most engineers.</p>
+<p>This article is an introduction to Candid I wish I had when I started using it.</p>
+</section>
+<section><h2 id="candid-overview"><a href="#candid-overview">Candid overview</a></h2>
+<p>As any interface definition language, Candid has multiple facets.</p>
+<p>One facet is the textual format defining the service interface.
+This facet is similar in function to the <a href="https://grpc.io/">gRPC</a> system.
+Another facet is the binary format for encoding service requests and responses.
+This facet is analogous to the <a href="https://protobuf.dev/">Protocol Buffers</a> serialization format.</p>
+<p>Though Candid is similar to gRPC on the surface, there is an essential distinction between the two systems.</p>
+<p>gRPC builds strictly on top of the Protocol Buffers format.
+Service method definitions can refer to message definitions, but messages cannot refer to services.</p>
+<p>Candid, on the other hand, ties the message format and service definition language into a knot.
+Service method definitions can refer to data types, and data types can refer to services.
+Services can accept as arguments and return references to other services and methods.
+The Candid team usually calls such designs <q>higher-order cases</q>.
+The <a href="https://internetcomputer.org/docs/current/developer-docs/backend/candid/candid-concepts">Candid overview</a> article introduces a higher-order function in its first example.</p>
+<figure><div class="source-container"><pre class="source candid"><code><span class="line"><b>service</b> counter : {</span>
+<span class="line">  <em>// A method taking a reference to a function.</em></span>
+<span class="line">  subscribe : (func (int) -&gt; ()) -&gt; ();</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>Another distinctive Candid feature is <a href="#subtyping">subtyping rules</a> for defining backward-compatible service evolution.
+That’s when you want formal language designers on your team.</p>
+<h3 id="service-definitions"><a href="#service-definitions">Service definitions</a></h3>
+<p>Most often, developers interact with Candid through the service definition files, also known as <a href="https://internetcomputer.org/docs/current/developer-docs/backend/candid/candid-howto#the-did-file"><code>.did</code></a> files.</p>
+<p>A <code>.did</code> file contains type definitions and at most one primary service definition, which must be the last clause in the <code>.did</code> file.</p>
+<figure><label class="margin-toggle" for="mn-token-interface">⊕</label><input type="checkbox" id="mn-token-interface" class="margin-toggle"><span class="marginnote">
+    The definition of a token ledger registry service.
+    The <code>service</code> keyword at the top level defines the primary service; it must appear as the last definition in the file.
+    Note the difference between a service type definition (top) and a service definition (bottom) syntactic forms.
+</span><div class="source-container"><pre class="source candid"><code><span class="line">// A type definition introducing the Token service interface.</span>
+<span class="line"><b>type</b> Token = <b>service</b> {</span>
+<span class="line">  token_symbol : () -&gt; (text) query;</span>
+<span class="line">  balance : (record { of : principal }) -&gt; (nat) query;</span>
+<span class="line">  transfer : (record { to : principal; amount : nat }) -&gt; ();</span>
+<span class="line">};</span>
+<span class="line"></span>
+<span class="line"><b>service</b> TokenRegistry : {</span>
+<span class="line">  <em>// Returns a reference to a token ledger service given the token symbol.</em></span>
+<span class="line">  lookup : (symbol : text) -&gt; (opt Token) query;</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>Two syntactic forms can introduce a service definition: with and without init arguments.
+The technical term for a service definition with init arguments is <a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md#services">service constructor</a><label class="margin-toggle sidenote-number" for="sn-class"></label><input type="checkbox" id="sn-class" class="margin-toggle"><span class="sidenote">
+    Some implementations use the term <a href="https://docs.rs/candid/0.8.4/candid/types/internal/enum.Type.html#variant.Class"><em>class</em></a>.
+</span></p>
+<figure><label class="margin-toggle" for="mn-service-vs-constructor">⊕</label><input type="checkbox" id="mn-service-vs-constructor" class="margin-toggle"><span class="marginnote">
+  Service definitions with (top) and without (bottom) init arguments (rendered in bold font).
+</span><div class="source-container"><pre class="source candid"><code><span class="line"><b>service</b> Token : {</span>
+<span class="line">  balance : (record { of : principal }) -&gt; (nat) query;</span>
+<span class="line">  <em>// ...</em></span>
+<span class="line">}</span>
+</code></pre></div>
+<div class="source-container"><pre class="source candid"><code><span class="line"><b>service</b> Token : <b>(init_balances : vec record { principal; nat })</b> -&gt; {</span>
+<span class="line">  balance : (record { of : principal }) -&gt; (nat) query;</span>
+<span class="line">  <em>// ...</em></span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>Conceptually, a service constructor represents an uninitialized canister, whereas a service represents a deployed canister.
+Init arguments describe the value the canister maintainers must specify when instantiating the canister.</p>
+<p>Ideally, canister <em>build</em> tools should produce a <b>service constructor</b>.
+If the module contains no init args, the tools should use the form <code>service : () -&gt; {…}</code>.
+Canister <em>deploy</em> tools, such as <a href="https://internetcomputer.org/docs/current/references/cli-reference/dfx-deploy"><code>dfx deploy</code></a>, should use the init args to install the canister, and use the <b>service</b> as the public metadata, stripping out the init args.
+As of July 2023, Motoko compiler and Rust CDK don’t follow these conventions, so people often conflate the two concepts.</p>
+<h3 id="types"><a href="#types">Types</a></h3>
+<p>In addition to a rich set of primitive types, such as booleans (<code>bool</code>), floats (<code>float64</code>), strings (<code>text</code>), and whole numbers of various widths (<code>nat8</code>, <code>nat16</code>, <code>nat32</code>, <code>nat64</code>, <code>int8</code>, <code>int16</code>, <code>int32</code>, <code>int64</code>), Candid provides a few more advanced types and type constructors:</p>
+<ul class="arrows"><li>
+    Arbitrary-precision integers (<a href="https://internetcomputer.org/docs/current/references/candid-ref#type-nat"><code>nat</code></a> and <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-int"><code>int</code></a>).
+    </li><li>
+    Unique identifiers (<a href="https://internetcomputer.org/docs/current/references/candid-ref#type-principal"><code>principal</code></a>).
+    </li><li>
+    The <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-opt-t"><code>opt</code></a> type constructor for marking values as potentially missing.
+    </li><li>
+    The <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t"><code>vec</code></a> type constructor for declaring collections.
+    </li><li><a href="https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--">Records</a> as product types (also known as <code>structs</code>) with named fields, such as <br>
+    <code><b>record</b> { <em>first_line</em> : text; <em>second_line</em> : <b>opt</b> text; <em>zip</em> : text; /* … */ }</code>.
+    </li><li><a href="https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--">Variants</a> as sum types (also known as <code>enums</code>) with named alternatives, such as <br>
+    <code><b>variant</b> { <em>cash</em>; <em>credit_card</em> : <b>record</b> { /* … */ } }</code>.
+    </li><li>
+    The <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-reserved"><code>reserved</code></a> type for retiring unused fields.
+    </li><li>
+    The <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-empty"><code>empty</code></a> that has no constructors.
+    It might be helpful for marking some alternatives as impossible, for example, <code>variant { Ok : int; Err : empty }</code>.
+    </li><li>
+    The <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-null"><code>null</code></a> type (also known as the <a href="https://en.wikipedia.org/wiki/Unit_type">unit type</a>) containing a single value, <code>null</code>.
+    You use it implicitly every time you define variant alternatives not containing any data.
+    For example, <code>variant { A; B }</code> and <code>variant { A : null; B : null }</code> are equivalent types.
+    </li><li>
+    The <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-func---"><code>func</code></a> type family describing actor method signatures.
+    Values of such types represent references to actor methods (actor address + method) of the corresponding type.
+    </li><li>
+    The <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-service-"><code>service</code></a> type family describing actor interfaces.
+    It might be helpful to view a service type as a special kind of record where all fields are functions.
+    Values of service types represent references to actors providing the corresponding interface.
+</li></ul>
+<p>Candid also allows recursive and mutually-recursive types.</p>
+<div class="source-container"><pre class="source good"><code><span class="line">type tree = variant { leaf : nat; children : forest };</span>
+<span class="line">type forest = vec tree;</span>
+</code></pre></div>
+<h3 id="records-and-variants"><a href="#records-and-variants">Records and variants</a></h3>
+<p>Records and variants are the bread and butter of working with Candid.</p>
+<p>Records and variants have similar syntax; the primary difference is the keyword introducing the type.
+The meanings of the constructs are complementary, however.
+A record type indicates that <em>all</em> of its fields must be set, and a variant type indicates that precisely <em>one</em> field must be set.</p>
+<figure><label class="margin-toggle" for="mn-record-vs-variant">⊕</label><input type="checkbox" id="mn-record-vs-variant" class="margin-toggle"><span class="marginnote">
+ Record and variant definitions have similar syntax but different semantics.
+ In a record, all fields must be set.
+ In a variant, precisely one alternative must be set.
+</span><div class="source-container"><pre class="source candid"><code><span class="line"><b>type</b> Employee = <b>record</b> {</span>
+<span class="line">  first_name : text;</span>
+<span class="line">  second_name : text;</span>
+<span class="line">  status : EmployeeStatus;</span>
+<span class="line">};</span>
+<span class="line"></span>
+<span class="line"><b>type</b> EmployeeStatus = <b>variant</b> {</span>
+<span class="line">  full_time;</span>
+<span class="line">  contractor : record { contract_expires_at : opt nat };</span>
+<span class="line">};</span>
+</code></pre></div>
+</figure>
+<p>Similarly to Protocol Buffers, Candid uses integers to identify fields and alternatives.
+Unlike Protocol Buffers, Candid doesn’t ask the programmer to map symbolic field names to integers, relying on a <a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md#shorthand-symbolic-field-ids">hash function</a> instead.
+This design choice has two practical implications.</p>
+<ul class="arrows"><li>
+    Renaming a field or an alternative is a backward-incompatible change.
+    </li><li>
+    Tools cannot display field names without the service definition file.
+</li></ul>
+<p>Please refer to the <a href="https://www.joachim-breitner.de/blog/786-A_Candid_explainer__Quirks#hashed-field-names">hashed field names</a> section in Joachim’s article for more insight and references.</p>
+<h3 id="tuples"><a href="#tuples">Tuples</a></h3>
+<p>Candid doesn’t provide first-class tuples.
+There are two constructs closely resembling tuples, however.</p>
+<ol class="circled"><li data-num-glyph="①">
+    Records with <a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md#shorthand-tuple-fields">omitted field names</a> act as type-level tuples.
+    Candid language integrations, such as <a href="https://internetcomputer.org/docs/current/developer-docs/backend/candid/candid-howto#interact-with-a-service-from-a-motoko-canister">native Motoko support</a> and Rust <a href="https://crates.io/crates/candid">candid</a> package, use this feature to map native tuples to Candid.
+    </li><li data-num-glyph="②">
+    Argument and result sequences in service methods behave a lot like tuples.
+</li></ol>
+<figure><label class="margin-toggle" for="mn-tuple-like">⊕</label><input type="checkbox" id="mn-tuple-like" class="margin-toggle"><span class="marginnote">
+  Tuple-like constructions in Candid: a record with tuple fields (top) and argument sequences (bottom).
+</span><div class="source-container"><pre class="source candid"><code><span class="line"><em>// A record with tuple fields.</em></span>
+<span class="line"><b>type</b> Entry  = <b>record</b> { text; nat };</span>
+<span class="line"><em>// The Entry and ExplicitEntry types are equivalent.</em></span>
+<span class="line"><b>type</b> ExplicitEntry = <b>record</b> { <b>0</b> : text; <b>1</b> : nat };</span>
+<span class="line"></span>
+<span class="line">service ArithmeticService : {</span>
+<span class="line">  <em>// Argument and result sequences.</em></span>
+<span class="line">  div : (divident : nat, divisor : nat) -&gt; (quotient : nat, reminder : nat) query;</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>Note that Candid ignores argument and result names in method signatures; it relies solely on the argument position within the sequence.
+Extending the argument sequence with a new optional value is safe, but adding an argument in the middle will break backward compatibility.
+Prefer using records as arguments and result types: you’ll have more freedom to rearrange or remove fields as the interface evolves.</p>
+<figure><label class="margin-toggle" for="mn-record-in-args">⊕</label><input type="checkbox" id="mn-record-in-args" class="margin-toggle"><span class="marginnote">
+  Using records with named fields as method arguments and results.
+</span><div class="source-container"><pre class="source candid"><code><span class="line">service ArithmeticService : {</span>
+<span class="line">  div : (record { divident : nat; divisor : nat })</span>
+<span class="line">     -&gt; (record { quotient : nat; reminder : nat }) query;</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>See the <a href="https://www.joachim-breitner.de/blog/786-A_Candid_explainer__Quirks#tuples">Tuples</a> section in Joachim’s article for more detail and advice.</p>
+<h3 id="structural-typing"><a href="#structural-typing">Structural typing</a></h3>
+<p>Candid’s type system is <a href="https://en.wikipedia.org/wiki/Structural_type_system">structural</a>: it treats types as equal if they have the same structure.
+Type names serve as monikers for the type structure, not as the type’s identity.</p>
+<p>Variable bindings in Rust are a good analogy for type names in Candid.
+The <code>let x = 5;</code> statement <em>binds</em> name <em>x</em> to value <code>5</code>, but <em>x</em> does not become the identity of that value.
+Expressions such as <code>x == 5</code> and <code>{ let y = 5; y == x }</code> evaluate to <code>true</code>.</p>
+<figure><label class="margin-toggle" for="mn-structural-types">⊕</label><input type="checkbox" id="mn-structural-types" class="margin-toggle"><span class="marginnote">
+  Candid views types <code>Point2d</code>, modeling a point on a plane, and <code>ECPoint</code>, modeling a point on an elliptic curve, as interchangeable because they have the same structure.
+</span><div class="source-container"><pre class="source candid"><code><span class="line"><em>// These types are identical from Candid's point of view.</em></span>
+<span class="line">type Point2d = record { x : int; y : int };</span>
+<span class="line">type ECPoint = record { x : int; y : int };</span>
+</code></pre></div>
+</figure>
+<p>Usually, you don’t have to name types; you can inline them in service definitions (unless you define recursive types, of course).
+Assigning descriptive names can improve the interface readability, however.</p>
+<figure><label class="margin-toggle" for="mn-type-names">⊕</label><input type="checkbox" id="mn-type-names" class="margin-toggle"><span class="marginnote">
+  Candid allows you to omit type names for non-recursive type definitions.
+  Service types <code>S1</code> and <code>S2</code> are interchangeable.
+</span><div class="source-container"><pre class="source candid"><code><span class="line">type <b>S1</b> = service {</span>
+<span class="line">  store_profile : (nat, record { name : text; age : nat }) -&gt; ();</span>
+<span class="line">};</span>
+<span class="line"></span>
+<span class="line">type UserProfile = record { name : text; age : nat };</span>
+<span class="line">type UserId = nat;</span>
+<span class="line"></span>
+<span class="line">type <b>S2</b> = service {</span>
+<span class="line">  store_profile : (UserId, UserProfile) -&gt; ();</span>
+<span class="line">};</span>
+</code></pre></div>
+</figure>
+<h3 id="subtyping"><a href="#subtyping">Subtyping</a></h3>
+<p>One of Candid’s distinctive traits is the use of structural <a href="https://en.wikipedia.org/wiki/Subtyping">subtyping</a> for defining backward-compatible interface evolutions<label class="margin-toggle sidenote-number" for="sn-upgradable"></label><input type="checkbox" id="sn-upgradable" class="margin-toggle"><span class="sidenote">
+  The Candid spec calls such evolutions <a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md#upgrading-and-subtyping">type upgrades</a>.
+</span>.
+If a type <span class="math">T</span> is a subtype of type <span class="math">V</span> (denoted <span class="math">T &lt;: V</span>), then Candid can decode any value of type <span class="math">T</span> into a value of type <span class="math">V</span>.</p>
+<p>Let’s inspect some of the basic subtyping rules for simple values (not functions):</p>
+<ul class="arrows"><li>
+    Subtyping is <a href="https://en.wikipedia.org/wiki/Reflexive_relation">reflexive</a>: any type is a subtype of itself.
+    You can’t break the clients if you don’t change the interface.
+    </li><li>
+    Subtyping is <a href="https://en.wikipedia.org/wiki/Transitive_relation">transitive</a>: <span class="math">T &lt;: V</span> and <span class="math">V &lt;: W</span> implies <span class="math">T &lt;: W</span>.
+    A sequence of backward-compatible changes is backward-compatible.
+    </li><li>
+    Adding a new field to a record creates a subtype.<br>
+    <code>record { name : text; status : variant { user; admin } } &lt;: record { name : text } </code></li><li>
+    Less intuitively, removing an <em>optional</em> field also creates a subtype.
+    <br>
+    <code>record { name : text } &lt;: record { name : text; status : <b>opt</b> variant { user; admin } } </code></li><li>
+    Removing a case in a variant creates a subtype.<br>
+    <code>variant { yes; no } &lt;: variant { yes; no; unknown }</code></li><li>
+    All types are subtypes of the <code>reserved</code> type.
+    Candid will happily decode any type into a reserved field.
+</li></ul>
+<p>Function subtyping follows the standard <a href="https://en.wikipedia.org/wiki/Covariance_and_contravariance_(computer_science)#Function_types">variance rules</a>:
+function <code>g : C -&gt; D</code> is a subtype of function <code>f : A -&gt; B</code> if <code>A &lt;: C</code> and <code>D &lt;: B</code>.
+Informally, <code>g</code> must accept the same or more generic arguments as <code>f</code> and produce the same or more specific results as <code>f</code>.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-function-variance">⊕</label><input type="checkbox" id="mn-function-variance" class="margin-toggle"><span class="marginnote">
+  Function subtyping rules.
+  As the interface evolves, the input types become more general, while output types become more restricted.
+</span><p class="svg"><img src="/images/20-function-variance.svg"></p>
+</figure>
+<p>The rules mentioned in this section are by no means complete or precise; please refer to the <a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md#rules">typing rules</a> section of the Candid specification for a formal definition.</p>
+<p>Understanding the subtyping rules for functions is helpful for reasoning about safe interface migrations.
+Let’s consider a few examples of common changes that preserve backward compatibility of a function interface (note that compatibility rules for arguments and results are often reversed).</p>
+<ul class="arrows"><li>
+    Remove an unused record field (or, better, change its type to <code>reserved</code>) from the method <em>input</em> argument.
+    </li><li>
+    Add a new case to a variant in the method <em>input</em> argument.
+    </li><li>
+    Add a new field to a record in the method <em>result</em> type.
+    </li><li>
+    Remove an optional field from a record in the method <em>result</em> type.
+    </li><li>
+    Remove an alternative from a variant type in the method <em>result</em> type.
+</li></ul>
+<p>Before we close the subtyping discussion, let’s consider a sequence of type changes where an optional field gets removed and re-introduced later with a different type.</p>
+<figure><label class="margin-toggle" for="mn-subtype-opt">⊕</label><input type="checkbox" id="mn-subtype-opt" class="margin-toggle"><span class="marginnote">
+  An example of the <em>special opt subtyping rule</em>.
+  Step <span class="circled-ref">①</span> removes the optional <code>status</code> field; step <span class="circled-ref">②</span> adds an optional field with the same name but an incompatible type.
+  The horizontal bar applies the transitive property of subtyping, eliminating the intermediate type without the <code>status</code> field.
+</span><div class="source-container"><pre class="source candid"><code><span class="line">   record { name : text; status : opt variant { user;   admin   } }</span>
+<span class="line">&lt;: record { name : text } <span class="circled-ref">①</span></span>
+<span class="line">&lt;: record { name : text; status : opt variant { single; married } } <span class="circled-ref">②</span></span>
+<span class="line"><hr>   record { name : text; status : opt variant { user;   admin   } }</span>
+<span class="line">&lt;: record { name : text; status : opt variant { single; married } }</span>
+</code></pre></div>
+</figure>
+<p>Indeed, in Candid, <span class="math">opt T &lt;: opt V</span> holds for any types <span class="math">T</span> and <span class="math">V</span>.
+This counter-intuitive property bears the name of the <em>special opt rule</em>, and it causes a lot of grief in practice.
+Multiple developers reported changing an optional field in an incompatible way, causing the corresponding values to decode as <code>null</code> after the upgrade.</p>
+<p>Joachim Breitner’s <a href="https://www.joachim-breitner.de/blog/784-A_Candid_explainer__Opt_is_special">opt is special</a> article explores the topic in more detail and provides historical background.</p>
+<h3 id="binary-message-anatomy"><a href="#binary-message-anatomy">Binary message anatomy</a></h3>
+<p>In Candid, a binary message defines a tuple of <span class="math">n</span> values and logically consists of three parts:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+    The <em>type table</em> part defines composite types (<a href="https://internetcomputer.org/docs/current/references/candid-ref#type-record--n--t--">records</a>, <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-variant--n--t--">variants</a>, <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-opt-t">options</a>, <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-vec-t">vectors</a>, etc.) required to decode the message.
+    </li><li data-num-glyph="②">
+    The <em>types</em> part is an <span class="math">n</span>-tuple of integers specifying the types <span class="math">(T<sub>1</sub>,…,T<sub>n</sub>)</span> of values in the next section.
+    The types are either primitives (negative integers) or pointers into the type table (non-negative integers).
+    </li><li data-num-glyph="③">
+    The <em>values</em> part is an <span class="math">n</span>-tuple of serialized values <span class="math">(V<sub>1</sub>,…,V<sub>n</sub>)</span>.
+</li></ol>
+<p>The tuple values usually correspond to service method arguments or results.
+For example, if we call method <code>transfer : (to : principal, amount : nat) -&gt; ()</code>, the argument tuple will contain two values: a principal and a natural number, and the result tuple will be empty.</p>
+<h3 id="encoding-an-empty-tuple"><a href="#encoding-an-empty-tuple">Example: encoding an empty tuple</a></h3>
+<p>Let’s first consider the shortest possible Candid message: an empty tuple.</p>
+<figure><label class="margin-toggle" for="mn-empty-tuple-encode-command">⊕</label><input type="checkbox" id="mn-empty-tuple-encode-command" class="margin-toggle"><span class="marginnote">
+  The shell command to encode an empty tuple using the <code>didc</code> tool.
+</span><div class="source-container"><pre class="source shell"><code><span class="line">$ didc encode '()'</span>
+<span class="line">4449444c0000</span>
+</code></pre></div>
+</figure>
+<p>We need six bytes to encode <q>nothing</q>.
+Let’s take a closer look at them.</p>
+<figure><label class="margin-toggle" for="mn-empty-tuple-ascii">⊕</label><input type="checkbox" id="mn-empty-tuple-ascii" class="margin-toggle"><span class="marginnote">
+  Bytes of an empty tuple encoding.
+</span><div class="source-container"><pre class="source ascii"><code><span class="line">           ⎡ 44 ⎤ D</span>
+<span class="line">    Magic  ⎢ 49 ⎥ I</span>
+<span class="line">           ⎢ 44 ⎥ D</span>
+<span class="line">           ⎣ 4c ⎦ L</span>
+<span class="line"></span>
+<span class="line">Type table [ 00 ] number of type table entries (0)</span>
+<span class="line"></span>
+<span class="line">    Types  [ 00 ] number of tuple elements (0)</span>
+</code></pre></div>
+</figure>
+<p>Even this trivial message reveals a few interesting details.</p>
+<ul class="arrows"><li>
+    All Candid messages begin with the <code>DIDL</code> byte string.
+    Most likely, <code>DIDL</code> stands for <q><span class="smallcaps">dfinity</span> Interface Definition Language</q>.
+    </li><li>
+    This message’s values is missing in this message because the tuple size is zero.
+</li></ul>
+<h3 id="encoding-a-tree"><a href="#encoding-a-tree">Example: encoding a tree</a></h3>
+<p>Let’s consider an encoding of a <a href="https://en.wikipedia.org/wiki/Rose_tree">rose tree</a> with 32-bit integers in the leaves.</p>
+<figure><label class="margin-toggle" for="mn-rose-tree">⊕</label><input type="checkbox" id="mn-rose-tree" class="margin-toggle"><span class="marginnote">
+  A definition of a <a href="https://en.wikipedia.org/wiki/Rose_tree">rose tree</a> data type containing 32-bit integers (top) and the Candid representation of the same type (bottom).
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><em>// Rust</em></span>
+<span class="line">pub enum Tree { Leaf(i32), Forest(Vec&lt;Tree&gt;) }</span>
+</code></pre></div>
+<div class="source-container"><pre class="source candid"><code><span class="line"><em>// Candid</em></span>
+<span class="line">type Tree = variant { leaf : int32; forest : vec Tree };</span>
+</code></pre></div>
+</figure>
+<p>Let’s rewrite the <code>Tree</code> type using at most one composite type per type definition.
+This <q>canonical</q> form will help us better understand the message type table.</p>
+<figure><label class="margin-toggle" for="mn-rose-tree-canonical">⊕</label><input type="checkbox" id="mn-rose-tree-canonical" class="margin-toggle"><span class="marginnote">
+  The canonical representation of the <code>Tree</code> type.
+</span><div class="source-container"><pre class="source candid"><code><span class="line">type T0 = variant { leaf : int32; forest : T1 };</span>
+<span class="line">type T1 = vec T0;</span>
+</code></pre></div>
+</figure>
+<p>Let’s encode a fork with two children equivalent to <code>Tree::Forest(vec![Tree::Leaf(1), Tree::Leaf(2)])</code> Rust expression using the <a href="https://github.com/dfinity/candid/tree/f7166f47d895e411a74de1eba4b347ac75f5fd26/tools/didc">didc</a> tool.</p>
+<figure><label class="margin-toggle" for="mn-encode-command">⊕</label><input type="checkbox" id="mn-encode-command" class="margin-toggle"><span class="marginnote">
+  The shell commands to encode a tree using the <code>didc</code> tool.
+  The <code>--defs</code> option loads type definitions from a file; the <code>--types</code> option specifies the types of values in the tuple (see point <span class="circled-ref">②</span> in the <a href="#binary-message-anatomy">binary message anatomy</a> section.
+</span><div class="source-container"><pre class="source shell"><code><span class="line">$ echo 'type Tree = variant { leaf : int32; forest : vec Tree };' &gt; tree.did</span>
+<span class="line">$ didc encode \</span>
+<span class="line">       --defs   tree.did \</span>
+<span class="line">       --types  '(Tree)' \</span>
+<span class="line">       '(variant { forest = vec { variant { leaf = 1 }; variant { leaf = 2 } } })'</span>
+<span class="line">4449444c026b029e87c0bd0475dd99a2ec0f016d000100010200010000000002000000</span>
+</code></pre></div>
+</figure>
+<p>Let’s look closely at the bytes.</p>
+<figure><div class="source-container"><pre class="source ascii"><code><span class="line">           ⎡ 44 ⎤ D</span>
+<span class="line">    Magic  ⎢ 49 ⎥ I</span>
+<span class="line">           ⎢ 44 ⎥ D</span>
+<span class="line">           ⎣ 4c ⎦ L</span>
+<span class="line"></span>
+<span class="line">           ⎡ 02 ] number of entries (2)</span>
+<span class="line">           ⎢ <a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md#types">6b</a> ] entry #0: variant type</span>
+<span class="line">           ⎢ 02 ] number of fields (2)</span>
+<span class="line">           ⎢ 9e ⎤</span>
+<span class="line">           ⎢ 87 ⎥</span>
+<span class="line">           ⎢ c0 ⎥ hash(&quot;leaf&quot;)</span>
+<span class="line">           ⎢ bd ⎥</span>
+<span class="line">           ⎢ 04 ⎦</span>
+<span class="line">Type table ⎢ <a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md#types">75</a> ] field #0 type: int32</span>
+<span class="line">           ⎢ dd ⎤</span>
+<span class="line">           ⎢ 99 ⎥</span>
+<span class="line">           ⎢ a2 ⎥ hash(&quot;forest&quot;)</span>
+<span class="line">           ⎢ ec ⎥</span>
+<span class="line">           ⎢ 0f ⎦</span>
+<span class="line">           ⎢ 01 ] field #1 type: see entry #1</span>
+<span class="line">           ⎢ 6d ] entry #1: vec type</span>
+<span class="line">           ⎣ 00 ] vec item type: entry #0</span>
+<span class="line"></span>
+<span class="line">    Types  ⎡ 01 ] number of tuple elements (1)</span>
+<span class="line">           ⎣ 00 ] type of the first element (entry #0)</span>
+<span class="line"></span>
+<span class="line">           ⎡ 01 ] value #0: variant field #1 (&quot;forest&quot;)</span>
+<span class="line">           ⎢ 02 ] number of elements in the vector</span>
+<span class="line">           ⎢ 00 ] variant field #0 (&quot;leaf&quot;)</span>
+<span class="line">           ⎢ 01 ⎤</span>
+<span class="line">           ⎢ 00 ⎥ 1 : int32 (little-endian)</span>
+<span class="line">    Values ⎢ 00 ⎥</span>
+<span class="line">           ⎢ 00 ⎦</span>
+<span class="line">           ⎢ 00 ] variant field #0 (&quot;leaf&quot;)</span>
+<span class="line">           ⎢ 02 ⎤</span>
+<span class="line">           ⎢ 00 ⎥ 2 : int32 (little-endian)</span>
+<span class="line">           ⎢ 00 ⎥</span>
+<span class="line">           ⎣ 00 ⎦</span>
+</code></pre></div>
+</figure>
+<p>We can observe a few interesting details about binary encoding.</p>
+<ul class="arrows"><li>
+    The binary format uses signed integers to represent types.
+    Negative integers correspond to built-in types and type constructors; non-negative integers are type table indices.
+    </li><li>
+    The type table contains field hashes, not symbolic names.
+    </li><li>
+    The value encoding uses field indices within the type, not hashes.
+    Encoding small integers requires less space.
+</li></ul>
+</section>
+<section><h2 id="faq"><a href="#faq">FAQ</a></h2>
+<h3 id="faq-remove-field"><a href="#faq-remove-field">Can I remove a record field?</a></h3>
+<p>Short answer: Sometimes you can, but please don’t.</p>
+<p>Removing an <code>opt</code> field is always safe, but prefer marking it <code>reserved</code> instead.
+Reserved fields make it unlikely that future service developers will use the field name in an unexpected way.</p>
+<div class="source-container"><pre class="source good"><code><span class="line"><em>// OK: the age field is optional.</em></span>
+<span class="line"> type User = record {</span>
+<span class="line">   name : text;</span>
+<span class="line">-  age : opt nat;</span>
+<span class="line"> };</span>
+<span class="line"></span>
+<span class="line"> service UserService : {</span>
+<span class="line">  add_user : (User) -&gt; (nat);</span>
+<span class="line">  get_user : (nat) -&gt; (User) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<div class="source-container"><pre class="source good"><code><span class="line"><em>// GOOD: marking an opt field as reserved.</em></span>
+<span class="line"> type User = record {</span>
+<span class="line">   name : text;</span>
+<span class="line">-  age : opt nat;</span>
+<span class="line">+  age : <b>reserved</b>;</span>
+<span class="line"> };</span>
+<span class="line"></span>
+<span class="line"> service UserService : {</span>
+<span class="line">  add_user : (User) -&gt; (nat);</span>
+<span class="line">  get_user : (nat) -&gt; (User) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<p>The answer depends on the record type variance if the field is not <code>opt</code>.</p>
+<p>You can remove the field if the type appears only in method arguments but prefer marking it as <code>reserved</code> instead.</p>
+<div class="source-container"><pre class="source good"><code><span class="line"> service UserService : {</span>
+<span class="line">-  add_user : (record { name : text;  age : nat }) -&gt; (nat);</span>
+<span class="line">+  add_user : (record { name : text             }) -&gt; (nat);</span>
+<span class="line"> }</span>
+</code></pre></div>
+<div class="source-container"><pre class="source good"><code><span class="line"> service UserService : {</span>
+<span class="line">-  add_user : (record { name : text; age : nat      }) -&gt; (nat);</span>
+<span class="line">+  add_user : (record { name : text; <b>age : reserved</b> }) -&gt; (nat);</span>
+<span class="line"> }</span>
+</code></pre></div>
+<p>You should preserve the field if the type appears in a method return type.</p>
+<div class="source-container"><pre class="source bad"><code><span class="line"><em>// BAD: the User type appears as an argument <b>and</b> a result.</em></span>
+<span class="line"> type User = record {</span>
+<span class="line">   name : text;</span>
+<span class="line">-  age : nat;</span>
+<span class="line">};</span>
+<span class="line"></span>
+<span class="line"> service UserService : {</span>
+<span class="line">  add_user : (User) -&gt; (nat);</span>
+<span class="line">  get_user : (nat) -&gt; (User) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<h3 id="faq-remove-field"><a href="#faq-remove-field">Can I add a record field?</a></h3>
+<p>Adding an <code>opt</code> field is always safe.</p>
+<div class="source-container"><pre class="source good"><code><span class="line"> type User = record {</span>
+<span class="line">   name : text;</span>
+<span class="line">+  age : opt nat;</span>
+<span class="line">};</span>
+<span class="line"></span>
+<span class="line"> service UserService : {</span>
+<span class="line">  add_user : (User) -&gt; (nat);</span>
+<span class="line">  get_user : (nat) -&gt; (User) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<p>For non-<code>opt</code> fields, the answer depends on the type variance.</p>
+<p>You can safely add a non-optional field if the record appears only in method return types.
+</p>
+<div class="source-container"><pre class="source good"><code><span class="line"> service UserService : {</span>
+<span class="line">-  get_user : (nat) -&gt; (record { name : text            }) query;</span>
+<span class="line">+  get_user : (nat) -&gt; (record { name : text; <b>age : nat</b> }) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<p>Adding a non-optional field breaks backward compatibility if the record appears in a method argument.</p>
+<div class="source-container"><pre class="source bad"><code><span class="line"> <em>// BAD: breaks the client code</em></span>
+<span class="line"> service UserService : {</span>
+<span class="line">-  add_user : (record { name : text            }) -&gt; (nat);</span>
+<span class="line">+  add_user : (record { name : text; <b>age : nat</b> }) -&gt; (nat);</span>
+<span class="line"> }</span>
+</code></pre></div>
+<h3 id="faq-remove-alternative"><a href="#faq-remove-alternative">Can I remove a variant alternative?</a></h3>
+<p>Changing optional variant fields is always<label class="margin-toggle sidenote-number" for="sn-remove-candid-0.9"></label><input type="checkbox" id="sn-remove-candid-0.9" class="margin-toggle"><span class="sidenote">
+  If you use Rust, make sure you use <a href="https://crates.io/crates/candid">candid</a> package version 0.9 or higher.
+</span> safe.</p>
+<div class="source-container"><pre class="source good"><code><span class="line"> <em>// OK: changing an optional field</em></span>
+<span class="line"> type OrderDetails = record {</span>
+<span class="line">-  size : <b>opt</b> variant { tiny; small; medium; large }</span>
+<span class="line">+  size : <b>opt</b> variant {       small; medium; large }</span>
+<span class="line"> };</span>
+<span class="line"> service UserService : {</span>
+<span class="line">   order_coffee : (OrderDetails) -&gt; (nat);</span>
+<span class="line">   get_order : (nat) -&gt; (OrderDetails) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<p>If the variant field is not optional, the answer depends on the type variance.</p>
+<p>You can remove alternatives if the variant appears only in method results.</p>
+<div class="source-container"><pre class="source good"><code><span class="line"> service CoffeeShop : {</span>
+<span class="line">-  order_size : (nat) -&gt; (variant { tiny; small; medium; large }) query;</span>
+<span class="line">+  order_size : (nat) -&gt; (variant {       small; medium; large }) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<div class="source-container"><pre class="source bad"><code><span class="line"> <em>// BAD: this change might break clients.</em></span>
+<span class="line"> service CoffeeShop : {</span>
+<span class="line">-  order_coffee : (record { size : variant { tiny; small; medium; large } }) -&gt; (nat);</span>
+<span class="line">+  order_coffee : (record { size : variant {       small; medium; large } }) -&gt; (nat);</span>
+<span class="line"> }</span>
+</code></pre></div>
+<h3 id="faq-remove-alternative"><a href="#faq-remove-alternative">Can I add a variant alternative?</a></h3>
+<p>Changing optional variant fields is always<label class="margin-toggle sidenote-number" for="sn-remove-candid-0.9"></label><input type="checkbox" id="sn-remove-candid-0.9" class="margin-toggle"><span class="sidenote">
+  If you use Rust, make sure you use <a href="https://crates.io/crates/candid">candid</a> package version 0.9 or higher.
+</span> safe.</p>
+<div class="source-container"><pre class="source good"><code><span class="line"> <em>// OK: changing an optional field</em></span>
+<span class="line"> type User = record {</span>
+<span class="line">   name : text;</span>
+<span class="line">-  age : <b>opt</b> variant { child;           adult }</span>
+<span class="line">+  age : <b>opt</b> variant { child; <b>teenager;</b> adult }</span>
+<span class="line">};</span>
+<span class="line"></span>
+<span class="line"> service UserService : {</span>
+<span class="line">   add_user : (User) -&gt; (nat);</span>
+<span class="line">   get_user : (nat) -&gt; (User) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<p>If the variant field is not optional, the answer depends on the type variance.</p>
+<p>If the variant appears only in method arguments, you can safely add new alternatives.</p>
+<div class="source-container"><pre class="source good"><code><span class="line"> service UserService : {</span>
+<span class="line">-  add_user : (record { name : text;  age : variant { child;           adult }}) -&gt; (nat);</span>
+<span class="line">+  add_user : (record { name : text;  age : variant { child; <b>teenager</b>; adult }}) -&gt; (nat);</span>
+<span class="line"> }</span>
+</code></pre></div>
+<div class="source-container"><pre class="source bad"><code><span class="line"><em>// BAD: the User type appears as an argument <b>and</b> a result.</em></span>
+<span class="line"> type User = record {</span>
+<span class="line">   name : text;</span>
+<span class="line">-  age : variant { child;           adult }</span>
+<span class="line">+  age : variant { child; <b>teenager;</b> adult }</span>
+<span class="line"> };</span>
+<span class="line"> service UserService : {</span>
+<span class="line">   add_user : (User) -&gt; (nat);</span>
+<span class="line">   get_user : (nat) -&gt; (User) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<h3 id="faq-change-init-args"><a href="#faq-change-init-args">Can I change init args?</a></h3>
+<p>Short answer: yes.</p>
+<p>Service init args are not part of the public interface.
+Only service maintainers encode the init args; service clients don’t have to worry about them.
+Service interface compatibility tools, such as <a href="https://github.com/dfinity/candid/blob/e212e096cb726548c6d6edba1189375dc5ad364e/tools/didc/README.md"><code>didc check</code></a>, ignore init args.</p>
+<h3 id="faq-add-result"><a href="#faq-add-result">Can I extend return values?</a></h3>
+<p>Yes.
+You can safely append a new value to a method result sequence.</p>
+<div class="source-container"><pre class="source good"><code><span class="line"> service TokenService : {</span>
+<span class="line">-  balance : (of : principal) -&gt; (nat) query;</span>
+<span class="line">+  balance : (of : principal) -&gt; (amount : nat, last_tx_id : nat) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<p>Reordering arguments or results is a breaking change.</p>
+<div class="source-container"><pre class="source bad"><code><span class="line"> service TokenService : {</span>
+<span class="line">-  balance : (of : principal) -&gt; (amount : nat) query;</span>
+<span class="line">+  balance : (of : principal) -&gt; (last_tx_id : nat, amount : nat) query;</span>
+<span class="line"> }</span>
+</code></pre></div>
+<h3 id="faq-post-upgrade-arg"><a href="#faq-post-upgrade-arg">How do I specify the post_upgrade arg?</a></h3>
+<p>As of June 2023, the Candid service definition language does not support specifying <code>post_upgrade</code> arguments in the service definition.</p>
+<p>However, there exists a workaround.
+Most canister management tools use the same type definition for encoding the init args and upgrade args.
+You can define a variant type to distinguish between these.</p>
+<figure><label class="margin-toggle" for="mn-post-upgrade-type">⊕</label><input type="checkbox" id="mn-post-upgrade-type" class="margin-toggle"><span class="marginnote">
+  Using a variant type for differentiating between service init and upgrade arguments.
+</span><div class="source-container"><pre class="source candid"><code><span class="line"><b>type</b> ServiceArg = variant {</span>
+<span class="line">  Init    : record { minter : principal };</span>
+<span class="line">  <em>// We might want to override the minter on upgrade.</em></span>
+<span class="line">  Upgrade : record { minter : <b>opt</b> principal }</span>
+<span class="line">};</span>
+<span class="line"></span>
+<span class="line"><b>service</b> TokenService : (ServiceArg) -&gt; {</span>
+<span class="line">  <em>// …</em></span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<h3 id="faq-deterministic"><a href="#faq-deterministic">Is Candid binary encoding deterministic?</a></h3>
+<p>No.
+Encoders have a lot of freedom in optimizing the rearranging the type table.
+Upgrading to a newer version of the Candid library might change the exact message bytes the library produces.</p>
+</section>
+<section><h2 id="resources"><a href="#resources">Resources</a></h2>
+<ul class="arrows"><li>
+    Joachim Breitner’s <a href="https://www.joachim-breitner.de/blog/782-A_Candid_explainer__The_rough_idea">Candid explainer</a> blog post series contains a lot of insight and historical background.
+    The <a href="https://www.joachim-breitner.de/blog/786-A_Candid_explainer__Quirks">Quirks</a> part is especially relevant for engineers.
+    This <a href="https://forum.dfinity.org/t/candid-explainer-first-post-published/6787">DFINITY forum post</a> announcing the series might be a fun read if you are into type theory.
+    </li><li><a href="https://fxa77-fiaaa-aaaae-aaana-cai.raw.ic0.app/explain">Ben Lynn’s Candid explainer</a> tool will help you analyze encoded Candid messages.
+    </li><li>
+    The <a href="https://internetcomputer.org/docs/current/developer-docs/build/candid/candid-intro/">Candid for developers</a> section on the Internet Computer portal is an excellent reference for the language.
+    </li><li><a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md">The Candid Specification</a> is the authoritative source of truth for all facets of the language.
+</li></ul>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/27-extending-https-outcalls.html">Extending HTTPS outcalls</a></li><li><a href="/posts/08-ic-xnet.html">IC internals: XNet protocol</a></li><li><a href="/posts/06-ic-orthogonal-persistence.html">IC internals: orthogonal persistence</a></li><li><a href="/posts/02-ic-state-machine-replication.html">IC internals: replicated state machine</a></li><li><a href="/posts/19-eventlog.html">ckBTC internals: event log</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/21-machs-principle.html"> ←Mach’s principle</a></div><div id="older"><a href="/posts/19-eventlog.html">ckBTC internals: event log→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

@@ -169,7 +169,7 @@ let render_social_link link icon title_text alt_text extra_class : Html.t =
       [ class_ "icon-link"
       ; href_ url
       ; attr "title" title_text
-      ; rel_ "nofollow"
+      ; rel_ "nofollow noopener noreferrer"
       ; attr "target" "_blank"
       ]
       (leaf "img"

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="bazel,rust"><meta name="description" content="Why DFINITY builds Rust with Bazel."><title>Scaling Rust builds with Bazel</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/17-scaling-rust-builds-with-bazel.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/17-scaling-rust-builds-with-bazel.html">Scaling Rust builds with Bazel</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2023-03-20</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2023-03-20</span></span><span class="post-icons"><a class="icon-link" href="https://news.ycombinator.com/item?id=35270660" title="Discuss on Hacker News" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/y18.svg" alt="Hacker News"></a><a class="icon-link" href="https://www.reddit.com/r/rust/comments/11xxffc/blog_post_scaling_rust_builds_with_bazel/" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#introduction">Introduction</a></li><li class="toc toc-level-1"><a href="#cargo-limitations">Cargo’s limitations</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#not-a-build-system">Cargo is not a build system</a></li><li class="toc toc-level-2"><a href="#poor-caching">Poor caching and dependency tracking</a></li></ul></li><li class="toc toc-level-1"><a href="#the-ci-saga">The CI saga</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#the-nix-days">The nix days</a></li><li class="toc toc-level-2"><a href="#the-iceberg">The iceberg</a></li><li class="toc toc-level-2"><a href="#enter-bazel">Enter Bazel</a></li></ul></li><li class="toc toc-level-1"><a href="#the-migration-process">The migration process</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#prototype">Build a prototype</a></li><li class="toc toc-level-2"><a href="#dig-a-tunner-from-the-middle">Dig a tunnel from the middle</a></li><li class="toc toc-level-2"><a href="#run-ci-early">Run CI early</a></li><li class="toc toc-level-2"><a href="#one-package-at-a-time">One package at a time</a></li><li class="toc toc-level-2"><a href="#test-parity">Ensure test parity</a></li><li class="toc toc-level-2"><a href="#rough-edges">Rough edges</a></li></ul></li><li class="toc toc-level-1"><a href="#acknowledgements">Acknowledgments</a></li></ul><hr>
+
+<section><h2 id="introduction"><a href="#introduction">Introduction</a></h2>
+<p>As of March 2023, the <a href="https://github.com/dfinity/ic">Internet Computer repository</a> contains about six hundred thousand lines of Rust code.
+Last year, we started using <a href="https://bazel.build/">Bazel</a> as our primary build system, and we couldn’t have been happier with the switch.
+This article explains the motivation behind this move and the migration process details.</p>
+</section>
+<section><h2 id="cargo-limitations"><a href="#cargo-limitations">Cargo’s limitations</a></h2>
+<p>Many Rust newcomers, especially those with a C++ background, swear by cargo.
+Rust tooling is fantastic for beginners, but we became dissatisfied with cargo as the project size increased.
+Most of our complaints fall into two categories.</p>
+<h3 id="not-a-build-system"><a href="#not-a-build-system">Cargo is not a build system</a></h3>
+<div class="epigraph"><blockquote><p>
+    Cargo is the Rust <em>package manager</em>.
+    Cargo downloads your Rust package’s dependencies, compiles your packages, makes distributable packages, and uploads them to crates.io.
+</p><footer><a href="https://doc.rust-lang.org/cargo/">The Cargo Book</a></footer></blockquote></div>
+<p>Let’s acknowledge the elephant in the room: cargo is not a build system; it’s a tool for building and distributing Rust packages.
+It can build Rust code for a specific platform with a given set of features in a single invocation.
+Cargo chose simplicity and ease of use over generality and scalability; it does not track dependencies well or support arbitrary build graphs.</p>
+<p>These trade-offs make cargo easy to pick up but impose severe limitations in a complex project.
+There are workarounds, such as <a href="https://github.com/matklad/cargo-xtask">xtask</a>, but they will only get you so far.
+Let’s consider an example of what many of our tests must do:</p>
+<ul class="arrows"><li>Build a sandbox binary for executing WebAssembly.
+  </li><li>Build a WebAssembly program.
+  </li><li>Post-process the WebAssembly program (strip some custom sections and compress the result, for example).
+  </li><li>Build and execute a test binary that launches the sandbox binary, sends the WebAssembly program to the sandbox and interacts with the program.
+</li></ul>
+<p>This simple scenario requires invoking cargo three times with different arguments and appropriately post-processing and threading the build artifacts.
+There is no way to express such a test using cargo alone; another build system must orchestrate the test execution.</p>
+<h3 id="poor-caching"><a href="#poor-caching">Poor caching and dependency tracking</a></h3>
+<p>Like notorious <a href="https://en.wikipedia.org/wiki/Make_(software)">Make</a>, cargo relies on file modification timestamps for incremental builds.
+Updating code comments or switching git branches can invalidate cargo’s cache, causing long rebuilds.
+The <a href="https://github.com/mozilla/sccache">sccache</a> tool can improve cache hits, but we saw no improvement from using it on our <a href="https://en.wikipedia.org/wiki/Continuous_integration">continuous integration</a> (CI) servers.</p>
+<p>Cargo’s dependency tracking facilities are relatively simplistic.
+For example, we can tell cargo to <a href="https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script">rerun build.rs</a> if some input files or environment variables change.
+Still, cargo has no idea which files or other resources tests might be accessing, so it must be conservative with caching.
+Consequently, we often build way more than we need to, and sometimes our builds fail with confusing errors that go away after <code>cargo clean</code>.</p>
+</section>
+<section><h2 id="the-ci-saga"><a href="#the-ci-saga">The CI saga</a></h2>
+<p>Over the project life, we used various tools to mitigate the cargo’s limitations, with mixed success. </p>
+<h3 id="the-nix-days"><a href="#the-nix-days">The nix days</a></h3>
+<p>When we started the Rust implementation in mid-2019, we relied on <a href="https://nixos.org/">nix</a> to build all our software and set up the development environment in a cross-platform way (we develop both on macOS and Linux).</p>
+<p>As our code base grew, we started to feel nix’s limitations.
+The unit of caching in nix is a <a href="https://nixos.org/manual/nix/stable/language/derivations.html">derivation</a>.
+If we wanted to take full advantage of nix’s caching capabilities, we would have to &quot;nixify&quot; all our external dependencies and internal Rust packages (one derivation per Rust package).
+After a long fight with build reproducibility issues, our glorious dev-infra team implemented fine-grained caching using the <a href="https://github.com/cargo2nix/cargo2nix">cargo2nix</a> project.</p>
+<p>Unfortunately, most developers in the team were uncomfortable with nix.
+It became a constant source of confusion and lost developer productivity.
+Since nix has a steep learning curve, only a few nix wizards could understand and modify the build rules.
+This nix-alienation bifurcated our build environment: the CI servers built the code with nix-build, and developers built the code by entering the nix-shell and invoking cargo.</p>
+<h3 id="the-iceberg"><a href="#the-iceberg">The iceberg</a></h3>
+<p>The final blow to the nix story came around late-2020, close to the network launch.
+Our security team chose Ubuntu as the deployment target and insisted that production binaries link against the regularly updated system libraries (libc, libc++, openssl, etc.) the deployment platform provides.
+This setup is hard to achieve in nix without compromising correctness<label class="margin-toggle sidenote-number" for="sn-patchelf"></label><input type="checkbox" id="sn-patchelf" class="margin-toggle"><span class="sidenote">
+    We considered using <a href="https://github.com/NixOS/patchelf">patchelf</a>, but it’s a bad idea in general: <code>libc++</code> from nix packages can be incompatible with the one installed on the deployment platform.
+</span>.</p>
+<p>Furthermore, the infrastructure team got a few new members unfamiliar with nix and decided to switch to a more familiar technology, Docker containers.
+The team implemented a new build system that runs cargo builds inside a docker container with the versions of dynamic libraries identical to those in the production environment.</p>
+<p>The new system grew organically and eventually evolved into a hot mess of a hundred GitLab Yaml configuration files calling shell and python scripts in the correct order.
+These scripts used the known filesystem locations and environment variables to pass the build artifacts around.
+Most integration tests ended up as shell scripts expected some inputs that the CI pipeline produces.</p>
+<p>The new Docker-based build system lost the granular caching capabilities of nix-build.
+The infra team attempted to build a custom caching system but eventually abandoned the project.
+Cache invalidation is a challenging problem indeed.</p>
+<p>With the new system, the chasm between the CI and development environments deepened further because the nix-shell didn’t go anywhere.
+The developers continued to use nix-shell for everyday development.
+It’s hard to pinpoint the exact reason.
+I attribute that to the fact that entering the nix-shell is less invasive than entering a docker container, and nix-shell does not require running in a virtual machine on macOS (Rust compile times are slow).
+Also, the infra team was so busy rewriting the build system that improving the everyday developer experience was out of reach.</p>
+<p>I call this setup an &quot;iceberg&quot;: on the surface, a developer needed only nix and cargo to work on the code, but in practice, that was only 10% of the story.
+Since most tests required a CI environment, developers had to create merge requests to check whether their code worked beyond the basic unit tests.
+The CI didn’t know developers were interested in running a specific test and executed the entire test suite, wasting scarce computing resources and slowing the development cycle.</p>
+<p>The tests accumulated over time, the load on the CI system grew, and eventually, the builds became unbearably slow and flaky.
+It was time for another change.</p>
+<h3 id="enter-bazel"><a href="#enter-bazel">Enter Bazel</a></h3>
+<p>Among about a dozen build systems I worked with, Bazel is the only one that made sense to me<label class="margin-toggle sidenote-number" for="sn-never-learned"></label><input type="checkbox" id="sn-never-learned" class="margin-toggle"><span class="sidenote">
+  It might also well be that I <a href="https://www.roguelazer.com/2020/07/etcd-or-why-modern-software-makes-me-sad/#fn:infection">never learned to do anything without involving protocol buffers</a>.
+</span>.
+One of my favorite features of Bazel is how explicit and intuitive it is for everyday use.</p>
+<p>Bazel is like a good videogame: it’s easy to learn and challenging to master.
+It’s easy to define and wire build targets (that’s what most engineers do), but adding new build rules requires some expertise.
+Every engineer at Google can write correct build files without knowing much about Blaze (Google’s internal variant of Bazel).
+The build files are verbose bordering plain boring, but it’s a good thing.
+They tell the reader precisely what the module’s artifacts and dependencies are.</p>
+<p>Bazel offers many features, but we mostly cared about the following:
+</p>
+<ul class="arrows"><li>
+    Bazel is extensible enough to cover all our use cases.
+    Bazel gracefully handled everything we threw at it: Linux and macOS binaries, WebAssembly programs, OS images, <a href="https://github.com/bazelbuild/rules_docker">Docker containers</a>, <a href="https://github.com/dfinity/rules_motoko">Motoko programs</a>, <a href="https://lamport.azurewebsites.net/tla/tla.html">TLA+ specifications</a>, etc.
+    The best part is: We can also combine and mix these artifacts in any way we like.
+  </li><li>
+    Aggressive caching.
+    The <a href="https://bazel.build/docs/sandboxing">sandboxing</a> feature ensures that build actions do not use undeclared dependencies, making it much safer to cache build artifacts and, most importantly for us, test results.
+  </li><li><a href="https://bazel.build/remote/caching">Remote caching</a>.
+    We use the cache from our CI system to speed up developer builds.
+  </li><li><a href="https://bazel.build/basics/distributed-builds">Distributed builds</a>.
+    Bazel can distribute tasks across multiple machines to finish builds even faster.
+  </li><li><a href="https://bazel.build/concepts/visibility">Visibility control</a>.
+    Bazel allows package authors to mark some packages as internal to prevent other teams from importing the code.
+    Controlling dependency graphs is crucial for fast builds.
+</li></ul>
+<p>Even more importantly, Bazel unifies our development and CI environments.
+All our tests are Bazel tests now, meaning that every developer can run any test locally.
+At its heart, our CI job is <code>bazel test --config=ci //...</code>.</p>
+<p>One nice feature of our Bazel setup is that we can configure versions of our external dependencies in a <a href="https://github.com/dfinity/ic/blob/2d985cf8cf61dab9fd609ab589bd7e0990d4dbf2/bazel/external_crates.bzl">single file</a>.
+Ironically, cargo developers implemented support for <a href="https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#inheriting-a-dependency-from-a-workspace">workspace dependency inheritance</a> <a href="https://blog.rust-lang.org/2022/09/22/Rust-1.64.0.html#cargo-improvements-workspace-inheritance-and-multi-target-builds">a few weeks after</a> we finished the migration.</p>
+</section>
+<section><h2 id="the-migration-process"><a href="#the-migration-process">The migration process</a></h2>
+<div class="epigraph"><blockquote><p>
+    You are such a naïve academic. I asked you how to do it, and you told me what I should do. I know what I need to do. I just don’t know how to do it.
+</p><footer>Attributed to <a href="https://en.wikipedia.org/wiki/Andrew_Grove">Andrew Grove</a>; see <a href="https://www.amazon.com/Disciplines-Execution-Achieving-Wildly-Important/dp/1491517751"><q>The 4 Disciplines of Execution</q></a> by Jim Huling, Chris McChesney, and Sean Covey, page xx.</footer></blockquote></div>
+<p>The idea of migrating the build system came from a few engineers (read Xooglers) who were tired of fighting with long build times and poor tooling.
+To our surprise, a few volunteers expressed interest in joining the rebellion at its earliest stage.
+We needed a plan for executing the switch and getting the management’s buy-in.</p>
+<p>The first rule of large codebases is to introduce significant changes gradually. This section describes our process of migration, which took several months.</p>
+<h3 id="prototype"><a href="#prototype">Build a prototype</a></h3>
+<p>We started migration by building a prototype.
+We created a sample repository that mimicked the features of our code base that we expected to bring the most trouble, such as generating Protocol Buffer types using the prost library, compiling Rust to WebAssembly and native code in a single invocation, and setting up rust-analyzer support.
+Once we knew that the most complex problems we face have a solution at a small scale, we presented the case to the management, explained the final vision, how many people and time we needed, and got a green light.
+Now the real work began.</p>
+<h3 id="dig-a-tunner-from-the-middle"><a href="#dig-a-tunner-from-the-middle">Dig a tunnel from the middle</a></h3>
+<p>Our CI was a multi-stage process that treated cargo as a black box producing binaries from the source code.
+There were two major work streams in our mission to minimize build times:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+    Replace the spaghetti of YAML files and scripts using cargo as a black box with neat Bazel targets with explicit dependencies.
+    This change would bring clarity and confidence to our CI routines and enable developers to access the build artifacts without an entire CI run.
+  </li><li data-num-glyph="②">
+    Use Bazel to build binaries from Rust code directly, bypassing cargo.
+    This change would significantly improve our cache hit rate and allow us to avoid running expensive tests on every change.
+</li></ol>
+<p>These work streams require different skill sets, and we wanted to start working on them in parallel.
+To unblock the first workstream, we created a simple Bazel rule, <code>cargo_build</code>, that treated cargo as a black box and produced binaries for deployment and tests.
+This way, our infrastructure experts could figure out how to build OS images with Bazel, while our Rust experts could proceed with the Rust code <q>bazelification</q>.</p>
+<h3 id="run-ci-early"><a href="#run-ci-early">Run CI early</a></h3>
+<p>We added the <code>bazel test //...</code> job to our CI pipeline as soon as we had the first <code>BUILD</code> file in our repository.
+The extra job slightly increased the CI wait time but ensured that packages converted to Bazel wouldn’t degrade over time.
+As a side benefit, developers started to experience Bazel-related CI failures during their code refactorings.
+They <a href="https://en.wikipedia.org/wiki/Active_learning">actively</a> learned to modify <code>BUILD</code> files and gradually became accustomed to the new world.</p>
+<h3 id="one-package-at-a-time"><a href="#one-package-at-a-time">One package at a time</a></h3>
+<p>The goal of the second workstream was converting a few hundred Rust packages to the new build rules.
+We started from the core packages at the bottom of the stack that needed special treatment, and then project volunteers bazelified a few packages at a time when they had a free time slot.
+Two little tricks helped us with this tedious task:
+</p>
+<ul class="arrows"><li>
+    Automation.
+    The infra team invested a few days in a script that converted a <code>Cargo.toml</code> file to a 90% complete <code>BUILD</code> file matching our guidelines.
+    Many packages required manual treatment, and the generated <code>BUILD</code> file was far from optimal, but the script boosted the conversion process significantly.
+  </li><li>
+    Progress visualization.
+    One team member wrote a utility visualizing the migration progress by inspecting the cargo dependency graph and searching for packages with and without <code>BUILD</code> files.
+    This little tool had a tremendous effect on our morale.
+</li></ul>
+<p>Eventually, we could build and test every piece of our Rust code with Bazel. We then switched the OS build from the <code>cargo_build</code> bootstrapping to the binaries built from the source using Bazel rules.</p>
+<h3 id="test-parity"><a href="#test-parity">Ensure test parity</a></h3>
+<p>The last piece of the puzzle was ensuring the test parity.
+Cargo discovers tests automagically, while Bazel <code>BUILD</code> files require explicit targets for each type of test (crate tests, doc tests, integration tests).
+The infra team wrote another little utility that analyzed the outputs of cargo and Bazel build pipelines and compared the list of executed tests, ensuring that the volunteers accounted for every test during the migration and that developers didn’t forget to update <code>BUILD</code> files when they added new tests.</p>
+<h3 id="rough-edges"><a href="#rough-edges">Rough edges</a></h3>
+<p>Bazel solves most of our needs regarding building artifacts, but we have yet to replicate a few cargo features related to developer flow.</p>
+<ul class="arrows"><li><a href="https://doc.rust-lang.org/cargo/commands/cargo-check.html">Cargo check</a>.
+    Cargo does not produce binaries when run in check mode, making it much faster than cargo build.
+    Developers often use this mode to check whether the entire code base compiles after a refactoring.
+  </li><li>
+    IDE support.
+    The rules_rust Bazel plugin offers <a href="https://bazelbuild.github.io/rules_rust/rust_analyzer.html">experimental support</a> for <a href="https://rust-analyzer.github.io/">rust-analyzer</a>, which worked perfectly in the prototype but choked on our code base.
+    We invested a lot of effort in making the new setup work, but we still keep cargo files around to keep developers relying on <a href="https://intellij-rust.github.io/">IntelliJ Rust</a> happy<label class="margin-toggle sidenote-number" for="sn-intellij-rust"></label><input type="checkbox" id="sn-intellij-rust" class="margin-toggle"><span class="sidenote">
+      Unfortunately, IntelliJ-Rust does not support non-cargo configurations; see <a href="https://github.com/intellij-rust/intellij-rust/issues/5594">issue #5594</a> in the <code>intellij-rust</code> repository.
+    </span>. 
+  </li><li>
+    Publishing packages.
+    We want to publish some of our Rust packages to crates.io, and the rules_rust Bazel plugin does not provide a replacement for &quot;cargo publish&quot; yet.
+  </li><li>
+    Access to the <a href="https://github.com/rust-lang/cargo/wiki/Third-party-cargo-subcommands">cargo ecosystem</a>.
+    Many helpful tools rely on cargo and don’t have an analog in the Bazel world yet, such as <a href="https://github.com/dtolnay/cargo-expand"><code>cargo-expand</code></a>.
+</li></ul>
+<p>Because of these issues, we still keep cargo files around. Luckily, this does not affect our CI times much because the only check we need is that <code>cargo check --tests --benches</code> succeeds. </p>
+</section>
+<section><h2 id="acknowledgements"><a href="#acknowledgements">Acknowledgments</a></h2>
+<p>The Bazel migration project was a definitive success.
+I thank our talented infra team and all the volunteers who contributed to the project.</p>
+<p>Special thanks go to the developers and maintainers of the <a href="https://bazelbuild.github.io/rules_rust/">rules_rust</a> Bazel plugin, who unblocked us many times during the migration, especially <a href="https://github.com/UebelAndre">Andre Uebel</a> and <a href="https://github.com/illicitonion">Daniel Wagner-Hall</a>, and to <a href="https://github.com/matklad">Alex Kladov</a> for taking the time to share his rust-analyzer expertise.</p>
+<p>You can discuss this article on <a href="https://www.reddit.com/r/rust/comments/11xxffc/blog_post_scaling_rust_builds_with_bazel/">Reddit</a>.</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/15-when-rust-hurts.html">When Rust hurts</a></li><li><a href="/posts/12-rust-error-handling.html">Designing error types in Rust</a></li><li><a href="/posts/03-rust-packages-crates-modules.html">Rust at scale: packages, crates, and modules</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/18-if-composers-were-hackers.html"> ←If composers were hackers</a></div><div id="older"><a href="/posts/16-building-a-second-brain.html">Book summary: Building a Second Brain→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

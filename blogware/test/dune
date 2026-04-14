@@ -1,3 +1,19 @@
-(test
+(executable
  (name test_main)
  (libraries blogware))
+
+(executable
+ (name snapshot_test)
+ (libraries blogware))
+
+(rule
+ (deps
+  (source_tree ../../posts)
+  ../../about.tex
+  (source_tree snapshots))
+ (action
+  (progn
+   (run %{exe:test_main.exe})
+   (chdir %{workspace_root}
+    (run %{exe:snapshot_test.exe}))))
+ (alias runtest))

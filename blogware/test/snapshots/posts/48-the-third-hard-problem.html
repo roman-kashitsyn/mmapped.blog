@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="glasperlenspiel,programming"><meta name="description" content="It’s not off-by-one errors."><title>The third hard problem</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/48-the-third-hard-problem.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/48-the-third-hard-problem.html">The third hard problem</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2026-02-28</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2026-02-28</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#spaces-trees-webs">Spaces, trees, and webs</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#file-systems">File systems</a></li><li class="toc toc-level-2"><a href="#writing">Writing</a></li><li class="toc toc-level-2"><a href="#architecture">Architecture</a></li><li class="toc toc-level-2"><a href="#biology">Biology</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
+
+<section><p>According to a <a href="https://martinfowler.com/bliki/TwoHardThings.html">classic joke</a> attributed to <a href="https://www.karlton.org/karlton/">Phil Karlton</a>,
+computer science has only two hard problems: naming things and cache invalidation.
+They are hard because no algorithm can solve them:
+good names come from empathy and understanding,
+and cache invalidation requires system thinking and careful analysis.
+This article describes another such problem, pervasive and insidious yet rarely noticed:
+mapping a general graph onto a hierarchical structure. I call it <em>tree mapping</em>.</p>
+</section>
+<section><h2 id="spaces-trees-webs"><a href="#spaces-trees-webs">Spaces, trees, and webs</a></h2>
+<p>Our brains evolved to be remarkably good at dealing with physical space.
+We can intuitively orient ourselves in an unfamiliar city and draw an accurate map of a place we visited decades ago.
+Naturally, we want to take advantage of this machinery in all aspects of our lives.</p>
+<p>One of the defining features of a physical space is its hierarchical, localized structure.
+We perceive each bit of space as self-contained and interacting only with nearby bits,
+which enables a hierarchical view of the world in which objects form collections that can be understood as a whole:
+particles form atoms, atoms form molecules, molecules form bodies, and so forth, up to galaxies and superclusters.</p>
+<p>Hierarchies are so natural to us that they have become our dominant organizing tool.
+We sort things and ideas into labeled boxes and put these into larger boxes.
+It works for physical objects that can be in only one place at a time.
+Ideas and information, however, resist taxonomies.
+They form intricate <em>webs</em> that penetrate rigid boundaries.</p>
+<p><a href="https://en.wikipedia.org/wiki/Tree_(abstract_data_type)">Trees</a> formalize hierarchies; they are among the most widely used structures in computer science.
+Trees are intimately related to spaces as they are universal space organizers:
+B-trees organize ordered key spaces in databases,
+<a href="https://en.wikipedia.org/wiki/K-d_tree">k-d trees</a> slice multi-dimensional spaces in graphics,
+and abstract syntax trees organize linear token sequences in compilers.</p>
+<figure class="grayscale-diagram p75"><label class="margin-toggle" for="mn-parsing">⊕</label><input type="checkbox" id="mn-parsing" class="margin-toggle"><span class="marginnote">
+  Parsing is a space organization problem as it requires labeling token sequences with their syntactic roles.
+</span><p class="svg"><img src="/images/48-parsing.svg"></p>
+</figure>
+<p>But with all their utility, trees can’t model webs directly.
+Thus, <em>tree mapping</em> is a problem that requires embedding a web into a tree in a way that distorts the web structure.</p>
+<p>Let’s look at a few examples.</p>
+<h3 id="file-systems"><a href="#file-systems">File systems</a></h3>
+<div class="epigraph"><blockquote><p>
+The digital world thereby allows us to transcend the most fundamental rule of ordering the real world:
+Instead of everything having its place,
+it’s better if things can get assigned multiple places simultaneously.</p><footer>David Weinberger, <q>Everything Is Miscellaneous</q></footer></blockquote></div>
+<p>Imagine receiving a bill from your dentist.
+How do you file it?
+In a common <q>archive</q> folder?
+In a more specific &quot;medical&quot; folder?
+In the <q>XXXX year taxes</q> project folder for future tax returns?
+Or copy it and choose all the options at once?</p>
+<p>The question might seem moot in the age of Dropbox and Google Drive.
+Yet Victorian-era gentlemen might have pondered the same questions while sorting letters as we do while sorting virtual paper.
+The user-facing design of our state-of-the-art distributed systems inherited most of the restrictions of the physical world.</p>
+<p>Operating systems face the same dilemma:
+should files be organized by the application they belong to or by type?
+Windows and macOS traditionally preferred the former option, packaging applications into (mostly) self-contained bundles.
+Most Linux systems embraced the latter approach,
+so when you install a package,
+its shreds lie all over the filesystem:
+libraries go to <code>/usr/lib</code>, documentation — to <code>/usr/man</code>, configuration — to <code>/etc/</code>, and so forth.</p>
+<p>This choice comes with a trade-off:
+shredding packages simplifies tooling (<code>man</code> needs to look in only a handful of locations) and enables reuse, but complicates software management.
+The pain of packaging and installing modern applications on Linux led to the development of macOS-inspired bundle formats,
+such as <a href="https://snapcraft.io/docs">Snap</a> and <a href="https://flatpak.org/">Flatpak</a>.</p>
+<p>If you’ve ever tried to organize a non-trivial code repository,
+you’ve likely run into the same issue.
+Modern projects have components implemented in different languages, for example,
+TypeScript on the frontend and Rust on the backend.
+You can group files by the component they implement (<code>/acme/payments/index.ts</code> and <code>/acme/payments/main.rs</code>) or by language (<code>acme/ts/payments.ts</code> and <code>/acme/rs/payments.rs</code>).</p>
+<figure class="grayscale-diagram p75"><label class="margin-toggle" for="mn-repo-layouts">⊕</label><input type="checkbox" id="mn-repo-layouts" class="margin-toggle"><span class="marginnote">
+  Two common ways to organize a code repository:
+  by component (left) or by implementation language (right).
+</span><p class="svg"><img src="/images/48-repo-layouts.svg"></p>
+</figure>
+<p>Slicing by component is easier for humans because it <a href="https://en.wikipedia.org/wiki/Conway%27s_law">reflects the organizational structure</a>,
+but most tools don’t support this setup, forcing a technology-centric approach.
+Google and a few other engineering organizations bit the bullet and organized their repositories by projects (<code>/search</code>, <code>/shopping</code>, <code>/maps</code>),
+developing a plethora of language-agnostic build tools along the way<label class="margin-toggle sidenote-number" for="sn-blaze"></label><input type="checkbox" id="sn-blaze" class="margin-toggle"><span class="sidenote">
+  Google’s <a href="https://news.ycombinator.com/item?id=9257000">Blaze</a> was among the first such tools.
+  It inspired <a href="https://www.pantsbuild.org/">Pants</a>, <a href="https://buck.build/">Buck</a>, and <a href="https://please.build/">Please</a>, and was later open-sourced as <a href="https://bazel.build/">Bazel</a>.
+</span>.</p>
+<p>These dilemmas, however, are mostly self-inflicted.
+There is no inherent reason for a digital file system to be a skeumorph of a shelf filled with folders.
+Several projects experimented with web-like filesystems
+(<a href="https://en.wikipedia.org/wiki/Be_File_System">BeFS</a> and <a href="https://en.wikipedia.org/wiki/WinFS">WinFS</a>, for example),
+but none had a significant effect on the status quo.
+However,
+as tags and links enter the public consciousness through web services,
+filesystems might follow the lead and evolve into webs over time.</p>
+<h3 id="writing"><a href="#writing">Writing</a></h3>
+<div class="epigraph"><blockquote><p>the writer’s goal is to encode a web of ideas into a string of words using a tree of phrases.</p><footer>Steven Pinker, <q>The Sense of Style</q></footer></blockquote></div>
+<p>Books are the epitome of hierarchy:
+they have chapters that contain paragraphs with sentences composed of words made of letters,
+all sliced into neat numbered pages.
+Yet, the ideas we express on these pages are anything but linear or hierarchical.</p>
+<p>Many stories appear linear:
+the storyteller describes events in the order they occurred,
+with chapter boundaries marking scene changes and time jumps.
+But beneath every story lies a web of ideas.
+Untangling this web into a sequence of words that recreates the web in another mind is the primordial struggle of every writer.</p>
+<div class="epigraph"><blockquote><p>Writing is easy. All you do is stare at a blank sheet of paper until drops of blood form on your forehead.</p><footer>Gene Fowler</footer></blockquote></div>
+<p>In fiction, the <em>web</em> involves relationships between characters and the emotional connections that the reader is meant to form with them.
+Best fiction uses the limitations of the medium to its advantage, presenting events in an order that puzzles and engages the reader most.
+Its ultimate goal is to deliver the joy of connecting the dots and assembling the complete web.</p>
+<p>When the underlying web gets dense and abstract, however, the writer’s job becomes daunting, and so is the reader’s.
+Math textbooks are a perfect example.
+Math might seem like a Lego brick tower with simple concepts at the foundation and complexity gradually increasing toward the top.
+Indeed, each coherent presentation of math starting with Euclid’s <q><a href="https://en.wikipedia.org/wiki/Euclid%27s_Elements">Elements</a></q> follows this pattern.
+Yet, the choice of foundational blocks is often arbitrary.
+Mathematical concepts shift shape and gain nuance as you learn how they relate to everything else<label class="margin-toggle sidenote-number" for="sn-limits"></label><input type="checkbox" id="sn-limits" class="margin-toggle"><span class="sidenote">
+  I remember waking up a few months after finishing my <a href="https://en.wikipedia.org/wiki/Real_analysis">real analysis</a> course
+  and realizing that I finally <em>understood</em> <a href="https://en.wikipedia.org/wiki/Limit_(mathematics)">limits</a>,
+  thanks to the <a href="https://en.wikipedia.org/wiki/Ordinary_differential_equation">ordinary differential equations</a> course I was taking at the time.
+  Even my understanding of natural numbers seems to change with every textbook I read.</span>.
+The selection of ideas and the order of their presentation shape the reader’s experience,
+so no two math books have the same table of contents.</p>
+<p>The next time you sit down to an empty design doc and don’t know where to start,
+be kind to yourself.
+You’re solving a hard problem.</p>
+<h3 id="architecture"><a href="#architecture">Architecture</a></h3>
+<div class="epigraph"><blockquote><p>The units of which an artificial city is made up are always organized to form a tree.</p><footer>Christopher Alexander, <q>A City is not a Tree</q>.</footer></blockquote></div>
+<figure><label class="margin-toggle" for="mn-levittown-siena">⊕</label><input type="checkbox" id="mn-levittown-siena" class="margin-toggle"><span class="marginnote">
+  Panoramas of Levittown (left, public domain, source: <a href="https://commons.wikimedia.org/wiki/File:LevittownPA.jpg">Wikipedia</a>) and Siena (right, copyright <a href="https://www.vascoplanet.com/">Vyacheslav Argenberg</a> under <a href="https://creativecommons.org/licenses/by/4.0/deed.en">CC BY 4.0 license</a>).</span><img src="/images/48-levittown-siena.webp">
+</figure>
+<p>In his 1965 essay, <q><a href="https://www.patternlanguage.com/archive/cityisnotatree.html">A City is not a Tree</a></q>,
+architect and mathematician Christopher Alexander observed a distinction between designed and naturally grown cities,
+classifying Levittown and Chandigarh as designed and Siena and Kyoto as naturally grown.
+He argues that artificial cities feel stifled and lack a secret ingredient that gives natural cities a sense of life and comfort.</p>
+<p>According to Christopher Alexander, the difference lies in the mathematical structure underpinning the city design.
+Artificial cities are organized as trees:
+they consist of isolated neighbourhoods, each with a housing complex, a school, and a shopping mall,
+along with a few compartmentalized specialized areas, such as a cultural centre and an industrial zone.
+Natural cities, on the other hand, have a <a href="https://en.wikipedia.org/wiki/Semilattice">semilattice</a> structure,
+which enables more fulfilling interactions to emerge.
+In natural cities, the boundaries between aspects of life are blurred.
+Work, leisure, and play coincide and interact.</p>
+<p>The city design is a tree-mapping problem that demands embedding a semilattice of human relationships into a particular terrain.
+No canonical mapping exists,
+so it’s natural that Christopher Alexander couldn’t provide a universal blueprint for a natural city.</p>
+<div class="epigraph"><blockquote><p>
+  You are no doubt wondering by now what a city looks like which is a semilattice, but not a tree.
+  I must confess that I cannot yet show you plans or sketches.
+  It is not enough merely to make a demonstration of overlap — the overlap must be the right overlap.
+</p><footer>Christopher Alexander, <q>A City is not a Tree</q></footer></blockquote></div>
+<p>In other words, natural cities preserve deeper connections when they lay out the web of human lives within the hierarchy of quarters and buildings.
+No algorithm can tell you what these connections are.</p>
+<h3 id="biology"><a href="#biology">Biology</a></h3>
+<p><a href="https://en.wikipedia.org/wiki/Taxonomy_(biology)">Biological taxonomy</a> is a field that classifies living organisms.
+It started with the morphological taxonomy, which is based on easily observable traits, such as whether an animal has a spine or feeds its offspring milk.
+This approach is error-prone because useful traits often <a href="https://en.wikipedia.org/wiki/Convergent_evolution">evolve independently</a> in remote branches of the tree of life.</p>
+<p>For example, <a href="https://en.wikipedia.org/wiki/Cephalopod_eye">cephalopod eyes</a> are strikingly similar to those of vertebrates,
+even though their common ancestor likely resembled a blind worm with a photoreceptive spot.
+If <a href="https://en.wikipedia.org/wiki/Eye#Spherical_lens_eye">camera-type eyes</a> defined a biological group,
+its members would be a weird bunch.</p>
+<p>History is full of actual misclassifications.
+Fungi were classified as plants until they were given a separate kingdom in the mid-20th century.
+Crocodiles and birds used to belong to sibling classes (<em>Reptilia</em> and <em>Aves</em>),
+even though crocodiles are more closely related to birds than to other reptiles.</p>
+<p>Morphological taxonomy is another case of tree-mapping because collections of traits form <a href="https://en.wikipedia.org/wiki/Formal_concept_analysis">concepts</a>,
+and their inclusions form graphs that are more general than trees (<a href="https://en.wikipedia.org/wiki/Lattice_(order)">lattices</a>).
+Jorge Luis Borges mocked such taxonomies in his essay, <q><a href="https://www.crockford.com/wilkins.html">The Analytical Language of John Wilkins</a></q>,
+quoting a fictional ancient Chinese encyclopedia,
+<q>The Celestial Emporium of Benevolent Knowledge</q>:</p>
+<blockquote><p>
+the animals are divided into:
+(a) belonging to the Emperor
+(b) embalmed
+(c) trained
+(d) piglets
+(e) sirens
+(f) fabulous
+(g) stray dogs
+(h) included in this classification
+(i) trembling like crazy
+(j) innumerables
+(k) drawn with a very fine camelhair brush
+(l) et cetera
+(m) just broke the vase
+(n) from a distance look like flies
+</p><footer>Jorge Luis Borges, <q>The Analytical Language of John Wilkins</q></footer></blockquote>
+<p><a href="https://en.wikipedia.org/wiki/Cladistics">Cladistics</a> is a modern system that classifies organisms based on their common ancestry and genetics.
+Even though this mapping is imperfect due to <a href="https://en.wikipedia.org/wiki/Horizontal_gene_transfer">horizontal gene transfer</a>,
+it’s more accurate and revealing than the traditional classification because it preserves existing connections rather than imposing artificial ones.</p>
+</section>
+<section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
+<p>Now that you know about the problem,
+you won’t have any trouble spotting it everywhere.
+It lurks in database modeling challenges (I’m looking at you, MongoDB),
+dooms object-oriented class hierarchies,
+and underpins struggles with Rust’s borrow checker (object ownership graphs are trees, but object interactions are webs).
+It’s responsible for the size of your <code>node_modules</code> directory and the layout of your cookbook.</p>
+<p>The primary strategy for dealing with tree mapping is to be intentional.
+We reach for hierarchies instinctively,
+and we often don’t notice that we’re making a choice.
+We must stop and ask:
+What web is being flattened?
+Which links are sacrifices?
+And, most importantly, must the target medium be a tree in the first place?
+</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/38-static-types-perfectionism.html">Static types are for perfectionists</a></li><li><a href="/posts/26-good-names-form-galois-connections.html">Good names form Galois connections</a></li><li><a href="/posts/05-debug-like-feynman.html">Debug like Feynman, test like Faraday</a></li><li><a href="/posts/18-if-composers-were-hackers.html">If composers were hackers</a></li><li><a href="/posts/45-compilation-is-communication.html">Compilation is communication</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/49-kirk-scotty-spock.html"> ←Kirk, Scotty, and Spock</a></div><div id="older"><a href="/posts/47-2025-retro.html">2025 retrospective→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

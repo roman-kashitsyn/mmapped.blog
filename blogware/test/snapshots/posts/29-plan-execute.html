@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="programming,software-design"><meta name="description" content="A ubiquitous pattern you won’t find in your textbook."><title>The plan-execute pattern</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/29-plan-execute.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/29-plan-execute.html">The plan-execute pattern</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2024-06-20</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2024-06-20</span></span><span class="post-icons"><a class="icon-link" href="https://news.ycombinator.com/item?id=40749401" title="Discuss on Hacker News" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/y18.svg" alt="Hacker News"></a><a class="icon-link" href="https://lobste.rs/s/hub6qd/plan_execute_pattern" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#background">Background</a></li><li class="toc toc-level-1"><a href="#plan">Plan</a></li><li class="toc toc-level-1"><a href="#execution">Execution</a></li><li class="toc toc-level-1"><a href="#build-system-example">Build system example</a></li><li class="toc toc-level-1"><a href="#instances-relatives">Instances and relatives</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
+
+<section><p>I feel uneasy about design patterns.
+On the one hand, my university class on design patterns revived my interest in programming.
+On the other hand, I find most patterns in the <a href="https://www.goodreads.com/book/show/85009.Design_Patterns">Gang of Four</a> book to be irrelevant to my daily work;
+they solve problems that a choice of programming language or paradigm creates.</p>
+<p>My litmus test of a good design pattern is its cross-disciplinary applicability.
+I’m more likely to accept an idea that pops up in fields beyond software engineering.
+And the most convincing patterns are the ones that help me in everyday life.</p>
+<p>This article describes a universal pattern that billions of people rely on daily, but software engineers rarely discuss—the plan-execute pattern.</p>
+</section>
+<section><h2 id="background"><a href="#background">Background</a></h2>
+<p>In early August 2020 I was working on <span class="smallcaps">dfinity</span>’s <a href="/posts/02-ic-state-machine-replication.html#incremental-sync">incremental state synchronization protocol</a>.
+The protocol brings a stale replica up to date by computing and applying state deltas on top of an existing state snapshot.</p>
+<p>One major challenge with this protocol was testing.
+If the protocol implementation is a black box that outputs the final state, then how do I check that it took the most efficient path to reconstruct the checkpoint?
+Simply observing the output won’t work: it might have decided to fetch the entire new state instead of re-using locally available pieces.</p>
+<p>To address this problem, I factored the implementation into stages:
+</p>
+<ol class="circled"><li data-num-glyph="①">Acquire all the information required for synchronization: the bill of materials for the local and target replica states.
+  </li><li data-num-glyph="②">Build a <em>plan</em>—a data structure encapsulating the protocol decisions: what data to fetch, what to copy from the local state, and how to assemble the pieces.
+  </li><li data-num-glyph="③">Execute: fetch the data and schedule disk writes according to the plan.
+</li></ol>
+<p>Since then, the pattern has become one of my favorite techniques.
+I used it a few more times with great success and started recognizing it in other software.</p>
+</section>
+<section><h2 id="plan"><a href="#plan">Plan</a></h2>
+<div class="epigraph"><blockquote><p>
+    Planning can be seen as reformulating a problem in a simpler problem space, solving it in the simpler space, and then trying to generalize that approach to the real problem space.
+</p><footer>Scott H. Young, <q>Get Better at Anything</q></footer></blockquote></div>
+<p>There are two ways to get from Washington, <span class="smallcaps">dc</span>, to New York City by car.
+One approach is getting in your vehicle, starting the engine, and following the road signs until you reach the destination.
+I call this approach <q>just do it.</q>
+Alternatively, you can sit down with a map and plan your itinerary, deciding which routes you will take and where you’ll stop for a break, and then follow the planned route.
+That’s the plan-execute approach.</p>
+<p>In software engineering, we often deal with complex algorithms that can take many paths to reach their goals.
+A <q>just do it</q> implementation freely interleaves decisions and actions, hiding the execution details from observers.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-just-do-it">⊕</label><input type="checkbox" id="mn-just-do-it" class="margin-toggle"><span class="marginnote">
+  The <q>just do it</q> implementation of an algorithm hides all decisions it takes.
+</span><p class="svg"><img src="/images/29-just-do-it.svg"></p>
+</figure>
+<p>The plan-execute pattern tackles the problem in two stages.
+The planning stage takes the inputs and produces a plan: a data structure encapsulating all the decisions the algorithm should make.
+The execution stage realizes the plan.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-plan-execute">⊕</label><input type="checkbox" id="mn-plan-execute" class="margin-toggle"><span class="marginnote">
+  The plan-execute pattern consists of two stages: the planning stage outputs the decisions as a data structure, and the execution stage realizes the plan.
+</span><p class="svg"><img src="/images/29-plan-execute.svg"></p>
+</figure>
+<p>This approach allows for more comprehensive testing of the decision-making part.
+It also extends the system’s debugging capabilities: since the plan is a data structure, humans can inspect it to understand what the system is about to do without causing <a href="https://en.wikipedia.org/wiki/Side_effect_(computer_science)">side effects</a>.</p>
+</section>
+<section><h2 id="execution"><a href="#execution">Execution</a></h2>
+<div class="epigraph"><blockquote><p>If you want to make God laugh, tell him about your plans.</p><footer>Woody Allen</footer></blockquote></div>
+<p>In some cases, the execution part of the pattern is straightforward: traverse the plan data structure and run predefined steps:
+Turn left, turn right, <a href="https://xkcd.com/461/">take the ferry across the lake</a>.
+That works well if the execution environment is predictable.</p>
+<p>When driving a car, however, we might have to take an unplanned route because of traffic, weather conditions, missed turns, and construction work.
+Similarly, when execution steps can involve concurrency or potential failure, our programs must adjust the plan as they realize it.</p>
+<p>My favorite way to deal with uncertainty is to split the execution stage further into a state machine and a driver loop.
+The driver feeds external events into the state machine, and the state machine emits actions that the driver must take.
+The original plan becomes an initializer for the state machine starting state.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-dynamic-planning">⊕</label><input type="checkbox" id="mn-dynamic-planning" class="margin-toggle"><span class="marginnote">
+
+</span><p class="svg"><img src="/images/29-dynamic-planning.svg"></p>
+</figure>
+<p>The beauty of this approach is that the state machine doesn’t depend on messy execution details,
+so we can test it exhaustively and thoroughly,
+potentially applying <a href="https://propertesting.com/book_state_machine_properties.html">property-based testing techniques</a>.</p>
+</section>
+<section><h2 id="build-system-example"><a href="#build-system-example">Build system example</a></h2>
+<p>The following simplistic build system design demonstrates how all the pattern pieces fit together.
+The inputs for a build are the build graph, the set of outputs the caller requested to materialize, and the build cache state.
+The plan is the list of tasks we need to execute to materialize the desired artifacts, in the topological order.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line">struct Node {</span>
+<span class="line">    id: NodeId,</span>
+<span class="line">    inputs: Vec&lt;ArtifactId&gt;,</span>
+<span class="line">    outputs: Vec&lt;ArtifactId&gt;,</span>
+<span class="line">    transform: Command,</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">struct BuildGraph(…)</span>
+<span class="line"></span>
+<span class="line">type BuildPlan = Vec&lt;Node&gt;;</span>
+<span class="line"></span>
+<span class="line">fn plan(</span>
+<span class="line">    g: &amp;BuildGraph,</span>
+<span class="line">    cache: &amp;BuildCache,</span>
+<span class="line">    targets: &amp;[ArtifactId],</span>
+<span class="line">) -&gt; Result&lt;BuildPlan, BuildError&gt; { … }</span>
+</code></pre></div>
+<p>The most straightforward execution function would go over the tasks in the plan and execute them sequentially.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line">fn run_build_sequentially(</span>
+<span class="line">    plan: &amp;BuildPlan,</span>
+<span class="line">    cache: &amp;BuildCache,</span>
+<span class="line">    sandbox: &amp;Sandbox,</span>
+<span class="line">) -&gt; Result&lt;(), BuildError&gt; {</span>
+<span class="line">    for node in plan {</span>
+<span class="line">        sandbox.execute(node, cache)?;</span>
+<span class="line">    }</span>
+<span class="line">    Ok(())</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>A more efficient approach is to implement pipeline parallelism and execute independent tasks concurrently.
+This execution model adds a lot of complexity, which the build plan alone doesn’t address.
+So we introduce a state machine that keeps track of unfinished work and adjusts the plan as the execution unfolds.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line">struct ExecutionState {</span>
+<span class="line">    graph: BuildGraph,</span>
+<span class="line">    todo: Vec&lt;NodeId&gt;,</span>
+<span class="line">    in_progress: Vec&lt;NodeId&gt;,</span>
+<span class="line">    depcount: HashMap&lt;NodeId, usize&gt;,</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">enum Action {</span>
+<span class="line">    Schedule(Vec&lt;Node&gt;),</span>
+<span class="line">    Finish,</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">impl ExecutionState {</span>
+<span class="line">    <em>// Returns the first action to take.</em></span>
+<span class="line">    fn init(&amp;self) -&gt; Action { … }</span>
+<span class="line"></span>
+<span class="line">    <em>// Indicates that the task corresponding to the node is in progress.</em></span>
+<span class="line">    fn started(&amp;must self, node: NodeId) { … }</span>
+<span class="line"></span>
+<span class="line">    <em>// Indicates that the task corresponding to the node has been completed.</em></span>
+<span class="line">    <em>// Returns the next action to take.</em></span>
+<span class="line">    fn completed(&amp;mut self, node: NodeId) -&gt; Action { … }</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The <code>run_build</code> function is the driver loop that spawns processes and feeds their results to the state machine, which either outputs more tasks or reports that the build has finished.</p>
+<div class="source-container"><pre class="source rust"><code><span class="line">fn run_build(</span>
+<span class="line">    cache: &amp;BuildCache,</span>
+<span class="line">    sandbox: &amp;Sandbox,</span>
+<span class="line">    state: ExecutionState,</span>
+<span class="line">) -&gt; Result&lt;(), BuildError&gt; { … }</span>
+</code></pre></div>
+<p>This design splits a hard problem into smaller pieces that are easy to understand.
+The most algorithm-heavy portions (planning and execution control) do not require any I/O and are easy to test.
+Only the <code>run_build</code> function needs to interact with the operating system.
+The planning function is also helpful in implementing the <code>--dry-run</code> feature.</p>
+</section>
+<section><h2 id="instances-relatives"><a href="#instances-relatives">Instances and relatives</a></h2>
+<p>The <a href="https://en.wikipedia.org/wiki/Query_plan"><span class="smallcaps">rdbms</span> query planner</a> is a supreme example of the pattern.
+There are many ways to execute an <span class="smallcaps">sql</span> query, and the database engine should always use the most efficient one.
+Query plans give us insight into which path the engine is going to take; they are paramount for understanding and tweaking database performance.</p>
+<p>The <a href="https://en.wikipedia.org/wiki/Interpreter_pattern">interpreter pattern</a> is a special case of the plan-execute pattern,
+where plans are syntactic trees expressing the intent,
+and the execution stage is their interpretation.</p>
+<p>The <a href="https://sans-io.readthedocs.io/how-to-sans-io.html">Sans-<span class="smallcaps">i/o</span></a> protocol implementations provide a blueprint for extracting execution state machines from input/output driver loops
+as discussed in the <a href="#execution">Execution</a> section.
+This practice goes back to functional programming folklore;
+<a href="https://www.destroyallsoftware.com/talks/boundaries">Gary Bernhardt</a> called it <q>functional core, imperative shell</q>.</p>
+<p>Finally, all programs are plans: a programmer makes all decisions in advance and encodes them as a byte array,
+leaving it to the computer to take care of the execution.
+<q>Programming</q> was a synonym of <q>planning</q> before computers conquered the world.</p>
+</section>
+<section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
+<p>This article presented two approaches to implementing complex algorithms:
+the <q>just do it</q> approach where decisions and actions are intertwined,
+and the plan-execute pattern that separates decisions from actions.</p>
+<p>The former approach is the natural first choice that leads to straightforward code.
+As our systems grow and become more complex,
+the plan-execute pattern becomes a viable alternative that helps separate concerns and test our code more easily and thoroughly.</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/31-effective-design-docs.html">Effective design docs</a></li><li><a href="/posts/37-onnx-intro.html">ONNX introduction</a></li><li><a href="/posts/41-box-combinators.html">Box combinators</a></li><li><a href="/posts/44-tag-based-logging.html">Tag-based logging</a></li><li><a href="/posts/45-compilation-is-communication.html">Compilation is communication</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/30-transaction-models.html"> ←Transaction models are programming paradigms</a></div><div id="older"><a href="/posts/28-enlightenmentware.html">Enlightenmentware→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

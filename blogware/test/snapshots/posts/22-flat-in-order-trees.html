@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="cs"><meta name="description" content="An efficient algorithm for incremental merkle trees updates."><title>Flat in-order binary trees</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/22-flat-in-order-trees.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/22-flat-in-order-trees.html">Flat in-order binary trees</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2023-08-13</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2023-11-26</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#sec-abstract">Abstract</a></li><li class="toc toc-level-1"><a href="#sec-background">Background</a></li><li class="toc toc-level-1"><a href="#sec-nomenclature">Nomenclature</a></li><li class="toc toc-level-1"><a href="#sec-addressing">Addressing tree nodes</a></li><li class="toc toc-level-1"><a href="#sec-fbt">Traversing perfect binary trees</a></li><li class="toc toc-level-1"><a href="#sec-lpbt">Traversing left-perfect binary trees</a></li><li class="toc toc-level-1"><a href="#sec-extensible-segment-trees">Extensible segment trees</a></li></ul><hr>
+
+<section><h2 id="sec-abstract"><a href="#sec-abstract">Abstract</a></h2>
+<p>This article is an in-depth guide to the flat in-order representation of binary trees.
+We derive efficient operations to navigate these trees, such as finding the tree root and computing the parent and children for each node.
+We then use this flat representation to implement a novel efficient data structure: extensible segment trees.</p>
+</section>
+<section><h2 id="sec-background"><a href="#sec-background">Background</a></h2>
+<p>Authenticated data structures are essential in distributed systems (e.g., version control systems and blockchains).
+Binary <a href="https://en.wikipedia.org/wiki/Merkle_tree">Merkle trees</a> are among the most common approaches to authenticated data structures.</p>
+<p>Building a Merkle tree from scratch for an arbitrary data structure is straightforward and can be mechanized<label class="margin-toggle sidenote-number" for="sn-auth-ds-generically"></label><input type="checkbox" id="sn-auth-ds-generically" class="margin-toggle"><span class="sidenote">
+See, for example, <a href="https://www.cs.umd.edu/~mwh/papers/gpads.pdf">Authenticated Data Structures, Generically</a> by Andrew Miller et al.
+</span>.
+A more interesting question is how to update existing Merkle trees incrementally to reflect changes in the underlying data structure.
+For example, adding a new item to a sequence of <span class="math">N</span> data blocks requires recomputing about <span class="math">log<sub>2</sub>(N)</span> hashes.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-update-merkle-tree">⊕</label><input type="checkbox" id="mn-update-merkle-tree" class="margin-toggle"><span class="marginnote">
+    Adding a new item to a sequence of <span class="math">N</span> data blocks requires recomputing about <span class="math">log<sub>2</sub>(N)</span> hashes in the Merkle tree.
+    The diagram demonstrates the addition of the sixth node to a sequence of five data items.
+    Hatched rectangles correspond to hash computations required to construct the new Merkle tree.
+  </span><p class="svg"><img src="/images/22-new-item.svg"></p>
+</figure>
+<p>Furthermore, storing Merkle trees for a linear sequence of data blocks explicitly (i.e., as explicit tree nodes with pointers) is wasteful.
+Finding an <a href="https://en.wikipedia.org/wiki/Implicit_data_structure">implicit encoding</a> mapping the tree onto an array of <span class="math">2N-1</span> hashes reduces storage space significantly.</p>
+<p>The most common approach to packing a tree into an array used in binary heaps and <a href="https://cp-algorithms.com/data_structures/segment_tree.html">segment trees</a> is to place children of node at index <span class="math">i</span> at positions <span class="math">2i+1</span> and <span class="math">2i+2</span>.
+This approach works well for fixed-size arrays, but it’s inefficient for growable arrays because adding a new data block might require <span class="math">O(N)</span> data moves.</p>
+<figure class="grayscale-diagram medium-size"><label class="margin-toggle" for="mn-binary-heap">⊕</label><input type="checkbox" id="mn-binary-heap" class="margin-toggle"><span class="marginnote">
+    Representing a binary tree as an array using the <a href="https://en.wikipedia.org/wiki/Binary_heap#Derivation_of_index_equations">binary heap array indexing</a>.
+    If a tree node maps to index <span class="math">i</span>, then its left and right children map to indices <span class="math">2i+1</span> and <span class="math">2i+2</span> respectively.
+  </span><p class="svg"><img src="/images/22-binary-heap.svg"></p>
+</figure>
+<p>The <a href="https://www.datprotocol.com/">DAT protocol</a> pioneered an alternative approach, <a href="https://dat-ecosystem-archive.github.io/book/ch01-01-flat-tree.html">flat in-order trees</a>.
+This scheme interleaves interior node hashes and data hashes.
+A tree with <span class="math">N</span> data blocks requires <span class="math">2N-1</span> slots, with <span class="math">i</span>-th data block hash stored at index <span class="math">2i</span>.
+The interior hashes reside at odd indices between the data block hashes.
+This scheme fixes the data node locations (slots with even indices contain leaf data nodes) and allows updating internal nodes efficiently.</p>
+<figure class="grayscale-diagram medium-size"><label class="margin-toggle" for="mn-in-order-tree">⊕</label><input type="checkbox" id="mn-in-order-tree" class="margin-toggle"><span class="marginnote">Representing a binary tree as an array using the flat in-order indexing.</span><p class="svg"><img src="/images/22-in-order-tree.svg"></p>
+</figure>
+<p>Unfortunately, the way DAT protocol defines trees is somewhat awkward: it treats the sequence as a forest of perfect binary trees, not a single binary tree.
+Furthermore, the specification doesn’t contain enough details on how to navigate the flat tree efficiently.</p>
+<p>This article describes an intuitive model for flat in-order tree navigation and suggests efficient routines for computing the parent and children of any tree node.</p>
+</section>
+<section><h2 id="sec-nomenclature"><a href="#sec-nomenclature">Nomenclature</a></h2>
+<p>We will consider two types of trees.
+First, we’ll analyze the case of <em>perfect binary trees</em> (<code>PBT</code>), i.e., binary trees in which all interior nodes have two children and all leaves have the same depth.
+These trees correspond to sequences of <span class="math">2<sup>K</sup></span> data blocks and contain <span class="math">2<sup>K+1</sup>-1</span> nodes.</p>
+<p>Second, we’ll generalize perfect trees to handle sequences of any <span class="math">N</span> data blocks.
+There is no established name for such trees, so we’ll call them <em>left-perfect binary trees</em> (<code>LPBT</code>).
+A left-perfect tree with <span class="math">N</span> leaves is either a perfect tree or a fork where the left child is a perfect tree containing at least <span class="math">N/2</span> leaves, and the right child is a left-perfect tree containing the rest of the leaves.</p>
+<figure class="grayscale-diagram medium-size"><label class="margin-toggle" for="mn-left-perfect-tree">⊕</label><input type="checkbox" id="mn-left-perfect-tree" class="margin-toggle"><span class="marginnote">
+    The left-perfect tree for a sequence of seven data blocks.
+    Dotted rectangles mark perfect subtrees.
+    The number of leaves in the perfect subtrees corresponds to powers of two in the binary representation of total leaf count.
+  </span><p class="svg"><img src="/images/22-left-perfect-tree.svg"></p>
+</figure>
+</section>
+<section><h2 id="sec-addressing"><a href="#sec-addressing">Addressing tree nodes</a></h2>
+<p>We’ll first examine addressing nodes within a flat in-order perfect binary tree and then extend the approach to left-perfect binary trees.</p>
+<p><span class="smallcaps">theorem</span>: in a flat in-order perfect binary tree of depth <span class="math">D</span>, node’s index <span class="math">i</span> has the following structure:
+</p>
+<ul class="arrows"><li>
+    The longest run of least-significant set bits in <span class="math">i</span>’s binary representation indicates the depth of subtrees rooted at <span class="math">i</span>.
+    If <span class="math">i</span>’s binary representation has the last <span class="math">K</span> bits set, <span class="math">i</span>’s children are subtrees of depth <span class="math">K</span>.
+    </li><li>
+    The bits before the last zero signify the path to node <span class="math">i</span> starting from the tree root.
+    Zeros indicate left turns; ones indicate right turns.
+</li></ul>
+<figure class="grayscale-diagram medium-size"><label class="margin-toggle" for="mn-addressing-scheme">⊕</label><input type="checkbox" id="mn-addressing-scheme" class="margin-toggle"><span class="marginnote">
+    The addressing scheme for nodes in the flat in-order representation of perfect binary trees.
+  </span><p class="svg"><img src="/images/22-addressing-scheme.svg"></p>
+</figure>
+<p><span class="smallcaps">proof</span>: by induction on the tree depth <span class="math">D</span>.</p>
+<p>Base case: the theorem is vacuously true for trees of depth one (a single node with index zero).
+The case of a tree of depth two is more instructive:</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-addressing-scheme">⊕</label><input type="checkbox" id="mn-addressing-scheme" class="margin-toggle"><span class="marginnote">
+    An example of the in-order addressing scheme for a tree of depth two.
+  </span><p class="svg"><img src="/images/22-depth-two-example.svg"></p>
+</figure>
+<p>Induction step: let’s assume that the theorem holds for trees of depth <span class="math">D</span> and consider a tree of depth <span class="math">D+1</span>.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-visual-proof">⊕</label><input type="checkbox" id="mn-visual-proof" class="margin-toggle"><span class="marginnote">
+    The induction step of the flat in-order tree addressing theorem.
+  </span><p class="svg"><img src="/images/22-visual-proof.svg"></p>
+</figure>
+<p>The root of a <span class="math">D+1</span>-tree resides at index <span class="math">2<sup>D</sup>-1</span>, so its binary representation is <span class="math">011…1</span>, with precisely <span class="math">D</span> least-significant bits set.
+The binary representation of indices in the left subtree starts with zero, followed by a <span class="math">D</span>-tree address.
+The binary representation of indices in the right subtree begins with one, followed by a <span class="math">D</span>-tree address.
+Hence, the addressing scheme preserves as we increase the tree depth from <span class="math">D</span> to <span class="math">D+1</span>.
+∎</p>
+</section>
+<section><h2 id="sec-fbt"><a href="#sec-fbt">Traversing perfect binary trees</a></h2>
+<p>We’ll need two primitive bit-twiddling operations for the tree navigation: locating the last zero bit of a number and rounding a number up to a power of two<label class="margin-toggle sidenote-number" for="sn-examples-c"></label><input type="checkbox" id="sn-examples-c" class="margin-toggle"><span class="sidenote">
+  All code in this article is in the <a href="https://en.wikipedia.org/wiki/C_(programming_language)">C programming language</a> and complies with the <a href="https://en.wikipedia.org/wiki/C11_(C_standard_revision)">C11 standard</a>.
+</span>.</p>
+<div class="source-container"><pre class="source c"><code><span class="line">#include &lt;assert.h&gt;</span>
+<span class="line">#include &lt;stdint.h&gt;</span>
+<span class="line"></span>
+<span class="line"><em>// Isolates the last set bit of number N.</em></span>
+<span class="line">uint64_t LastSetBit(const uint64_t n) {</span>
+<span class="line">    return n - ((n - 1) &amp; n);</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><em>// Isolates the last unset bit of number N.</em></span>
+<span class="line">uint64_t LastZeroBit(const uint64_t n) {</span>
+<span class="line">    return LastSetBit(n + 1);</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><em>// Rounds the argument up to the next highest power of two.</em></span>
+<span class="line">uint64_t RoundUpPowerOf2(uint64_t n) {</span>
+<span class="line">    // See <a href="https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2">Bit Twiddling Hacks</a>.</span>
+<span class="line">    n--;</span>
+<span class="line">    n |= n &gt;&gt; 1;</span>
+<span class="line">    n |= n &gt;&gt; 2;</span>
+<span class="line">    n |= n &gt;&gt; 4;</span>
+<span class="line">    n |= n &gt;&gt; 8;</span>
+<span class="line">    n |= n &gt;&gt; 16;</span>
+<span class="line">    n |= n &gt;&gt; 32;</span>
+<span class="line">    n++;</span>
+<span class="line">    return n;</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>We are now ready to define the tree navigation functions.
+The addressing scheme proof suggests the function for locating the tree root: we divide the tree size by two.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the root of the perfect binary tree of the given SIZE.</em></span>
+<span class="line">uint64_t PBT_Root(const uint64_t size) {</span>
+<span class="line">    assert(size == 1 || RoundUpPowerOf2(size) == size + 1);</span>
+<span class="line">    return size &gt;&gt; 1;</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Next, let’s consider locating the parent of node <span class="math">i</span>.
+According to the scheme, we must find the last zero in the binary representation of <span class="math">i</span>, set it to one, and set the next most significant bit to zero.</p>
+<figure class="grayscale-diagram medium-size"><label class="margin-toggle" for="mn-fbt-parent">⊕</label><input type="checkbox" id="mn-fbt-parent" class="margin-toggle"><span class="marginnote">
+    The relation between binary representations of node <span class="math">i</span> and its parent <span class="math">p</span> in a flat in-order perfect binary tree.
+    If bit <span class="math">b<sub>k</sub></span> is zero, then <span class="math">i</span> is the left child. Otherwise, <span class="math">i</span> is the right child.
+  </span><p class="svg"><img src="/images/22-fbt-parent.svg"></p>
+</figure>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the parent of node I in a perfect binary tree.</em></span>
+<span class="line">uint64_t PBT_Parent(const uint64_t i) {</span>
+<span class="line">    return (LastZeroBit(i) | i) &amp; ~(LastZeroBit(i) &lt;&lt; 1);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Finally, the parent computation suggests procedures for locating the children.
+We must find the last zero bit <span class="math">k</span> in the node’s binary representation.
+For the left child, we must set bit <span class="math">k-1</span> to zero.
+For the right child, we also need to set bit <span class="math">k</span> to one.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the left child of node P in a perfect binary tree.</em></span>
+<span class="line"><em>// Requires: P is not a leaf.</em></span>
+<span class="line">uint64_t PBT_LeftChild(const uint64_t p) {</span>
+<span class="line">    assert(p &amp; 1);</span>
+<span class="line">    return p &amp; ~(LastZeroBit(p) &gt;&gt; 1);</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><em>// Computes the right child of node P in a perfect binary tree.</em></span>
+<span class="line"><em>// Requires: P is not a leaf.</em></span>
+<span class="line">uint64_t PBT_RightChild(const uint64_t p) {</span>
+<span class="line">    assert(p &amp; 1);</span>
+<span class="line">    return (p | LastZeroBit(p)) &amp; ~(LastZeroBit(p) &gt;&gt; 1);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Next, we’ll generalize these functions to handle left-perfect binary trees.</p>
+</section>
+<section><h2 id="sec-lpbt"><a href="#sec-lpbt">Traversing left-perfect binary trees</a></h2>
+<p>The left subtree of a left-perfect binary tree is a perfect binary tree by definition.
+Hence the formula for the left child we developed for perfect binary trees works as-is.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the left child in a flat in-order left-perfect binary tree.</em></span>
+<span class="line">uint64_t LPBT_LeftChild(const uint64_t i) { return PBT_LeftChild(i); }</span>
+</code></pre></div>
+<p>We need three more operations to efficiently navigate a left-perfect binary tree: finding the tree root and computing the node’s parent and right child.
+Left-perfect binary tree structure changes with the node count, so the latter two functions will depend on the node index and the tree node count.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-cbt-structure">⊕</label><input type="checkbox" id="mn-cbt-structure" class="margin-toggle"><span class="marginnote">
+    In a left-perfect binary tree, the tree structure changes as the tree grows.
+    The parent of node 4 in a five-node tree is node 3, but it becomes node 5 when we add one more leaf.
+  </span><p class="svg"><img src="/images/22-cbt-structure-change.svg"></p>
+</figure>
+<p>In a left-perfect binary tree, the tree root is the same node that the smallest perfect binary tree with at least the same number of nodes would have.
+Thus, given the number of tree nodes, we compute the root of the smallest perfect tree containing the input tree.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the root of a left-perfect binary tree of the given SIZE.</em></span>
+<span class="line">uint64_t LPBT_Root(const uint64_t size) {</span>
+<span class="line">    return PBT_Root(RoundUpPowerOf2(size + 1) - 1);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Another way to view left-perfect binary trees is to imagine them as perfect binary trees with some trailing nodes removed.
+The remaining nodes are reattached to the closest existing parent to keep the tree complete.
+This observation gives us a simple way to compute the node’s parent:
+We apply the <code>PBT_Parent</code> function until the computed node falls within the tree bounds.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-missing-nodes">⊕</label><input type="checkbox" id="mn-missing-nodes" class="margin-toggle"><span class="marginnote">
+    We can see a left-perfect binary tree as a perfect binary tree with some of the trailing nodes in the right subtree removed.
+    Note that all of the missing nodes are outside of the tree.
+    Following node’s <q>virtual</q> parents until we hit a <q>real</q> node gives us the node’s true parent.
+  </span><p class="svg"><img src="/images/22-missing-nodes.svg"></p>
+</figure>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the parent of node I in a left-perfect binary tree of the given SIZE.</em></span>
+<span class="line">uint64_t LPBT_Parent_Iterative(uint64_t i, const uint64_t size) {</span>
+<span class="line">    do { i = PBT_Parent(i); } while (i &gt;= size);</span>
+<span class="line">    reutrn i;</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>There is also a non-iterative way to find the parent in a left-perfect tree.
+Notice that the <code>PBT_Parent</code> function can return a value outside the array only if the input node is either the root node or a right child<label class="margin-toggle sidenote-number" for="sn-parent-right-proof"></label><input type="checkbox" id="sn-parent-right-proof" class="margin-toggle"><span class="sidenote">
+Proof: if the node is a left child, then it’s a root of a perfect binary tree (by definition of left-perfect trees), and its parent resides to its right within the array bounds (by construction of in-order trees).
+</span>.
+Furthermore, if node <code>i</code> is a right child, its parent is always the node preceding <code>i</code>-th most-left leaf.
+Thus, we can attempt to compute the parent using <code>PBT_Parent</code> first and adjust the result if it falls out of bounds.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the leftmost leaf of node I in a perfect binary tree.</em></span>
+<span class="line">uint64_t PBT_LeftmostLeaf(const uint64_t i) {</span>
+<span class="line">    return i &amp; (i + 1);</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><em>// Computes the parent of node I in a left-perfect binary tree of the given SIZE.</em></span>
+<span class="line">uint64_t LPBT_Parent(const uint64_t i, const uint64_t size) {</span>
+<span class="line">    assert(i != LPBT_Root(size));</span>
+<span class="line">    const uint64_t p = PBT_Parent(i);</span>
+<span class="line">    return (p &lt; size) ? p : PBT_LeftmostLeaf(i) - 1;</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Our observations give us two algorithms for computing the right child.
+Notice that the <code>PBT_RightChild</code> function gives correct results if the output value falls within the tree bounds.
+If the outcome falls outside the tree bounds, the recursive definition of left-perfect trees implies that the right child must be the root of the right subtree.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the right child of node I in a left-perfect binary tree of the given SIZE.</em></span>
+<span class="line">uint64_t LPBT_RightChild(const uint64_t i, const uint64_t size) {</span>
+<span class="line">    assert(n &amp; 1);</span>
+<span class="line">    const uint64_t r = PBT_RightChild(i);</span>
+<span class="line">    return (r &lt; size) ? r : i + 1 + LPBT_Root(size - i - 1);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>Alternatively, if <code>PBT_RightChild</code>’s result falls outside of the tree, we can follow the left links in the <q>virtual</q> perfect tree until we hit the tree bounds again.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the right child of node I in a left-perfect binary tree of the given SIZE.</em></span>
+<span class="line">uint64_t LPBT_RightChild_Iterative(const uint64_t i, const uint64_t size) {</span>
+<span class="line">    assert(n &amp; 1);</span>
+<span class="line">    uint64_t r;</span>
+<span class="line">    for (r = PBT_RightChild(n); r &lt; size; r = PBT_LeftChild(r));</span>
+<span class="line">    return r;</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>We now have enough tools to navigate any left-perfect binary tree efficiently.</p>
+</section>
+<section><h2 id="sec-extensible-segment-trees"><a href="#sec-extensible-segment-trees">Extensible segment trees</a></h2>
+<p>Merkle trees are a special case of <a href="https://cp-algorithms.com/data_structures/segment_tree.html">segment trees</a>.
+Traditional representations of segment trees allow efficient updates, but they don’t support appending new items to the sequence.
+Flat in-order representation for segment trees opens a path to an efficient append operation.</p>
+<p>This section presents an implementation of segment trees designed for answering range sum queries.
+The same approach will work for any problem where node elements and the aggregation operation form a <a href="https://en.wikipedia.org/wiki/Semigroup">semigroup</a>.</p>
+<p>We’ll need a new operation to support efficient range queries: finding the <a href="https://en.wikipedia.org/wiki/Lowest_common_ancestor">lowest common ancestor</a> (LCA) of two leaves in a left-perfect binary tree.
+The <a href="#sec-addressing">tree addressing scheme</a> suggests a simple way to compute LCA for leaves because their paths from the root node are aligned.
+We must find the most significant bit where the leaves differ, set this bit to zero, and set all lower bits.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Extracts the most significant bit from number N.</em></span>
+<span class="line">uint64_t MostSignificantBit(uint64_t n) {</span>
+<span class="line">    uint64_t x = n;</span>
+<span class="line">    x |= (x &gt;&gt; 1);</span>
+<span class="line">    x |= (x &gt;&gt; 2);</span>
+<span class="line">    x |= (x &gt;&gt; 4);</span>
+<span class="line">    x |= (x &gt;&gt; 8);</span>
+<span class="line">    x |= (x &gt;&gt; 16);</span>
+<span class="line">    x |= (x &gt;&gt; 32);</span>
+<span class="line">    return x - (x &gt;&gt; 1);</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><em>// Computes the lowest common ancestor of leaves X and Y in a left-perfect</em></span>
+<span class="line"><em>// binary tree.</em></span>
+<span class="line">uint64_t LPBT_LeavesLCA(const uint64_t x, const uint64_t y) {</span>
+<span class="line">    assert(!(x &amp; 1));</span>
+<span class="line">    assert(!(y &amp; 1));</span>
+<span class="line"></span>
+<span class="line">    if (x == y) return x;</span>
+<span class="line">    const uint64_t d = MostSignificantBit(x ^ y);</span>
+<span class="line">    return (x &amp; ~d) | (d - 1);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>We can now proceed with the segment tree implementation.
+Let’s define the data structures representing the tree.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// The type of values stored in the tree nodes.</em></span>
+<span class="line">typedef int64_t value_t;</span>
+<span class="line"></span>
+<span class="line"><em>// The maximum number of nodes in the tree.</em></span>
+<span class="line">const size_t MAX_NODES = 10001;</span>
+<span class="line"></span>
+<span class="line"><em>// The current number of nodes in the tree.</em></span>
+<span class="line"><em>// Invariant: G_NumNodes &lt;= MAX_NODES</em></span>
+<span class="line"><em>// Invariant: G_NumNodes == 0 || G_NumNodes % 2 == 1</em></span>
+<span class="line">size_t G_NumNodes;</span>
+<span class="line"></span>
+<span class="line"><em>// The flat in-order representation of the tree.</em></span>
+<span class="line"><em>// Even elements correspond to the sequence items.</em></span>
+<span class="line">value_t G_Nodes[MAX_NODES];</span>
+</code></pre></div>
+<p>We highlight that the trees work with any semigroup by extracting the combining operator into a separate function.</p>
+<div class="source-container"><pre class="source c"><code><span class="line">value_t Combine(const value_t x, const value_t y) {</span>
+<span class="line">    return x + y;</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>We then define procedure <code>ST_Set</code> updating the sequence.
+It sets the corresponding leaf value and traverses the tree upwards, recomputing the parent node values.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Updates the sequence to contain the given ITEM at the specified POSITION.</em></span>
+<span class="line">void ST_Set(const size_t position, const value_t item) {</span>
+<span class="line">    assert(G_NumNodes &gt; 0);</span>
+<span class="line">    assert(position &lt;= G_NumNodes / 2);</span>
+<span class="line"></span>
+<span class="line">    size_t i = position * 2;</span>
+<span class="line">    G_Nodes[i] = item;</span>
+<span class="line"></span>
+<span class="line">    if (G_NumNodes == 1) return;</span>
+<span class="line"></span>
+<span class="line">    size_t root = LPBT_Root(G_NumNodes);</span>
+<span class="line">    do {</span>
+<span class="line">        i = LPBT_Parent(i, G_NumNodes);</span>
+<span class="line">        G_Nodes[i] = Combine(</span>
+<span class="line">            G_Nodes[LPBT_LeftChild(i)],</span>
+<span class="line">            G_Nodes[LPBT_RightChild(i, G_NumNodes)]</span>
+<span class="line">        );</span>
+<span class="line">    } while (i != root);</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The <code>ST_Append</code> procedure adds an item to the sequence and updates the tree accordingly.
+The empty sequence is a special case because there are no interior nodes to update.
+In the case of non-empty sequences, the procedure adds a new interior node and a leaf and delegates the rest to the previously defined <code>ST_Set</code> procedure.</p>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Appends the given ITEM to the sequence.</em></span>
+<span class="line">void ST_Append(const value_t item) {</span>
+<span class="line">    assert(G_NumNodes + 2 &lt;= MAX_NODES);</span>
+<span class="line"></span>
+<span class="line">    if (G_NumNodes == 0) {</span>
+<span class="line">        G_Nodes[G_NumNodes++] = item;</span>
+<span class="line">    } else {</span>
+<span class="line">        G_NumNodes += 2;</span>
+<span class="line">        ST_Set(G_NumNodes / 2, item);</span>
+<span class="line">    }</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The <code>ST_Sum</code> function computing the sum of sequence items in the specified range is the most involved part of the implementation.
+It relies on the <code>LPBT_LeavesLCA</code> function to compute the LCA of the two leaves corresponding to the requested bounds.
+It then traverses the tree from the left bound to the LCA node, summing all unaccounted <em>right</em> subtrees on the way up.
+It does the same for the right bound, summing all unaccounted <em>left</em> subtrees on the path.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-lca-sum">⊕</label><input type="checkbox" id="mn-lca-sum" class="margin-toggle"><span class="marginnote">
+    Computing the sum of items in the range from sequence item <span class="math">l = 1</span> (node index <span class="math">i = 2</span>) to item <span class="math">r = 5</span> (node index <span class="math">j = 10</span>) in a flat in-order tree using traversal to the lowest common ancestor.
+    Dotted rectangles mark subtrees to be accumulated.
+  </span><p class="svg"><img src="/images/22-lca-sum.svg"></p>
+</figure>
+<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the sum of the sequence items in the index interval [l, r].</em></span>
+<span class="line">value_t ST_Sum(const size_t l, const size_t r) {</span>
+<span class="line">    assert(r * 2 &lt; G_NumNodes);</span>
+<span class="line">    assert(l &lt;= r);</span>
+<span class="line"></span>
+<span class="line">    uint64_t i = l * 2;</span>
+<span class="line">    uint64_t j = r * 2;</span>
+<span class="line"></span>
+<span class="line">    if (i == j) return G_Nodes[i];</span>
+<span class="line"></span>
+<span class="line">    const uint64_t lca = LPBT_LeavesLCA(i, j);</span>
+<span class="line">    value_t acc = Combine(G_Nodes[i], G_Nodes[j]);</span>
+<span class="line"></span>
+<span class="line">    <em>// Traverse the tree upwards from the left bound and sum up all</em></span>
+<span class="line">    <em>// the right subtrees on the way.</em></span>
+<span class="line">    while (1) {</span>
+<span class="line">        const uint64_t p = LPBT_Parent(i, G_NumNodes);</span>
+<span class="line">        if (p == lca) break;</span>
+<span class="line"></span>
+<span class="line">        const uint64_t rc = LPBT_RightChild(p, G_NumNodes);</span>
+<span class="line">        if (rc != i) acc = Combine(acc, G_Nodes[rc]);</span>
+<span class="line">        i = p;</span>
+<span class="line">    }</span>
+<span class="line">    <em>// Traverse the tree upwards from the right bound and sum up all</em></span>
+<span class="line">    <em>// the left subtrees on the way.</em></span>
+<span class="line">    while (1) {</span>
+<span class="line">        const uint64_t p = LPBT_Parent(j, G_NumNodes);</span>
+<span class="line">        if (p == lca) break;</span>
+<span class="line"></span>
+<span class="line">        const uint64_t lc = LPBT_LeftChild(p);</span>
+<span class="line">        if (lc != j) acc = Combine(acc, G_Nodes[lc]);</span>
+<span class="line">        j = p;</span>
+<span class="line">    }</span>
+<span class="line">    return acc;</span>
+<span class="line">}</span>
+</code></pre></div>
+<p>The <code>ST_Append</code>, <code>ST_Set</code>, and <code>ST_Sum</code> procedures provide a working implementation of extensible segment trees.</p>
+</section>
+
+<div id="next-prev-nav"><div id="newer"><a href="/posts/23-numeric-tower-fiasco.html"> ←The numeric tower fiasco</a></div><div id="older"><a href="/posts/21-machs-principle.html">Mach’s principle→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

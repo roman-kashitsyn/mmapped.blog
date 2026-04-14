@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="ocaml,programming,puzzles"><meta name="description" content="Reflection on puzzles and OCaml."><title>Advent of Code 2024</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/35-aoc-2024.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/35-aoc-2024.html">Advent of Code 2024</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2025-01-02</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2025-01-03</span></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#puzzles">Puzzles</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#hoof-it">Day 10: Hoof It</a></li><li class="toc toc-level-2"><a href="#chronospacial-computer">Day 17: Chronospacial Computer</a></li><li class="toc toc-level-2"><a href="#keypad-conundrum">Day 21: Keypad Conundrum</a></li></ul></li><li class="toc toc-level-1"><a href="#ocaml-retro">OCaml retrospective</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#good-parts">The good parts</a></li><li class="toc toc-level-2"><a href="#bad-parts">The bad parts</a></li></ul></li></ul><hr>
+
+<section><figure><label class="margin-toggle" for="mn-aoc-screen">⊕</label><input type="checkbox" id="mn-aoc-screen" class="margin-toggle"><span class="marginnote">Screenshot of the 2024 event page.</span><img src="/images/35-aoc-screen.png">
+</figure>
+<p>Advent of Code (AoC) 2024 was my first advent of code.
+I chose OCaml to solve this year’s puzzles.
+I used it before on online judge websites (e.g., <a href="https://www.hackerrank.com/">Hackerrank</a>) and felt productive with the language.</p>
+<p>This article describes solutions to the puzzles I enjoyed the most and reflects on OCaml’s pros and cons in the AoC context.</p>
+</section>
+<section><h2 id="puzzles"><a href="#puzzles">Puzzles</a></h2>
+<p>Most AoC puzzles were fun, but some stirred more profound experiences: aesthetic appreciation, struggle, and the exhilaration of finally cracking the code.
+This section describes solutions to three puzzles.</p>
+<h3 id="hoof-it"><a href="#hoof-it">Day 10: Hoof It</a></h3>
+<p>The <a href="https://adventofcode.com/2024/day/10">Hoof It</a> puzzle asks you to count particular paths on a grid.
+The grid elements are integers from zero to nine representing heights; a path exists between two neighboring cells if their heights differ by one.
+The first part asks you to count unique combinations of zeros and nines between which a path exists.
+The second part asks you to count the number of <em>distinct</em> paths between ones and nines.</p>
+<p>This puzzle wasn’t hard, but it’s an interesting example of dynamic programming on a graph.
+I could express both parts with a single algorithm parameterized over the monoid type accumulating answers for each cell.
+In the first part, the monoid is the set of all the nines reachable from a cell with the set union operation.
+In the second, it’s the additive monoid of integers representing the number of distinct paths leading to nines.</p>
+<p>This question is perfect for demonstrating OCaml’s <a href="https://dev.realworldocaml.org/first-class-modules.html">first-class modules</a>.</p>
+<p>The <code>DpMonoid</code> module signature describes the interface for types we’ll use for dynamic programming.</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line">module type DpMonoid = sig</span>
+<span class="line">  type t</span>
+<span class="line">  <em>(** The neutral element of the monoid. *)</em></span>
+<span class="line">  val identity : t</span>
+<span class="line">  <em>(** Combine two monoidal values. *)</em></span>
+<span class="line">  val append : t -&gt; t -&gt; t</span>
+<span class="line">  <em>(** Wrap a &quot;nine&quot; on the grid at the specified location into a monoidal value. *)</em></span>
+<span class="line">  val inject : int -&gt; int -&gt; t</span>
+<span class="line">  <em>(** Convert a monoidal value to a path score. *)</em></span>
+<span class="line">  val project : t -&gt; int</span>
+<span class="line">end</span>
+</code></pre></div>
+<p>
+The <code>count</code> function implements the dynamic programming driver.
+It builds a matrix of monoidal values,
+accumulates these values along valid paths starting from nines,
+and counts path scores at zero heights.</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line">let count (map : int array array) (module M : DpMonoid) : int =</span>
+<span class="line">  let n, m = Array.length map, Array.length map.(0) in</span>
+<span class="line">  let dp = Array.make_matrix n m M.identity in</span>
+<span class="line">  let each f = for i = 0 to n-1 do for j = 0 to m-1 do f i j done done in</span>
+<span class="line">  each (fun i j -&gt; if map.(i).(j) == 9 then dp.(i).(j) &lt;- M.inject i j);</span>
+<span class="line">  for d = 8 downto 0 do</span>
+<span class="line">    each (fun i j -&gt; if map.(i).(j) == d then</span>
+<span class="line">                       Array.iter (fun (dx, dy) -&gt;</span>
+<span class="line">                           let x, y = i + dx, j + dy in</span>
+<span class="line">                           if x &gt;= 0 &amp;&amp; x &lt; n &amp;&amp; y &gt;= 0 &amp;&amp; y &lt; n</span>
+<span class="line">                              &amp;&amp; map.(x).(y) == d+1 then</span>
+<span class="line">                             dp.(i).(j) &lt;- M.append dp.(i).(j) dp.(x).(y);</span>
+<span class="line">                         ) [|(1, 0); (-1, 0); (0, 1); (0, -1)|]</span>
+<span class="line">      )</span>
+<span class="line">  done;</span>
+<span class="line">  let total = ref 0 in</span>
+<span class="line">  each (fun i j -&gt; if map.(i).(j) == 0 then total := !total + M.project dp.(i).(j));</span>
+<span class="line">  !total</span>
+</code></pre></div>
+<p>
+The entry point calls the <code>count</code> function twice with different monoids:
+the <code>IntSet</code> monoid to compute trailhead scores and the additive integers to compute the total path count.</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line">let read_map fname =</span>
+<span class="line">  let tmp = Arg.read_arg fname in</span>
+<span class="line">  Array.map (fun s -&gt;</span>
+<span class="line">      String.to_seq s</span>
+<span class="line">      |&gt; Seq.map (fun c -&gt; Char.code c - Char.code '0')</span>
+<span class="line">      |&gt; Array.of_seq</span>
+<span class="line">    ) tmp</span>
+<span class="line"></span>
+<span class="line">let () =</span>
+<span class="line">  let map = read_map &quot;10-input.txt&quot; in</span>
+<span class="line">  count map (module struct</span>
+<span class="line">               module IntSet = Set.Make(Int)</span>
+<span class="line">               type t = IntSet.t</span>
+<span class="line">               let identity = IntSet.empty</span>
+<span class="line">               let append = IntSet.union</span>
+<span class="line">               let inject i j = IntSet.singleton ((Array.length map) * i + j)</span>
+<span class="line">               let project = IntSet.cardinal</span>
+<span class="line">             end)</span>
+<span class="line">  |&gt; Printf.printf &quot;%d\n&quot;;</span>
+<span class="line">  count map (module struct</span>
+<span class="line">               type t = int</span>
+<span class="line">               let identity = 0</span>
+<span class="line">               let append = (+)</span>
+<span class="line">               let inject _ _ = 1</span>
+<span class="line">               let project = Fun.id</span>
+<span class="line">             end)</span>
+<span class="line">  |&gt; Printf.printf &quot;%d\n&quot;</span>
+</code></pre></div>
+<h3 id="chronospacial-computer"><a href="#chronospacial-computer">Day 17: Chronospacial Computer</a></h3>
+<p>The <a href="https://adventofcode.com/2024/day/17">Chronospacial Computer</a> puzzle asks you to implement an interpreter for a simple compute device (part 1)
+and find an initial state of the processor that turns a given program into a <a href="https://en.wikipedia.org/wiki/Quine_(computing)">quine</a>.</p>
+<p>The first part of the problem was straightforward to implement:
+</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line">type cpu = { a : int; b : int; c : int; p : int; }</span>
+<span class="line">type out = Nothing | Just of int | Halt</span>
+<span class="line"></span>
+<span class="line">let read_prog fname =</span>
+<span class="line">  let b = Scanf.Scanning.from_file fname in</span>
+<span class="line">  let cpu, prog =</span>
+<span class="line">    Scanf.bscanf b &quot;Register A: %d\nRegister B: %d\nRegister C: %d\n\nProgram: %s&quot;</span>
+<span class="line">      (fun a b c prg -&gt;</span>
+<span class="line">        ({a=a; b=b; c=c; p=0},</span>
+<span class="line">         prg |&gt; String.split_on_char ','</span>
+<span class="line">         |&gt; List.map int_of_string |&gt; Array.of_list)</span>
+<span class="line">      ) in</span>
+<span class="line">  Scanf.Scanning.close_in b;</span>
+<span class="line">  (cpu, prog)</span>
+<span class="line"></span>
+<span class="line">let read_combo cpu b = match b with</span>
+<span class="line">  | 0 | 1 | 2 | 3 -&gt; b</span>
+<span class="line">  | 4 -&gt; cpu.a</span>
+<span class="line">  | 5 -&gt; cpu.b</span>
+<span class="line">  | 6 -&gt; cpu.c</span>
+<span class="line">  | _ -&gt; raise (Failure (Printf.sprintf &quot;bad combo value: %d&quot; b))</span>
+<span class="line"></span>
+<span class="line">let step cpu prog =</span>
+<span class="line">  if Array.length prog &lt;= cpu.p then (cpu, Halt) else</span>
+<span class="line">    let arg = prog.(cpu.p + 1) in</span>
+<span class="line">    match prog.(cpu.p) with</span>
+<span class="line">    | 0 -&gt; let r = cpu.a / (Int.shift_left 1 (read_combo cpu arg)) in</span>
+<span class="line">           ({ cpu with a = r; p = cpu.p+2}, Nothing)</span>
+<span class="line">    | 1 -&gt; ({ cpu with b = cpu.b lxor arg; p = cpu.p + 2}, Nothing)</span>
+<span class="line">    | 2 -&gt; ({ cpu with b = (read_combo cpu arg) mod 8; p = cpu.p + 2}, Nothing)</span>
+<span class="line">    | 3 -&gt; if cpu.a == 0 then ({cpu with p=cpu.p + 2}, Nothing)</span>
+<span class="line">           else ({cpu with p = arg}, Nothing)</span>
+<span class="line">    | 4 -&gt; ({ cpu with b = cpu.b lxor cpu.c; p = cpu.p + 2 }, Nothing)</span>
+<span class="line">    | 5 -&gt; ({ cpu with p = cpu.p + 2}, Just((read_combo cpu arg) mod 8))</span>
+<span class="line">    | 6 -&gt; let r = cpu.a / (Int.shift_left 1 (read_combo cpu arg)) in</span>
+<span class="line">           ({ cpu with b = r; p = cpu.p+2}, Nothing)</span>
+<span class="line">    | 7 -&gt; let arg = read_combo cpu arg in</span>
+<span class="line">           let r = cpu.a / (Int.shift_left 1 arg) in</span>
+<span class="line">           ({ cpu with c = r; p = cpu.p+2 }, Nothing)</span>
+<span class="line">    | _ -&gt; raise (Failure (Printf.sprintf &quot;unsupported opcode %d&quot; prog.(cpu.p)))</span>
+<span class="line"></span>
+<span class="line">let rec run cpu prog out =</span>
+<span class="line">  match step cpu prog with</span>
+<span class="line">  | (cpu, Nothing) -&gt; run cpu prog out</span>
+<span class="line">  | (cpu, Just v) -&gt; run cpu prog (v :: out)</span>
+<span class="line">  | (_, Halt) -&gt; out</span>
+<span class="line"></span>
+<span class="line">let () =</span>
+<span class="line">  let cpu, prog = read_prog &quot;17-input.txt&quot; in</span>
+<span class="line">  run cpu prog [] |&gt; List.rev |&gt; List.map string_of_int</span>
+<span class="line">  |&gt; String.concat &quot;,&quot; |&gt; print_string;</span>
+<span class="line">  print_newline ()</span>
+</code></pre></div>
+<p>
+The second part gave me a hard time.
+A brute-force search attempt didn’t produce results in a reasonable time:</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line">let rec quine cpu prog i =</span>
+<span class="line">  match step cpu prog with</span>
+<span class="line">  | (cpu, Nothing) -&gt; quine cpu prog i</span>
+<span class="line">  | (cpu, Just v) -&gt; i &lt; Array.length prog &amp;&amp; prog.(i) == v &amp;&amp; quine cpu prog (i+1)</span>
+<span class="line">  | (_, Halt) -&gt; i == Array.length prog</span>
+<span class="line"></span>
+<span class="line">let brute_force () =</span>
+<span class="line">  Seq.ints 0 |&gt; Seq.filter (fun v -&gt; quine {cpu with a = v} prog 0)</span>
+<span class="line">  |&gt; Seq.uncons |&gt; Option.get |&gt; fst |&gt; print_int</span>
+</code></pre></div>
+<p>I had to find a solution that makes more assumptions about the program,
+so I wrote a little disassembler to investigate what the program does.</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line">let disassemble prog =</span>
+<span class="line">  let print_combo n = match n with | 0 | 1 | 2 | 3 -&gt; print_int n</span>
+<span class="line">                                   | 4 -&gt; print_string &quot;%a&quot;</span>
+<span class="line">                                   | 5 -&gt; print_string &quot;%b&quot;</span>
+<span class="line">                                   | 6 -&gt; print_string &quot;%c&quot;</span>
+<span class="line">                                   | _ -&gt; () in</span>
+<span class="line">  for i = 0 to (Array.length prog) / 2  - 1 do</span>
+<span class="line">    let arg = prog.(2*i+1) in</span>
+<span class="line">    print_newline ();</span>
+<span class="line">    match prog.(2*i) with</span>
+<span class="line">    | 0 -&gt; (print_string &quot;%a &lt;- div %a 2^&quot;; print_combo arg)</span>
+<span class="line">    | 1 -&gt; (print_string &quot;%b &lt;- xor %b &quot;; print_int arg; print_string &quot; mod 8&quot;)</span>
+<span class="line">    | 2 -&gt; (print_string &quot;%b &lt;- &quot;; print_combo arg; print_string &quot; mod 8&quot;)</span>
+<span class="line">    | 3 -&gt; (print_string &quot;jnz &quot;; print_int arg)</span>
+<span class="line">    | 4 -&gt; (print_string &quot;%b &lt;- %b xor %c&quot;)</span>
+<span class="line">    | 5 -&gt; (print_string &quot;out &quot;; print_combo arg; print_string &quot; mod 8&quot;)</span>
+<span class="line">    | 6 -&gt; (print_string &quot;%b &lt;- div %a 2^&quot;; print_combo arg)</span>
+<span class="line">    | 7 -&gt; (print_string &quot;%b &lt;- div %a 2^&quot;; print_combo arg)</span>
+<span class="line">    | _ -&gt; ()</span>
+<span class="line">  done;</span>
+<span class="line">  print_newline ()</span>
+</code></pre></div>
+<p>That’s what my program was:
+</p>
+<div class="source-container"><pre class="source"><code>%b &lt;- %a mod 8
+%b &lt;- xor %b 2 mod 8
+%b &lt;- div %a 2^%b
+%b &lt;- %b xor %c
+%a &lt;- div %a 2^3
+%b &lt;- xor %b 7 mod 8
+out %b mod 8
+jnz 0
+</code></pre></div>
+<p>This program shifts the <code>A</code> register right by three bits, outputs three bits, and halts when the register is zero.
+We now have an explanation for the ineffectiveness of the brute force approach: the target <code>A</code> value is around 3×16 = 48 bits long!
+The program can’t loop forever (the <code>A</code> decreases on every iteration) and, more importantly, we can construct the quine iteratively in three-bit groups.</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line">let rec first_n_eq n lhs rhs = match n, lhs, rhs with</span>
+<span class="line">  | 0, _, _ -&gt; true</span>
+<span class="line">  | i, x :: xs, y :: ys -&gt; x == y &amp;&amp; first_n_eq (i-1) xs ys</span>
+<span class="line">  | _ -&gt; false</span>
+<span class="line"></span>
+<span class="line">let find_forward cpu prog =</span>
+<span class="line">  let n = Array.length prog in</span>
+<span class="line">  let rev = Array.to_list prog |&gt; List.rev in</span>
+<span class="line">  let digits = Array.make n 0 in</span>
+<span class="line">  let mk () = Array.fold_left (fun acc x -&gt; acc * 8 + x) 0 digits in</span>
+<span class="line">  for i = 0 to n-1 do</span>
+<span class="line">    let out = ref (run {cpu with a = mk ()} prog []) in</span>
+<span class="line">    while not (first_n_eq (i+1) rev !out) do</span>
+<span class="line">      digits.(i) &lt;- digits.(i) + 1;</span>
+<span class="line">      out := run {cpu with a = mk ()} prog [];</span>
+<span class="line">      if digits.(i) &gt; 1000 (* <span class="circled-ref">①</span> *)</span>
+<span class="line">      then raise (Failure (Printf.sprintf &quot;failed at digit %d&quot; i));</span>
+<span class="line">    done;</span>
+<span class="line">  done;</span>
+<span class="line">  mk ()</span>
+</code></pre></div>
+<p>The <code>find_forward</code> function initializes an array of three-bit digits constituting the <code>A</code> register value and tweaks one digit at a time to obtain the desired program prefix.
+The line marked with <span class="circled-ref">①</span> is the most mysterious:
+<em>Why do we allow a supposedly three-bit digit to exceed seven?</em>
+Sometimes, we must adjust the previous digits of <code>A</code> to produce the next item.
+If we allow larger values for digits, we can tweak more significant digits to accommodate new constraints.
+The limit of 1000 is arbitrary; it worked on my input.</p>
+<h3 id="keypad-conundrum"><a href="#keypad-conundrum">Day 21: Keypad Conundrum</a></h3>
+<p>The <a href="https://adventofcode.com/2024/day/21">Keypad Conundrum</a> problem is… mind-blowing.
+You control a robot that controls a robot that controls a robot typing numbers on a keypad.
+You must compute the minimal number of key presses required to make the last robot in the chain type a passcode.</p>
+<p>This problem melted my brain, but careful problem formulation made the coding part straightforward.
+Here is how I approached it: For each pair of control pads, I computed the minimal number of key presses required to move the pointer between key pairs while keeping all previous robotic fingers in the chain on the activation key.</p>
+<p>I used the <a href="https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm">Floyd-Warshall</a> algorithm on a graph where vertices are positions of the current and the previous robotic fingers on the keypads.
+For example, vertice <code>(&quot;1&quot;, &quot;&lt;&quot;)</code> corresponds to the last robot pointing at the <code>&quot;1&quot;</code> key, while the previous robot points at the <code>&quot;&lt;&quot;</code> key.
+The distance between <code>(&quot;1&quot;, &quot;A&quot;)</code> and <code>(&quot;2&quot;, &quot;A&quot;)</code> is to the minimal number of human keypresses required to move from <code>&quot;1&quot;</code> to <code>&quot;2&quot;</code> on the numeric pad
+so that the previous robot points at the <code>&quot;A&quot;</code> key at the beginning and the end of the transition.</p>
+<p>That probably sounds too abstract, so let’s look at the code.
+The <code>numpad</code> and <code>dirpad</code> values define adjacency lists for the keypad types.</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line">type graph = { labels : string; adj : (int * int) array array }</span>
+<span class="line"></span>
+<span class="line">let k_up, k_down, k_left, k_right, k_act, dir_count = 0, 1, 2, 3, 4, 5</span>
+<span class="line"></span>
+<span class="line">(* 7 8 9</span>
+<span class="line">   4 5 6</span>
+<span class="line">   1 2 3</span>
+<span class="line">   0 A</span>
+<span class="line"> *)</span>
+<span class="line">let numpad =</span>
+<span class="line">  { labels = &quot;0123456789A&quot;;</span>
+<span class="line">    adj = [|</span>
+<span class="line">            (* 0: *) [| (2, k_up); (10, k_right) |];</span>
+<span class="line">            (* 1: *) [| (4, k_up); ( 2, k_right) |];</span>
+<span class="line">            (* 2: *) [| (5, k_up); ( 3, k_right); ( 0, k_down); (1, k_left) |];</span>
+<span class="line">            (* 3: *) [| (6, k_up);                (10, k_down); (2, k_left) |];</span>
+<span class="line">            (* 4: *) [| (7, k_up); ( 5, k_right); ( 1, k_down); |];</span>
+<span class="line">            (* 5: *) [| (8, k_up); ( 6, k_right); ( 2, k_down); (4, k_left) |];</span>
+<span class="line">            (* 6: *) [| (9, k_up);                ( 3, k_down); (5, k_left) |];</span>
+<span class="line">            (* 7: *) [|            ( 8, k_right); ( 4, k_down) |];</span>
+<span class="line">            (* 8: *) [|            ( 9, k_right); ( 5, k_down); (7, k_left) |];</span>
+<span class="line">            (* 9: *) [|                           ( 6, k_down); (8, k_left) |];</span>
+<span class="line">            (* A: *) [| (3, k_up);                              (0, k_left) |];</span>
+<span class="line">          |]</span>
+<span class="line">  }</span>
+<span class="line">(*   ^ A</span>
+<span class="line">     &lt; v &gt;</span>
+<span class="line"> *)</span>
+<span class="line">let dirpad =</span>
+<span class="line">  { labels = &quot;^v&lt;&gt;A&quot;;</span>
+<span class="line">    adj = [|</span>
+<span class="line">            (* ^: *) [| (k_act, k_right); (k_down, k_down) |];</span>
+<span class="line">            (* v: *) [| (k_up, k_up); (k_left, k_left); (k_right, k_right); |];</span>
+<span class="line">            (* &lt;: *) [| (k_down, k_right) |];</span>
+<span class="line">            (* &gt;: *) [| (k_down, k_left); (k_act, k_up) |];</span>
+<span class="line">            (* A: *) [| (k_up, k_left); (k_right, k_down) |];</span>
+<span class="line">          |]</span>
+<span class="line">  }</span>
+</code></pre></div>
+<p>The <code>all_paths</code> function computes the shortest distances between keys using the number of human keypresses as the metric.
+The <code>graph</code> argument describes the next keypad in the chain; the <code>move_cost</code> matrix describes the costs of moving the robotic finger for the current keypad.</p>
+<figure><label class="margin-toggle" for="mn-all-paths">⊕</label><input type="checkbox" id="mn-all-paths" class="margin-toggle"><span class="marginnote">
+    Computing shortest paths on a keypad using the Floyd-Warshall algorithm.
+    Six nested loops look intimidating, but it’s the price we pay for two-dimensional vertices.
+  </span><div class="source-container"><pre class="source ocaml"><code><span class="line">let all_paths graph move_cost =</span>
+<span class="line">  let n = Array.length graph.adj in</span>
+<span class="line">  let d4 = Array.init_matrix n dir_count (fun _ _ -&gt;</span>
+<span class="line">               Array.make_matrix n dir_count max_int</span>
+<span class="line">             ) in</span>
+<span class="line">  for i = 0 to n-1 do</span>
+<span class="line">    for s = 0 to dir_count-1 do</span>
+<span class="line">      for e = 0 to dir_count-1 do</span>
+<span class="line">        d4.(i).(s).(i).(e) &lt;- move_cost.(s).(e)</span>
+<span class="line">      done</span>
+<span class="line">    done</span>
+<span class="line">  done;</span>
+<span class="line">  Array.iteri (fun u adj -&gt;</span>
+<span class="line">      Array.iter (fun (v, move) -&gt;</span>
+<span class="line">          for d = 0 to dir_count-1 do</span>
+<span class="line">            d4.(u).(d).(v).(move) &lt;- min d4.(u).(d).(v).(move)</span>
+<span class="line">                                         (move_cost.(d).(move) + 1);</span>
+<span class="line">          done</span>
+<span class="line">        ) adj</span>
+<span class="line">    ) graph.adj;</span>
+<span class="line"></span>
+<span class="line">  for k = 0 to n-1 do</span>
+<span class="line">    for mk = 0 to dir_count-1 do</span>
+<span class="line">      for u = 0 to n-1 do</span>
+<span class="line">        for mu = 0 to dir_count-1 do</span>
+<span class="line">          for v = 0 to n-1 do</span>
+<span class="line">            for mv = 0 to dir_count-1 do</span>
+<span class="line">              if d4.(u).(mu).(k).(mk) != max_int &amp;&amp;</span>
+<span class="line">                 d4.(k).(mk).(v).(mv) != max_int then</span>
+<span class="line">                d4.(u).(mu).(v).(mv) &lt;-</span>
+<span class="line">                  min d4.(u).(mu).(v).(mv)</span>
+<span class="line">                      (d4.(u).(mu).(k).(mk) + d4.(k).(mk).(v).(mv));</span>
+<span class="line">            done</span>
+<span class="line">          done</span>
+<span class="line">        done</span>
+<span class="line">      done</span>
+<span class="line">    done</span>
+<span class="line">  done;</span>
+<span class="line">  Array.init_matrix n n (fun i j -&gt; d4.(i).(k_act).(j).(k_act))</span>
+</code></pre></div>
+</figure>
+<p>Calling <code>all_paths</code> in a loop allows us to compute the cost tables for an arbitrary level of indirection.
+The <code>costs0</code> variable defines metrics for the human-controlled keypad that bootstraps the computation chain:
+All the distances are zero because moving the finger doesn’t require any keypresses.</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line">let code_cost costs code =</span>
+<span class="line">  String.fold_left (fun (p, acc) c -&gt;</span>
+<span class="line">      let next = String.index numpad.labels c in</span>
+<span class="line">      (next, acc + costs.(p).(next) + 1)</span>
+<span class="line">    ) (10, 0) code |&gt; snd</span>
+<span class="line"></span>
+<span class="line">let complexity costs codes =</span>
+<span class="line">  Array.map (fun code -&gt;</span>
+<span class="line">      code_cost costs code * int_of_string (String.sub code 0 3)</span>
+<span class="line">    ) codes</span>
+<span class="line">  |&gt; Array.fold_left (+) 0</span>
+<span class="line"></span>
+<span class="line">let () =</span>
+<span class="line">  let codes = Arg.read_arg &quot;21-input.txt&quot; in</span>
+<span class="line">  let power f n x = let out = ref x in for i = 1 to n do out := f !out; done; !out in</span>
+<span class="line">  let costs0 = Array.make_matrix dir_count dir_count 0 in</span>
+<span class="line"></span>
+<span class="line">  (* part 1 *)</span>
+<span class="line">  let costs2 = power (all_paths dirpad) 2 costs0 in</span>
+<span class="line">  let costs3 = all_paths numpad costs2 in</span>
+<span class="line">  complexity costs3 codes |&gt; Printf.printf &quot;%d\n&quot;;</span>
+<span class="line"></span>
+<span class="line">  (* part 2 *)</span>
+<span class="line">  let costs25 = power (all_paths dirpad) 25 costs0 in</span>
+<span class="line">  let final_cost = all_paths numpad costs25 in</span>
+<span class="line">  complexity final_cost codes |&gt; Printf.printf &quot;%d\n&quot;;</span>
+</code></pre></div>
+</section>
+<section><h2 id="ocaml-retro"><a href="#ocaml-retro">OCaml retrospective</a></h2>
+<p>Overall, I enjoyed using OCaml for solving the puzzles, and I would use it again.
+I intentionally pursued a minimalistic approach: each solution must be a single file without external dependencies except the standard library so that I could compile it with the <code>ocamlopt dayN.ml -o dayN</code> command.
+My experience might have been different if I used third-party libraries.</p>
+<h3 id="good-parts"><a href="#good-parts">The good parts</a></h3>
+<ul class="arrows"><li>
+  The language balances strong compile-time guarantees, execution speed, type inference, and convenience for small problems.
+  I could use high-level abstractions and resort to low-level loops and mutable state when needed without having to deal with monads.
+</li><li>
+  Nested functions are an absolute pleasure to use.
+</li><li>
+  The tooling is reasonably good.
+  I edited code in <a href="https://zed.dev/">Zed</a>, <a href="https://neovim.io/">Neovim</a>, and <a href="https://www.gnu.org/software/emacs/">Emacs</a> and quickly got an acceptable setup (autocomplete, error highlighting, and code formatting) in all three editors.
+</li><li>
+  I love the pipe operator (<a href="https://ocaml.org/manual/5.2/api/Stdlib.html#VAL(%7C%3E)"><code>|&gt;</code></a>).
+  It’s a minor convenience, but it contributes to the enjoyment of using the language.
+</li><li>
+  Type-safe <a href="https://ocaml.org/manual/5.2/api/Scanf.html#VALscanf"><code>scanf</code></a> was handy for parsing inputs, more so than regular expressions.
+</li></ul>
+<h3 id="bad-parts"><a href="#bad-parts">The bad parts</a></h3>
+<ul class="arrows"><li>The backtrace support is broken.
+  I used arrays a lot and had many indexing bugs.
+  Backtraces are disabled by default, but even after I enabled them with <code>OCAMLRUNPARAM=b</code>, all array indexing exceptions pointed to bogus locations that had nothing to do with the actual cause.
+</li><li>
+  The standard library lacks many essential tools.
+  For example, the <a href="https://ocaml.org/manual/5.2/api/String.html"><code>String</code></a> module does not have a function to find a substring within a string.
+</li><li>
+  Polymorphic equality bit me a few times.
+  For example, I wrote <code>Array.find ((==) &quot;&quot;)</code> when I should have written <code>Array.find (String.equal &quot;&quot;)</code> or at least <code>Array.find ((=) &quot;&quot;)</code>, which resulted in confusing runtime errors.
+  Both <a href="https://www.haskell.org/?uwu=true">Haskell</a> and <a href="https://en.wikipedia.org/wiki/Standard_ML">Standard ML</a> handle equality better.
+</li><li>
+  Printing arrays and lists for debugging requires writing extra code.
+</li><li>
+  OCaml doesn’t provide syntax for early loop termination (<code>break</code>), forcing me to structure my code convolutedly a few times.
+  I could have used recursion, but it would make the code even more convoluted.
+</li><li>
+  There are no convenient multi-dimensional arrays.
+  The <code>Bigarray</code> module supports arrays of primitives of up to sixteen dimensions, but it’s bare-bones and clunky (it has no folds or iterators, for example).
+</li><li>
+  It is slightly annoying to use different indexing syntaxes for various types (<code>a.(i)</code> for regular arrays, <code>s.[i]</code> for strings, <code>b.{i}</code> for big arrays).
+  I assume this inconsistency helps the compiler with type inference.
+</li><li>
+  I wish I could use sum types as array indices (Haskell supports it through the <a href="https://hackage.haskell.org/package/base-4.21.0.0/docs/Data-Ix.html">Ix</a> typeclass).
+  That feature would be handy in the <a href="#keypad-conundrum">Keypad Conundrum</a> puzzle.
+</li></ul>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/46-aoc-2025.html">Advent of Code 2025</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/36-2024-retro.html"> ←2024 retrospective</a></div><div id="older"><a href="/posts/34-square-joy-tile-crush.html">Square joy: tile crush→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

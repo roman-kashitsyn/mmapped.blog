@@ -7,6 +7,9 @@ open Syntax
 (* --- Helpers --- *)
 
 let join_classes cs = String.concat " " cs
+let class_attr_if_nonempty cls =
+  if cls = "" then [] else [class_ cls]
+
 let trim_inlines (ils : inline list) : inline list =
   let is_ws = function
     | Str t -> String.trim t = ""
@@ -102,7 +105,7 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Small_caps ils -> span_ [class_ "smallcaps"] (render_inlines ctx ils)
   | Strikethrough ils -> span_ [class_ "strikethrough"] (render_inlines ctx ils)
   | Code (classes, ils) ->
-    code_ [class_ (join_classes classes)] (render_inlines ctx ils)
+    code_ (class_attr_if_nonempty (join_classes classes)) (render_inlines ctx ils)
   | Link (url, ils) -> a_ [href_ url] (render_inlines ctx ils)
   | Math (disp, nodes) -> Render_mathml.render_math disp nodes
   | Margin_note (anchor, ils) ->
@@ -130,7 +133,7 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Mathml (opts, body) -> Render_mathml.render_mathml_cmd opts body
   | Image_inline (classes, path) ->
     let cls = join_classes classes in
-    let img = leaf "img" [class_ cls; src_ path] in
+    let img = leaf "img" (class_attr_if_nonempty cls @ [src_ path]) in
     let is_svg =
       let lp = String.length path in
       lp >= 4
@@ -175,7 +178,7 @@ let render_table_cell ctx cell_tag (c : table_cell) : Html.t =
 
 let render_table_row ctx cell_tag (r : table_row) : Html.t =
   let cls = border_class r.tr_border_top r.tr_border_bottom in
-  tr_ [class_ cls] (concat (List.map (render_table_cell ctx cell_tag) r.tr_cells))
+  tr_ (class_attr_if_nonempty cls) (concat (List.map (render_table_cell ctx cell_tag) r.tr_cells))
 
 let render_table (ctx : ctx) (td : table_def) : Html.t =
   let num_cols = List.length td.table_spec in
@@ -187,7 +190,7 @@ let render_table (ctx : ctx) (td : table_def) : Html.t =
     | Some h -> raw "<thead>" ++ thead_ [] (render_table_row ctx "th" h)
     | None -> empty
   in
-  table_ [class_ cls]
+  table_ (class_attr_if_nonempty cls)
     (header_html
      ++ tbody_ []
           (concat (List.map (render_table_row ctx "td") td.table_rows)))
@@ -260,9 +263,9 @@ let rec render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
     ++ nl
 
   | Description_list items ->
-    dl_ [class_ ""]
+    dl_ []
       (concat (List.map (fun (term, def_) ->
-         dt_ [class_ ""] (render_inlines ctx term) ++ dd_ [class_ ""] (render_blocks ctx def_)
+         dt_ [] (render_inlines ctx term) ++ dd_ [] (render_blocks ctx def_)
        ) items))
     ++ nl
 
@@ -282,7 +285,7 @@ let rec render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
 
   | Image (classes, path) ->
     let cls = join_classes classes in
-    let img = leaf "img" [class_ cls; src_ path] in
+    let img = leaf "img" (class_attr_if_nonempty cls @ [src_ path]) in
     let is_svg =
       let lp = String.length path in
       lp >= 4
@@ -294,7 +297,7 @@ let rec render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
     else img ++ nl
 
   | Figure (classes, body) ->
-    figure_ [class_ (join_classes classes)]
+    figure_ (class_attr_if_nonempty (join_classes classes))
       (render_blocks ~wrap_images:false ctx body)
     ++ nl
 
@@ -314,7 +317,7 @@ let rec render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
     ++ nl
 
   | Details (summary, body) ->
-    parent "details" [class_ ""]
+    parent "details" []
       (parent "summary" [] (render_inlines ctx summary)
        ++ render_blocks ctx (plainify_paras body))
     ++ nl

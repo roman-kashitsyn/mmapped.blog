@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="personal,programming"><meta name="description" content="Software that makes you a better programmer."><title>Enlightenmentware</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/28-enlightenmentware.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/28-enlightenmentware.html">Enlightenmentware</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2024-05-20</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2024-05-20</span></span><span class="post-icons"><a class="icon-link" href="https://news.ycombinator.com/item?id=40419856" title="Discuss on Hacker News" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/y18.svg" alt="Hacker News"></a><a class="icon-link" href="https://www.reddit.com/r/programming/comments/1cwa1m8/blog_post_enlightenmentware/" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a><a class="icon-link" href="https://lobste.rs/s/qrrc6x/enlightenmentware" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#unix">UNIX</a></li><li class="toc toc-level-1"><a href="#git">Git</a></li><li class="toc toc-level-1"><a href="#emacs">Emacs</a></li><li class="toc toc-level-1"><a href="#boost-graph">Boost.Graph</a></li><li class="toc toc-level-1"><a href="#bazel">Bazel</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
+
+<section><p>
+As programmers, we interact with software tools daily.
+Most of them can barely get the job done.
+But occasionally, we discover a piece of software that transcends mere utility.
+These tools capture our imagination, open new possibilities, and affect how we design our own systems.
+I call such software <em>enlightenmentware</em>.</p>
+<p>The most common source of enlightenment for programmers is the programming language they use at work or learn as a hobby.
+I experienced many jolts of enlightenment from fiddling with programming languages, from <a href="https://en.wikipedia.org/wiki/Microsoft_Macro_Assembler"><span class="smallcaps">masm</span></a> and <a href="https://en.wikipedia.org/wiki/C_(programming_language)">C</a> to <a href="https://en.wikipedia.org/wiki/Prolog">Prolog</a> and <a href="https://www.idris-lang.org/">Idris</a>.
+I won’t focus on languages, however, since the effects of language learning on mind expansion is old news<label class="margin-toggle sidenote-number" for="sn-norvig"></label><input type="checkbox" id="sn-norvig" class="margin-toggle"><span class="sidenote">
+  See, for example, Peter Norvig’s <q><a href="https://norvig.com/21-days.html">Teach Yourself Programming in Ten Years</a></q>.
+</span>.</p>
+<p>In this article, I praise the software that contributed the most to my enlightenment.</p>
+</section>
+<section><h2 id="unix"><a href="#unix">UNIX</a></h2>
+<div class="epigraph"><blockquote><p>
+  <span class="smallcaps">unix</span> is user-friendly—it’s just choosy about who its friends are.
+</p><footer>
+  Anonymous, in the <q>Art of <span class="smallcaps">unix</span> Programming</q> by Eric S. Raymond
+</footer></blockquote></div>
+<p>I started looking for my first real programming job around 2008 while studying at a university in my hometown of Nizhny Novgorod.
+Almost all the open positions required knowledge of mysterious things called <span class="smallcaps">unix</span> and <em>sockets</em>.
+My curriculum didn’t offer a course on <span class="smallcaps">unix</span> or operating systems in general, so I decided to get a textbook and master the topic myself. </p>
+<p class="hanging-quote"><q><a href="https://www.goodreads.com/book/show/22066650-unix">The <span class="smallcaps">unix</span> Operating System</a></q> by Andrey Robachevsky et al., also known as the <em>turtle book</em> in Russia because of its cover, introduced me to the magical world of <span class="smallcaps">unix</span>-like operating systems.
+<span class="smallcaps">unix</span> became something I could understand, explore, and programmatically interact with.
+All pieces of the puzzle—the filesystem interface, the process model with environments and permissions, forking, sockets, and signals—fell into place and revealed a coherent, beautiful picture.</p>
+<p>A search for a working <span class="smallcaps">unix</span> installation led me to <a href="https://en.wikipedia.org/wiki/Mandriva_Linux">Mandriva Linux</a>.
+It was like discovering a parallel universe where you don’t have to pirate software or spend forty minutes installing an <span class="smallcaps">ide</span> to compile a <span class="smallcaps">c</span> program.
+Here, people developed software for fun and shared it freely.
+I couldn’t fathom why anyone would use Windows<label class="margin-toggle sidenote-number" for="sn-windows"></label><input type="checkbox" id="sn-windows" class="margin-toggle"><span class="sidenote">
+  I became significantly more tolerant since my early university years.
+  Windows (specifically the <a href="https://en.wikipedia.org/wiki/Windows_NT">NT family</a>) is a great operating system.
+  I even have it installed on my gaming <span class="smallcaps">pc</span> so that I can buy games I never play.
+</span>.</p>
+<p>From that moment on, <span class="smallcaps">unix</span> followed me through all stages of my life:
+the toddler phase of keeping up with the cutting-edge <a href="https://ubuntu.com">Ubuntu</a> releases,
+the rebellious teens of compiling custom kernels for my <a href="https://www.thinkwiki.org/wiki/Category:T61p">Thinkpad T61p</a> and <a href="https://wiki.gentoo.org/wiki/Emerge">emerging</a> the <a href="https://wiki.gentoo.org/wiki/World_set_(Portage)"><code>@world</code></a> on <a href="https://www.gentoo.org/">Gentoo</a>,
+the maturity of returning to Ubuntu <span class="smallcaps">lts</span> and delaying upgrades until the first dot one release,
+and to the overwhelmed parent stage of becoming a happy macOS user.</p>
+<p><span class="smallcaps">unix</span> also became an essential building block in my profession.
+Most of the software I wrote operates in a <span class="smallcaps">unix</span> environment, and I still occasionally consult my copy of <a href="https://www.goodreads.com/book/show/603263.Advanced_Programming_in_the_UNIX_Environment">Advanced Programming in the <span class="smallcaps">unix</span> Environment</a>.</p>
+</section>
+<section><h2 id="git"><a href="#git">Git</a></h2>
+<div class="epigraph"><blockquote><p>
+  It is easy to shoot your foot off with git, but also easy to revert to a previous foot and merge it with your current leg.
+</p><footer>
+  Jack William Bell
+</footer></blockquote></div>
+<p>I encountered version control systems in early 2009; the company I worked for used <a href="https://en.wikipedia.org/wiki/IBM_Rational_ClearCase">Rational ClearCase</a> to manage their code.
+The system versioned each file separately and relied on large configuration files—<em>config specs</em>—to construct a consistent snapshot of the source tree.
+The tool was utterly confusing and intimidating, so I avoided dealing with it beyond the minimal requirements of my job.</p>
+<p>About a year later, I joined a shop that used <a href="https://subversion.apache.org/">Subversion</a>.
+This time, I invested in learning upfront and swallowed the entire <a href="https://svnbook.red-bean.com/">Version Control with Subversion</a> before making my first commit.
+Subversion was easy to understand and use; I couldn’t imagine how to improve on it.
+Still, I perceived it as a tool that you use at work.
+There was enough friction in setting up a repository to hinder its use for small personal projects.
+At the time, Google offered hosting on <a href="https://code.google.com/">Google Code</a>, but I didn’t feel comfortable sharing my experiments with the world back then.</p>
+<p>And then I discovered <a href="https://git-scm.com/">Git</a>.</p>
+<p>Git was nothing like Subversion.
+It had a steep learning curve and confused everyone to no end<label class="margin-toggle sidenote-number" for="sn-git-random-man"></label><input type="checkbox" id="sn-git-random-man" class="margin-toggle"><span class="sidenote">
+  Way before we all got used to ChatGPT,
+  <a href="https://github.com/Lokaltog">Kim Ødegaard</a> created a <a href="https://git-man-page-generator.lokaltog.net/">service</a> that generates random man pages mocking Git’s dense documentation style.
+</span>.
+Still, the confusion was qualitatively different from what I experienced with ClearCase.
+ClearCase is confusing like a Russian novel: All the characters have strange names, the plot is complex, and it doesn’t end well.
+Git is confusing like math: It slowly melts your brain and molds it into a <a href="https://en.wikipedia.org/wiki/Tesseract">tesseract</a>, giving access to higher dimensions.</p>
+<p>Git removed the friction from using version control; there was no excuse not to version anything of value anymore.
+Merging branches with Git didn’t cause anxiety disorders.
+The staging area—confusingly named <em>index</em>—became essential to my workflows.
+But my favorite feature was the breathtaking beauty of Git’s design, the elegant mix of distributed systems, acyclic graphs, and content-addressed storage.</p>
+<p>Learning about Git’s internals was so much fun that I became interested in the bits and bolts of other version control systems.
+I travelled through time from <a href="https://darcs.net/">Darcs</a> to <a href="https://www.mercurial-scm.org/">Mercurial</a>, <a href="https://www.bitkeeper.org/">BitKeeper</a>, and the ultimate origin, <a href="https://en.wikipedia.org/wiki/Source_Code_Control_System">SCCS</a>.
+I also built a toy one-file version control system while learning Rust.</p>
+<p>Will Git ever be replaced with something better?
+Just as it was hard to imagine an improvement over Subversion before Git came along, it’s hard to imagine a significant improvement over Git now.
+For me, Git’s primary disadvantage is its snapshot-oriented approach which makes merges hard to reason about.
+Git, Mercurial, and most other tools make it challenging to separate original code from the decisions that the person merging files had to make<label class="margin-toggle sidenote-number" for="sn-janestreet-patch-vs-diff"></label><input type="checkbox" id="sn-janestreet-patch-vs-diff" class="margin-toggle"><span class="sidenote">
+  Jane Street’s tech staff reports similar concerns.
+  See, for example, the <a href="https://blog.janestreet.com/patch-review-vs-diff-review-revisited/">Patch review vs. diff review, revisited</a> blog article.
+</span>.
+Systems based on <a href="https://en.m.wikibooks.org/wiki/Understanding_Darcs/Patch_theory">patch theory</a>, such as <a href="https://pijul.org/">Pijul</a> and <a href="https://darcs.net/">Darcs</a>, might address these issues.</p>
+</section>
+<section><h2 id="emacs"><a href="#emacs">Emacs</a></h2>
+<div class="epigraph"><blockquote><p>
+  While any text editor can save your files, only Emacs can save your soul.
+</p><footer>Per Abrahamsen</footer></blockquote></div>
+<p>I edited my first programs in a friendly blue window of <a href="https://en.wikipedia.org/wiki/Turbo_Pascal">Turbo Pascal 7.0</a>.
+The environment had little friction: no project or build configuration, no noticeable build time; you type your code and run it.
+That was a perfect tool for learning.</p>
+<p>My university used Pascal for introductory programming classes, so I also used Turbo Pascal for my assignments.
+Later courses introduced C++ and Java, for which we used <a href="https://en.wikipedia.org/wiki/Visual_Studio#6.0_(1998)">Visual Studio 6.0</a> and <a href="https://en.wikipedia.org/wiki/JBuilder">JBuilder</a>.
+Although we learned to invoke compilers from the command line, <span class="smallcaps">ide</span>s dominated my early code-editing experience.</p>
+<p>At my first programming job, I worked on a remote Solaris workstation over a <a href="https://en.wikipedia.org/wiki/Citrix_Systems">Citrix</a> connection.
+Almost everyone in our group used <a href="https://en.wikipedia.org/wiki/NEdit">NEdit</a> to edit the code.
+One day, I noticed a person whose editor looked markedly different from everyone else’s; the background was dark, and the code glowed with bright colors.
+To me, that was a sign of their superior technical knowledge.
+I <em>needed</em> to learn how to tweak my editor.</p>
+<p>The quest for customization led me to <a href="https://www.vim.org/">Vim</a> (the workstation had Vim 6 installed out of the box).
+After all, if the goal is to stand out from the crowd, why stop at the color scheme?
+I went through the Vim tutorial, and it clicked with me immediately.
+It felt like playing a musical instrument: challenging but fun.
+It turned a mundane job of fixing bugs into an exercise in skill.</p>
+<p>I don’t remember exactly when and why I got interested in Emacs<label class="margin-toggle sidenote-number" for="sn-wolfram-notes"></label><input type="checkbox" id="sn-wolfram-notes" class="margin-toggle"><span class="sidenote">
+  Daly journaling is one of the things I wish I started doing earlier.
+  I’m nowhere near <a href="https://writings.stephenwolfram.com/2019/02/seeking-the-productive-life-some-details-of-my-personal-infrastructure/#archiving-and-searching">Stephen Wolfram’s level</a>, but I enjoy going back and seeing what I was up to a few years ago.
+</span>.
+Most likely, it was a result of my obsession with Lisp after reading <a href="https://en.wikipedia.org/wiki/Structure_and_Interpretation_of_Computer_Programs">Structure and Interpretation of Computer Programs</a> and looking for a Lisp to interact with.
+I remember reading <a href="https://www.gnu.org/software/emacs/manual/eintr.html">An Introduction to Programming in Emacs Lisp</a> around 2010 and having a great time.</p>
+<p>I became interested in the editor internals.
+Using <a href="https://www.finseth.com/craft/">The Craft of Text Editing</a> by Craig A. Finseth as a guide, I explored the source code of various editors to see how they worked: which the data structures they used to represent text buffers, how they interacted with extensions and implemented the undo mechanism.
+I found Vim’s source code somewhat messy, inconsistent, and hard to understand.
+Emacs’s source was spotless, well-organized, and well-documented.</p>
+<p>A dive into Emacs internals also revealed the inherent beauty of its architecture.
+Emacs is a Lisp machine that provides text editing and window management capabilities.
+It is a powerful, convenient, and friendly development environment for building dynamic text-driven applications in Emacs Lisp.</p>
+<p>Almost everything in Emacs is a Lisp object you can inspect, interact with, and access its documentation.
+That makes Emacs’ documentation system unparalleled once you master it.
+Emacs’ dynamism makes extending it much easier than any other editor.
+The feedback loop is airtight: you can immediately try out your code in the context of the editor you use to write it.</p>
+<p>Although I’m writing these words in <a href="https://code.visualstudio.com/">Visual Studio Code</a>, I always have my Emacs open<label class="margin-toggle sidenote-number" for="sn-vim"></label><input type="checkbox" id="sn-vim" class="margin-toggle"><span class="sidenote">
+  I also have a <a href="https://github.com/tmux/tmux/wiki">tmux</a> session with multiple <a href="https://neovim.io/">nvim</a> instances running.
+  I use these when my pinky gets tired of holding down the <kbd>Ctrl</kbd> key.
+</span>.
+Many things are easier in Emacs; I don’t think any software will ever completely replace it for me.
+It’s also my editor of choice if I need to implement an extension.
+Programming Emacs Lisp is a joy, especially compared to writing Vimscript.</p>
+</section>
+<section><h2 id="boost-graph"><a href="#boost-graph">Boost.Graph</a></h2>
+<div class="epigraph"><blockquote><p>
+  I also must confess to a strong bias against the fashion for reusable code.
+  To me, <q>re-editable code</q> is much, much better than an untouchable black box or toolkit.
+</p><footer>
+  Donald Knuth, <a href="https://www.informit.com/articles/article.aspx?p=1193856">Interview with Andrew Binstock</a>
+</footer></blockquote></div>
+<p>The evening of 2013 New Year’s Eve didn’t go as planned.
+I was on a cruise ship crossing the stormy Baltic Sea and couldn’t stay on my feet because of the seasickness.
+Instead of consuming tasty treats with the rest of the passengers, I was lying in bed and reading a book I took for the trip: <a href="https://www.goodreads.com/book/show/1705806.The_Boost_Graph_Library">The Boost Graph Library</a> by Jeremy G. Siek et al.</p>
+<p>Most algorithm libraries require you to commit to a specific data representation, making integrating them into an existing project prohibitively expensive.
+That’s especially true for graph algorithms: The vertices and edges are usually implicitly defined and deeply embedded into other data structures, so it’s easier to re-implement the algorithm than to use a generic library.</p>
+<p>The <a href="https://www.boost.org/library/latest/graph/">Boost.Graph</a> library solves this problem elegantly using <a href="https://en.wikipedia.org/wiki/Alexander_Stepanov">Alex Stepanov</a>’s ideas on generic programming.
+It uses a bag of tricks (type traits, property maps, visitors) to implement graph algorithms that can work with any graph representation you throw at them, given that you provide an adapter telling the library how to view your data structures as a graph.</p>
+<p>Even though I never had a chance to use the library in practice<label class="margin-toggle sidenote-number" for="sn-boost-graph-use"></label><input type="checkbox" id="sn-boost-graph-use" class="margin-toggle"><span class="sidenote">
+  Given that I share Donald Knuth’s attitude opening this section, I would probably not use the library even if I had a chance.
+  I’d rather write one page of interesting code traversing a graph than two pages of boring adapters required to invoke the algorithm.
+</span>, its design helped me deepen my understanding of <a href="https://en.wikipedia.org/wiki/Standard_Template_Library"><span class="smallcaps">stl</span></a> design and generic programming in general.
+It also helped me understand the motivation for advanced type-level programming features in other programming languages, such as <a href="https://wiki.haskell.org/GHC/Type_families">type families</a> in Haskell.
+Overall, Boost.Graph is one of the most enlightening pieces of software that I’ve never used.</p>
+</section>
+<section><h2 id="bazel"><a href="#bazel">Bazel</a></h2>
+<div class="epigraph"><blockquote><p>
+  If make doesn’t do what you expect it to, it’s a good chance the makefile is wrong.
+</p><footer>
+  Adam de Boor, <q><a href="https://docs-archive.freebsd.org/44doc/psd/12.make/paper.pdf">PMake—A Tutorial</a></q>
+</footer></blockquote></div>
+<p>I wrote my first <code>Makefile</code> around 2009 while working on a research project in computational mathematics for my degree.
+I already used <a href="https://en.wikipedia.org/wiki/Make_(software)"><code>make</code></a> at work, but I didn’t need to understand how it worked.
+This time, I had to compile a <span class="smallcaps">fortran</span> program mixing sources adhering to different language standards: from venerable <span class="smallcaps">fortran</span> 77 to hip Fortran 2003.
+To get a deeper understanding of the tool, I referred to <a href="https://www.oreilly.com/library/view/managing-projects-with/0596006101/">Managing Projects with GNU Make</a> by Robert Mecklenburg.</p>
+<p>Most books on technology excite me: I become enthusiastic about the subject and want to try it out in practice. 
+The book on <code>make</code> had the opposite effect.
+The complexity required to make builds correct and ergonomic made me yearn for a better tool<label class="margin-toggle sidenote-number" for="sn-modern-cpp-design"></label><input type="checkbox" id="sn-modern-cpp-design" class="margin-toggle"><span class="sidenote">
+  One book that made me feel the same way was <a href="https://www.goodreads.com/book/show/871669.Modern_C_Design">Modern C++ Design</a> by Andrei Alexandrescu.
+  The book is deep and beautifully written, but the terrifyingly clever and ugly tricks in the second chapter made me question the choice of the programming language.
+  Another one is <a href="https://nostarch.com/autotools2e">Autotools</a> by John Calcote.
+</span>.</p>
+<p>After my deep dive into <code>make</code>, I often fiddled with build systems at work:
+I introduced <a href="https://cmake.org/">CMake</a> to my first C++ project to replace complex and scarily incorrect <code>Makefile</code> files and
+replaced an inflexible <a href="https://ant.apache.org/">Ant</a>-based build system in a 500 <span class="smallcaps">kloc</span> Java project with <a href="https://gradle.org/">Gradle</a> scripts that everyone on the team could contribute to.
+But all the tools I tried, including <a href="https://cmake.org/">CMake</a>, <a href="https://ant.apache.org/">Ant</a>, <a href="https://maven.apache.org/">Maven</a>, <a href="https://gradle.org/">Gradle</a>, <a href="https://www.scons.org/">SCons</a>, and <a href="https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html">autotools</a> left me deeply unsatisfied.
+They were clunky, awkward, and hard to extend and compose.</p>
+<p>In 2016, I joined Google in Zurich.
+I heard about Google’s internal build tool, <code>blaze</code>, and couldn’t wait to lay my hands on it.
+Surprisingly, I didn’t need to fiddle with <code>blaze</code>, nor did I have to understand how it worked.
+I could copy some build targets and edit the dependency list, and the build worked as expected.
+<code>blaze</code> made correct and fast builds not just easy, but <em>boring</em> in the good sense.
+Only a few years later, when I attempted to use <a href="https://bazel.build/">Bazel</a>—the open-source version of <code>blaze</code>—for a toy personal project, did I have to understand the underlying model.</p>
+<p>Bazel was the final piece of the puzzle, together with Haskell’s typeclasses, <a href="https://research.google/pubs/flumejava-easy-efficient-data-parallel-pipelines/">Flume pipelines</a> interface,  and the <a href="https://www.tensorflow.org/">TensorFlow</a> 1.0 execution model, that made me understand the ubiquitous <a href="/posts/29-plan-execute.html">plan-execute pattern</a><label class="margin-toggle sidenote-number" for="sn-build-systems-a-la-carte"></label><input type="checkbox" id="sn-build-systems-a-la-carte" class="margin-toggle"><span class="sidenote">
+  The <a href="https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf">Build Systems à la Carte</a> article by Andrey Mokhov, Neil Mitchell, and Simon Peyton Jones explains how various build system designs map to Haskell typeclasses.
+  Thomas Leonard’s <a href="https://roscidus.com/blog/blog/2019/11/14/cicd-pipelines">CI/CD pipelines: Monad, Arrow or Dart?</a> blog post is also a great read on this topic.
+</span>.
+Bazel build file is a program that constructs a slice of the build artifact graph.
+Bazel rules don’t <em>run</em> the build commands; they <em>declare</em> how to transform inputs into outputs, and the Bazel engine figures out the rest.</p>
+<p>My relationship with the tool reached true intimacy when I helped <a href="/posts/17-scaling-rust-builds-with-bazel.html">transition <span class="smallcaps">dfinity</span>’s build system to Bazel</a>.
+Despite all the challenges I faced on the way, Bazel is still my favorite build system.
+It’s fast, correct, easy to use, and language-agnostic.</p>
+<p>Paraphrasing <a href="https://www.stroustrup.com/quotes.html">Bjarne Stroustup</a>, I think a smaller, simpler, cleaner build system is struggling to get out within Bazel.
+I hope this core will someday reveal itself to the world and become the standard tool for building all software.</p>
+</section>
+<section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
+<p>After presenting my cases, I find it tempting to look for a common theme.
+What makes a good enlightenmentware?
+For me, these are the key points:</p>
+<ul class="arrows"><li>
+  All these tools address a deep problem, and a kind of problem that I face every day, such as making programs on my computer cooperate, managing concurrent work streams, or generalizing a piece of code.
+  </li><li>
+  They are <q>round</q>: they pack the most volume in the smallest surface area.
+  <span class="smallcaps">unix</span> surface area is tiny, but it unlocks much power.
+  Emacs and Git are all over the place, but their <em>core</em> is small, sweet, and easy to appreciate.
+  </li><li>
+  They invite and encourage you to explore their internals.
+  It’s not only about being free and open-source; mastering them is also well worth the investment.
+</li></ul>
+<p>What’s your enlightenmentware? Tell me on <a href="https://news.ycombinator.com/item?id=40419856">Hacker News</a> or <a href="https://www.reddit.com/r/programming/comments/1cwa1m8/blog_post_enlightenmentware/">Reddit</a>!</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/23-numeric-tower-fiasco.html">The numeric tower fiasco</a></li><li><a href="/posts/31-effective-design-docs.html">Effective design docs</a></li><li><a href="/posts/37-onnx-intro.html">ONNX introduction</a></li><li><a href="/posts/41-box-combinators.html">Box combinators</a></li><li><a href="/posts/44-tag-based-logging.html">Tag-based logging</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/29-plan-execute.html"> ←The plan-execute pattern</a></div><div id="older"><a href="/posts/27-extending-https-outcalls.html">Extending HTTPS outcalls→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>

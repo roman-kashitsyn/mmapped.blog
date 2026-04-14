@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="programming"><meta name="description" content="An ode to M-x compile."><title>Compilation is communication</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/45-compilation-is-communication.html"></head><body><article><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><h1 class="article-title"><a href="/posts/45-compilation-is-communication.html">Compilation is communication</a></h1><span class="post-attrs"><span title="First published">✏ <span itemprop="datePublished">2025-10-13</span></span>&nbsp;
+<span title="Last modified">✂ <span itemprop="dateModified">2025-10-13</span></span><span class="post-icons"><a class="icon-link" href="https://lobste.rs/s/huqrbu" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#constant-interaction">The perils of constant interaction</a></li><li class="toc toc-level-1"><a href="#batching">The power of batching</a></li><li class="toc toc-level-1"><a href="#expertise">Tools and expertise</a></li><li class="toc toc-level-1"><a href="#my-workflow">My workflow</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
+
+<section><div class="epigraph"><blockquote><p>Never show a half-finished job to a fool.</p><footer>A Russian proverb</footer></blockquote></div>
+<figure class="p25 left"><p class="svg"><img src="/images/45-chat.svg"></p>
+</figure>
+<p>However the exchange unfolds,
+I’ll be impatient.
+I want my messages self-contained and coherent.
+Instant messaging offers many advantages,
+but cultivated, efficient communication isn’t one of them.</p>
+<p>As software engineers,
+we focus on teammates and overlook our even more frequent conversations with tools.
+Those interactions have changed drastically over the decades:
+Compiling first <span class="smallcaps">fortran</span> programs felt like using snail mail,
+while starting a modern development environment feels like connecting to an overcrowded Discord server.
+In contemporary tooling, the slogan seems to be:
+</p>
+<div class="advice" id="feedback-hypothesis"><p><a class="anchor" href="#feedback-hypothesis">☛</a>
+  Immediate feedback makes us more productive.
+</p></div>
+<p>This claim deserves scrutiny.
+I admire
+<a href="https://en.wikipedia.org/wiki/Seymour_Papert">Seymour Papert</a>,
+<a href="https://en.wikipedia.org/wiki/Alan_Kay">Alan Kay</a>,
+and other pioneers of exploratory programming environments.
+I applaud <a href="https://worrydream.com/">Bret Victor</a> and his vision of <a href="https://youtu.be/5Q9r-AEzRMA">Dynamicland</a>.
+Yet, I disable most of my editor’s features,
+call my batch compiler,
+and carefully read its output.
+Why would I ignore decades of progress in developer experience?</p>
+</section>
+<section><h2 id="constant-interaction"><a href="#constant-interaction">The perils of constant interaction</a></h2>
+<p>First, unsolicited feedback breaks my focus.
+Here I am, holding a virtual castle in my mind and trying to will one of its towers into existence,
+and here comes an anxiety-inducing squiggly underline.
+I interrupt myself to make it go away, and, victorious, observe the castle’s ruins.</p>
+<p>IntelliSense-style code completion doesn’t bother me
+because its suggestions stay relevant and unobtrusive.
+However, <span class="smallcaps">ai</span> completion tools drain my energy like watching a movie in my native language with mismatching subtitles.
+They force my brain to switch from the composition mode (<a href="https://en.wikipedia.org/wiki/Frontoparietal_network">central executive network</a>)
+to evaluation mode (<a href="https://en.wikipedia.org/wiki/Salience_network">salience network</a>) every time I type a word.</p>
+<p>Second, I become frustrated when my tools don’t respond promptly.
+My attention drifts if the letters I type don’t appear on the screen <em>instantly</em>
+due to my editor cooking something in the background.
+I don’t mind waiting if my request is inherently slow;
+what bothers me is when a tool prioritizes something else over my request.</p>
+<p>These points might seem to contradict each other,
+as I’m asking for less and more interactivity simultaneously.
+What counts, however, is <em>when</em> the interaction happens.
+I enjoy tools that remain silent until I need them
+and respond quickly once summoned.
+Two ideas convince me that calmer tool conversations benefit not only my messy mind:
+batching and mastery research.</p>
+</section>
+<section><h2 id="batching"><a href="#batching">The power of batching</a></h2>
+<p>Batching is the cornerstone of computer optimization,
+and its power goes far beyond the digital world:
+</p>
+<ul class="arrows"><li>Henry Ford used batching to build the most efficient production line of his time.
+</li><li>Productivity experts, ranging from David Allen to Cal Newport,
+recommend time-boxing and batch-processing communications.
+</li><li>Prolific writers recommend silencing the inner critic and delaying editing
+until the <a href="https://blog.reedsy.com/live/draft-zero-sj-watson/">draft zero</a> is complete.
+</li></ul>
+<p>Steven Pressfield summarized the last point well:
+  
+</p>
+<blockquote><p>
+  Let’s talk about the actual process—the writing/composing/idea generation process.
+  It progresses in two stages: action and reflection.
+  Act, reflect. Act, reflect.
+  NEVER act and reflect at the same time. […]
+  In writing, <q>action</q> means putting words on paper.
+  <q>Reflection</q> means evaluating what we have on paper.
+  For this first draft,
+  we’ll go light on reflection and heavy on action.
+</p><footer>Steven Pressfield, <q>Do the Work</q></footer></blockquote>
+<p>
+Writers like Neil Gaiman and J.K. Rowling draft longhand,
+partly because paper makes revision hard and nudges them toward action<label class="margin-toggle sidenote-number" for="sn-longhand"></label><input type="checkbox" id="sn-longhand" class="margin-toggle"><span class="sidenote">
+  I draft blog posts longhand if they involve complex arguments.
+  Effortless text editing paralyzes me:
+  I keep noodling with the same few sentences instead of developing my ideas.
+</span>.</p>
+<p>Overall, chunking complementary activities works so well
+that I separate creative coding from dealing with compiler pedantry.</p>
+</section>
+<section><h2 id="expertise"><a href="#expertise">Tools and expertise</a></h2>
+<p>The time I can go without the compiler’s feedback is proportional to my expertise in the language and the codebase.
+At the height of my C++ abilities,
+I could write a 100 <span class="smallcaps">loc</span> self-contained program involving template meta-programming that would compile on the first try.
+On the other hand,
+I can’t write a one-liner in an unfamiliar language without a dozen interactions with its compiler or interpreter.</p>
+<p>As people progress from novices to experts,
+their relationship with feedback changes.
+Feedback is vital for achieving proficiency,
+but a master internalizes the system so well that the need for external input diminishes;
+masters generate their own feedback.
+That’s why you notice when you mistype your password before you hit the enter key:
+you’ve typed the symbols correctly so many times that you’ve internalized the feel of it.</p>
+<p>No wonder experts and novices prefer different tools and workflows.
+Experts aren’t fond of graphical menus; they prefer shortcuts.
+Many outstanding programmers use a bare text editor.
+Edward Kmett is a good example:
+He authored over a hundred popular Haskell packages using a minimal Vim setup
+before he added <a href="https://neovim.io/doc/user/tagsrch.html"><code>tags</code> files</a> to his workflow<label class="margin-toggle sidenote-number" for="sn-kmett-live"></label><input type="checkbox" id="sn-kmett-live" class="margin-toggle"><span class="sidenote">
+  The <a href="https://youtu.be/hIZxTQP1ifo?si=MliJIlho6h7Ybng-&amp;t=2827">Type Classes vs. the World</a> talk has a good example of him doing live programming.
+</span>.
+Aaron Hsu sometimes delves deeper and <a href="https://www.sacrideo.us/paper-is-dead-long-live-paper-programming/">programs on paper</a>.
+André Bensoussan <a href="https://www.multicians.org/andre.html">wrote one of Multics’s subsystems</a> on paper.</p>
+<p>Christof van Nimwegen’s thesis,
+<a href="https://dspace.library.uu.nl/bitstream/handle/1874/26875/nimwegen.pdf">The paradox of the guided user: assistance can be counter-effective</a>,
+suggests that the connection between mastery and minimalistic tools also works in the other direction:
+Simple tools foster deeper understanding.
+Nimwegen asked two groups of people to solve a tricky logic puzzle on a computer.
+The first group enjoyed helpful interactive software that suggested legal moves;
+the second group was given only bare-bones software that provided no hints.
+The first group initially made more progress,
+but the second group quickly caught up and took over,
+demonstrating <q>more focus, more direct and economical solutions, better strategies, and better imprinting of knowledge.</q></p>
+<p>I don’t imply that interactive tools are inferior and that <a href="https://xkcd.com/378/">real programmers use butterflies</a>.
+If the task is novel or if the language is particularly demanding,
+even experts will struggle without appropriate tools.
+A tool isn’t inherently good or bad;
+we prefer different tools depending on our proficiency
+and the task’s cognitive load demands.</p>
+<p><a href="https://en.wikipedia.org/wiki/John_Carmack">John Carmack</a>,
+one of the most influential programmers in history,
+relies heavily on <span class="smallcaps">ide</span>s and visual debuggers:</p>
+<blockquote><p>
+  The first thing I do after writing code is set a breakpoint and step through the function.
+</p><footer>
+  John Carmack, <a href="https://www.youtube.com/watch?v=tzr7hRXcwkw">interview with Lex Fridman</a>
+</footer></blockquote>
+<p>
+This approach is common among game developers and graphics programmers,
+where the <q>right</q> results don’t follow logically from the first principles.
+The <a href="https://tomorrowcorporation.com/">Tomorrow Corporation</a> team
+<a href="https://www.youtube.com/watch?v=72y2EC5fkcE">built their own programming language and environment</a>
+to facilitate live experimentation and debugging,
+and the <a href="https://loglog.games/">LogLog Games</a> studio <a href="https://loglog.games/blog/leaving-rust-gamedev/#hot-reloading-is-more-important-for-iteration-speed-than-people-give-it-credit-for">treats hot reload as the top priority</a> when picking their technology stack.</p>
+<p>Note, however, the batching aspect of John’s workflow:
+he switches between composition and refinement.
+Interactive debuggers don’t interfere with authoring;
+they fade away when they aren’t needed.</p>
+</section>
+<section><h2 id="my-workflow"><a href="#my-workflow">My workflow</a></h2>
+<p>I separate my work into two phases: authoring and cleaning up.
+During the authoring phase,
+I write and refactor code, design interfaces, and write documentation.
+Once I reach a meaningful milestone,
+I enter the cleaning phase in which I run the compiler and linters and address their findings.
+This phase also serves as a natural rest point before I return to the demanding authoring mode.</p>
+<p>The first phase doesn’t need much tooling beyond regular text editing and basic <span class="smallcaps">lsp</span> support.
+The second phase hinges on the concept of the <em>error list</em>.
+Batch tools report issues,
+my editor parses them into a navigable list,
+and I refresh it after each pass until it’s empty.</p>
+<p>Emacs’s <a href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Compilation.html">compilation mode</a> is the most convenient implementation of my workflow.
+Running a compiler populates Emacs’s global error list that I can navigate with hotkeys
+(<code>M-g n</code> goes to the next error on the list, <code>M-g p</code>—to the previous).
+Typing <code>g</code> in the compilation buffer reruns the build and refreshes the list.
+The build process is interactive and asynchronous.
+The compilation output is a regular buffer:
+I can open it in a vertical split, so even long-winded errors fit on the screen.</p>
+<figure><label class="margin-toggle" for="mn-emacs-compile">⊕</label><input type="checkbox" id="mn-emacs-compile" class="margin-toggle"><span class="marginnote">
+    The interface of Emacs’s compilation mode (the right buffer in the vertical split).
+  </span><img src="/images/45-emacs-compile.webp">
+</figure>
+<p>Vim’s <a href="https://neovim.io/doc/user/quickfix.html">quickfix</a> list comes as a close second.
+Vim’s <code>:make</code> command is synchronous
+(the <a href="https://github.com/tpope/vim-dispatch">vim-dispatch</a> plugin addresses this shortcoming),
+requires more configuration,
+and is somewhat less flexible
+(the quickfix window is stubborn in its preference for horizontal splits, which can make long error messages unreadable),
+but it’s also packed with more features,
+such as error list history (see <code>:cnewer</code> and <code>:colder</code>)
+and batch editing on quickfix entries (see <code>:cdo</code> and <code>:cfdo</code>).
+Typing <code>]q</code> or <code>[q</code> shifts the focus to the next/previous list entry.</p>
+<figure><label class="margin-toggle" for="mn-nvim-quickfix">⊕</label><input type="checkbox" id="mn-nvim-quickfix" class="margin-toggle"><span class="marginnote">
+    The interface of Neovim’s quickfix feature (the bottom buffer in the horizontal split).
+  </span><img src="/images/45-nvim-quickfix.webp">
+</figure>
+<p>Many other editors support this workflow.
+For example, <a href="https://code.visualstudio.com/">VS Code</a> can run external tools
+as <a href="https://code.visualstudio.com/docs/debugtest/tasks">tasks</a>
+and populate the error list via <a href="https://code.visualstudio.com/docs/debugtest/tasks#_defining-a-problem-matcher">problem matchers</a>,
+but that setup creates enough friction that I always return to bureaucracy-free Emacs.</p>
+</section>
+<section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
+<p>A programmer’s interaction with a tool is a conversation.
+Most modern tools treat this conversation as instant messaging,
+trading depth for interactivity,
+interrupting the natural pace of discussion,
+and trying to finish programmers’ sentences for them.</p>
+<p>Interactive tools are a great asset when they don’t interfere with authoring;
+they can help us stay more focused and engaged for longer.
+Conversations need pauses. Music is the space between the notes.</p>
+</section>
+
+<h2>Similar articles</h2><ul class="arrows"><li><a href="/posts/44-tag-based-logging.html">Tag-based logging</a></li><li><a href="/posts/41-box-combinators.html">Box combinators</a></li><li><a href="/posts/37-onnx-intro.html">ONNX introduction</a></li><li><a href="/posts/31-effective-design-docs.html">Effective design docs</a></li><li><a href="/posts/43-stepanovs-biggest-blunder.html">Stepanov’s biggest blunder</a></li></ul><div id="next-prev-nav"><div id="newer"><a href="/posts/46-aoc-2025.html"> ←Advent of Code 2025</a></div><div id="older"><a href="/posts/44-tag-based-logging.html">Tag-based logging→ </a></div></div>
+<hr>
+<footer><span>&copy;Roman Kashitsyn</span>&nbsp;
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></article></body></html>
