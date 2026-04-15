@@ -135,6 +135,22 @@ let one_of (chars : string) : char t =
 let none_of (chars : string) : char t =
   satisfy (fun c -> not (String.contains chars c))
 
+let advance_range (_src : string) (start : int) (stop : int) (pos : pos) : pos =
+  Parser_pos.advance_by pos (stop - start)
+
+let has_prefix_at (src : string) (ofs : int) (lit : string) : bool =
+  let n = String.length lit in
+  let len = String.length src in
+  if ofs + n > len then false
+  else begin
+    let rec loop i =
+      if i = n then true
+      else if src.[ofs + i] <> lit.[i] then false
+      else loop (i + 1)
+    in
+    loop 0
+  end
+
 (* Match a literal multi-character string. Atomic: either fully consumes
    the prefix or fully rewinds (Parsec's [string] is partially consuming,
    but for the rest of the parser we want atomicity). *)
@@ -142,13 +158,34 @@ let string (lit : string) : string t = fun st ->
   let n = String.length lit in
   if st.ofs + n > String.length st.src then
     PFail (st.pos, Printf.sprintf "expected %S" lit, false)
-  else if String.sub st.src st.ofs n = lit then begin
-    let pos = ref st.pos in
-    for i = 0 to n - 1 do pos := Parser_pos.advance !pos lit.[i] done;
-    POk (lit, { st with ofs = st.ofs + n; pos = !pos }, n > 0)
+  else if has_prefix_at st.src st.ofs lit then begin
+    let stop = st.ofs + n in
+    let pos = Parser_pos.advance_by st.pos n in
+    POk (lit, { st with ofs = stop; pos }, n > 0)
   end
   else
     PFail (st.pos, Printf.sprintf "expected %S" lit, false)
+
+let take_while (f : char -> bool) : string t = fun st ->
+  let len = String.length st.src in
+  let i = ref st.ofs in
+  while !i < len && f st.src.[!i] do incr i done;
+  let pos = advance_range st.src st.ofs !i st.pos in
+  POk
+    ( String.sub st.src st.ofs (!i - st.ofs)
+    , { st with ofs = !i; pos }
+    , !i > st.ofs )
+
+let take_while1 (f : char -> bool) : string t = fun st ->
+  match take_while f st with
+  | POk ("", _, _) -> PFail (st.pos, "expected matching character", false)
+  | POk (s, st', _) -> POk (s, st', true)
+  | PFail _ as e -> e
+
+let skip_while (f : char -> bool) : unit t = fun st ->
+  match take_while f st with
+  | POk (_, st', consumed) -> POk ((), st', consumed)
+  | PFail _ as e -> e
 
 (* --- repetition --- *)
 
@@ -192,26 +229,20 @@ let option_maybe (p : 'a t) : 'a option t = fun st ->
 let many_till_chars (terminator : string) : string t = fun st0 ->
   let n = String.length terminator in
   let len = String.length st0.src in
-  let buf = Buffer.create 32 in
-  let st = ref st0 in
-  let consumed = ref false in
-  let found = ref false in
-  while not !found && !st.ofs <= len - n &&
-        not (String.sub !st.src !st.ofs n = terminator) do
-    let c = !st.src.[!st.ofs] in
-    Buffer.add_char buf c;
-    st := { !st with ofs = !st.ofs + 1; pos = Parser_pos.advance !st.pos c };
-    consumed := true
-  done;
-  if !st.ofs <= len - n && String.sub !st.src !st.ofs n = terminator then begin
-    found := true;
-    let pos = ref !st.pos in
-    for i = 0 to n - 1 do pos := Parser_pos.advance !pos terminator.[i] done;
-    st := { !st with ofs = !st.ofs + n; pos = !pos };
-    consumed := true
-  end;
-  if !found then POk (Buffer.contents buf, !st, !consumed)
-  else PFail (st0.pos, Printf.sprintf "expected %S" terminator, false)
+  let rec find ofs =
+    if ofs > len - n then None
+    else if has_prefix_at st0.src ofs terminator then Some ofs
+    else find (ofs + 1)
+  in
+  match find st0.ofs with
+  | None -> PFail (st0.pos, Printf.sprintf "expected %S" terminator, false)
+  | Some end_ofs ->
+    let after_term = end_ofs + n in
+    let pos = advance_range st0.src st0.ofs after_term st0.pos in
+    POk
+      ( String.sub st0.src st0.ofs (end_ofs - st0.ofs)
+      , { st0 with ofs = after_term; pos }
+      , true )
 
 (* --- lookahead and position --- *)
 

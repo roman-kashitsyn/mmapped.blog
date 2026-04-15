@@ -2,30 +2,46 @@
 
 type t = {
   source_name : string;
+  offset : int;
+}
+
+type resolved = {
+  source_name : string;
   line : int;
   column : int;
 }
 
-let make source_name line column = { source_name; line; column }
+let make source_name offset _column = { source_name; offset }
 
-let initial source_name = { source_name; line = 1; column = 1 }
+let initial source_name = { source_name; offset = 0 }
 
 let source_name p = p.source_name
-let line p = p.line
-let column p = p.column
+let offset p = p.offset
 
 let equal a b =
-  a.line = b.line && a.column = b.column && a.source_name = b.source_name
+  a.offset = b.offset && a.source_name = b.source_name
 
 let compare a b =
-  let c = compare a.line b.line in
-  if c <> 0 then c else compare a.column b.column
+  compare a.offset b.offset
 
-(* Advance a position past a character. Tabs do not get any special treatment;
-   this matches Parsec's defaultUpdatePosChar with tab width = 1. *)
-let advance p c =
-  if c = '\n' then { p with line = p.line + 1; column = 1 }
-  else { p with column = p.column + 1 }
+let advance p _c =
+  { p with offset = p.offset + 1 }
 
-let to_string p =
-  Printf.sprintf "\"%s\" (line %d, column %d)" p.source_name p.line p.column
+let advance_by p n =
+  { p with offset = p.offset + n }
+
+let resolve source p =
+  let line = ref 1 in
+  let column = ref 1 in
+  let limit = min p.offset (String.length source) in
+  for i = 0 to limit - 1 do
+    if source.[i] = '\n' then begin
+      incr line;
+      column := 1
+    end else
+      incr column
+  done;
+  { source_name = p.source_name; line = !line; column = !column }
+
+let to_string (p : t) =
+  Printf.sprintf "\"%s\" (offset %d)" p.source_name p.offset

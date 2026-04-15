@@ -61,15 +61,16 @@ let format_report category source file_name line_num col msg =
   String.concat "\n" [header; ""; prefix ^ src_line; carets; msg; ""]
 
 let format_parse_error source (e : parse_error) =
-  let p = e.pe_pos in
+  let p = Parser_pos.resolve source e.pe_pos in
   format_report "PARSE ERROR" source
-    (Parser_pos.source_name p) (Parser_pos.line p) (Parser_pos.column p)
+    p.source_name p.line p.column
     e.pe_message
 
 let format_elab_error source (e : elab_error) =
   match e.ee_pos with
   | None -> e.ee_message
   | Some p ->
+    let p = Parser_pos.resolve source p in
     format_report "ELABORATION ERROR" source
-      (Parser_pos.source_name p) (Parser_pos.line p) (Parser_pos.column p)
+      p.source_name p.line p.column
       e.ee_message

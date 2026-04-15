@@ -20,7 +20,7 @@ let is_math_op c =
   || c = '[' || c = ']' || c = '|' || c = '(' || c = ')'
   || c = '\n' || c = '<' || c = '>' || c = ':'
 
-let skip_math_spaces : unit t = skip_many (satisfy (fun c -> c = ' '))
+let skip_math_spaces : unit t = skip_while (fun c -> c = ' ')
 
 (* Whether a node is "operator-like", meaning a following '-' should be
    parsed as a unary minus rather than as a binary operator. *)
@@ -41,14 +41,14 @@ let parse_escaped_brace : string t =
 let parse_negative_number : math_node t =
   try_ (
     let* _ = char '-' in
-    let* digits = many1 (satisfy is_digit) in
-    let s = "-" ^ string_of_chars digits in
+    let* digits = take_while1 is_digit in
+    let s = "-" ^ digits in
     return (Math_num s)
   )
 
 let parse_math_number : math_node t =
-  let* digits = many1 (satisfy is_digit) in
-  return (Math_num (string_of_chars digits))
+  let* digits = take_while1 is_digit in
+  return (Math_num digits)
 
 let parse_math_operator : math_node t =
   let* c = satisfy is_math_op in
@@ -104,16 +104,24 @@ and collect_sub_sup ~end_p nuc st =
       | None -> return nuc)) st
 
 and parse_math_atom ~end_p st =
-  (let* () = skip_math_spaces in
-   let alts =
-     [ parse_math_group ~end_p
-     ; parse_math_control
-     ; parse_math_number
-     ; parse_math_operator
-     ; parse_math_symbol
-     ]
-   in
-   choice alts) st
+  match skip_math_spaces st with
+  | PFail _ as e -> e
+  | POk ((), st', c1) ->
+    let r =
+      if st'.ofs >= String.length st'.src then
+        PFail (st'.pos, "unexpected end of input", false)
+      else
+        match st'.src.[st'.ofs] with
+        | '{' -> parse_math_group ~end_p st'
+        | '\\' -> parse_math_control st'
+        | c when is_digit c -> parse_math_number st'
+        | c when is_math_op c -> parse_math_operator st'
+        | c when is_letter c -> parse_math_symbol st'
+        | c -> PFail (st'.pos, Printf.sprintf "unexpected character %C" c, false)
+    in
+    match r with
+    | POk (x, st'', c2) -> POk (x, st'', c1 || c2)
+    | PFail (p, m, c2) -> PFail (p, m, c1 || c2)
 
 and parse_math_group ~end_p:_ st =
   (let* _ = char '{' in
@@ -126,11 +134,10 @@ and parse_math_control st =
    match esc with
    | Some c -> return (Math_op (String.make 1 c, false))
    | None ->
-     let* c = look_ahead any_char in
-     if c = ']' then unexpected "\\] (unmatched display math delimiter)"
-     else
-       let* name_chars = many1 (satisfy is_symbolic) in
-       let name = string_of_chars name_chars in
+       let* c = look_ahead any_char in
+       if c = ']' then unexpected "\\] (unmatched display math delimiter)"
+       else
+       let* name = take_while1 is_symbolic in
        (match SMap.find_opt name math_cmds with
         | Some _ when name = "left" || name = "right" ->
           let* () = skip_math_spaces in
@@ -161,8 +168,7 @@ and parse_math_cmd_arg t st =
    | Math_arg_sym ->
      let* () = skip_math_spaces in
      let* _ = char '{' in
-     let* sym_chars = many1 (satisfy is_symbolic) in
-     let sym = string_of_chars sym_chars in
+     let* sym = take_while1 is_symbolic in
      let* _ = char '}' in
      return (Math_op (sym, false))) st
 
