@@ -14,7 +14,7 @@ jobs:
           path: |
             opam/2.3.0/root
             opam/2.3.0/local-switch
-          key: ${{ runner.os }}-opam-${{ hashFiles('Makefile', 'blogware/dune-project') }}
+          key: ${{ runner.os }}-opam-${{ hashFiles('Makefile', 'dune-project') }}
 
       - name: Install dependencies
         run: make deps

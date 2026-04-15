@@ -60,7 +60,8 @@ help:
 	@echo "snapshots    - update website rendering snapshots"
 	@echo "clean        - remove build artifacts"
 	@echo "distclean    - remove build artifacts and installed toolchains"
-	@echo "deps         - install dependencies"
+	@echo "deps         - install the minimal build dependencies"
+	@echo "dev-deps     - install optional documentation tooling"
 
 $(OPAM_STATE_ROOT)/config: $(OPAM)
 	@echo "Initializing opam..."
@@ -70,10 +71,16 @@ $(OPAMSWITCH)/_opam/.opam-switch/switch-config: $(OPAM_STATE_ROOT)/config
 	@echo "Creating local switch at $(OPAMSWITCH)..."
 	$(OPAM) switch create $(OPAM_SWITCH_ABS) ocaml-base-compiler.5.3.0 --yes --root=$(OPAM_STATE_ROOT)
 
-# Install project dependencies
+# Install the minimum toolchain required to build and test the site.
 $(OPAM_ROOT)/.deps: $(OPAMSWITCH)/_opam/.opam-switch/switch-config dune-project
-	@echo "Installing dependencies..."
-	$(OPAM) install $(OPAM_COMMON_ARGS) dune ocaml-lsp-server odoc --yes
+	@echo "Installing build dependencies..."
+	$(OPAM) install $(OPAM_COMMON_ARGS) dune --yes
+	@touch $@
+
+# Optional documentation tooling. Not required for CI or deployment.
+$(OPAM_ROOT)/.dev-deps: $(OPAM_ROOT)/.deps
+	@echo "Installing development dependencies..."
+	$(OPAM) install $(OPAM_COMMON_ARGS) merlin --yes
 	@touch $@
 
 .PHONY: serve
@@ -102,6 +109,9 @@ build: $(OPAM_ROOT)/.deps
 
 .PHONY: deps
 deps: $(OPAM_ROOT)/.deps
+
+.PHONY: dev-deps
+dev-deps: $(OPAM_ROOT)/.dev-deps
 
 .PHONY: clean
 clean:

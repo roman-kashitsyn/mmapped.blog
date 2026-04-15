@@ -1,5 +1,3 @@
-(* Top-level TeX parser. Mirror of Blogware.Parser. *)
-
 open Parser_state
 open Syntax
 
