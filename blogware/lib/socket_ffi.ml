@@ -17,7 +17,7 @@ let listen_on (port : int) : fd =
 
 (* Accept one connection. Returns the client socket. *)
 let accept_conn (server_fd : fd) : fd =
-  let (client_fd, _addr) = Unix.accept server_fd in
+  let client_fd, _addr = Unix.accept server_fd in
   client_fd
 
 (* Read up to [max_bytes] bytes from [fd] in a single read. Returns the
@@ -25,8 +25,7 @@ let accept_conn (server_fd : fd) : fd =
 let recv_all (fd : fd) (max_bytes : int) : string =
   let buf = Bytes.create max_bytes in
   let n = Unix.read fd buf 0 max_bytes in
-  if n <= 0 then ""
-  else Bytes.sub_string buf 0 n
+  if n <= 0 then "" else Bytes.sub_string buf 0 n
 
 (* Write the whole string to [fd], retrying until fully sent. *)
 let send_all (fd : fd) (data : string) : unit =
@@ -35,8 +34,7 @@ let send_all (fd : fd) (data : string) : unit =
     if off >= len then ()
     else
       let n = Unix.write_substring fd data off (len - off) in
-      if n <= 0 then ()
-      else loop (off + n)
+      if n <= 0 then () else loop (off + n)
   in
   loop 0
 

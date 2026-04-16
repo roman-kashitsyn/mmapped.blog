@@ -2,14 +2,9 @@
    Haskell's [time] package. We only need YYYY-MM-DD parsing/formatting,
    ordering, and a "today" helper. *)
 
-type t = {
-  year : int;
-  month : int;  (* 1..12 *)
-  day : int;    (* 1..31 *)
-}
+type t = { year : int; month : int; (* 1..12 *) day : int (* 1..31 *) }
 
 let make ~year ~month ~day = { year; month; day }
-
 let year d = d.year
 let month d = d.month
 let day d = d.day
@@ -19,8 +14,7 @@ let compare a b =
   if c <> 0 then c
   else
     let c = Int.compare a.month b.month in
-    if c <> 0 then c
-    else Int.compare a.day b.day
+    if c <> 0 then c else Int.compare a.day b.day
 
 let equal a b = compare a b = 0
 
@@ -47,6 +41,8 @@ let to_rfc3339_midnight d =
 (* Today, derived from the local clock. *)
 let today () =
   let tm = Unix.gmtime (Unix.time ()) in
-  { year = tm.Unix.tm_year + 1900;
+  {
+    year = tm.Unix.tm_year + 1900;
     month = tm.Unix.tm_mon + 1;
-    day = tm.Unix.tm_mday }
+    day = tm.Unix.tm_mday;
+  }

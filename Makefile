@@ -1,6 +1,7 @@
 PORT ?= 9090
 DEST ?= _site
 INPUT ?= .
+BENCH_ITERATIONS ?= 10
 
 OPAM_VERSION := 2.3.0
 OPAM_DIR := opam
@@ -46,7 +47,9 @@ OPAM_SWITCH_ABS := $(abspath $(OPAMSWITCH))
 OPAM_COMMON_ARGS := --root=$(OPAM_STATE_ROOT) --switch=$(OPAM_SWITCH_ABS)
 DUNE := $(OPAM) exec $(OPAM_COMMON_ARGS) -- dune
 BLOGWARE := _build/default/$(BLOGWARE_DIR)/bin/main.exe
+BLOGWARE_BENCH := _build/default/$(BLOGWARE_DIR)/bin/bench.exe
 BLOGWARE_BUILD_DIR := _build
+ARTICLE_SOURCES := about.tex $(wildcard posts/*.tex)
 
 .PHONY: help
 help:
@@ -57,6 +60,8 @@ help:
 	@echo "render       - render the website into the DEST directory"
 	@echo "test         - run the test suite"
 	@echo "test-verbose - run tests with verbose output"
+	@echo "format       - format all OCaml code"
+	@echo "bench-all    - benchmark all articles ($(BENCH_ITERATIONS) iterations each)"
 	@echo "snapshots    - update website rendering snapshots"
 	@echo "clean        - remove build artifacts"
 	@echo "distclean    - remove build artifacts and installed toolchains"
@@ -80,7 +85,7 @@ $(OPAM_ROOT)/.deps: $(OPAMSWITCH)/_opam/.opam-switch/switch-config dune-project
 # Optional documentation tooling. Not required for CI or deployment.
 $(OPAM_ROOT)/.dev-deps: $(OPAM_ROOT)/.deps
 	@echo "Installing development dependencies..."
-	$(OPAM) install $(OPAM_COMMON_ARGS) merlin --yes
+	$(OPAM) install $(OPAM_COMMON_ARGS) merlin ocamlformat --yes
 	@touch $@
 
 .PHONY: serve
@@ -99,6 +104,10 @@ test: $(OPAM_ROOT)/.deps
 test-verbose: $(OPAM_ROOT)/.deps
 	$(DUNE) exec ./blogware/test/test_main.exe -- -verbose
 
+.PHONY: format
+format: $(OPAM_ROOT)/.dev-deps
+	$(DUNE) fmt
+
 .PHONY: snapshots
 snapshots: $(OPAM_ROOT)/.deps
 	UPDATE_SNAPSHOTS=1 $(DUNE) exec ./blogware/test/snapshot_test.exe
@@ -106,6 +115,10 @@ snapshots: $(OPAM_ROOT)/.deps
 .PHONY: build
 build: $(OPAM_ROOT)/.deps
 	$(DUNE) build ./blogware/bin/main.exe
+
+.PHONY: bench-all
+bench-all: $(OPAM_ROOT)/.deps
+	$(DUNE) exec ./blogware/bin/bench.exe -- $(BENCH_ITERATIONS) $(ARTICLE_SOURCES)
 
 .PHONY: deps
 deps: $(OPAM_ROOT)/.deps

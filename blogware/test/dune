@@ -14,6 +14,7 @@
  (action
   (progn
    (run %{exe:test_main.exe})
-   (chdir %{workspace_root}
+   (chdir
+    %{workspace_root}
     (run %{exe:snapshot_test.exe}))))
  (alias runtest))

@@ -7,16 +7,17 @@ open Blogware
 
 let all_tests : Test_framework.t list =
   List.concat
-    [ Html_test.tests
-    ; Parser_test.tests
-    ; Math_test.tests
-    ; Render_test.tests
-    ; Render_mathml_test.tests
-    ; Elaborate_test.tests
-    ; Feed_test.tests
-    ; Layout_test.tests
-    ; Server_test.tests
-    ; Pipeline_test.tests
+    [
+      Html_test.tests;
+      Parser_test.tests;
+      Math_test.tests;
+      Render_test.tests;
+      Render_mathml_test.tests;
+      Elaborate_test.tests;
+      Feed_test.tests;
+      Layout_test.tests;
+      Server_test.tests;
+      Pipeline_test.tests;
     ]
 
 let () =
