@@ -124,7 +124,6 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Circled_ref n -> span_ [ class_ "circled-ref" ] (round_num_glyph n |> text)
   | Line_break -> br_ []
   | Numeric_space -> raw "&numsp;"
-  | Mathml (opts, body) -> Render_mathml.render_mathml_cmd opts body
   | Image_inline (classes, path) ->
       let cls = join_classes classes in
       let img = leaf "img" (class_attr_if_nonempty cls @ [ src_ path ]) in

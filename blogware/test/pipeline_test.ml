@@ -67,9 +67,7 @@ let tests : Test_framework.t list =
                ]));
       test "parse error: invalid multicolumn keeps source position" (fun () ->
           assert_parse_error_msg
-            "\\begin{tabular}{c}\n\
-             \\multicolumn{2}{lr}{x}\n\
-             \\end{tabular}\n"
+            "\\begin{tabular}{c}\n\\multicolumn{2}{lr}{x}\n\\end{tabular}\n"
             (String.concat "\n"
                [
                  "-- PARSE ERROR -------------------------------------- <test>";

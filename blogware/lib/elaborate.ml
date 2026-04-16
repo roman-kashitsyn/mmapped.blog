@@ -195,7 +195,6 @@ and inline_to_text = function
   | Math_span ils -> render_inlines_to_text ils
   | Normal ils -> render_inlines_to_text ils
   | Nameref label -> "[nameref:" ^ label ^ "]"
-  | Mathml _ -> ""
   | Image_inline _ -> ""
   | _ -> ""
 
@@ -311,24 +310,6 @@ let metadata_cmd_set =
       "lobsters";
     ]
 
-let mathml_subcmd_set =
-  sset_of_list
-    [
-      "mi";
-      "mn";
-      "mo";
-      "mo*";
-      "msup";
-      "msub";
-      "mtext";
-      "mrow";
-      "mtable";
-      "mtr";
-      "mtd";
-      "munderover";
-      "msubsup";
-    ]
-
 let rec classify_node (n : node) : node_class result_ =
   match n with
   | NText (_, t) -> Ok (CInline (Str (apply_typography t)))
@@ -436,9 +417,6 @@ let rec classify_node (n : node) : node_class result_ =
   | NCmd (_, "includegraphics", opts, Arg_nodes (_, ns) :: _) ->
       Ok (CBlock (Image (opts, node_text_of_nodes ns)))
   | NCmd (pos, "item", _, _) -> elab_error pos "hanging item command"
-  | NCmd (_, "mathml", opts, Arg_nodes (_, body) :: _) ->
-      Ok (CInline (Mathml (opts, body)))
-  | NCmd (_, name, _, _) when SSet.mem name mathml_subcmd_set -> Ok CSkip
   | NCmd (_, name, _, _) when SSet.mem name replacement_cmd_set ->
       let repl = SMap.find name replacements in
       Ok (CInline (Str repl))
@@ -567,10 +545,6 @@ and elaborate_code_inlines (ns : node list) : inline list result_ =
         go (Nameref r :: acc) rest
     | NCmd (_, "includegraphics", opts, Arg_nodes (_, ns) :: _) :: rest ->
         go (Image_inline (opts, node_text_of_nodes ns) :: acc) rest
-    | NCmd (_, "mathml", opts, Arg_nodes (_, body) :: _) :: rest ->
-        go (Mathml (opts, body) :: acc) rest
-    | NCmd (_, name, _, _) :: rest when SSet.mem name mathml_subcmd_set ->
-        go acc rest
     | NCmd (_, name, _, _) :: rest when SSet.mem name replacement_cmd_set ->
         go (Str (SMap.find name replacements) :: acc) rest
     | _ :: rest -> go acc rest

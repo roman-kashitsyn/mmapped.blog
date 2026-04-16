@@ -128,20 +128,10 @@ We'll view a sequence $f$ as a function over natural number
 and denote the discrete derivative of $f$ as $D_f$.
 and its antiderivative as $S_f$, where
 
-\mathml[block]{
-  \mtable{r c l}{
-    \mtr{
-      \mtd{$D_f(i)$}
-      \mtd{$=$}
-      \mtd{$f(i+1) - f(i)$}
-    }
-    \mtr{
-      \mtd{$S_f(i)$}
-      \mtd{$=$}
-      \mtd{$\sum_{k=0}^i f(k)$}
-    }
-  }
-}
+\begin{align*}
+  D_f(i) &=& f(i+1) - f(i) \\
+  S_f(i) &=& \sum_{k=0}^i f(k)
+\end{align*}
 
 $D_f$ corresponds to differences between adjacent elements in the source sequence,
 and $S_f$ corresponds to partial sums.

@@ -42,11 +42,12 @@ end
 
 type pos = Pos.t
 type state = { src : string; source_name : string; ofs : int; pos : pos }
+type message = string Lazy.t
 
 (* Step result: success (POk) or failure (PFail). The bool flag indicates
    whether input was consumed; alternatives are only attempted on a
    non-consuming failure. *)
-type 'a step = POk of 'a * state * bool | PFail of pos * string * bool
+type 'a step = POk of 'a * state * bool | PFail of pos * message * bool
 type 'a t = state -> 'a step
 
 type parse_error = {
@@ -58,14 +59,22 @@ type parse_error = {
 (* --- core combinators --- *)
 
 let return (x : 'a) : 'a t = fun st -> POk (x, st, false)
-let fail (msg : string) : 'a t = fun st -> PFail (st.pos, msg, false)
+let fail (msg : string) : 'a t = fun st -> PFail (st.pos, lazy msg, false)
 
 let unexpected (what : string) : 'a t =
- fun st -> PFail (st.pos, "unexpected " ^ what, false)
+ fun st -> PFail (st.pos, lazy ("unexpected " ^ what), false)
 
 let bind (p : 'a t) (f : 'a -> 'b t) : 'b t =
  fun st ->
   match p st with
+  | PFail _ as e -> e
+  | POk (x, st', c1) -> (
+      match f x st' with
+      | POk (y, st'', c2) -> POk (y, st'', c1 || c2)
+      | PFail (pos, msg, c2) -> PFail (pos, msg, c1 || c2))
+
+let bind_step (step : 'a step) (f : 'a -> state -> 'b step) : 'b step =
+  match step with
   | PFail _ as e -> e
   | POk (x, st', c1) -> (
       match f x st' with
@@ -120,14 +129,15 @@ let try_ (p : 'a t) : 'a t =
  fun st ->
   match p st with
   | POk _ as r -> r
-  | PFail (pos, msg, _) -> PFail (pos, msg, false)
+  | PFail (_, _, false) as e -> e
+  | PFail (pos, msg, true) -> PFail (pos, msg, false)
 
 (* --- input inspection --- *)
 
 let eof : unit t =
  fun st ->
   if st.ofs >= String.length st.src then POk ((), st, false)
-  else PFail (st.pos, "expected end of input", false)
+  else PFail (st.pos, lazy "expected end of input", false)
 
 let peek_char : char option t =
  fun st ->
@@ -137,7 +147,7 @@ let peek_char : char option t =
 let any_char : char t =
  fun st ->
   if st.ofs >= String.length st.src then
-    PFail (st.pos, "unexpected end of input", false)
+    PFail (st.pos, lazy "unexpected end of input", false)
   else
     let c = st.src.[st.ofs] in
     POk (c, { st with ofs = st.ofs + 1; pos = Pos.advance st.pos c }, true)
@@ -145,21 +155,27 @@ let any_char : char t =
 let satisfy (f : char -> bool) : char t =
  fun st ->
   if st.ofs >= String.length st.src then
-    PFail (st.pos, "unexpected end of input", false)
+    PFail (st.pos, lazy "unexpected end of input", false)
   else
     let c = st.src.[st.ofs] in
     if f c then
       POk (c, { st with ofs = st.ofs + 1; pos = Pos.advance st.pos c }, true)
-    else PFail (st.pos, Printf.sprintf "unexpected character %C" c, false)
+    else PFail (st.pos, lazy (Printf.sprintf "unexpected character %C" c), false)
 
 let char (c : char) : char t =
  fun st ->
   if st.ofs >= String.length st.src then
-    PFail (st.pos, Printf.sprintf "expected %C, got end of input" c, false)
+    PFail
+      (st.pos, lazy (Printf.sprintf "expected %C, got end of input" c), false)
   else if st.src.[st.ofs] = c then
     POk (c, { st with ofs = st.ofs + 1; pos = Pos.advance st.pos c }, true)
   else
-    PFail (st.pos, Printf.sprintf "expected %C, got %C" c st.src.[st.ofs], false)
+    PFail
+      ( st.pos,
+        lazy (Printf.sprintf "expected %C, got %C" c st.src.[st.ofs]),
+        false )
+
+let expect_char (c : char) : unit t = char c *> return ()
 
 let one_of (chars : string) : char t =
   satisfy (fun c -> String.contains chars c)
@@ -193,13 +209,15 @@ let string (lit : string) : string t =
  fun st ->
   let n = String.length lit in
   if st.ofs + n > String.length st.src then
-    PFail (st.pos, Printf.sprintf "expected %S" lit, false)
+    PFail (st.pos, lazy (Printf.sprintf "expected %S" lit), false)
   else if has_prefix_at st.src st.ofs lit then begin
     let stop = st.ofs + n in
     let pos = Pos.advance_by st.pos n in
     POk (lit, { st with ofs = stop; pos }, n > 0)
   end
-  else PFail (st.pos, Printf.sprintf "expected %S" lit, false)
+  else PFail (st.pos, lazy (Printf.sprintf "expected %S" lit), false)
+
+let expect_string (s : string) : unit t = string s *> return ()
 
 let take_while (f : char -> bool) : string t =
  fun st ->
@@ -217,7 +235,7 @@ let take_while (f : char -> bool) : string t =
 let take_while1 (f : char -> bool) : string t =
  fun st ->
   match take_while f st with
-  | POk ("", _, _) -> PFail (st.pos, "expected matching character", false)
+  | POk ("", _, _) -> PFail (st.pos, lazy "expected matching character", false)
   | POk (s, st', _) -> POk (s, st', true)
   | PFail _ as e -> e
 
@@ -247,7 +265,7 @@ let scan (s0 : 's) ~(step : 's -> char -> 's option) ~(accept : 's -> bool) :
       ( String.sub src start (ofs' - start),
         { st with ofs = ofs'; pos = pos' },
         ofs' > st.ofs )
-  else PFail (st.pos, "expected matching character", false)
+  else PFail (st.pos, lazy "expected matching character", false)
 
 (* --- repetition --- *)
 
@@ -302,7 +320,8 @@ let many_till_chars (terminator : string) : string t =
     else find (ofs + 1)
   in
   match find st0.ofs with
-  | None -> PFail (st0.pos, Printf.sprintf "expected %S" terminator, false)
+  | None ->
+      PFail (st0.pos, lazy (Printf.sprintf "expected %S" terminator), false)
   | Some end_ofs ->
       let after_term = end_ofs + n in
       let pos = advance_range st0.src st0.ofs after_term st0.pos in
@@ -328,4 +347,9 @@ let run (p : 'a t) ~source_name (input : string) : ('a, parse_error) result =
   match p st with
   | POk (x, _, _) -> Ok x
   | PFail (pos, msg, _) ->
-      Error { pe_source_name = source_name; pe_pos = pos; pe_message = msg }
+      Error
+        {
+          pe_source_name = source_name;
+          pe_pos = pos;
+          pe_message = Lazy.force msg;
+        }

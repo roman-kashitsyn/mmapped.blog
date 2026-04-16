@@ -33,6 +33,17 @@ let show_math_list ns =
         ^ (match sup with Some s -> go s | None -> "_")
         ^ ")"
     | Math_frac (n, d) -> "frac(" ^ go n ^ "," ^ go d ^ ")"
+    | Math_align (_, rows) ->
+        "align["
+        ^ String.concat "; "
+            (List.map
+               (fun row ->
+                 String.concat " & "
+                   (List.map
+                      (fun cell -> String.concat " " (List.map go cell))
+                      row))
+               rows)
+        ^ "]"
   in
   String.concat " " (List.map go ns)
 

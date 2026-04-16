@@ -4,7 +4,6 @@
 type math_display = Syntax.math_display
 type math_node = Syntax.math_node
 type col_spec = Syntax.col_spec
-type mathml_tree = Syntax.node list
 
 (* Inline elements *)
 type inline =
@@ -32,8 +31,6 @@ type inline =
   | Line_break
   | Numeric_space
   | Nameref of string (* label for \nameref *)
-  | Mathml of
-      string list * mathml_tree (* direct MathML snippet options + body *)
   | Image_inline of
       string list
       * string (* css classes, src path (for inline/table contexts) *)

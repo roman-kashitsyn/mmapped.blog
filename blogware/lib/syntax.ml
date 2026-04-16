@@ -5,6 +5,9 @@ type pos = Parser.Pos.t
 (* Math display mode *)
 type math_display = Math_inline | Math_display
 
+(* Column alignment for tabular environments *)
+type col_spec = Col_left | Col_right | Col_center
+
 (* Math AST *)
 type math_node =
   | Math_term of math_node * math_node option * math_node option
@@ -16,9 +19,7 @@ type math_node =
   | Math_text of string
   | Math_sym of char
   | Math_group of math_node list
-
-(* Column alignment for tabular environments *)
-type col_spec = Col_left | Col_right | Col_center
+  | Math_align of col_spec list * math_node list list list
 
 (* Optional row borders *)
 type row_border = Border_none | Border_top | Border_bottom | Border_both
@@ -122,21 +123,7 @@ let cmd_args : arg_type list SMap.t =
       ("multicolumn", [ At_num; At_align_spec; At_seq ]);
       ("term", [ At_seq; At_seq ]);
       ("kbd", [ At_seq ]);
-      ("nameref", [ At_sym ]) (* Raw MathML support *);
-      ("mathml", [ At_seq ]);
-      ("mi", [ At_sym ]);
-      ("mn", [ At_seq ]);
-      ("mo", [ At_seq ]);
-      ("mo*", [ At_seq ]);
-      ("msup", [ At_seq; At_seq ]);
-      ("msub", [ At_seq; At_seq ]);
-      ("mtext", [ At_seq ]);
-      ("mrow", [ At_seq ]);
-      ("mtable", [ At_align_spec; At_seq ]);
-      ("mtr", [ At_seq ]);
-      ("mtd", [ At_seq ]);
-      ("munderover", [ At_seq; At_seq; At_seq ]);
-      ("msubsup", [ At_seq; At_seq; At_seq ]);
+      ("nameref", [ At_sym ]);
     ]
 
 let math_cmds : math_arg_type list SMap.t =

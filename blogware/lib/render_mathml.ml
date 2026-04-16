@@ -1,8 +1,7 @@
 (* MathML renderer. Mirror of Blogware.Render.MathML.
 
    Renders Syntax.math_node trees (produced by Parser_math) into MathML
-   elements using the Html builder. Also handles the raw \mathml{...}
-   escape hatch that lets authors write MathML directly. *)
+   elements using the Html builder. *)
 
 open Html
 open Syntax
@@ -48,6 +47,18 @@ let nucleus_is_big_op = function
   | Math_cmd (name, _) -> SSet.mem name big_ops
   | _ -> false
 
+let col_align_attrs (specs : col_spec list) : attribute list =
+  if specs = [] then []
+  else
+    let spec_to_text = function
+      | Col_left -> "left"
+      | Col_right -> "right"
+      | Col_center -> "center"
+    in
+    [
+      attr "columnalign" (String.concat " " (List.map spec_to_text specs) ^ " ");
+    ]
+
 (* --- Main math-node renderer --- *)
 
 let rec render_math_node (n : math_node) : Html.t =
@@ -64,6 +75,19 @@ let rec render_math_node (n : math_node) : Html.t =
       mfrac_ []
         (mrow_ [] (render_math_node num) ++ mrow_ [] (render_math_node denom))
   | Math_term (nucleus, msub, msup) -> render_math_term nucleus msub msup
+  | Math_align (specs, rows) ->
+      mtable_ (col_align_attrs specs)
+        (concat
+           (List.map
+              (fun row ->
+                mtr_ []
+                  (concat
+                     (List.map
+                        (fun cell ->
+                          mtd_ []
+                            (mrow_ [] (concat (List.map render_math_node cell))))
+                        row)))
+              rows))
 
 and render_math_cmd name args =
   match (name, args) with
@@ -121,83 +145,3 @@ let render_math (disp : math_display) (nodes : math_node list) : Html.t =
     (attr "xmlns" "http://www.w3.org/1998/Math/MathML"
     :: class_ "math" :: disp_attr)
     (concat (List.map render_math_node nodes))
-
-(* --- Raw \mathml{...} support ---
-   Authors can embed MathML directly using \mathml with a nested tree of
-   \mi, \mn, \mo, \msup, etc. We walk that Node tree here. *)
-
-let col_align_attrs (specs : col_spec list) : attribute list =
-  if specs = [] then []
-  else
-    let spec_to_text = function
-      | Col_left -> "left"
-      | Col_right -> "right"
-      | Col_center -> "center"
-    in
-    [
-      attr "columnalign" (String.concat " " (List.map spec_to_text specs) ^ " ");
-    ]
-
-let rec render_mathml_node (n : node) : Html.t =
-  match n with
-  | NText _ -> empty
-  | NMath (_, _, mnodes) -> mrow_ [] (concat (List.map render_math_node mnodes))
-  | NCmd (_, "mi", _, Arg_symbol (_, s) :: _) ->
-      mi_ [] (raw (escape_math_text s))
-  | NCmd (_, "mn", _, Arg_nodes (_, ns) :: _) ->
-      mn_ [] (concat (List.map render_mathml_node ns))
-  | NCmd (_, "mo", _, Arg_nodes (_, ns) :: _) ->
-      mo_ [] (concat (List.map render_mathml_node ns))
-  | NCmd (_, "mo*", _, Arg_nodes (_, ns) :: _) ->
-      mo_ [] (concat (List.map render_mathml_node ns))
-  | NCmd (_, "mtext", _, Arg_nodes (_, ns) :: _) ->
-      mtext_ [] (concat (List.map render_mathml_node ns))
-  | NCmd (_, "mrow", _, Arg_nodes (_, ns) :: _) ->
-      mrow_ [] (concat (List.map render_mathml_node ns))
-  | NCmd (_, "msup", _, Arg_nodes (_, base) :: Arg_nodes (_, sup) :: _) ->
-      msup_ []
-        (concat (List.map render_mathml_node base)
-        ++ concat (List.map render_mathml_node sup))
-  | NCmd (_, "msub", _, Arg_nodes (_, base) :: Arg_nodes (_, sub) :: _) ->
-      msub_ []
-        (concat (List.map render_mathml_node base)
-        ++ concat (List.map render_mathml_node sub))
-  | NCmd
-      ( _,
-        "msubsup",
-        _,
-        Arg_nodes (_, base) :: Arg_nodes (_, sub) :: Arg_nodes (_, sup) :: _ )
-    ->
-      msubsup_ []
-        (concat (List.map render_mathml_node base)
-        ++ concat (List.map render_mathml_node sub)
-        ++ concat (List.map render_mathml_node sup))
-  | NCmd
-      ( _,
-        "munderover",
-        _,
-        Arg_nodes (_, base) :: Arg_nodes (_, u) :: Arg_nodes (_, o) :: _ ) ->
-      munderover_ []
-        (concat (List.map render_mathml_node base)
-        ++ concat (List.map render_mathml_node u)
-        ++ concat (List.map render_mathml_node o))
-  | NCmd (_, "mtable", _, Arg_align (_, spec) :: Arg_nodes (_, ns) :: _) ->
-      mtable_ (col_align_attrs spec) (concat (List.map render_mathml_node ns))
-  | NCmd (_, "mtr", _, Arg_nodes (_, ns) :: _) ->
-      mtr_ [] (concat (List.map render_mathml_node ns))
-  | NCmd (_, "mtd", _, Arg_nodes (_, ns) :: _) ->
-      mtd_ [] (concat (List.map render_mathml_node ns))
-  | NCmd (_, name, _, _) -> (
-      match SMap.find_opt name replacements with
-      | Some repl -> raw repl
-      | None -> empty)
-  | _ -> empty
-
-let render_mathml_cmd (opts : string list) (body : node list) : Html.t =
-  let disp_attr =
-    if List.mem "block" opts then [ attr "display" "block" ] else []
-  in
-  math_
-    (attr "xmlns" "http://www.w3.org/1998/Math/MathML"
-    :: class_ "math" :: disp_attr)
-    (concat (List.map render_mathml_node body))

@@ -74,20 +74,19 @@ module Math = struct
   (* Mutually recursive parsers. Each body is written as [fun st -> (...) st]
      so OCaml's [let rec] sees a syntactic function. *)
   let rec parse_m_list ~end_p st =
+    let allow_negative = function
+      | [] -> true
+      | prev :: _ -> is_operator_like prev
+    in
     let rec go acc st =
       match end_p st with
       | POk (_, st', c) -> POk (List.rev acc, st', c)
       | PFail (_, _, true) as e -> e
-      | PFail (_, _, false) -> (
-          let allow_negative =
-            match acc with [] -> true | prev :: _ -> is_operator_like prev
-          in
-          match parse_math_term_with_sub_sup ~end_p ~allow_negative st with
-          | PFail _ as e -> e
-          | POk (term, st', c1) -> (
-              match go (term :: acc) st' with
-              | POk (xs, st'', c2) -> POk (xs, st'', c1 || c2)
-              | PFail (p, m, c2) -> PFail (p, m, c1 || c2)))
+      | PFail (_, _, false) ->
+          bind_step
+            (parse_math_term_with_sub_sup ~end_p
+               ~allow_negative:(allow_negative acc) st)
+            (fun term st' -> go (term :: acc) st')
     in
     go [] st
 
@@ -97,57 +96,41 @@ module Math = struct
       st
 
   and collect_sub_sup ~end_p nuc st =
-    (let* msub = option_maybe (char '_') in
-     match msub with
-     | Some _ -> (
-         let* sub_node = parse_math_atom ~end_p ~allow_negative:true in
-         let* msup = option_maybe (char '^') in
-         match msup with
-         | Some _ ->
-             let* sup_node = parse_math_atom ~end_p ~allow_negative:true in
-             return (Math_term (nuc, Some sub_node, Some sup_node))
-         | None -> return (Math_term (nuc, Some sub_node, None)))
+    let parse_scripted marker =
+      option_maybe (char marker *> parse_math_atom ~end_p ~allow_negative:true)
+    in
+    (let* first_sub = parse_scripted '_' in
+     match first_sub with
+     | Some sub ->
+         let* sup = parse_scripted '^' in
+         return (Math_term (nuc, Some sub, sup))
      | None -> (
-         let* msup = option_maybe (char '^') in
-         match msup with
-         | Some _ -> (
-             let* sup_node = parse_math_atom ~end_p ~allow_negative:true in
-             let* msub2 = option_maybe (char '_') in
-             match msub2 with
-             | Some _ ->
-                 let* sub_node = parse_math_atom ~end_p ~allow_negative:true in
-                 return (Math_term (nuc, Some sub_node, Some sup_node))
-             | None -> return (Math_term (nuc, None, Some sup_node)))
-         | None -> return nuc))
+         let* sup = parse_scripted '^' in
+         match sup with
+         | None -> return nuc
+         | Some sup ->
+             let* sub = parse_scripted '_' in
+             return (Math_term (nuc, sub, Some sup))))
       st
 
   and parse_math_atom ~end_p ~allow_negative st =
-    match skip_math_spaces st with
-    | PFail _ as e -> e
-    | POk ((), st', c1) -> (
-        let r =
-          match peek_char st' with
-          | POk (None, _, _) -> PFail (st'.pos, "unexpected end of input", false)
-          | POk (Some '{', _, _) -> parse_math_group ~end_p st'
-          | POk (Some '\\', _, _) -> parse_math_control st'
-          | POk (Some '-', _, _) when allow_negative -> (
-              match parse_negative_number st' with
-              | POk _ as r -> r
-              | PFail (_, _, false) -> parse_math_operator st'
-              | PFail _ as e -> e)
-          | POk (Some c, _, _) when is_digit c -> parse_math_number st'
-          | POk (Some c, _, _) when is_math_op c -> parse_math_operator st'
-          | POk (Some c, _, _) when is_letter c -> parse_math_symbol st'
-          | POk (Some c, _, _) ->
-              PFail (st'.pos, Printf.sprintf "unexpected character %C" c, false)
-          | PFail _ as e -> e
-        in
-        match r with
-        | POk (x, st'', c2) -> POk (x, st'', c1 || c2)
-        | PFail (p, m, c2) -> PFail (p, m, c1 || c2))
+    let parse_atom_body =
+      let* next = peek_char in
+      match next with
+      | None -> fail "unexpected end of input"
+      | Some '{' -> parse_math_group ~end_p
+      | Some '\\' -> parse_math_control
+      | Some '-' when allow_negative ->
+          try_ parse_negative_number <|> parse_math_operator
+      | Some c when is_digit c -> parse_math_number
+      | Some c when is_math_op c -> parse_math_operator
+      | Some c when is_letter c -> parse_math_symbol
+      | Some c -> fail (Printf.sprintf "unexpected character %C" c)
+    in
+    (skip_math_spaces *> parse_atom_body) st
 
   and parse_math_group ~end_p:_ st =
-    (let* nodes = char '{' *> parse_m_list ~end_p:(char '}' *> return ()) in
+    (let* nodes = char '{' *> parse_m_list ~end_p:(expect_char '}') in
      return (Math_group nodes))
       st
 
@@ -171,14 +154,14 @@ module Math = struct
                in
                return (Math_cmd (name, [ Math_op (op, true) ]))
            | Some arg_types ->
-               let rec collect = function
+               let rec collect_args = function
                  | [] -> return []
                  | t :: rest ->
                      let* a = parse_math_cmd_arg t in
-                     let* xs = collect rest in
+                     let* xs = collect_args rest in
                      return (a :: xs)
                in
-               let* args = collect arg_types in
+               let* args = collect_args arg_types in
                return (Math_cmd (name, args))
            | None -> return (Math_cmd (name, []))))
       st
@@ -187,8 +170,7 @@ module Math = struct
     (match t with
     | Math_arg_expr ->
         let* nodes =
-          skip_math_spaces *> char '{'
-          *> parse_m_list ~end_p:(char '}' *> return ())
+          skip_math_spaces *> char '{' *> parse_m_list ~end_p:(expect_char '}')
         in
         return (Math_group nodes)
     | Math_arg_sym ->
@@ -205,8 +187,7 @@ module Math = struct
     let end_p =
       try_
         (skip_math_spaces
-        *> if display then string "\\]" *> return () else char '$' *> return ()
-        )
+        *> if display then expect_string "\\]" else expect_char '$')
     in
     parse_m_list ~end_p
 end
@@ -273,6 +254,16 @@ let finish_cell (cell : cell) : cell =
 let finish_row (row_borders : row_border) (row_cells_rev : cell list) : row =
   { row_borders; row_cells = List.rev_map finish_cell row_cells_rev }
 
+let collect_list (f : 'a -> 'b t) (xs : 'a list) : 'b list t =
+  let rec go = function
+    | [] -> return []
+    | x :: rest ->
+        let* a = f x in
+        let* bs = go rest in
+        return (a :: bs)
+  in
+  go xs
+
 let singleton (p : node t) : node list t =
   let* n = p in
   return [ n ]
@@ -328,7 +319,7 @@ let rec parse_arg arg_type =
 (* parse_seq_body and parse_seq_item are mutually recursive with parse_cmd. *)
 and parse_seq_body () st = parse_many_node_lists parse_seq_item st
 
-and parse_seq_item st =
+and parse_seq_like_item ~text_p ~allow_single_quote st =
   (let* c = look_ahead any_char in
    match c with
    | '%' -> parse_comment *> return []
@@ -339,10 +330,15 @@ and parse_seq_item st =
    | '$' -> singleton parse_inline_math
    | '[' | ']' -> singleton parse_bracket_text
    | '`' ->
-       (try_ parse_quotation >>| fun n -> [ n ])
+       try_ parse_quotation
+       >>| (fun n -> [ n ])
        <|> (parse_one_char_text '`' >>| fun n -> [ n ])
-   | _ -> singleton parse_text_node)
+   | '\'' when allow_single_quote -> singleton (parse_one_char_text '\'')
+   | _ -> singleton text_p)
     st
+
+and parse_seq_item st =
+  parse_seq_like_item ~text_p:parse_text_node ~allow_single_quote:false st
 
 (* ``...'' → [NQuotation]. [try_ (string "``")] makes the whole
    parser rewindable so a lone ` falls through to [parse_one_char_text]. *)
@@ -350,30 +346,17 @@ and parse_quotation st =
   (let* pos = get_position in
    let* _ = try_ (string "``") in
    let rec go acc st =
-     ((try_ (string "''") *> return (NQuotation (pos, List.rev acc)))
-      <|>
-      (let* nodes = parse_quot_item in
-       go (List.rev_append nodes acc)))
+     (try_ (string "''") *> return (NQuotation (pos, List.rev acc))
+     <|>
+     let* nodes = parse_quot_item in
+     go (List.rev_append nodes acc))
        st
    in
    go [])
     st
 
 and parse_quot_item st =
-  (let* c = look_ahead any_char in
-   match c with
-   | '%' -> parse_comment *> return []
-   | '\\' ->
-       let* display = starts_with "\\[" in
-       if display then singleton parse_display_math else singleton parse_cmd
-   | '{' -> singleton parse_group
-   | '$' -> singleton parse_inline_math
-   | '[' | ']' -> singleton parse_bracket_text
-   | '`' ->
-       (try_ parse_quotation >>| fun n -> [ n ])
-       <|> (parse_one_char_text '`' >>| fun n -> [ n ])
-   | '\'' -> singleton (parse_one_char_text '\'')
-   | _ -> singleton parse_text_node_in_quot)
+  parse_seq_like_item ~text_p:parse_text_node_in_quot ~allow_single_quote:true
     st
 
 (* Optional [opt1,opt2,...] argument list. *)
@@ -432,14 +415,7 @@ and parse_command_with_args pos name st =
    let arg_types =
      match SMap.find_opt name cmd_args with Some xs -> xs | None -> []
    in
-   let rec collect = function
-     | [] -> return []
-     | t :: rest ->
-         let* a = parse_arg t in
-         let* xs = collect rest in
-         return (a :: xs)
-   in
-   let* args = collect arg_types in
+   let* args = collect_list parse_arg arg_types in
    return (NCmd (pos, name, opts, args)))
     st
 
@@ -451,6 +427,7 @@ and parse_begin_env begin_pos st =
    | "verbatim" -> parse_verbatim_env begin_pos name opts
    | "tabular" | "tabular*" -> parse_table_env begin_pos name opts
    | "code" -> optional (char '\n') *> parse_regular_env begin_pos name opts
+   | "align*" -> parse_align_env begin_pos
    | _ -> parse_regular_env begin_pos name opts)
     st
 
@@ -470,7 +447,8 @@ and parse_env_body env_name st =
         else
           PFail
             ( pos,
-              "expected \\end{" ^ env_name ^ "} but found \\end{" ^ n ^ "}",
+              lazy
+                ("expected \\end{" ^ env_name ^ "} but found \\end{" ^ n ^ "}"),
               true )
     | PFail (_, _, false) -> (
         (* Skip comments; if any were skipped, re-check for \end{ before
@@ -520,15 +498,9 @@ and parse_env_node st =
        if display then parse_display_math else parse_cmd
    | '{' -> parse_group
    | '$' -> parse_inline_math
-   | '[' | ']' -> parse_bracket_text_single
+   | '[' | ']' -> parse_bracket_text
    | '`' -> try_ parse_quotation <|> parse_one_char_text '`'
    | _ -> parse_text_node)
-    st
-
-and parse_bracket_text_single st =
-  (let* pos = get_position in
-   let* c = char '[' <|> char ']' in
-   return (NText (pos, String.make 1 c)))
     st
 
 (* Verbatim env: raw text until \end{verbatim} *)
@@ -556,7 +528,7 @@ and parse_table_rows env_name spec st =
   let fresh_cell pos align =
     { cell_pos = pos; cell_align = align; cell_colspan = 1; cell_body = [] }
   in
-  let parse_row_sep : unit t = try_ (string "\\\\") *> return () in
+  let parse_row_sep : unit t = try_ (expect_string "\\\\") in
   let parse_hrule : unit t =
     try_ (string "\\hrule") *> optional (char ' ') *> return ()
   in
@@ -575,7 +547,8 @@ and parse_table_rows env_name spec st =
         if n <> env_name then
           PFail
             ( pos,
-              "expected \\end{" ^ env_name ^ "} but found \\end{" ^ n ^ "}",
+              lazy
+                ("expected \\end{" ^ env_name ^ "} but found \\end{" ^ n ^ "}"),
               true )
         else
           (* Handle pending hrule as bottom border on last row. *)
@@ -644,7 +617,8 @@ and parse_table_rows env_name spec st =
                     | POk ((pos, _, _, _), _, _) ->
                         PFail
                           ( pos,
-                            "\\multicolumn requires {N}{alignment}{content}",
+                            lazy
+                              "\\multicolumn requires {N}{alignment}{content}",
                             true )
                     | PFail _ -> (
                         (* Parse a node for the current cell *)
@@ -680,6 +654,68 @@ and parse_table_rows env_name spec st =
     | PFail _ as e -> e
   in
   go [] Border_none [] (fresh_cell st.pos (spec_at 0)) 1 st
+
+(* align* env: \begin{align*} math & math \\ ... \end{align*}
+   Parses in text mode but each cell contains math content.
+   Produces NMath with Math_display and a single Math_align node. *)
+and parse_align_env begin_pos st =
+  let cell_end =
+    try_
+      (Math.skip_math_spaces
+      *> look_ahead
+           (expect_string "\\\\" <|> expect_string "\\end{" <|> expect_char '&')
+      )
+  in
+  let filter_newlines nodes =
+    List.filter (function Math_op ("\n", _) -> false | _ -> true) nodes
+  in
+  let skip_ws = skip_while (fun c -> c = ' ' || c = '\n') in
+  let consume_delim =
+    try_ (string "\\\\" *> return `Row)
+    <|> try_ (char '&' *> return `Cell)
+    <|> string "\\end{align*}" *> return `End
+  in
+  let finish_rows rows_rev cells_rev =
+    let row = List.rev cells_rev in
+    let rows = List.rev (row :: rows_rev) in
+    List.filter (fun r -> not (List.for_all (fun c -> c = []) r)) rows
+  in
+  let default_align num_cols =
+    match num_cols with
+    | 0 -> []
+    | 1 -> [ Col_right ]
+    | n ->
+        List.init n (fun i ->
+            if i = 0 then Col_right
+            else if i = n - 1 then Col_left
+            else Col_center)
+  in
+  let rec go rows_rev cells_rev st =
+    bind_step (Math.parse_m_list ~end_p:cell_end st) (fun nodes st1 ->
+        let cells_rev = filter_newlines nodes :: cells_rev in
+        bind_step (consume_delim st1) (fun delim st2 ->
+            match delim with
+            | `Cell -> go rows_rev cells_rev st2
+            | `Row ->
+                let row = List.rev cells_rev in
+                bind_step (skip_ws st2) (fun () st3 ->
+                    go (row :: rows_rev) [] st3)
+            | `End ->
+                let rows = finish_rows rows_rev cells_rev in
+                let num_cols =
+                  List.fold_left (fun m r -> max m (List.length r)) 0 rows
+                in
+                return
+                  (NMath
+                     ( begin_pos,
+                       Math_display,
+                       [ Math_align (default_align num_cols, rows) ] ))
+                  st2))
+  in
+  (let* _ = optional (char '\n') in
+   let* _ = skip_ws in
+   go [] [])
+    st
 
 and parse_cell_text st =
   (let* pos = get_position in

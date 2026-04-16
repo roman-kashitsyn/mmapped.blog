@@ -101,7 +101,11 @@ let tests : Test_framework.t list =
           let input = "\\begin{tabular}{c}\\\\\\end{tabular}" in
           match parse_ok input with
           | Error msg -> Fail ("parse error: " ^ msg)
-          | Ok [ NTable (_, _, _, _, _, [ { row_cells = [ { cell_pos; _ } ]; _ } ]) ] ->
+          | Ok
+              [
+                NTable
+                  (_, _, _, _, _, [ { row_cells = [ { cell_pos; _ } ]; _ } ]);
+              ] ->
               assert_equal_int 18 cell_pos
           | Ok _ -> Fail "unexpected AST");
       test "table empty row after separator keeps row-start position" (fun () ->
@@ -111,12 +115,7 @@ let tests : Test_framework.t list =
           | Ok
               [
                 NTable
-                  ( _,
-                    _,
-                    _,
-                    _,
-                    _,
-                    [ _; { row_cells = [ { cell_pos; _ } ]; _ } ] );
+                  (_, _, _, _, _, [ _; { row_cells = [ { cell_pos; _ } ]; _ } ]);
               ] ->
               assert_equal_int 21 cell_pos
           | Ok _ -> Fail "unexpected AST");
@@ -132,4 +131,53 @@ let tests : Test_framework.t list =
       parse_expect "group with nested text" "{abc}"
         [ NGroup (zero, [ NText (zero, "abc") ]) ];
       parse_fails "unmatched end" "\\end{foo}";
+      test "align* basic" (fun () ->
+          let input = "\\begin{align*}\na &= b \\\\\nc &= d\n\\end{align*}" in
+          match parse_ok input with
+          | Error msg -> Fail ("parse error: " ^ msg)
+          | Ok [ NMath (_, Math_display, [ Math_align (specs, rows) ]) ] -> (
+              match (specs, rows) with
+              | ( [ Col_right; Col_left ],
+                  [
+                    [
+                      [ Math_text "a" ]; [ Math_op ("=", false); Math_text "b" ];
+                    ];
+                    [
+                      [ Math_text "c" ]; [ Math_op ("=", false); Math_text "d" ];
+                    ];
+                  ] ) ->
+                  Pass
+              | _ -> Fail "unexpected align structure")
+          | Ok _ -> Fail "unexpected AST");
+      test "align* default three-column alignment" (fun () ->
+          let input = "\\begin{align*}\na & = & b\n\\end{align*}" in
+          match parse_ok input with
+          | Error msg -> Fail ("parse error: " ^ msg)
+          | Ok [ NMath (_, Math_display, [ Math_align (specs, _) ]) ] ->
+              assert_equal_string "r,c,l"
+                (String.concat ","
+                   (List.map
+                      (function
+                        | Col_right -> "r" | Col_center -> "c" | Col_left -> "l")
+                      specs))
+          | Ok _ -> Fail "unexpected AST");
+      test "align* default four-column alignment" (fun () ->
+          let input = "\\begin{align*}\na & = & b & c\n\\end{align*}" in
+          match parse_ok input with
+          | Error msg -> Fail ("parse error: " ^ msg)
+          | Ok [ NMath (_, Math_display, [ Math_align (specs, _) ]) ] ->
+              assert_equal_string "r,c,c,l"
+                (String.concat ","
+                   (List.map
+                      (function
+                        | Col_right -> "r" | Col_center -> "c" | Col_left -> "l")
+                      specs))
+          | Ok _ -> Fail "unexpected AST");
+      test "align* trailing row separator" (fun () ->
+          let input = "\\begin{align*}\na &= b \\\\\n\\end{align*}" in
+          match parse_ok input with
+          | Error msg -> Fail ("parse error: " ^ msg)
+          | Ok [ NMath (_, Math_display, [ Math_align (_, rows) ]) ] ->
+              assert_equal_int 1 (List.length rows)
+          | Ok _ -> Fail "unexpected AST");
     ]

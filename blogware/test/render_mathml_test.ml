@@ -37,4 +37,16 @@ let tests : Test_framework.t list =
         "<mrow><mfrac><mrow><mi>a</mi></mrow><mrow><mi>b</mi></mrow></mfrac></mrow>"
         (Render_mathml.render_math_node
            (Math_cmd ("frac", [ Math_text "a"; Math_text "b" ])));
+      t "align table"
+        "<mtable columnalign=\"right left \
+         \"><mtr><mtd><mrow><mi>a</mi></mrow></mtd><mtd><mrow><mo \
+         stretchy=\"false\">=</mo><mi>b</mi></mrow></mtd></mtr><mtr><mtd><mrow><mi>c</mi></mrow></mtd><mtd><mrow><mo \
+         stretchy=\"false\">=</mo><mi>d</mi></mrow></mtd></mtr></mtable>"
+        (Render_mathml.render_math_node
+           (Math_align
+              ( [ Col_right; Col_left ],
+                [
+                  [ [ Math_text "a" ]; [ Math_op ("=", false); Math_text "b" ] ];
+                  [ [ Math_text "c" ]; [ Math_op ("=", false); Math_text "d" ] ];
+                ] )));
     ]
