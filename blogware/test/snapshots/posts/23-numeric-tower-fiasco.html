@@ -250,10 +250,8 @@ It fails spectacularly even on tiny examples where the problem domain is <em>mat
 The numeric tower is one example, but there are more.
 The <a href="https://en.wikipedia.org/wiki/Circle%E2%80%93ellipse_problem">circle-ellipse problem</a> is a good one,
 but my favorite is how inheriting <code>ColorPoint</code> from <code>Point</code> breaks the transitivity property of the <code>equals</code> method:</p>
-<blockquote><p>
-    There is no way to extend an instantiable class and add a value component while preserving the <code>equals</code> contract,
-    unless you’re willing to forgo the benefits of object-oriented abstraction.
-</p><footer>Joshua Bloch, <q>Effective Java</q>, 3rd edition, item 10, p. 42</footer></blockquote>
+<blockquote><p>There is no way to extend an instantiable class and add a value component while preserving the <code>equals</code> contract,
+    unless you’re willing to forgo the benefits of object-oriented abstraction.</p><footer>Joshua Bloch, <q>Effective Java</q>, 3rd edition, item 10, p. 42</footer></blockquote>
 <p>If something doesn’t work on small examples, why do we expect it to work in large codebases?
 When was the last time you looked in a complex class hierarchy and admired how easy to understand the code was?</p>
 <p>Experts often recommend <q>favor composition over inheritance</q><label class="margin-toggle sidenote-number" for="sn-composition-over-inheritance"></label><input type="checkbox" id="sn-composition-over-inheritance" class="margin-toggle"><span class="sidenote">

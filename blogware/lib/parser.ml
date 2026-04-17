@@ -186,21 +186,8 @@ let none_of (chars : string) : char t =
 let advance_range (_src : string) (start : int) (stop : int) (pos : pos) : pos =
   Pos.advance_by pos (stop - start)
 
-let has_prefix_at (src : string) (ofs : int) (lit : string) : bool =
-  let n = String.length lit in
-  let len = String.length src in
-  if ofs + n > len then false
-  else begin
-    let rec loop i =
-      if i = n then true
-      else if src.[ofs + i] <> lit.[i] then false
-      else loop (i + 1)
-    in
-    loop 0
-  end
-
 let starts_with (lit : string) : bool t =
- fun st -> POk (has_prefix_at st.src st.ofs lit, st, false)
+ fun st -> POk (Strings.has_prefix_at st.src st.ofs lit, st, false)
 
 (* Match a literal multi-character string. Atomic: either fully consumes
    the prefix or fully rewinds (Parsec's [string] is partially consuming,
@@ -210,7 +197,7 @@ let string (lit : string) : string t =
   let n = String.length lit in
   if st.ofs + n > String.length st.src then
     PFail (st.pos, lazy (Printf.sprintf "expected %S" lit), false)
-  else if has_prefix_at st.src st.ofs lit then begin
+  else if Strings.has_prefix_at st.src st.ofs lit then begin
     let stop = st.ofs + n in
     let pos = Pos.advance_by st.pos n in
     POk (lit, { st with ofs = stop; pos }, n > 0)
@@ -316,7 +303,7 @@ let many_till_chars (terminator : string) : string t =
   let len = String.length st0.src in
   let rec find ofs =
     if ofs > len - n then None
-    else if has_prefix_at st0.src ofs terminator then Some ofs
+    else if Strings.has_prefix_at st0.src ofs terminator then Some ofs
     else find (ofs + 1)
   in
   match find st0.ofs with

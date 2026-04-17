@@ -76,8 +76,8 @@ type block =
   | Bullet_list of list_style * block list list
   | Ordered_list of block list list
   | Description_list of (inline list * block list) list
-  | Blockquote of inline list * inline list (* body, attribution *)
-  | Epigraph of inline list * inline list (* body, attribution *)
+  | Blockquote of block list * inline list (* body, attribution *)
+  | Epigraph of block list * inline list (* body, attribution *)
   | Table of table_def
   | Image of string list * string (* css classes, src path *)
   | Figure of string list * block list (* css classes, body *)

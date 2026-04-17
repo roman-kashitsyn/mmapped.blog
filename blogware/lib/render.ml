@@ -9,64 +9,34 @@ open Syntax
 let join_classes cs = String.concat " " cs
 let class_attr_if_nonempty cls = if cls = "" then [] else [ class_ cls ]
 
-let trim_inlines (ils : inline list) : inline list =
-  let is_ws = function Str t -> String.trim t = "" | _ -> false in
-  let rec drop_left = function
-    | [] -> []
-    | x :: xs when is_ws x -> drop_left xs
-    | xs -> xs
-  in
-  let drop_right xs = List.rev (drop_left (List.rev xs)) in
-  drop_right (drop_left ils)
-
-let split_inline_paragraphs (ils : inline list) : inline list list =
-  let flush cur acc =
-    let trimmed = trim_inlines (List.rev cur) in
-    if trimmed = [] then acc else trimmed :: acc
-  in
-  let rec handle_str s cur acc =
-    let len = String.length s in
-    let rec find idx =
-      if idx + 1 >= len then None
-      else if s.[idx] = '\n' && s.[idx + 1] = '\n' then Some idx
-      else find (idx + 1)
-    in
-    match find 0 with
-    | None -> if s = "" then (cur, acc) else (Str s :: cur, acc)
-    | Some idx ->
-        let before = String.sub s 0 idx in
-        let cur = if before = "" then cur else Str before :: cur in
-        let acc = flush cur acc in
-        let start = idx + 2 in
-        let rest =
-          if start >= len then "" else String.sub s start (len - start)
-        in
-        handle_str rest [] acc
-  in
-  let rec go cur acc = function
-    | [] -> List.rev (flush cur acc)
-    | Str s :: rest ->
-        let cur, acc = handle_str s cur acc in
-        go cur acc rest
-    | x :: rest -> go (x :: cur) acc rest
-  in
-  go [] [] ils
-
 let plainify_paras blocks =
   List.map (function Para ils -> Plain ils | b -> b) blocks
 
+let trim_quote_html (s : string) : string =
+  let len = String.length s in
+  let rec left i =
+    if i >= len then len
+    else
+      match s.[i] with
+      | ' ' | '\t' | '\x0C' | '\n' | '\r' -> left (i + 1)
+      | _ -> i
+  in
+  let rec right i =
+    if i < 0 then -1
+    else
+      match s.[i] with
+      | ' ' | '\t' | '\x0C' | '\n' | '\r' -> right (i - 1)
+      | _ -> i
+  in
+  let i = left 0 in
+  let j = right (len - 1) in
+  if j < i then "" else String.sub s i (j - i + 1)
+
 (* Convert 1-based integer to circled-number glyph (①②③...). *)
 let round_num_glyph (n : int) : string =
-  (* 0x245F + n, encoded as a 3-byte UTF-8 sequence. *)
-  let cp = 0x245F + n in
-  let b1 = 0xE0 lor (cp lsr 12) in
-  let b2 = 0x80 lor ((cp lsr 6) land 0x3F) in
-  let b3 = 0x80 lor (cp land 0x3F) in
-  let s = Bytes.create 3 in
-  Bytes.unsafe_set s 0 (Char.chr b1);
-  Bytes.unsafe_set s 1 (Char.chr b2);
-  Bytes.unsafe_set s 2 (Char.chr b3);
-  Bytes.unsafe_to_string s
+  let buf = Buffer.create 3 in
+  Buffer.add_utf_8_uchar buf (Uchar.of_int (0x245F + n));
+  Buffer.contents buf
 
 let alignment_to_class = function
   | Col_left -> "align-l"
@@ -127,14 +97,9 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Image_inline (classes, path) ->
       let cls = join_classes classes in
       let img = leaf "img" (class_attr_if_nonempty cls @ [ src_ path ]) in
-      let is_svg =
-        let lp = String.length path in
-        lp >= 4
-        &&
-        let ext = String.lowercase_ascii (String.sub path (lp - 4) 4) in
-        ext = ".svg"
-      in
-      if is_svg then p_ [ class_ "svg" ] img else img
+      if String.equal (Filename.extension path) ".svg" then
+        p_ [ class_ "svg" ] img
+      else img
   | Nameref label -> (
       match RefTable.find_opt label ctx.ref_table with
       | Some r -> a_ [ href_ r.ref_url ] (text r.ref_title)
@@ -193,7 +158,23 @@ let render_table (ctx : ctx) (td : table_def) : Html.t =
 
 (* --- Block rendering --- *)
 
-let rec render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
+let rec render_quote_block (ctx : ctx) (b : block) : Html.t =
+  match b with
+  | Para ils ->
+      let attrs =
+        match ils with
+        | Quotation _ :: _ -> [ class_ "hanging-quote" ]
+        | _ -> []
+      in
+      let content = Html.render (render_inlines ctx ils) |> trim_quote_html in
+      p_ attrs (raw content)
+  | Plain ils -> render_inlines ctx ils
+  | b -> render_block ctx b
+
+and render_quote_blocks (ctx : ctx) (bs : block list) : Html.t =
+  concat (List.map (render_quote_block ctx) bs)
+
+and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
   match b with
   | Para ils ->
       let attrs =
@@ -268,25 +249,15 @@ let rec render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
               items))
       ++ nl
   | Blockquote (body, attribution) ->
-      let paras = split_inline_paragraphs body in
-      let body_html =
-        match paras with
-        | [] -> p_ [] (render_inlines ctx body)
-        | ps -> concat (List.map (fun ils -> p_ [] (render_inlines ctx ils)) ps)
-      in
-      blockquote_ [] (body_html ++ footer_ [] (render_inlines ctx attribution))
+      blockquote_ []
+        (render_quote_blocks ctx body
+        ++ footer_ [] (render_inlines ctx attribution))
       ++ nl
   | Table td -> render_table ctx td ++ nl
   | Image (classes, path) ->
       let cls = join_classes classes in
       let img = leaf "img" (class_attr_if_nonempty cls @ [ src_ path ]) in
-      let is_svg =
-        let lp = String.length path in
-        lp >= 4
-        &&
-        let ext = String.lowercase_ascii (String.sub path (lp - 4) 4) in
-        ext = ".svg"
-      in
+      let is_svg = String.equal (Filename.extension path) ".svg" in
       if is_svg then p_ [ class_ "svg" ] img ++ nl
       else if wrap_images then p_ [] img ++ nl
       else img ++ nl
@@ -299,7 +270,7 @@ let rec render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
       div_
         [ class_ "epigraph" ]
         (blockquote_ []
-           (p_ [] (render_inlines ctx body)
+           (render_quote_blocks ctx body
            ++ footer_ [] (render_inlines ctx attribution)))
       ++ nl
   | Abstract body -> div_ [ class_ "abstract" ] (render_blocks ctx body) ++ nl

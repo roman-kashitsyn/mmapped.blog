@@ -4,10 +4,8 @@
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#state-machine">The state machine</a></li><li class="toc toc-level-1"><a href="#state-trees">State trees</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#stat-auth">State authentication</a></li><li class="toc toc-level-2"><a href="#tree-lookup">Authorization through tree pruning</a></li></ul></li><li class="toc toc-level-1"><a href="#state-transfer">State transfer</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#checkpoints">Checkpoints</a></li><li class="toc toc-level-2"><a href="#state-artifact">State as an artifact</a></li><li class="toc toc-level-2"><a href="#trigger-transfer">Triggering state transfer</a></li><li class="toc toc-level-2"><a href="#incremental-sync">Fetching states incrementally</a></li><li class="toc toc-level-2"><a href="#state-sync-alternatives">Paths not taken</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
 
-<div class="epigraph"><blockquote><p>
-My dear, here we must run as fast as we can, just to stay in place.
-And if you wish to go anywhere you must run twice as fast as that.
-</p><footer>
+<div class="epigraph"><blockquote><p>My dear, here we must run as fast as we can, just to stay in place.
+And if you wish to go anywhere you must run twice as fast as that.</p><footer>
   <a href="https://en.wikipedia.org/wiki/Red_Queen_(Through_the_Looking-Glass)">Red Queen</a> explaining state sync.
 </footer></blockquote></div>
 <section><p>Like all blockchains, the Internet Computer relies on <a href="https://en.wikipedia.org/wiki/State_machine_replication">state machine replication</a> for fault-tolerance.

@@ -4,17 +4,13 @@
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#intro">Introduction</a></li><li class="toc toc-level-1"><a href="#language-features">Language features</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#newtypes">Newtypes</a></li><li class="toc toc-level-2"><a href="#typedefs">Typedefs</a></li></ul></li><li class="toc toc-level-1"><a href="#domain-type-classes">Domain type classes</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#identifiers">Identifiers</a></li><li class="toc toc-level-2"><a href="#amounts">Amounts</a></li><li class="toc toc-level-2"><a href="#Loci">Loci</a></li><li class="toc toc-level-2"><a href="#quantities">Quantities</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li><li class="toc toc-level-1"><a href="#exercises">Exercises</a></li></ul><hr>
 
-<div class="epigraph"><blockquote><p>
-  <span class="smallcaps">in strong typing we trust</span>
-</p><footer>Inscription on the <a href="https://people.cs.kuleuven.be/~dirk.craeynest/ada-belgium/pictures/ada-strong.html">Ada coin</a></footer></blockquote></div>
+<div class="epigraph"><blockquote><p><span class="smallcaps">in strong typing we trust</span></p><footer>Inscription on the <a href="https://people.cs.kuleuven.be/~dirk.craeynest/ada-belgium/pictures/ada-strong.html">Ada coin</a></footer></blockquote></div>
 <section><h2 id="intro"><a href="#intro">Introduction</a></h2>
 <p>Skillful use of a strong static type system can eliminate certain classes of bugs.
 Using custom application-specific types instead of raw integers or strings is a powerful technique that will save you hours of debugging.
 The following quote from one of my favorite books on software design illustrates this point:</p>
-<blockquote><p>
-  It took six months, but I eventually found and fixed the bug. […]
-  At one point in the code there was a <code>block</code> variable containing a logical block number, but it was accidentally used in a context where a physical block number was needed.
-</p><footer>John Ousterhout, <q>A Philosophy of Software Design</q>, Chapter 14, <q>Choosing names</q></footer></blockquote>
+<blockquote><p>It took six months, but I eventually found and fixed the bug. […]
+  At one point in the code there was a <code>block</code> variable containing a logical block number, but it was accidentally used in a context where a physical block number was needed.</p><footer>John Ousterhout, <q>A Philosophy of Software Design</q>, Chapter 14, <q>Choosing names</q></footer></blockquote>
 <p>The author attributes the bug to poor variable naming, but this blame is misplaced.
 If the programmer had defined <em>distinct types</em> for logical and physical block numbers, the compiler would have caught this mistake immediately.
 In this article, I call such definitions <em>domain types</em>.

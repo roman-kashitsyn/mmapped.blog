@@ -4,10 +4,8 @@
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#safe-tensors">The safetensors file format</a></li><li class="toc toc-level-1"><a href="#tensor-safes">Tensor safes</a></li><li class="toc toc-level-1"><a href="#alternative-designs">Alternative designs</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#chunked-metadata">Chunked metadata</a></li><li class="toc toc-level-2"><a href="#floating-metadata">Floating metadata</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li><li class="toc toc-level-1"><a href="#checklist">Appendix: binary format checklist</a></li></ul><hr>
 
-<div class="epigraph"><blockquote><p>
-  Here is a problem related to yours and solved before.
-  Could you use it?
-</p><footer>G. Pólya, <q>How to Solve It</q>, second edition, p. 9</footer></blockquote></div>
+<div class="epigraph"><blockquote><p>Here is a problem related to yours and solved before.
+  Could you use it?</p><footer>G. Pólya, <q>How to Solve It</q>, second edition, p. 9</footer></blockquote></div>
 <section><p>I recently spent much time working with machine learning serialization formats,
 especially <a href="https://onnx.ai/"><span class="smallcaps">onnx</span></a>.
 This file format uses <a href="https://protobuf.dev/">Protocol Buffers</a> for its binary representation

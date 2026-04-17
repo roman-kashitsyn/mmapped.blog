@@ -4,9 +4,7 @@
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#the-context-problem">The context problem</a></li><li class="toc toc-level-1"><a href="#tag-based-logging">Tag-based logging</a></li><li class="toc toc-level-1"><a href="#tracing">Querying logs with tracing</a></li><li class="toc toc-level-1"><a href="#non-linear-future">Toward a non-linear future</a></li></ul><hr>
 
-<section><div class="epigraph"><blockquote><p>
-  The problem we are facing is that the logs have devolved into noise
-</p><footer>@Achilles, <a href="https://stackoverflow.com/questions/2000323/noisy-logging-problem">StackOverflow Question #2000323</a></footer></blockquote></div>
+<section><div class="epigraph"><blockquote><p>The problem we are facing is that the logs have devolved into noise</p><footer>@Achilles, <a href="https://stackoverflow.com/questions/2000323/noisy-logging-problem">StackOverflow Question #2000323</a></footer></blockquote></div>
 <p>In every large project I worked on, logging looked like a lost battle.
 The raw logs contained so much data that developers gave up on reading them.
 Instead, they dumped the logs into an indexing system (such as <a href="https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/logs/">Grafana</a>)
@@ -23,12 +21,10 @@ Firstly, the guidelines on how loud a log entry should be are contradictory, wit
 <a href="https://ntietz.com/blog/the-only-two-log-levels-you-need-are-info-and-error/">of</a>
 <a href="https://www.reddit.com/r/golang/comments/yxiyt3/rethinking_logging_levels">anecdotes</a>
 and a broader analysis by Eduardo Mendes and Fabio Petrillo echo my experience:</p>
-<blockquote><p>
-  We observed a lack of precision in the definitions of log severity levels.
+<blockquote><p>We observed a lack of precision in the definitions of log severity levels.
   For example, there are severity levels in library definitions without distinguishing specific purposes
   or only characterized by adjectives and superlatives.
-  This lack of precision can cause a misunderstanding of severity levels and hinder logging practices.
-</p><footer>
+  This lack of precision can cause a misunderstanding of severity levels and hinder logging practices.</p><footer>
   Eduardo Mendes, Fabio Petrillo, <q><a href="https://arxiv.org/pdf/2109.01192">Log severity levels matter: A multivocal mapping</a></q>
 </footer></blockquote>
 <p>Furthermore, log levels ignore context: information that seems irrelevant in one context becomes critical in another.
