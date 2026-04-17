@@ -17,6 +17,7 @@ let all_tests : Test_framework.t list =
       Feed_test.tests;
       Layout_test.tests;
       Server_test.tests;
+      Strings_test.tests;
       Pipeline_test.tests;
     ]
 

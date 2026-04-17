@@ -4,9 +4,7 @@
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#personae">Dramatis Personae</a></li><li class="toc toc-level-1"><a href="#modules-vs-crates">Modules vs Crates</a></li><li class="toc toc-level-1"><a href="#code-organization-advice">Advice on code organization</a></li><li class="toc toc-level-1"><a href="#common-pitfalls">Common pitfalls</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#confusing-crates-and-packages">Confusing crates and packages</a></li><li class="toc toc-level-2"><a href="#quasi-circular">Quasi-circular dependencies</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li><li class="toc toc-level-1"><a href="#links">Further reading</a></li></ul><hr>
 
-<section><div class="epigraph"><blockquote><p>
-  Good judgment is the result of experience and experience the result of bad judgment.
-</p><footer>Attributed to Mark Twain.</footer></blockquote></div>
+<section><div class="epigraph"><blockquote><p>Good judgment is the result of experience and experience the result of bad judgment.</p><footer>Attributed to Mark Twain.</footer></blockquote></div>
 <p>The <a href="https://internetcomputer.org">Internet Computer</a> (IC) <a href="https://github.com/dfinity/ic">Rust code base</a> grew from an empty repository in June 2019 to almost 350,000 lines of code in early 2022.
 This rapid growth taught me that decisions working fine for relatively small projects might start dragging the project down over time.
 This article evaluates Rust code organization options and suggests ways to use them effectively.</p>
@@ -14,10 +12,8 @@ This article evaluates Rust code organization options and suggests ways to use t
 <section><h2 id="personae"><a href="#personae">Dramatis Personae</a></h2>
 <p>Rust terminology proved to be confusing because the term <em>crate</em> is overloaded.
 For example, the first edition of the venerable <a href="https://doc.rust-lang.org/1.25.0/book/">The Rust Programming Language</a> book contained the following misleading passage</p>
-<blockquote><p>
-  Rust has two distinct terms that relate to the module system: ‘crate’ and ‘module’. A crate is synonymous with a ‘library’ or ‘package’ in other languages.
-  Hence “Cargo” as the name of Rust’s package management tool: you ship your crates to others with Cargo. Crates can produce an executable or a library, depending on the project.
-</p><footer><q><a href="https://doc.rust-lang.org/1.25.0/book/">The Rust Programming Language</a></q>, version 1.25.0</footer></blockquote>
+<blockquote><p>Rust has two distinct terms that relate to the module system: ‘crate’ and ‘module’. A crate is synonymous with a ‘library’ or ‘package’ in other languages.
+  Hence “Cargo” as the name of Rust’s package management tool: you ship your crates to others with Cargo. Crates can produce an executable or a library, depending on the project.</p><footer><q><a href="https://doc.rust-lang.org/1.25.0/book/">The Rust Programming Language</a></q>, version 1.25.0</footer></blockquote>
 <p>Wait a minute, a library and a package are different concepts, aren’t they?
 Mixing up these concepts leads to frustration, even if you already have a few months of Rust exposure.
 Tooling conventions also contribute to the confusion: If a Rust package defines a library crate, <code>cargo</code> automatically derives the library name from the package name<label class="margin-toggle sidenote-number" for="sn-library-name-override"></label><input type="checkbox" id="sn-library-name-override" class="margin-toggle"><span class="sidenote">You can override this behavior, but please don’t.</span>.</p>
@@ -185,11 +181,9 @@ As you correctly guessed, the missing components recorded metrics to the <code>0
 <p>Passing loggers, metrics registries, and async runtimes explicitly turns a runtime bug into a compile-time error.
 Switching to explicit passing the metrics registry helped me find and fix the bug.</p>
 <p>The official documentation of the venerable <a href="https://crates.io/crates/slog">slog</a> package also <a href="https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around">recommends passing loggers explicitly</a>:</p>
-<blockquote><p>
-  The reason is: manually passing <code>Logger</code> gives maximum flexibility.
+<blockquote><p>The reason is: manually passing <code>Logger</code> gives maximum flexibility.
   Using <code>slog_scope</code> ties the logging data structure to the stacktrace, which is not the same a logical structure of your software.
-  Especially libraries should expose full flexibility to their users, and not use implicit logging behaviour.</p><p>  Usually <code>Logger</code> instances fit pretty neatly into data structures in your code representing resources, so it’s not that hard to pass them in constructors, and use <code>info!(self.log, ...)</code> everywhere.
-</p><footer><a href="https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around"><code>slog</code> <span class="smallcaps">faq</span></a></footer></blockquote>
+  Especially libraries should expose full flexibility to their users, and not use implicit logging behaviour.</p><p>Usually <code>Logger</code> instances fit pretty neatly into data structures in your code representing resources, so it’s not that hard to pass them in constructors, and use <code>info!(self.log, ...)</code> everywhere.</p><footer><a href="https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around"><code>slog</code> <span class="smallcaps">faq</span></a></footer></blockquote>
 <p>By passing state implicitly, you gain temporary convenience but make your code less clear, less testable, and more error-prone.
 Every type of resource we passed implicitly<label class="margin-toggle sidenote-number" for="sn-resource-types"></label><input type="checkbox" id="sn-resource-types" class="margin-toggle"><span class="sidenote"><a href="https://crates.io/crates/slog-scope">scoped</a> loggers, <a href="https://crates.io/crates/prometheus">Prometheus</a> metrics registries, <a href="https://crates.io/crates/rayon">Rayon</a> thread pools, <a href="https://crates.io/crates/tokio">Tokio</a> runtimes, to name a few.</span> caused hard-to-diagnose issues and wasted a lot of engineering time.</p>
 <p>People in other programming communities also realized that global loggers are evil.

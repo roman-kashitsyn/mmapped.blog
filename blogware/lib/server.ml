@@ -10,14 +10,6 @@ open Document
 
 (* --- Small string helpers --- *)
 
-let has_prefix s p =
-  let lp = String.length p in
-  String.length s >= lp && String.sub s 0 lp = p
-
-let has_suffix s sfx =
-  let ls = String.length s and lsfx = String.length sfx in
-  ls >= lsfx && String.sub s (ls - lsfx) lsfx = sfx
-
 let split_first_line s =
   match String.index_opt s '\n' with Some i -> String.sub s 0 i | None -> s
 
@@ -46,36 +38,52 @@ let status_text = function
   | 500 -> "Internal Server Error"
   | _ -> "Unknown"
 
-let build_response (status : int) (content_type : string) (body : string) :
-    string =
+let build_response_head (status : int) (content_type : string)
+    (content_length : int) : string =
   Printf.sprintf
     "HTTP/1.1 %d %s\r\n\
      Content-Type: %s\r\n\
      Content-Length: %d\r\n\
      Connection: close\r\n\
-     \r\n\
-     %s"
-    status (status_text status) content_type (String.length body) body
+     \r\n"
+    status (status_text status) content_type content_length
+
+let build_response (status : int) (content_type : string) (body : string) :
+    string =
+  build_response_head status content_type (String.length body) ^ body
 
 let send_response fd status content_type body =
-  Socket_ffi.send_all fd (build_response status content_type body)
+  let head = build_response_head status content_type (String.length body) in
+  Socket_ffi.send_all fd head;
+  Socket_ffi.send_all fd body
 
 (* --- Content-type sniffing --- *)
 
+let suffix_to_mime =
+  [|
+    (".css", "text/css; charset=utf-8");
+    (".woff2", "font/woff2");
+    (".woff", "font/woff");
+    (".ttf", "font/ttf");
+    (".png", "image/png");
+    (".jpg", "image/jpeg");
+    (".jpeg", "image/jpeg");
+    (".gif", "image/gif");
+    (".svg", "image/svg+xml");
+    (".ico", "image/x-icon");
+    (".txt", "text/plain; charset=utf-8");
+    (".xml", "application/xml; charset=utf-8");
+    ("", "application/octet-stream");
+  |]
+
 let content_type_for (path : string) : string =
-  if has_suffix path ".css" then "text/css; charset=utf-8"
-  else if has_suffix path ".woff2" then "font/woff2"
-  else if has_suffix path ".woff" then "font/woff"
-  else if has_suffix path ".ttf" then "font/ttf"
-  else if has_suffix path ".png" then "image/png"
-  else if has_suffix path ".jpg" then "image/jpeg"
-  else if has_suffix path ".jpeg" then "image/jpeg"
-  else if has_suffix path ".gif" then "image/gif"
-  else if has_suffix path ".svg" then "image/svg+xml"
-  else if has_suffix path ".ico" then "image/x-icon"
-  else if has_suffix path ".txt" then "text/plain; charset=utf-8"
-  else if has_suffix path ".xml" then "application/xml; charset=utf-8"
-  else "application/octet-stream"
+  match
+    Array.find_index
+      (fun (suffix, _) -> String.ends_with ~suffix path)
+      suffix_to_mime
+  with
+  | Some i -> snd suffix_to_mime.(i)
+  | None -> "application/octet-stream"
 
 (* --- Handlers --- *)
 
@@ -208,10 +216,13 @@ let handle_get fd (config : site_config) (path : string) : unit =
   else if path = "/posts.html" then serve_post_list fd config
   else if path = "/about.html" then serve_page fd config "about"
   else if path = "/feed.xml" then serve_feed fd config
-  else if has_prefix path "/posts/" then serve_post fd config path
+  else if String.starts_with ~prefix:"/posts/" path then
+    serve_post fd config path
   else if
-    has_prefix path "/css/" || has_prefix path "/fonts/"
-    || has_prefix path "/images/" || path = "/robots.txt"
+    String.starts_with ~prefix:"/css/" path
+    || String.starts_with ~prefix:"/fonts/" path
+    || String.starts_with ~prefix:"/images/" path
+    || path = "/robots.txt"
   then serve_static fd config path
   else send_response fd 404 "text/plain" "Not Found"
 

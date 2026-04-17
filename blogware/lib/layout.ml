@@ -423,11 +423,6 @@ let render_post_list_page (title_text : string) (articles : article list) :
 
 let render_standalone_page (title_text : string) (url : string)
     (body_html : string) : Html.t =
-  let link_href =
-    if String.length url > 0 && url.[0] = '/' then
-      String.sub url 1 (String.length url - 1)
-    else url
-  in
   doctype ++ nl
   ++ html_
        [ lang_ "en" ]
@@ -437,6 +432,6 @@ let render_standalone_page (title_text : string) (url : string)
                (site_header
                ++ h1_
                     [ class_ "article-title" ]
-                    (a_ [ href_ link_href ] (raw title_text))
+                    (a_ [ href_ url ] (raw title_text))
                ++ hr_ [] ++ raw body_html ++ hr_ [] ++ nl ++ site_footer)))
   ++ nl

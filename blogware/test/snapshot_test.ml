@@ -74,10 +74,9 @@ let with_silenced_stderr f =
 
 let relative_to ~root path =
   let prefix = root ^ Filename.dir_sep in
-  let lp = String.length prefix in
-  if String.length path >= lp && String.sub path 0 lp = prefix then
-    String.sub path lp (String.length path - lp)
-  else path
+  match Strings.strip_prefix ~prefix path with
+  | Some rest -> rest
+  | None -> path
 
 let existing_snapshot_paths root =
   list_files_recursive root

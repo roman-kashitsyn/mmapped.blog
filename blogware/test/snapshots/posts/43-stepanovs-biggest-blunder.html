@@ -66,10 +66,8 @@ The following example illustrates this limitation: the code attempts to compute 
 Was it a mistake?
 No, it was a deliberate design choice; the original <a href="https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html#1"><span class="smallcaps">sgi stl</span> documentation</a> provides the reasoning behind it:
 </p>
-<div class="epigraph"><blockquote><p>
-  The reason it is useful to store the value of the first element, as well as simply storing the differences, is that this provides enough information to reconstruct the input range.
-  In particular, if addition and subtraction have the usual arithmetic definitions, then <a href="https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html"><code>adjacent_difference</code></a> and <a href="https://www.jmeiners.com/sgi-stl-docs/partial_sum.html"><code>partial_sum</code></a> are inverses of each other.
-</p><footer><a href="https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html#1"><span class="smallcaps">sgi stl</span> documentation</a></footer></blockquote></div>
+<div class="epigraph"><blockquote><p>The reason it is useful to store the value of the first element, as well as simply storing the differences, is that this provides enough information to reconstruct the input range.
+  In particular, if addition and subtraction have the usual arithmetic definitions, then <a href="https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html"><code>adjacent_difference</code></a> and <a href="https://www.jmeiners.com/sgi-stl-docs/partial_sum.html"><code>partial_sum</code></a> are inverses of each other.</p><footer><a href="https://www.jmeiners.com/sgi-stl-docs/adjacent_difference.html#1"><span class="smallcaps">sgi stl</span> documentation</a></footer></blockquote></div>
 <p><code>std::adjacent_difference</code> and <a href="http://www.en.cppreference.com/w/cpp/algorithm/partial_sum.html"><code>std::partial_sum</code></a> are inverses:
 computing partial sums over the adjacent differences of a sequence yields that sequence, and vice versa.</p>
 <figure><label class="margin-toggle" for="mn-inverses">⊕</label><input type="checkbox" id="mn-inverses" class="margin-toggle"><span class="marginnote">
@@ -112,8 +110,7 @@ if <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>k</mi><mo s
 we have to access the minus first element, so, for convenience,
 we define <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>f</mi><mo stretchy="false">(</mo><mn>-1</mn><mo stretchy="false">)</mo><mo stretchy="false">=</mo><mn>0</mn></math>.</p>
 <p>I like how Kyne Santos explained this result:</p>
-<div class="epigraph"><blockquote><p>
-imagine you’re hiking up a mountain, going from point A to point B, and you want to find out the overall change in elevation.
+<div class="epigraph"><blockquote><p>imagine you’re hiking up a mountain, going from point A to point B, and you want to find out the overall change in elevation.
 So let’s say that point A, the starting point, is 500 meters above sea level.
 In the first hour, you ascend 100 meters.
 In the second hour, you descend 50 meters, and in the third and final hour you ascend 200 meters to arrive at point B, which is 750 meters above sea level.
@@ -121,8 +118,7 @@ The question is, what’s the overall change in elevation? Well, there’s two w
 You can find the final elevation, which is 750 meters, and just subtract the starting elevation, which was 500 and the difference between 750 and 500 is 250 meters.
 Or you can add up the little changes along the way.
 So in the first hour, we climbed 100 meters, and then we descended 50, and then we climbed another 200 so 100 minus 50 plus 200 is 250 meters.
-And these two approaches represent the two sides of the equation in the fundamental theorem of calculus.
-</p><footer>Kyne Santos, <a href="https://kpknudson.com/my-favorite-theorem/2025/5/15/episode-95-kyne-santos">episode 95</a> of the <a href="https://kpknudson.com/my-favorite-theorem">My Favorite Theorem</a> podcast</footer></blockquote></div>
+And these two approaches represent the two sides of the equation in the fundamental theorem of calculus.</p><footer>Kyne Santos, <a href="https://kpknudson.com/my-favorite-theorem/2025/5/15/episode-95-kyne-santos">episode 95</a> of the <a href="https://kpknudson.com/my-favorite-theorem">My Favorite Theorem</a> podcast</footer></blockquote></div>
 <h3 id="problem-slopes"><a href="#problem-slopes">Finding slopes with adjacent differences</a></h3>
 <p>The slope between two discrete values is their difference,
 so taking the difference between neighboring points of a sequence solves the forward problem,

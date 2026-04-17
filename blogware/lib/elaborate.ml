@@ -37,45 +37,47 @@ let typographic_replacements : (string * string) list =
     ("'", "\xE2\x80\x99" (* right single quote ’ *));
   ]
 
-let is_typography_special c = c = '-' || c = '`' || c = '\''
+let is_typography_special c =
+  match c with '-' | '`' | '\'' -> true | _ -> false
 
-let string_starts_with s prefix =
-  let lp = String.length prefix in
-  String.length s >= lp && String.sub s 0 lp = prefix
+let is_whitespace c =
+  match c with ' ' | '\x0C' | '\t' | '\n' | '\r' -> true | _ -> false
 
 (* Try each replacement at the start of [s]; return (replacement, rest_len)
    on first match, or None. *)
-let try_replacement s =
+let try_replacement_at s i =
   let rec go = function
     | [] -> None
     | (pref, rep) :: rest ->
-        if string_starts_with s pref then Some (rep, String.length pref)
+        if Strings.has_prefix_at s i pref then Some (rep, String.length pref)
         else go rest
   in
   go typographic_replacements
 
 let apply_typography (input : string) : string =
-  let b = Buffer.create (String.length input) in
-  let len = String.length input in
-  let i = ref 0 in
-  while !i < len do
-    let c = input.[!i] in
-    if not (is_typography_special c) then begin
-      Buffer.add_char b c;
-      incr i
-    end
-    else begin
-      let suffix = String.sub input !i (len - !i) in
-      match try_replacement suffix with
-      | Some (rep, used) ->
-          Buffer.add_string b rep;
-          i := !i + used
-      | None ->
-          Buffer.add_char b c;
-          incr i
-    end
-  done;
-  Buffer.contents b
+  if not (Strings.any input is_typography_special) then input
+  else begin
+    let b = Buffer.create (String.length input) in
+    let len = String.length input in
+    let i = ref 0 in
+    while !i < len do
+      let c = input.[!i] in
+      if not (is_typography_special c) then begin
+        Buffer.add_char b c;
+        incr i
+      end
+      else
+        begin match try_replacement_at input !i with
+        | Some (rep, used) ->
+            Buffer.add_string b rep;
+            i := !i + used
+        | None ->
+            Buffer.add_char b c;
+            incr i
+        end
+    done;
+    Buffer.contents b
+  end
 
 (* --- Dingbats --- *)
 
@@ -201,38 +203,9 @@ and inline_to_text = function
 (* Paragraph splitting. Text containing "\n\n" is split into separate Para
    blocks. LineBreak and empty-string Str are trimmed at boundaries. *)
 
-let string_contains_substr s sub =
-  let ls = String.length s and lsub = String.length sub in
-  if lsub = 0 then true
-  else
-    let rec go i =
-      if i + lsub > ls then false
-      else if String.sub s i lsub = sub then true
-      else go (i + 1)
-    in
-    go 0
-
 let is_paragraph_break = function
-  | Str t -> string_contains_substr t "\n\n"
+  | Str t -> Strings.is_infix_of "\n\n" t
   | _ -> false
-
-(* Byte-level split on "\n\n". We deliberately keep this stdlib-only to
-   avoid pulling in opam [str]. *)
-let split_on_double_newline (s : string) : string list =
-  let len = String.length s in
-  let parts = ref [] in
-  let start = ref 0 in
-  let i = ref 0 in
-  while !i + 1 < len do
-    if s.[!i] = '\n' && s.[!i + 1] = '\n' then begin
-      parts := String.sub s !start (!i - !start) :: !parts;
-      i := !i + 2;
-      start := !i
-    end
-    else incr i
-  done;
-  parts := String.sub s !start (len - !start) :: !parts;
-  List.rev !parts
 
 let expand_breaks_il (il : inline) : inline list =
   match il with
@@ -242,11 +215,11 @@ let expand_breaks_il (il : inline) : inline list =
         | [ x ] -> [ Str x ]
         | x :: rest -> Str x :: Str "\n\n" :: go rest
       in
-      go (split_on_double_newline t)
+      go (Strings.split_on t "\n\n")
   | il -> [ il ]
 
 let trim_inlines (ils : inline list) : inline list =
-  let is_ws = function Str t -> String.trim t = "" | _ -> false in
+  let is_ws = function Str t -> Strings.all t is_whitespace | _ -> false in
   let rec drop_left = function
     | [] -> []
     | x :: xs when is_ws x -> drop_left xs
@@ -393,14 +366,14 @@ let rec classify_node (n : node) : node_class result_ =
       Ok (CBlock (Advice (anchor, ils)))
   | NCmd (_, "epigraph", _, Arg_nodes (_, body) :: Arg_nodes (_, attrib) :: _)
     ->
-      let* b_ils = elaborate_inlines body in
+      let* b_blocks = build_blocks body in
       let* a_ils = elaborate_inlines attrib in
-      Ok (CBlock (Epigraph (b_ils, a_ils)))
+      Ok (CBlock (Epigraph (b_blocks, a_ils)))
   | NCmd (_, "blockquote", _, Arg_nodes (_, body) :: Arg_nodes (_, attrib) :: _)
     ->
-      let* b_ils = elaborate_inlines body in
+      let* b_blocks = build_blocks body in
       let* a_ils = elaborate_inlines attrib in
-      Ok (CBlock (Blockquote (b_ils, a_ils)))
+      Ok (CBlock (Blockquote (b_blocks, a_ils)))
   | NCmd (_, "details", _, Arg_nodes (_, summary) :: Arg_nodes (_, body) :: _)
     ->
       let* s_ils = elaborate_inlines summary in
@@ -558,7 +531,7 @@ and build_flat_blocks (ns : node list) : flat_block list result_ =
     && List.for_all
          (function
            | Margin_note _ | Side_note _ | Anchor _ | Line_break -> true
-           | Str t when String.trim t = "" -> true
+           | Str t when Strings.all t is_whitespace -> true
            | _ -> false)
          trimmed
   in
@@ -571,7 +544,7 @@ and build_flat_blocks (ns : node list) : flat_block list result_ =
         let rec find = function
           | [] -> false
           | Line_break :: _ -> false
-          | Str t :: _ when string_contains_substr t "\n\n" -> true
+          | Str t :: _ when Strings.is_infix_of "\n\n" t -> true
           | _ :: rest -> find rest
         in
         find ordered

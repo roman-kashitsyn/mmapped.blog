@@ -14,10 +14,8 @@ This article explains the motivation behind this move and the migration process 
 Rust tooling is fantastic for beginners, but we became dissatisfied with cargo as the project size increased.
 Most of our complaints fall into two categories.</p>
 <h3 id="not-a-build-system"><a href="#not-a-build-system">Cargo is not a build system</a></h3>
-<div class="epigraph"><blockquote><p>
-    Cargo is the Rust <em>package manager</em>.
-    Cargo downloads your Rust package’s dependencies, compiles your packages, makes distributable packages, and uploads them to crates.io.
-</p><footer><a href="https://doc.rust-lang.org/cargo/">The Cargo Book</a></footer></blockquote></div>
+<div class="epigraph"><blockquote><p>Cargo is the Rust <em>package manager</em>.
+    Cargo downloads your Rust package’s dependencies, compiles your packages, makes distributable packages, and uploads them to crates.io.</p><footer><a href="https://doc.rust-lang.org/cargo/">The Cargo Book</a></footer></blockquote></div>
 <p>Let’s acknowledge the elephant in the room: cargo is not a build system; it’s a tool for building and distributing Rust packages.
 It can build Rust code for a specific platform with a given set of features in a single invocation.
 Cargo chose simplicity and ease of use over generality and scalability; it does not track dependencies well or support arbitrary build graphs.</p>
@@ -110,9 +108,7 @@ At its heart, our CI job is <code>bazel test --config=ci //...</code>.</p>
 Ironically, cargo developers implemented support for <a href="https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#inheriting-a-dependency-from-a-workspace">workspace dependency inheritance</a> <a href="https://blog.rust-lang.org/2022/09/22/Rust-1.64.0.html#cargo-improvements-workspace-inheritance-and-multi-target-builds">a few weeks after</a> we finished the migration.</p>
 </section>
 <section><h2 id="the-migration-process"><a href="#the-migration-process">The migration process</a></h2>
-<div class="epigraph"><blockquote><p>
-    You are such a naïve academic. I asked you how to do it, and you told me what I should do. I know what I need to do. I just don’t know how to do it.
-</p><footer>Attributed to <a href="https://en.wikipedia.org/wiki/Andrew_Grove">Andrew Grove</a>; see <a href="https://www.amazon.com/Disciplines-Execution-Achieving-Wildly-Important/dp/1491517751"><q>The 4 Disciplines of Execution</q></a> by Jim Huling, Chris McChesney, and Sean Covey, page xx.</footer></blockquote></div>
+<div class="epigraph"><blockquote><p>You are such a naïve academic. I asked you how to do it, and you told me what I should do. I know what I need to do. I just don’t know how to do it.</p><footer>Attributed to <a href="https://en.wikipedia.org/wiki/Andrew_Grove">Andrew Grove</a>; see <a href="https://www.amazon.com/Disciplines-Execution-Achieving-Wildly-Important/dp/1491517751"><q>The 4 Disciplines of Execution</q></a> by Jim Huling, Chris McChesney, and Sean Covey, page xx.</footer></blockquote></div>
 <p>The idea of migrating the build system came from a few engineers (read Xooglers) who were tired of fighting with long build times and poor tooling.
 To our surprise, a few volunteers expressed interest in joining the rebellion at its earliest stage.
 We needed a plan for executing the switch and getting the management’s buy-in.</p>

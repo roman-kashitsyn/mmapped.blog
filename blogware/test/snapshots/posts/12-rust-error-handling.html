@@ -22,13 +22,11 @@ Libraries do their job well when they recover from errors transparently and prov
 However, the core <a href="#empathy">principle of empathy</a> applies equally well to designing machine-machine, human-machine, and human-human interfaces.</p>
 </section>
 <section><h2 id="design-heuristics"><a href="#design-heuristics">Design goals</a></h2>
-<div class="epigraph"><blockquote><p>
-  I didn’t want to call these guidelines, and I didn’t want to call these rules.
+<div class="epigraph"><blockquote><p>I didn’t want to call these guidelines, and I didn’t want to call these rules.
   I wanted them to be goals.
   These are the things that you should strive for in your code, that are not always easy to accomplish.
   And maybe you can’t always pull them off.
-  But the closer you come, the better your code will be.
-</p><footer>Sean Parent, <q><a href="https://youtu.be/W2tWOdzgXHA?t=107">C++ Seasoning</a></q></footer></blockquote></div>
+  But the closer you come, the better your code will be.</p><footer>Sean Parent, <q><a href="https://youtu.be/W2tWOdzgXHA?t=107">C++ Seasoning</a></q></footer></blockquote></div>
 <p>Most issues in the error type design stem from the same root: making error cases easy for the code author at the expense of the caller.
 All the strategies I describe in this article are applications of the following mantra:</p>
 <div class="advice" id="empathy"><p><a class="anchor" href="#empathy">☛</a>Be empathetic to your user.</p></div>
@@ -97,9 +95,7 @@ I am still looking for Rust code that went overboard with distinct error types.<
 </code></pre></div>
 </figure>
 <h3 id="avoid-panics"><a href="#avoid-panics">Reserve panics for bugs in your code</a></h3>
-<div class="epigraph"><blockquote><p>
-  The <code>panic!</code> macro is used to construct errors that represent a bug that has been detected in your program.
-</p><footer>The Rust Standard Library, <a href="https://doc.rust-lang.org/std/macro.panic.html#when-to-use-panic-vs-result">When to use <code>panic!</code> vs <code>Result</code></a>.</footer></blockquote></div>
+<div class="epigraph"><blockquote><p>The <code>panic!</code> macro is used to construct errors that represent a bug that has been detected in your program.</p><footer>The Rust Standard Library, <a href="https://doc.rust-lang.org/std/macro.panic.html#when-to-use-panic-vs-result">When to use <code>panic!</code> vs <code>Result</code></a>.</footer></blockquote></div>
 <p>The primary purpose of <a href="https://doc.rust-lang.org/std/macro.panic.html"><code>panics</code></a> in Rust is to indicate bugs in your program.
 Resist the temptation to use panics for input validation if there is a chance that the inputs come from the end user, even if you document panics meticulously.
 People rarely read documentation; they can easily miss your warnings.

@@ -135,8 +135,9 @@ let eprintln s = prerr_endline s
 
 (* Drop a leading '/' so paths can be joined against the output dir. *)
 let strip_leading_slash s =
-  if String.length s > 0 && s.[0] = '/' then String.sub s 1 (String.length s - 1)
-  else s
+  match Strings.strip_prefix ~prefix:"/" s with
+  | Some stripped -> stripped
+  | None -> s
 
 (* Replace the ".html" suffix with ".tex". *)
 let html_to_tex path = Filename.remove_extension path ^ ".tex"

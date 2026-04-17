@@ -20,15 +20,6 @@ let tests : Test_framework.t list =
       test "parse_request_line POST" (fun () ->
           let m, _ = Server.parse_request_line "POST /x HTTP/1.1\r\n" in
           if m = "POST" then Pass else Fail m);
-      test "has_prefix true" (fun () ->
-          if Server.has_prefix "/posts/foo" "/posts/" then Pass
-          else Fail "expected true");
-      test "has_prefix false" (fun () ->
-          if not (Server.has_prefix "/post" "/posts/") then Pass
-          else Fail "expected false");
-      test "has_suffix true" (fun () ->
-          if Server.has_suffix "main.css" ".css" then Pass
-          else Fail "expected true");
       test "content_type_for css" (fun () ->
           assert_equal_string "text/css; charset=utf-8"
             (Server.content_type_for "/css/main.css"));
@@ -42,19 +33,10 @@ let tests : Test_framework.t list =
           assert_equal_string "Not Found" (Server.status_text 404));
       test "build_response has status line" (fun () ->
           let r = Server.build_response 200 "text/plain" "hi" in
-          if String.length r >= 15 && String.sub r 0 15 = "HTTP/1.1 200 OK" then
-            Pass
+          if String.starts_with ~prefix:"HTTP/1.1 200 OK" r then Pass
           else Fail r);
       test "build_response has content-length" (fun () ->
           let r = Server.build_response 200 "text/plain" "hello" in
           assert_bool "content-length: 5"
-            (let n = String.length r in
-             let needle = "Content-Length: 5" in
-             let nn = String.length needle in
-             let rec find i =
-               if i + nn > n then false
-               else if String.sub r i nn = needle then true
-               else find (i + 1)
-             in
-             find 0));
+            (Strings.is_infix_of "Content-Length: 5" r));
     ]
