@@ -99,6 +99,7 @@ type article = {
   art_slug : string;
   art_title : inline list;
   art_subtitle : inline list;
+  art_featured : bool;
   art_created_at : Date.t;
   art_modified_at : Date.t;
   art_word_count : int;

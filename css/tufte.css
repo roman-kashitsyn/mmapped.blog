@@ -1,5 +1,10 @@
 @charset "UTF-8";
 
+:root {
+    --left-gutter-width: 1em;
+    --left-gutter-gap: 0.5rem;
+}
+
 /* Font faces */
 
 @font-face {
@@ -219,7 +224,7 @@ a.icon-link:visited {
 }
 
 .article-abstract {
-    font-family: "Libertinus Sans", sans;
+    font-family: "Libertinus Sans", sans-serif;
 }
 
 figure > div.source-container {
@@ -243,8 +248,35 @@ ul.posts {
     margin-bottom: 0.1em;
 }
 
+.left-gutter-anchor {
+    position: relative;
+}
+
+.left-gutter-anchor::before {
+    position: absolute;
+    right: calc(100% + var(--left-gutter-gap));
+    width: var(--left-gutter-width);
+    text-align: center;
+    font-family: "Libertinus Sans", sans-serif;
+}
+
 ul.posts > li {
     list-style: none;
+}
+
+.featured-marker::before {
+    content: "★";
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.advice-anchor::before {
+    /* content: "§"; */
+    content: "☛";
+    top: 0;
+    transform: none;
+    font-style: normal;
+    font-size: 1.5em;
 }
 
 nav ul {
@@ -402,9 +434,11 @@ a:link,
 }
 
 a.anchor {
-    float: left;
+    display: inline-block;
+    width: 0;
     font-size: 0.8em;
     text-decoration: none;
+    vertical-align: baseline;
 }
 
 a > code {
@@ -422,9 +456,16 @@ div.advice {
 }
 
 div.advice > p {
+    position: relative;
     width: 100%;
     font-style: italic;
     text-align: center;
+}
+
+.advice-anchor {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 div.advice code {
@@ -1088,6 +1129,32 @@ p.svg {
         margin: 1rem 2.5%;
         vertical-align: baseline;
         position: relative;
+    }
+
+    .left-gutter-anchor::before {
+        position: static;
+        display: inline-block;
+        width: auto;
+        margin-right: 0.35em;
+        transform: none;
+    }
+
+    .advice-anchor {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: block;
+        width: 1em;
+    }
+
+    .advice-anchor::before {
+        display: block;
+        margin-right: 0;
+    }
+
+    div.advice > p {
+        padding-left: 1.35em;
+        text-align: left;
     }
 
     label {

@@ -9,6 +9,7 @@ let article_with slug keywords : article =
     art_slug = slug;
     art_title = [ Str slug ];
     art_subtitle = [ Str "subtitle" ];
+    art_featured = false;
     art_created_at = Date.make ~year:2024 ~month:1 ~day:1;
     art_modified_at = Date.make ~year:2024 ~month:1 ~day:1;
     art_word_count = 42;
@@ -75,6 +76,18 @@ let tests : Test_framework.t list =
               assert_bool "uses time for modified date"
                 (Strings.is_infix_of
                    {|<time datetime="2024-01-01">2024-01-01</time>|} attrs);
+            ]);
+      test "featured post entries render a marker" (fun () ->
+          let article = { (article_with "hello" [ "ocaml" ]) with art_featured = true } in
+          let entry = Html.render (Layout.render_post_entry article) in
+          all
+            [
+              assert_bool "marks list item as featured"
+                (Strings.is_infix_of {|<li class="featured">|} entry);
+              assert_bool "marks title as left gutter anchor"
+                (Strings.is_infix_of
+                   {|<h2 class="article-title left-gutter-anchor featured-marker">|}
+                   entry);
             ]);
       test "json-ld escapes script-breaking text" (fun () ->
           let article =

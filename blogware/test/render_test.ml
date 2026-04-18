@@ -51,4 +51,8 @@ let tests : Test_framework.t list =
            (Blockquote
               ( [ Para [ Str "\n  hello "; Strong [ Str "world" ]; Str "\n" ] ],
                 [ Str "by test" ] )));
+      t "advice anchor uses gutter anchor link"
+        "<div class=\"advice\" id=\"hint\"><p><a class=\"anchor left-gutter-anchor advice-anchor\" href=\"#hint\" aria-label=\"Link to this advice\"></a>Use it.</p></div>\n"
+        (Render.render_block Render.empty_ctx
+           (Advice ("hint", [ Str "Use it." ])));
     ]

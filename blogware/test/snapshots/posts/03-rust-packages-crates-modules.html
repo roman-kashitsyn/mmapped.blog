@@ -65,7 +65,7 @@ Modules are convenient but don’t help the compiler do less work.
 Packages are less convenient but deliver better compilation speed as the code base grows.</p>
 </section>
 <section><h2 id="code-organization-advice"><a href="#code-organization-advice">Advice on code organization</a></h2>
-<div class="advice" id="avoid-dependency-hubs"><p><a class="anchor" href="#avoid-dependency-hubs">☛</a>Split dependency hubs.</p></div>
+<div class="advice" id="avoid-dependency-hubs"><p><a class="anchor left-gutter-anchor advice-anchor" href="#avoid-dependency-hubs" aria-label="Link to this advice"></a>Split dependency hubs.</p></div>
 <p>There are two types of dependency hubs:
 </p>
 <ul class="arrows"><li>
@@ -89,7 +89,7 @@ Some types from <code>types</code> are pervasive.
 The package containing these types is doomed to be a type-two dependency hub.
 The <code>replica</code> package wiring all the components is doomed to be a type-one dependency hub.
 The best you can do is to localize the hubs and make them small and stable.</p>
-<div class="advice" id="generic-no-deps"><p><a class="anchor" href="#generic-no-deps">☛</a>Consider using generics and associated types to eliminate dependencies.</p></div>
+<div class="advice" id="generic-no-deps"><p><a class="anchor left-gutter-anchor advice-anchor" href="#generic-no-deps" aria-label="Link to this advice"></a>Consider using generics and associated types to eliminate dependencies.</p></div>
 <p>This advice needs an example, so bear with me.</p>
 <p><code>types</code>, <code>interfaces</code>, and <code>replicated_state</code> were among the first packages in the IC code base.
 The <code>types</code> package contains common type definitions,
@@ -128,7 +128,7 @@ We only need to replace the exact type with a generic type argument.</p>
 </code></pre></div>
 </figure>
 <p>Now, we don’t need to recompile the <code>interfaces</code> package and its numerous dependencies every time we add a new field to the replicated state.</p>
-<div class="advice" id="dyn-polymorphism"><p><a class="anchor" href="#dyn-polymorphism">☛</a>Prefer runtime polymorphism.</p></div>
+<div class="advice" id="dyn-polymorphism"><p><a class="anchor left-gutter-anchor advice-anchor" href="#dyn-polymorphism" aria-label="Link to this advice"></a>Prefer runtime polymorphism.</p></div>
 <p>One of the design choices we had was how to connect software components.
 Should we pass instances of components as <code>Arc&lt;dyn Interface&gt;</code> (runtime polymorphism) or as generic type arguments (compile-time polymorphism)?</p>
 <figure><label class="margin-toggle" for="mn-runtime-poly">⊕</label><input type="checkbox" id="mn-runtime-poly" class="margin-toggle"><span class="marginnote">Composing components using runtime polymorphism.</span><div class="source-container"><pre class="source good"><code><span class="line">pub struct Consensus {</span>
@@ -146,7 +146,7 @@ Should we pass instances of components as <code>Arc&lt;dyn Interface&gt;</code> 
 <p>Compile-time polymorphism is an essential tool but a heavy-weight one.
 Runtime polymorphism requires less code and results in less binary bloat.
 Most team members also found the <code>dyn</code> version easier to read.</p>
-<div class="advice" id="explicit-dependencies"><p><a class="anchor" href="#explicit-dependencies">☛</a>Prefer explicit dependencies.</p></div>
+<div class="advice" id="explicit-dependencies"><p><a class="anchor left-gutter-anchor advice-anchor" href="#explicit-dependencies" aria-label="Link to this advice"></a>Prefer explicit dependencies.</p></div>
 <p>One of the most common questions new developers ask on the dev channel is <q>Why do we explicitly pass around loggers? Global loggers seem to work pretty well.</q>
 What a great question.
 I would ask the same thing in 2019!</p>
@@ -190,7 +190,7 @@ Switching to explicit passing the metrics registry helped me find and fix the bu
 Every type of resource we passed implicitly<label class="margin-toggle sidenote-number" for="sn-resource-types"></label><input type="checkbox" id="sn-resource-types" class="margin-toggle"><span class="sidenote"><a href="https://crates.io/crates/slog-scope">scoped</a> loggers, <a href="https://crates.io/crates/prometheus">Prometheus</a> metrics registries, <a href="https://crates.io/crates/rayon">Rayon</a> thread pools, <a href="https://crates.io/crates/tokio">Tokio</a> runtimes, to name a few.</span> caused hard-to-diagnose issues and wasted a lot of engineering time.</p>
 <p>People in other programming communities also realized that global loggers are evil.
 You might enjoy reading <a href="https://www.yegor256.com/2019/03/19/logging-without-static-logger.html">Logging Without a Static Logger</a>.</p>
-<div class="advice" id="dedup-dependencies"><p><a class="anchor" href="#dedup-dependencies">☛</a>Deduplicate dependencies.</p></div>
+<div class="advice" id="dedup-dependencies"><p><a class="anchor left-gutter-anchor advice-anchor" href="#dedup-dependencies" aria-label="Link to this advice"></a>Deduplicate dependencies.</p></div>
 <p>Cargo makes it easy to add dependencies, but this convenience comes with a cost.
 You might accidentally introduce incompatible version of the same package.</p>
 <p>Multiple versions of the same package might result in correctness issues, especially with packages with zero major version component (<code>0.y.z</code>).
@@ -199,7 +199,7 @@ If you ever pulled your hair off trying to figure out why you get that <q><a hre
 <p><a href="https://doc.rust-lang.org/cargo/reference/workspaces.html#the-dependencies-table">Workspace dependencies</a> and <a href="https://doc.rust-lang.org/cargo/commands/cargo-update.html">cargo update</a> will help you keep your dependency graph in order.</p>
 <p>You do not have to unify the feature sets for the same dependency across the workspace packages.
 Cargo compiles each dependency version once, thanks to the <a href="https://doc.rust-lang.org/cargo/reference/features.html#feature-unification">feature unification</a> mechanism.</p>
-<div class="advice" id="tests-in-separate-files"><p><a class="anchor" href="#tests-in-separate-files">☛</a>Put unit tests into separate files.</p></div>
+<div class="advice" id="tests-in-separate-files"><p><a class="anchor left-gutter-anchor advice-anchor" href="#tests-in-separate-files" aria-label="Link to this advice"></a>Put unit tests into separate files.</p></div>
 <p>Rust allows you to write unit tests right next to your production code.</p>
 <figure><label class="margin-toggle" for="mn-test-code">⊕</label><input type="checkbox" id="mn-test-code" class="margin-toggle"><span class="marginnote">A module that has unit tests and production code in the same file, <code>foo.rs</code>.</span><div class="source-container"><pre class="source bad"><code><span class="line">pub fn frobnicate(x: &amp;Foo) -&gt; u32 {</span>
 <span class="line">    todo!(&quot;implement frobnication&quot;)</span>
