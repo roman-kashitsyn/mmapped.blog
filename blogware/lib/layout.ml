@@ -108,6 +108,48 @@ let find_similar_articles (articles : article list) (idx : int) : article list =
   in
   take 5 sorted
 
+(* --- Structured data --- *)
+
+let post_json_ld (type s) (module B : Json.Builder with type t = s)
+    (root_url : string) (article : article) : s =
+  let url = root_url ^ article.art_url in
+  let author =
+    B.obj [|
+      ("@type", B.str "Person");
+      ("givenName", B.str "Roman");
+      ("familyName", B.str "Kashitsyn");
+    |]
+  in
+  let fields =
+    Dynarray.of_array
+      [|
+        ("@context", B.str "https://schema.org");
+        ("@type", B.str "BlogPosting");
+        ("headline", B.str (Elaborate.render_inlines_to_text article.art_title));
+        ("url", B.str url);
+        ( "mainEntityOfPage",
+          B.obj [| ("@type", B.str "WebPage"); ("@id", B.str url) |] );
+        ("datePublished", B.str (Date.to_string article.art_created_at));
+        ("dateModified", B.str (Date.to_string article.art_modified_at));
+        ("license", B.str "http://creativecommons.org/licenses/by/4.0/");
+        ("author", author);
+        ("publisher", author);
+      |]
+  in
+  if not (List.is_empty article.art_subtitle) then
+    Dynarray.add_last fields
+      ("description", B.str (Elaborate.render_inlines_to_text article.art_subtitle));
+  if not (List.is_empty article.art_keywords) then
+    Dynarray.add_last fields
+      ( "keywords",
+        article.art_keywords |> List.map B.str |> Array.of_list |> B.arr );
+  B.obj (Dynarray.to_array fields)
+
+let render_json_ld (root_url : string) (article : article) : Html.t =
+  parent "script"
+    [ type_ "application/ld+json" ]
+    (nl ++ post_json_ld (module Json.Render) root_url article ++ nl)
+
 (* --- Page head --- *)
 
 let page_head (root_url : string) (article : article) : Html.t =
@@ -141,7 +183,8 @@ let page_head (root_url : string) (article : article) : Html.t =
          ]
     ++ link_
          [ rel_ "alternate"; type_ "application/atom+xml"; href_ "/feed.xml" ]
-    ++ link_ [ rel_ "canonical"; href_ (root_url ^ article.art_url) ])
+    ++ link_ [ rel_ "canonical"; href_ (root_url ^ article.art_url) ]
+    ++ render_json_ld root_url article)
 
 (* --- Site header / footer --- *)
 
@@ -216,15 +259,15 @@ let render_post_attributes (article : article) : Html.t =
     (span_
        [ attr "title" "First published" ]
        (raw "\xE2\x9C\x8F " (* ✏ *)
-       ++ span_
-            [ attr "itemprop" "datePublished" ]
+       ++ time_
+            [ datetime_ (Date.to_string article.art_created_at) ]
             (raw (format_date article.art_created_at)))
     ++ raw "&nbsp;\n"
     ++ span_
          [ attr "title" "Last modified" ]
          (raw "\xE2\x9C\x82 " (* ✂ *)
-         ++ span_
-              [ attr "itemprop" "dateModified" ]
+         ++ time_
+              [ datetime_ (Date.to_string article.art_modified_at) ]
               (raw (format_date article.art_modified_at)))
     ++ span_
          [ class_ "post-icons" ]
@@ -335,18 +378,14 @@ let render_post_page (root_url : string) (article : article)
 (* --- Post list page --- *)
 
 let render_post_entry (a : article) : Html.t =
-  li_
-    [ attr "itemscope" ""; attr "itemtype" "https://schema.org/CreativeWork" ]
-    (leaf "meta" [ attr "keywords" (String.concat "," a.art_keywords) ]
-    ++ h2_
-         [ class_ "article-title" ]
-         (a_
-            [ href_ a.art_url ]
-            (span_
-               [ attr "itemprop" "headline" ]
-               (Render.render_inlines Render.empty_ctx a.art_title)))
+  li_ []
+    (h2_
+       [ class_ "article-title" ]
+       (a_
+          [ href_ a.art_url ]
+          (span_ [] (Render.render_inlines Render.empty_ctx a.art_title)))
     ++ div_
-         [ class_ "article-abstract"; attr "itemprop" "abstract" ]
+         [ class_ "article-abstract" ]
          (Render.render_inlines Render.empty_ctx a.art_subtitle)
     ++ render_post_attributes a)
 

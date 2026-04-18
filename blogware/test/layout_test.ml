@@ -8,7 +8,7 @@ let article_with slug keywords : article =
   {
     art_slug = slug;
     art_title = [ Str slug ];
-    art_subtitle = [];
+    art_subtitle = [ Str "subtitle" ];
     art_created_at = Date.make ~year:2024 ~month:1 ~day:1;
     art_modified_at = Date.make ~year:2024 ~month:1 ~day:1;
     art_keywords = keywords;
@@ -19,9 +19,84 @@ let article_with slug keywords : article =
     art_lobsters = None;
   }
 
+let all checks =
+  let rec go = function
+    | [] -> Pass
+    | Pass :: rest -> go rest
+    | (Fail _ as failed) :: _ -> failed
+  in
+  go checks
+
 let tests : Test_framework.t list =
   group "layout"
     [
+      test "page head includes blog posting json-ld" (fun () ->
+          let article = article_with "hello" [ "ocaml"; "testing" ] in
+          let head =
+            Html.render (Layout.page_head "https://example.test" article)
+          in
+          all
+            [
+              assert_bool "has ld+json script"
+                (Strings.is_infix_of "<script type=\"application/ld+json\">"
+                   head);
+              assert_bool "has schema.org context"
+                (Strings.is_infix_of "\"@context\":\"https://schema.org\"" head);
+              assert_bool "has blog posting type"
+                (Strings.is_infix_of "\"@type\":\"BlogPosting\"" head);
+              assert_bool "has canonical url"
+                (Strings.is_infix_of
+                   "\"url\":\"https://example.test/posts/hello.html\"" head);
+              assert_bool "has mainEntityOfPage"
+                (Strings.is_infix_of
+                   "\"mainEntityOfPage\":{\"@type\":\"WebPage\",\"@id\":\"https://example.test/posts/hello.html\"}"
+                   head);
+              assert_bool "has dates"
+                (Strings.is_infix_of "\"datePublished\":\"2024-01-01\"" head
+                && Strings.is_infix_of "\"dateModified\":\"2024-01-01\"" head);
+              assert_bool "has author"
+                (Strings.is_infix_of
+                   {|"author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"}|}
+                   head);
+              assert_bool "has keywords array"
+                (Strings.is_infix_of {|"keywords":["ocaml","testing"]|} head);
+            ]);
+      test "post attributes render semantic time elements" (fun () ->
+          let article = article_with "hello" [ "ocaml" ] in
+          let attrs = Html.render (Layout.render_post_attributes article) in
+          all
+            [
+              assert_bool "uses time for published date"
+                (Strings.is_infix_of
+                   {|<time datetime="2024-01-01">2024-01-01</time>|}
+                   attrs);
+              assert_bool "uses time for modified date"
+                (Strings.is_infix_of
+                  {|<time datetime="2024-01-01">2024-01-01</time>|}
+                   attrs);
+            ]);
+      test "json-ld escapes script-breaking text" (fun () ->
+          let article =
+            {
+              (article_with "quotes" []) with
+              art_title = [ Str "A \"quoted\" <title>" ];
+              art_subtitle = [ Str "Fish & Chips" ];
+            }
+          in
+          let head =
+            Html.render (Layout.page_head "https://example.test" article)
+          in
+          all
+            [
+              assert_bool "escapes quotes"
+                (Strings.is_infix_of
+                   "\"headline\":\"A \\\"quoted\\\" \\u003ctitle\\u003e\"" head);
+              assert_bool "escapes ampersand"
+                (Strings.is_infix_of "\"description\":\"Fish \\u0026 Chips\""
+                   head);
+              assert_bool "does not emit empty keywords"
+                (not (Strings.is_infix_of "\"keywords\":" head));
+            ]);
       test "extract_toc flat sections" (fun () ->
           let blocks =
             [

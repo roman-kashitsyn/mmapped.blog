@@ -190,15 +190,26 @@ let rec render_inlines_to_text (ils : inline list) : string =
 
 and inline_to_text = function
   | Str t -> t
-  | Strong ils -> render_inlines_to_text ils
-  | Emph ils -> render_inlines_to_text ils
-  | Quotation ils -> render_inlines_to_text ils
-  | Fun ils -> render_inlines_to_text ils
-  | Math_span ils -> render_inlines_to_text ils
-  | Normal ils -> render_inlines_to_text ils
-  | Nameref label -> "[nameref:" ^ label ^ "]"
-  | Image_inline _ -> ""
-  | _ -> ""
+  | Strong ils
+  | Emph ils
+  | Underline ils
+  | Small_caps ils
+  | Strikethrough ils
+  | Kbd ils
+  | Sub ils
+  | Sup ils
+  | Quotation ils
+  | Fun ils
+  | Math_span ils
+  | Normal ils ->
+      render_inlines_to_text ils
+  | Code (_, ils) -> render_inlines_to_text ils
+  | Link (_, ils) -> render_inlines_to_text ils
+  | Margin_note (_, ils) -> render_inlines_to_text ils
+  | Side_note (_, ils) -> render_inlines_to_text ils
+  | Math _ | Anchor _ | Horizontal_rule | Circled_ref _ | Line_break
+  | Numeric_space | Nameref _ | Image_inline _ ->
+      ""
 
 (* Paragraph splitting. Text containing "\n\n" is split into separate Para
    blocks. LineBreak and empty-string Str are trimmed at boundaries. *)

@@ -45,9 +45,10 @@ let tests : Test_framework.t list =
         "<p class=\"svg\"><img src=\"diagram.svg\"></p>\n"
         (Render.render_block Render.empty_ctx (Image ([], "diagram.svg")));
       t "blockquote trims boundary whitespace in quote paragraphs"
-        "<blockquote><p>hello <b>world</b></p><footer>by test</footer></blockquote>\n"
+        "<blockquote><p>hello <b>world</b></p><footer>by \
+         test</footer></blockquote>\n"
         (Render.render_block Render.empty_ctx
            (Blockquote
-              ([ Para [ Str "\n  hello "; Strong [ Str "world" ]; Str "\n" ] ],
-               [ Str "by test" ])));
+              ( [ Para [ Str "\n  hello "; Strong [ Str "world" ]; Str "\n" ] ],
+                [ Str "by test" ] )));
     ]
