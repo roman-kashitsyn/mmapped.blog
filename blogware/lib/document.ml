@@ -101,6 +101,7 @@ type article = {
   art_subtitle : inline list;
   art_created_at : Date.t;
   art_modified_at : Date.t;
+  art_word_count : int;
   art_keywords : string list;
   art_body : block list;
   art_url : string;

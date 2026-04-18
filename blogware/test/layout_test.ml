@@ -11,6 +11,7 @@ let article_with slug keywords : article =
     art_subtitle = [ Str "subtitle" ];
     art_created_at = Date.make ~year:2024 ~month:1 ~day:1;
     art_modified_at = Date.make ~year:2024 ~month:1 ~day:1;
+    art_word_count = 42;
     art_keywords = keywords;
     art_body = [];
     art_url = "/posts/" ^ slug ^ ".html";
@@ -54,6 +55,8 @@ let tests : Test_framework.t list =
               assert_bool "has dates"
                 (Strings.is_infix_of "\"datePublished\":\"2024-01-01\"" head
                 && Strings.is_infix_of "\"dateModified\":\"2024-01-01\"" head);
+              assert_bool "has word count"
+                (Strings.is_infix_of "\"wordCount\":42" head);
               assert_bool "has author"
                 (Strings.is_infix_of
                    {|"author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"}|}
@@ -68,12 +71,10 @@ let tests : Test_framework.t list =
             [
               assert_bool "uses time for published date"
                 (Strings.is_infix_of
-                   {|<time datetime="2024-01-01">2024-01-01</time>|}
-                   attrs);
+                   {|<time datetime="2024-01-01">2024-01-01</time>|} attrs);
               assert_bool "uses time for modified date"
                 (Strings.is_infix_of
-                  {|<time datetime="2024-01-01">2024-01-01</time>|}
-                   attrs);
+                   {|<time datetime="2024-01-01">2024-01-01</time>|} attrs);
             ]);
       test "json-ld escapes script-breaking text" (fun () ->
           let article =

@@ -11,6 +11,7 @@ let hello_article : article =
     art_subtitle = [ Str "World" ];
     art_created_at = Date.make ~year:2024 ~month:1 ~day:2;
     art_modified_at = Date.make ~year:2024 ~month:1 ~day:3;
+    art_word_count = 2;
     art_keywords = [ "ocaml"; "port" ];
     art_body = [];
     art_url = "/posts/hello.html";

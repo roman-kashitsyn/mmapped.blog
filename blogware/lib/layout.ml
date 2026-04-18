@@ -114,11 +114,12 @@ let post_json_ld (type s) (module B : Json.Builder with type t = s)
     (root_url : string) (article : article) : s =
   let url = root_url ^ article.art_url in
   let author =
-    B.obj [|
-      ("@type", B.str "Person");
-      ("givenName", B.str "Roman");
-      ("familyName", B.str "Kashitsyn");
-    |]
+    B.obj
+      [|
+        ("@type", B.str "Person");
+        ("givenName", B.str "Roman");
+        ("familyName", B.str "Kashitsyn");
+      |]
   in
   let fields =
     Dynarray.of_array
@@ -131,6 +132,7 @@ let post_json_ld (type s) (module B : Json.Builder with type t = s)
           B.obj [| ("@type", B.str "WebPage"); ("@id", B.str url) |] );
         ("datePublished", B.str (Date.to_string article.art_created_at));
         ("dateModified", B.str (Date.to_string article.art_modified_at));
+        ("wordCount", B.num article.art_word_count);
         ("license", B.str "http://creativecommons.org/licenses/by/4.0/");
         ("author", author);
         ("publisher", author);
@@ -138,7 +140,8 @@ let post_json_ld (type s) (module B : Json.Builder with type t = s)
   in
   if not (List.is_empty article.art_subtitle) then
     Dynarray.add_last fields
-      ("description", B.str (Elaborate.render_inlines_to_text article.art_subtitle));
+      ( "description",
+        B.str (Elaborate.render_inlines_to_text article.art_subtitle) );
   if not (List.is_empty article.art_keywords) then
     Dynarray.add_last fields
       ( "keywords",
