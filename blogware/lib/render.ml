@@ -278,7 +278,13 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
       div_
         [ class_ "advice"; id_ anchor ]
         (p_ []
-           (a_ [ class_ "anchor"; href_ ("#" ^ anchor) ] (raw "\xE2\x98\x9B")
+           (a_
+              [
+                class_ "anchor left-gutter-anchor advice-anchor";
+                href_ ("#" ^ anchor);
+                attr "aria-label" "Link to this advice";
+              ]
+              empty
            ++ render_inlines ctx ils))
       ++ nl
   | Details (summary, body) ->

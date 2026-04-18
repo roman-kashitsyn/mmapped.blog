@@ -16,6 +16,15 @@ let elab_ok name input check_blocks : Test_framework.t =
           | Error e -> Fail ("elab error: " ^ e.Error.ee_message)
           | Ok art -> check_blocks art.art_body))
 
+let elab_article_ok name input check_article : Test_framework.t =
+  test name (fun () ->
+      match Tex_parser.parse_document ~source_name:"<test>" input with
+      | Error e -> Fail ("parse error: " ^ e.pe_message)
+      | Ok nodes -> (
+          match Elaborate.elaborate "slug" nodes with
+          | Error e -> Fail ("elab error: " ^ e.Error.ee_message)
+          | Ok art -> check_article art))
+
 open Document
 
 let tests : Test_framework.t list =
@@ -68,4 +77,7 @@ let tests : Test_framework.t list =
           match blocks with
           | [ Bullet_list (Arrows, items) ] when List.length items = 2 -> Pass
           | _ -> Fail "expected bullet list with 2 items");
+      elab_article_ok "featured metadata"
+        "\\featured\n\\begin{document}hello\\end{document}" (fun article ->
+          assert_bool "marks article as featured" article.art_featured);
     ]

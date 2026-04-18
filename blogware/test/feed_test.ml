@@ -9,6 +9,7 @@ let hello_article : article =
     art_slug = "hello";
     art_title = [ Str "Hello" ];
     art_subtitle = [ Str "World" ];
+    art_featured = false;
     art_created_at = Date.make ~year:2024 ~month:1 ~day:2;
     art_modified_at = Date.make ~year:2024 ~month:1 ~day:3;
     art_word_count = 2;

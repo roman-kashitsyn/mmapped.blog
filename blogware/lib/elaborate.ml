@@ -92,6 +92,7 @@ let dingbat_char = function
 type meta = {
   m_title : string;
   m_subtitle : string;
+  m_featured : bool;
   m_created_at : Date.t;
   m_modified_at : Date.t;
   m_keywords : string list;
@@ -105,6 +106,7 @@ let default_meta : meta =
   {
     m_title = "";
     m_subtitle = "";
+    m_featured = false;
     m_created_at = epoch;
     m_modified_at = epoch;
     m_keywords = [];
@@ -142,6 +144,7 @@ let extract_metadata (nodes : node list) : meta result_ =
         go { m with m_title = node_text_of_nodes ns } rest
     | NCmd (_, "subtitle", _, Arg_nodes (_, ns) :: _) :: rest ->
         go { m with m_subtitle = node_text_of_nodes ns } rest
+    | NCmd (_, "featured", _, _) :: rest -> go { m with m_featured = true } rest
     | NCmd (_, "date", _, Arg_symbol (pos, d) :: _) :: rest ->
         let* day = parse_day pos d in
         go { m with m_created_at = day; m_modified_at = day } rest
@@ -293,6 +296,7 @@ let metadata_cmd_set =
       "documentclass";
       "title";
       "subtitle";
+      "featured";
       "date";
       "modified";
       "keyword";
@@ -770,6 +774,7 @@ let elaborate (slug : string) (nodes : node list) : article result_ =
       art_slug = slug;
       art_title = [ Str (apply_typography meta.m_title) ];
       art_subtitle = [ Str (apply_typography meta.m_subtitle) ];
+      art_featured = meta.m_featured;
       art_created_at = meta.m_created_at;
       art_modified_at = meta.m_modified_at;
       art_word_count = Stats.word_count body;

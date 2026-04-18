@@ -381,9 +381,14 @@ let render_post_page (root_url : string) (article : article)
 (* --- Post list page --- *)
 
 let render_post_entry (a : article) : Html.t =
-  li_ []
+  let item_classes = if a.art_featured then [ class_ "featured" ] else [] in
+  let title_class =
+    if a.art_featured then "article-title left-gutter-anchor featured-marker"
+    else "article-title"
+  in
+  li_ item_classes
     (h2_
-       [ class_ "article-title" ]
+       [ class_ title_class ]
        (a_
           [ href_ a.art_url ]
           (span_ [] (Render.render_inlines Render.empty_ctx a.art_title)))
