@@ -185,31 +185,38 @@ type node_class =
 
 (* Flatten inlines back to plain text (used for groups that appear in a
    text context, e.g. inside \title{...\b{X}...}). *)
-let rec render_inlines_to_text (ils : inline list) : string =
-  String.concat "" (List.map inline_to_text ils)
-
-and inline_to_text = function
-  | Str t -> t
-  | Strong ils
-  | Emph ils
-  | Underline ils
-  | Small_caps ils
-  | Strikethrough ils
-  | Kbd ils
-  | Sub ils
-  | Sup ils
-  | Quotation ils
-  | Fun ils
-  | Math_span ils
-  | Normal ils ->
-      render_inlines_to_text ils
-  | Code (_, ils) -> render_inlines_to_text ils
-  | Link (_, ils) -> render_inlines_to_text ils
-  | Margin_note (_, ils) -> render_inlines_to_text ils
-  | Side_note (_, ils) -> render_inlines_to_text ils
-  | Math _ | Anchor _ | Horizontal_rule | Circled_ref _ | Line_break
-  | Numeric_space | Nameref _ | Image_inline _ ->
-      ""
+let render_inlines_to_text (ils : inline list) : string =
+  let buf = Buffer.create 64 in
+  let rec add_inlines = function
+    | [] -> ()
+    | il :: rest ->
+        add_inline il;
+        add_inlines rest
+  and add_inline = function
+    | Str t -> Buffer.add_string buf t
+    | Strong ils
+    | Emph ils
+    | Underline ils
+    | Small_caps ils
+    | Strikethrough ils
+    | Kbd ils
+    | Sub ils
+    | Sup ils
+    | Quotation ils
+    | Fun ils
+    | Math_span ils
+    | Normal ils
+    | Code (_, ils)
+    | Link (_, ils)
+    | Margin_note (_, ils)
+    | Side_note (_, ils) ->
+        add_inlines ils
+    | Math _ | Anchor _ | Horizontal_rule | Circled_ref _ | Line_break
+    | Numeric_space | Nameref _ | Image_inline _ ->
+        ()
+  in
+  add_inlines ils;
+  Buffer.contents buf
 
 (* Paragraph splitting. Text containing "\n\n" is split into separate Para
    blocks. LineBreak and empty-string Str are trimmed at boundaries. *)
@@ -765,6 +772,7 @@ let elaborate (slug : string) (nodes : node list) : article result_ =
       art_subtitle = [ Str (apply_typography meta.m_subtitle) ];
       art_created_at = meta.m_created_at;
       art_modified_at = meta.m_modified_at;
+      art_word_count = Stats.word_count body;
       art_keywords = List.sort compare meta.m_keywords;
       art_body = body;
       art_url = "/posts/" ^ slug ^ ".html";
