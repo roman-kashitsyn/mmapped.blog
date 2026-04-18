@@ -3,16 +3,6 @@
 open Xml
 open Document
 
-(* Very small inline-to-plaintext reducer used for feed <title>/<summary>. *)
-let rec inlines_to_text (ils : inline list) : string =
-  String.concat "" (List.map go ils)
-
-and go = function
-  | Str t -> t
-  | Strong ils -> inlines_to_text ils
-  | Emph ils -> inlines_to_text ils
-  | _ -> ""
-
 let rfc3339 d = Date.to_rfc3339_midnight d
 
 let latest_date (articles : article list) : Date.t =
@@ -37,8 +27,8 @@ let render_entry (root_url : string) (a : article) : Xml.t =
   in
   tag "entry"
     (tag "id" (text url)
-    ++ tag "title" (text (inlines_to_text a.art_title))
-    ++ tag "summary" (text (inlines_to_text a.art_subtitle))
+    ++ tag "title" (text (Elaborate.render_inlines_to_text a.art_title))
+    ++ tag "summary" (text (Elaborate.render_inlines_to_text a.art_subtitle))
     ++ tag "published" (text (rfc3339 a.art_created_at))
     ++ tag "updated" (text (rfc3339 a.art_modified_at))
     ++ tag_attr "link" ("rel=\"alternate\" href=\"" ^ url ^ "\"") empty
