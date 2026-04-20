@@ -20,22 +20,6 @@ let has_prefix_at (src : string) (offset : int) (pat : string) : bool =
   let len = String.length src in
   if offset + n > len then false else eq_from src pat offset 0 n
 
-let any (s : string) (p : char -> bool) : bool =
-  let n = String.length s in
-  let i = ref 0 in
-  while !i < n && not (p s.[!i]) do
-    incr i
-  done;
-  !i <> n
-
-let all (s : string) (p : char -> bool) : bool =
-  let n = String.length s in
-  let i = ref 0 in
-  while !i < n && p s.[!i] do
-    incr i
-  done;
-  !i = n
-
 let split_on (s : string) (pat : string) : string list =
   let len = String.length s in
   let pat_len = String.length pat in

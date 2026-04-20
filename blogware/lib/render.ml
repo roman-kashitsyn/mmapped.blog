@@ -6,13 +6,16 @@ open Syntax
 
 (* --- Helpers --- *)
 
-let join_classes cs = String.concat " " cs
-let class_attr_if_nonempty cls = if cls = "" then [] else [ class_ cls ]
+let txt = Text.of_string
+let join_classes cs = Text.concat (Text.of_char ' ') cs
+
+let class_attr_if_nonempty cls =
+  if Text.is_empty cls then [] else [ class_ cls ]
 
 let plainify_paras blocks =
   List.map (function Para ils -> Plain ils | b -> b) blocks
 
-let trim_quote_html (s : string) : string =
+let trim_quote_html (s : string) : Text.t =
   let len = String.length s in
   let rec left i =
     if i >= len then len
@@ -30,25 +33,25 @@ let trim_quote_html (s : string) : string =
   in
   let i = left 0 in
   let j = right (len - 1) in
-  if j < i then "" else String.sub s i (j - i + 1)
+  if j < i then Text.empty else Text.of_substr s i (j - i + 1)
 
 (* Convert 1-based integer to circled-number glyph (①②③...). *)
-let round_num_glyph (n : int) : string =
+let round_num_glyph (n : int) : Text.t =
   let buf = Buffer.create 3 in
   Buffer.add_utf_8_uchar buf (Uchar.of_int (0x245F + n));
-  Buffer.contents buf
+  Text.of_string (Buffer.contents buf)
 
 let alignment_to_class = function
-  | Col_left -> "align-l"
-  | Col_right -> "align-r"
-  | Col_center -> "align-c"
+  | Col_left -> txt "align-l"
+  | Col_right -> txt "align-r"
+  | Col_center -> txt "align-c"
 
 let border_class top bot =
   match (top, bot) with
-  | true, true -> "border-top border-bot"
-  | true, false -> "border-top"
-  | false, true -> "border-bot"
-  | false, false -> ""
+  | true, true -> txt "border-top border-bot"
+  | true, false -> txt "border-top"
+  | false, true -> txt "border-bot"
+  | false, false -> Text.empty
 
 (* --- Rendering context --- *)
 
@@ -64,9 +67,10 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Strong ils -> b_ [] (render_inlines ctx ils)
   | Emph ils -> em_ [] (render_inlines ctx ils)
   | Underline ils -> u_ [] (render_inlines ctx ils)
-  | Small_caps ils -> span_ [ class_ "smallcaps" ] (render_inlines ctx ils)
+  | Small_caps ils ->
+      span_ [ class_ (txt "smallcaps") ] (render_inlines ctx ils)
   | Strikethrough ils ->
-      span_ [ class_ "strikethrough" ] (render_inlines ctx ils)
+      span_ [ class_ (txt "strikethrough") ] (render_inlines ctx ils)
   | Code (classes, ils) ->
       code_
         (class_attr_if_nonempty (join_classes classes))
@@ -74,36 +78,42 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Link (url, ils) -> a_ [ href_ url ] (render_inlines ctx ils)
   | Math (disp, nodes) -> Render_mathml.render_math disp nodes
   | Margin_note (anchor, ils) ->
-      label_ [ class_ "margin-toggle"; for_ anchor ] (raw "\xE2\x8A\x95")
+      label_
+        [ class_ (txt "margin-toggle"); for_ anchor ]
+        (raw (txt "\xE2\x8A\x95"))
       (* ⊕ *)
-      ++ leaf "input" [ type_ "checkbox"; id_ anchor; class_ "margin-toggle" ]
-      ++ span_ [ class_ "marginnote" ] (render_inlines ctx ils)
+      ++ leaf "input"
+           [ type_ (txt "checkbox"); id_ anchor; class_ (txt "margin-toggle") ]
+      ++ span_ [ class_ (txt "marginnote") ] (render_inlines ctx ils)
   | Side_note (anchor, ils) ->
-      label_ [ class_ "margin-toggle sidenote-number"; for_ anchor ] empty
-      ++ leaf "input" [ type_ "checkbox"; id_ anchor; class_ "margin-toggle" ]
-      ++ span_ [ class_ "sidenote" ] (render_inlines ctx ils)
+      label_ [ class_ (txt "margin-toggle sidenote-number"); for_ anchor ] empty
+      ++ leaf "input"
+           [ type_ (txt "checkbox"); id_ anchor; class_ (txt "margin-toggle") ]
+      ++ span_ [ class_ (txt "sidenote") ] (render_inlines ctx ils)
   | Kbd ils -> kbd_ [] (render_inlines ctx ils)
   | Sub ils -> sub_ [] (render_inlines ctx ils)
   | Sup ils -> sup_ [] (render_inlines ctx ils)
   | Quotation ils -> parent "q" [] (render_inlines ctx ils)
-  | Fun ils -> span_ [ class_ "fun" ] (render_inlines ctx ils)
-  | Math_span ils -> span_ [ class_ "math" ] (render_inlines ctx ils)
-  | Normal ils -> span_ [ class_ "normal" ] (render_inlines ctx ils)
+  | Fun ils -> span_ [ class_ (txt "fun") ] (render_inlines ctx ils)
+  | Math_span ils -> span_ [ class_ (txt "math") ] (render_inlines ctx ils)
+  | Normal ils -> span_ [ class_ (txt "normal") ] (render_inlines ctx ils)
   | Anchor aid -> span_ [ id_ aid ] empty
   | Horizontal_rule -> hr_ []
-  | Circled_ref n -> span_ [ class_ "circled-ref" ] (round_num_glyph n |> text)
+  | Circled_ref n ->
+      span_ [ class_ (txt "circled-ref") ] (round_num_glyph n |> text)
   | Line_break -> br_ []
-  | Numeric_space -> raw "&numsp;"
+  | Numeric_space -> raw (txt "&numsp;")
   | Image_inline (classes, path) ->
       let cls = join_classes classes in
       let img = leaf "img" (class_attr_if_nonempty cls @ [ src_ path ]) in
-      if String.equal (Filename.extension path) ".svg" then
-        p_ [ class_ "svg" ] img
+      if String.equal (Filename.extension (Text.to_string path)) ".svg" then
+        p_ [ class_ (txt "svg") ] img
       else img
   | Nameref label -> (
       match RefTable.find_opt label ctx.ref_table with
       | Some r -> a_ [ href_ r.ref_url ] (text r.ref_title)
-      | None -> text ("[unresolved:" ^ label ^ "]"))
+      | None ->
+          text (Text.concat Text.empty [ txt "[unresolved:"; label; txt "]" ]))
 
 and render_inlines (ctx : ctx) (ils : inline list) : Html.t =
   concat (List.map (render_inline ctx) ils)
@@ -123,14 +133,17 @@ let render_code_content (ctx : ctx) (ils : inline list) : Html.t =
     | _ -> lines
   in
   concat
-    (List.map (fun line -> span_ [ class_ "line" ] (raw line) ++ raw "\n") kept)
+    (List.map
+       (fun line ->
+         span_ [ class_ (txt "line") ] (raw (txt line)) ++ raw (txt "\n"))
+       kept)
 
 (* --- Table rendering --- *)
 
 let render_table_cell ctx cell_tag (c : table_cell) : Html.t =
   parent cell_tag
     [
-      colspan_ (string_of_int c.tc_colspan);
+      colspan_ (txt (string_of_int c.tc_colspan));
       class_ (alignment_to_class c.tc_align);
     ]
     (render_inlines ctx c.tc_content)
@@ -144,11 +157,17 @@ let render_table_row ctx cell_tag (r : table_row) : Html.t =
 let render_table (ctx : ctx) (td : table_def) : Html.t =
   let num_cols = List.length td.table_spec in
   let cls =
-    "table-" ^ string_of_int num_cols ^ " " ^ join_classes td.table_opts
+    Text.concat Text.empty
+      [
+        txt "table-";
+        txt (string_of_int num_cols);
+        txt " ";
+        join_classes td.table_opts;
+      ]
   in
   let header_html =
     match td.table_header with
-    | Some h -> raw "<thead>" ++ thead_ [] (render_table_row ctx "th" h)
+    | Some h -> raw (txt "<thead>") ++ thead_ [] (render_table_row ctx "th" h)
     | None -> empty
   in
   table_
@@ -163,7 +182,7 @@ let rec render_quote_block (ctx : ctx) (b : block) : Html.t =
   | Para ils ->
       let attrs =
         match ils with
-        | Quotation _ :: _ -> [ class_ "hanging-quote" ]
+        | Quotation _ :: _ -> [ class_ (txt "hanging-quote") ]
         | _ -> []
       in
       let content = Html.render (render_inlines ctx ils) |> trim_quote_html in
@@ -179,7 +198,7 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
   | Para ils ->
       let attrs =
         match ils with
-        | Quotation _ :: _ -> [ class_ "hanging-quote" ]
+        | Quotation _ :: _ -> [ class_ (txt "hanging-quote") ]
         | _ -> []
       in
       p_ attrs (render_inlines ctx ils) ++ nl
@@ -188,39 +207,49 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
       let header_html =
         match header with
         | Some (anchor, title) ->
-            let attrs = if anchor = "" then [] else [ id_ anchor ] in
+            let attrs = if Text.is_empty anchor then [] else [ id_ anchor ] in
             let link =
-              if anchor = "" then render_inlines ctx title
-              else a_ [ href_ ("#" ^ anchor) ] (render_inlines ctx title)
+              if Text.is_empty anchor then render_inlines ctx title
+              else
+                a_
+                  [ href_ (Text.append (txt "#") anchor) ]
+                  (render_inlines ctx title)
             in
             parent "h2" attrs link ++ nl
         | None -> empty
       in
       section_ [] (header_html ++ render_blocks ctx body) ++ nl
   | Subsection (anchor, title, body) ->
-      let attrs = if anchor = "" then [] else [ id_ anchor ] in
+      let attrs = if Text.is_empty anchor then [] else [ id_ anchor ] in
       let link =
-        if anchor = "" then render_inlines ctx title
-        else a_ [ href_ ("#" ^ anchor) ] (render_inlines ctx title)
+        if Text.is_empty anchor then render_inlines ctx title
+        else
+          a_ [ href_ (Text.append (txt "#") anchor) ] (render_inlines ctx title)
       in
       parent "h3" attrs link ++ nl ++ render_blocks ctx body
   | Code_block (classes, content) ->
       let cls = join_classes classes in
-      let pre_cls = if cls = "" then "source" else "source " ^ cls in
+      let pre_cls =
+        if Text.is_empty cls then txt "source"
+        else Text.concat Text.empty [ txt "source "; cls ]
+      in
       div_
-        [ class_ "source-container" ]
+        [ class_ (txt "source-container") ]
         (pre_ [ class_ pre_cls ] (code_ [] (render_code_content ctx content)))
       ++ nl
   | Verbatim_block (classes, content) ->
       let cls = join_classes classes in
-      let pre_cls = if cls = "" then "source" else "source " ^ cls in
+      let pre_cls =
+        if Text.is_empty cls then txt "source"
+        else Text.concat Text.empty [ txt "source "; cls ]
+      in
       div_
-        [ class_ "source-container" ]
+        [ class_ (txt "source-container") ]
         (pre_ [ class_ pre_cls ] (code_ [] (text content)))
       ++ nl
   | Bullet_list (style, items) ->
       let cls =
-        match style with Arrows -> "arrows" | Checklist -> "checklist"
+        match style with Arrows -> txt "arrows" | Checklist -> txt "checklist"
       in
       ul_
         [ class_ cls ]
@@ -230,7 +259,7 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
   | Ordered_list items ->
       let numbered = List.mapi (fun i b -> (i + 1, b)) items in
       ol_
-        [ class_ "circled" ]
+        [ class_ (txt "circled") ]
         (concat
            (List.map
               (fun (n, bs) ->
@@ -257,8 +286,10 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
   | Image (classes, path) ->
       let cls = join_classes classes in
       let img = leaf "img" (class_attr_if_nonempty cls @ [ src_ path ]) in
-      let is_svg = String.equal (Filename.extension path) ".svg" in
-      if is_svg then p_ [ class_ "svg" ] img ++ nl
+      let is_svg =
+        String.equal (Filename.extension (Text.to_string path)) ".svg"
+      in
+      if is_svg then p_ [ class_ (txt "svg") ] img ++ nl
       else if wrap_images then p_ [] img ++ nl
       else img ++ nl
   | Figure (classes, body) ->
@@ -268,21 +299,22 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
       ++ nl
   | Epigraph (body, attribution) ->
       div_
-        [ class_ "epigraph" ]
+        [ class_ (txt "epigraph") ]
         (blockquote_ []
            (render_quote_blocks ctx body
            ++ footer_ [] (render_inlines ctx attribution)))
       ++ nl
-  | Abstract body -> div_ [ class_ "abstract" ] (render_blocks ctx body) ++ nl
+  | Abstract body ->
+      div_ [ class_ (txt "abstract") ] (render_blocks ctx body) ++ nl
   | Advice (anchor, ils) ->
       div_
-        [ class_ "advice"; id_ anchor ]
+        [ class_ (txt "advice"); id_ anchor ]
         (p_ []
            (a_
               [
-                class_ "anchor left-gutter-anchor advice-anchor";
-                href_ ("#" ^ anchor);
-                attr "aria-label" "Link to this advice";
+                class_ (txt "anchor left-gutter-anchor advice-anchor");
+                href_ (Text.append (txt "#") anchor);
+                attr "aria-label" (txt "Link to this advice");
               ]
               empty
            ++ render_inlines ctx ils))

@@ -7,17 +7,17 @@ type col_spec = Syntax.col_spec
 
 (* Inline elements *)
 type inline =
-  | Str of string (* plain text, typography already applied *)
+  | Str of Text.t (* plain text, typography already applied *)
   | Strong of inline list
   | Emph of inline list
   | Underline of inline list
   | Small_caps of inline list
   | Strikethrough of inline list
-  | Code of string list * inline list (* css classes, body *)
-  | Link of string * inline list (* url, body *)
+  | Code of Text.t list * inline list (* css classes, body *)
+  | Link of Text.t * inline list (* url, body *)
   | Math of math_display * math_node list (* preserved for MathML rendering *)
-  | Margin_note of string * inline list (* anchor, body *)
-  | Side_note of string * inline list (* anchor, body *)
+  | Margin_note of Text.t * inline list (* anchor, body *)
+  | Side_note of Text.t * inline list (* anchor, body *)
   | Kbd of inline list
   | Sub of inline list
   | Sup of inline list
@@ -25,15 +25,15 @@ type inline =
   | Fun of inline list (* \fun → <span class="fun"> *)
   | Math_span of inline list (* \math → <span class="math"> *)
   | Normal of inline list (* \normal → <span class="normal"> *)
-  | Anchor of string (* id for \label *)
+  | Anchor of Text.t (* id for \label *)
   | Horizontal_rule
   | Circled_ref of int
   | Line_break
   | Numeric_space
-  | Nameref of string (* label for \nameref *)
+  | Nameref of Text.t (* label for \nameref *)
   | Image_inline of
-      string list
-      * string (* css classes, src path (for inline/table contexts) *)
+      Text.t list
+      * Text.t (* css classes, src path (for inline/table contexts) *)
 
 (* List style for bullet lists *)
 type list_style = Arrows | Checklist
@@ -57,7 +57,7 @@ type table_def = {
   table_spec : col_spec list;
   table_header : table_row option;
   table_rows : table_row list;
-  table_opts : string list;
+  table_opts : Text.t list;
 }
 
 (* Block-level elements *)
@@ -65,48 +65,48 @@ type block =
   | Para of inline list
   | Plain of inline list (* inlines without paragraph wrapping *)
   | Section of
-      (string * inline list) option
+      (Text.t * inline list) option
       * block list (* None = anonymous, Some (anchor, title) = named *)
-  | Subsection of string * inline list * block list (* anchor, title, body *)
+  | Subsection of Text.t * inline list * block list (* anchor, title, body *)
   | Code_block of
-      string list
+      Text.t list
       * inline list (* css classes, formatted body with line spans *)
   | Verbatim_block of
-      string list * string (* css classes, raw text (no line spans) *)
+      Text.t list * Text.t (* css classes, raw text (no line spans) *)
   | Bullet_list of list_style * block list list
   | Ordered_list of block list list
   | Description_list of (inline list * block list) list
   | Blockquote of block list * inline list (* body, attribution *)
   | Epigraph of block list * inline list (* body, attribution *)
   | Table of table_def
-  | Image of string list * string (* css classes, src path *)
-  | Figure of string list * block list (* css classes, body *)
+  | Image of Text.t list * Text.t (* css classes, src path *)
+  | Figure of Text.t list * block list (* css classes, body *)
   | Abstract of block list
-  | Advice of string * inline list (* anchor, content *)
+  | Advice of Text.t * inline list (* anchor, content *)
   | Details of inline list * block list (* summary, body *)
   | Center of block list
   | HRule
 
 (* Reference table for nameref resolution *)
-type reference = { ref_title : string; ref_url : string }
+type reference = { ref_title : Text.t; ref_url : Text.t }
 
-module RefTable = Map.Make (String)
+module RefTable = Text.Map
 
 type ref_table = reference RefTable.t
 
 (* Article metadata extracted during elaboration *)
 type article = {
-  art_slug : string;
+  art_slug : Text.t;
   art_title : inline list;
   art_subtitle : inline list;
   art_featured : bool;
   art_created_at : Date.t;
   art_modified_at : Date.t;
   art_word_count : int;
-  art_keywords : string list;
+  art_keywords : Text.t list;
   art_body : block list;
-  art_url : string;
-  art_reddit : string option;
-  art_hn : string option;
-  art_lobsters : string option;
+  art_url : Text.t;
+  art_reddit : Text.t option;
+  art_hn : Text.t option;
+  art_lobsters : Text.t option;
 }

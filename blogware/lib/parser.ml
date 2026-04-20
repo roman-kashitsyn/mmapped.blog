@@ -175,7 +175,24 @@ let char (c : char) : char t =
         lazy (Printf.sprintf "expected %C, got %C" c st.src.[st.ofs]),
         false )
 
-let expect_char (c : char) : unit t = char c *> return ()
+let expect_char (c : char) : unit t =
+ fun st ->
+  if st.ofs >= String.length st.src then
+    PFail
+      (st.pos, lazy (Printf.sprintf "expected %C, got end of input" c), false)
+  else if st.src.[st.ofs] = c then
+    POk ((), { st with ofs = st.ofs + 1; pos = Pos.advance st.pos c }, true)
+  else
+    PFail
+      ( st.pos,
+        lazy (Printf.sprintf "expected %C, got %C" c st.src.[st.ofs]),
+        false )
+
+let skip_char (c : char) : unit t =
+ fun st ->
+  if st.ofs < String.length st.src && st.src.[st.ofs] = c then
+    POk ((), { st with ofs = st.ofs + 1; pos = Pos.advance st.pos c }, true)
+  else POk ((), st, false)
 
 let one_of (chars : string) : char t =
   satisfy (fun c -> String.contains chars c)
@@ -192,7 +209,7 @@ let starts_with (lit : string) : bool t =
 (* Match a literal multi-character string. Atomic: either fully consumes
    the prefix or fully rewinds (Parsec's [string] is partially consuming,
    but for the rest of the parser we want atomicity). *)
-let string (lit : string) : string t =
+let string (lit : string) : Text.t t =
  fun st ->
   let n = String.length lit in
   if st.ofs + n > String.length st.src then
@@ -200,40 +217,53 @@ let string (lit : string) : string t =
   else if Strings.has_prefix_at st.src st.ofs lit then begin
     let stop = st.ofs + n in
     let pos = Pos.advance_by st.pos n in
-    POk (lit, { st with ofs = stop; pos }, n > 0)
+    POk (Text.of_substr st.src st.ofs n, { st with ofs = stop; pos }, n > 0)
   end
   else PFail (st.pos, lazy (Printf.sprintf "expected %S" lit), false)
 
-let expect_string (s : string) : unit t = string s *> return ()
+let expect_string (lit : string) : unit t =
+  let n = String.length lit in
+  fun st ->
+    if st.ofs + n > String.length st.src then
+      PFail (st.pos, lazy (Printf.sprintf "expected %S" lit), false)
+    else if Strings.has_prefix_at st.src st.ofs lit then begin
+      let stop = st.ofs + n in
+      let pos = Pos.advance_by st.pos n in
+      POk ((), { st with ofs = stop; pos }, n > 0)
+    end
+    else PFail (st.pos, lazy (Printf.sprintf "expected %S" lit), false)
 
-let take_while (f : char -> bool) : string t =
+let take_while (f : char -> bool) : Text.t t =
  fun st ->
   let len = String.length st.src in
   let i = ref st.ofs in
   while !i < len && f st.src.[!i] do
     incr i
   done;
+  let n = !i - st.ofs in
   let pos = advance_range st.src st.ofs !i st.pos in
-  POk
-    ( String.sub st.src st.ofs (!i - st.ofs),
-      { st with ofs = !i; pos },
-      !i > st.ofs )
+  POk (Text.of_substr st.src st.ofs n, { st with ofs = !i; pos }, n > 0)
 
-let take_while1 (f : char -> bool) : string t =
+let take_while1 (f : char -> bool) : Text.t t =
  fun st ->
   match take_while f st with
-  | POk ("", _, _) -> PFail (st.pos, lazy "expected matching character", false)
-  | POk (s, st', _) -> POk (s, st', true)
+  | POk (t, _, _) when Text.is_empty t ->
+      PFail (st.pos, lazy "expected matching character", false)
+  | POk (t, st', _) -> POk (t, st', true)
   | PFail _ as e -> e
 
 let skip_while (f : char -> bool) : unit t =
  fun st ->
-  match take_while f st with
-  | POk (_, st', consumed) -> POk ((), st', consumed)
-  | PFail _ as e -> e
+  let len = String.length st.src in
+  let i = ref st.ofs in
+  while !i < len && f (String.unsafe_get st.src !i) do
+    incr i
+  done;
+  let pos = advance_range st.src st.ofs !i st.pos in
+  POk ((), { st with ofs = !i; pos }, !i > st.ofs)
 
 let scan (s0 : 's) ~(step : 's -> char -> 's option) ~(accept : 's -> bool) :
-    string t =
+    Text.t t =
  fun st ->
   let src = st.src in
   let len = String.length src in
@@ -249,7 +279,7 @@ let scan (s0 : 's) ~(step : 's -> char -> 's option) ~(accept : 's -> bool) :
   let s1, ofs', pos' = loop s0 start st.pos in
   if accept s1 then
     POk
-      ( String.sub src start (ofs' - start),
+      ( Text.of_substr src start (ofs' - start),
         { st with ofs = ofs'; pos = pos' },
         ofs' > st.ofs )
   else PFail (st.pos, lazy "expected matching character", false)
@@ -297,7 +327,7 @@ let option_maybe (p : 'a t) : 'a option t =
 
 (* Greedy character-mode "manyTill any-char (string terminator)". Used for
    verbatim and comment scanning. The terminator is consumed too. *)
-let many_till_chars (terminator : string) : string t =
+let many_till_chars (terminator : string) : Text.t t =
  fun st0 ->
   let n = String.length terminator in
   let len = String.length st0.src in
@@ -313,7 +343,7 @@ let many_till_chars (terminator : string) : string t =
       let after_term = end_ofs + n in
       let pos = advance_range st0.src st0.ofs after_term st0.pos in
       POk
-        ( String.sub st0.src st0.ofs (end_ofs - st0.ofs),
+        ( Text.of_substr st0.src st0.ofs (end_ofs - st0.ofs),
           { st0 with ofs = after_term; pos },
           true )
 

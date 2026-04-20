@@ -15,7 +15,7 @@ let parse input : (node list, Error.parse_error) result =
 let rec strip_node (n : node) : node =
   let zero = Parser.Pos.make 0 in
   match n with
-  | NText (_, s) -> NText (zero, s)
+  | NText (_, s) -> NText (zero, Text.of_string (Text.to_string s))
   | NCmd (_, name, opts, args) ->
       NCmd (zero, name, opts, List.map strip_arg args)
   | NEnv (_, _, name, opts, body) ->
@@ -28,12 +28,15 @@ let rec strip_node (n : node) : node =
 
 and strip_arg = function
   | Arg_nodes (_, ns) -> Arg_nodes (Parser.Pos.make 0, List.map strip_node ns)
-  | Arg_symbol (_, s) -> Arg_symbol (Parser.Pos.make 0, s)
+  | Arg_symbol (_, s) ->
+      Arg_symbol (Parser.Pos.make 0, Text.of_string (Text.to_string s))
   | Arg_number (_, n) -> Arg_number (Parser.Pos.make 0, n)
-  | Arg_url (_, s) -> Arg_url (Parser.Pos.make 0, s)
+  | Arg_url (_, s) ->
+      Arg_url (Parser.Pos.make 0, Text.of_string (Text.to_string s))
   | Arg_align (_, sp) -> Arg_align (Parser.Pos.make 0, sp)
 
 let zero = Parser.Pos.make 0
+let s = Text.of_string
 
 let parse_expect name input expected : Test_framework.t =
   test name (fun () ->
@@ -83,7 +86,7 @@ let tests : Test_framework.t list =
           in
           let accept = function `digits -> true | `start | `minus -> false in
           match scan_with (Parser.scan `start ~step ~accept) "-123" with
-          | Ok s -> assert_equal_string "-123" s
+          | Ok s -> assert_equal_string "-123" (Text.to_string s)
           | Error e -> Fail ("scan error: " ^ e.pe_message));
       test "scan rejects non-accepting partial prefix" (fun () ->
           let step state c =
@@ -96,7 +99,7 @@ let tests : Test_framework.t list =
           let accept = function `digits -> true | `start | `minus -> false in
           match scan_with (Parser.scan `start ~step ~accept) "-" with
           | Error _ -> Pass
-          | Ok s -> Fail ("expected scan failure, got " ^ s));
+          | Ok s -> Fail ("expected scan failure, got " ^ Text.to_string s));
       test "table empty first cell keeps table-body position" (fun () ->
           let input = "\\begin{tabular}{c}\\\\\\end{tabular}" in
           match parse_ok input with
@@ -120,32 +123,31 @@ let tests : Test_framework.t list =
               assert_equal_int 21 cell_pos
           | Ok _ -> Fail "unexpected AST");
       parse_expect "empty input" "" [];
-      parse_expect "plain text" "hello" [ NText (zero, "hello") ];
-      parse_expect "bare command" "\\qed" [ NCmd (zero, "qed", [], []) ];
+      parse_expect "plain text" "hello" [ NText (zero, s "hello") ];
+      parse_expect "bare command" "\\qed" [ NCmd (zero, S_qed, [], []) ];
       parse_expect "command with symbol arg" "\\label{foo}"
-        [ NCmd (zero, "label", [], [ Arg_symbol (zero, "foo") ]) ];
-      parse_expect "escaped backslash" "\\\\" [ NText (zero, "\\") ];
-      parse_expect "escaped percent" "\\%" [ NText (zero, "%") ];
+        [ NCmd (zero, S_label, [], [ Arg_symbol (zero, s "foo") ]) ];
+      parse_expect "escaped backslash" "\\\\" [ NText (zero, s "\\") ];
+      parse_expect "escaped percent" "\\%" [ NText (zero, s "%") ];
       parse_expect "comment is skipped" "% a comment\nhello"
-        [ NText (zero, "hello") ];
+        [ NText (zero, s "hello") ];
       parse_expect "group with nested text" "{abc}"
-        [ NGroup (zero, [ NText (zero, "abc") ]) ];
+        [ NGroup (zero, [ NText (zero, s "abc") ]) ];
       parse_fails "unmatched end" "\\end{foo}";
       test "align* basic" (fun () ->
           let input = "\\begin{align*}\na &= b \\\\\nc &= d\n\\end{align*}" in
           match parse_ok input with
           | Error msg -> Fail ("parse error: " ^ msg)
           | Ok [ NMath (_, Math_display, [ Math_align (specs, rows) ]) ] -> (
+              let str_eq t expected = Text.to_string t = expected in
               match (specs, rows) with
               | ( [ Col_right; Col_left ],
                   [
-                    [
-                      [ Math_text "a" ]; [ Math_op ("=", false); Math_text "b" ];
-                    ];
-                    [
-                      [ Math_text "c" ]; [ Math_op ("=", false); Math_text "d" ];
-                    ];
-                  ] ) ->
+                    [ [ Math_text a ]; [ Math_op (eq1, false); Math_text b ] ];
+                    [ [ Math_text c ]; [ Math_op (eq2, false); Math_text d ] ];
+                  ] )
+                when str_eq a "a" && str_eq eq1 "=" && str_eq b "b"
+                     && str_eq c "c" && str_eq eq2 "=" && str_eq d "d" ->
                   Pass
               | _ -> Fail "unexpected align structure")
           | Ok _ -> Fail "unexpected AST");

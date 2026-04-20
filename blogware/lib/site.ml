@@ -73,8 +73,11 @@ let load_article (dir : string) (file : string) : (article, string) result =
           Error (Error.format_elab_error ~source_name:path content err)
       | Ok article ->
           Ok
-            { article with art_url = "/posts/" ^ take_base_name file ^ ".html" }
-      )
+            {
+              article with
+              art_url =
+                Text.of_string ("/posts/" ^ take_base_name file ^ ".html");
+            })
 
 (* Load and sort all *.tex files under {input}/posts, newest-first. *)
 let load_articles (input_dir : string) : (article list, string) result =
@@ -148,7 +151,7 @@ let render_one_post ~root_url ~all_articles ~prev_post ~next_post article =
   let similar =
     let rec index_of i = function
       | [] -> 0
-      | a :: _ when a.art_slug = article.art_slug -> i
+      | a :: _ when Text.equal a.art_slug article.art_slug -> i
       | _ :: rest -> index_of (i + 1) rest
     in
     Layout.find_similar_articles all_articles (index_of 0 all_articles)
@@ -204,7 +207,8 @@ let generated_output_paths (input_dir : string) : (string list, string) result =
                | Static_files -> []
                | TeX_articles ->
                    List.map
-                     (fun article -> strip_leading_slash article.art_url)
+                     (fun article ->
+                       strip_leading_slash (Text.to_string article.art_url))
                      articles
                | Index_page | Standalone_page | Post_list | Atom_xml_feed ->
                    [ strip_leading_slash le_path ])
@@ -256,7 +260,7 @@ let rendered_outputs (config : site_config) :
                         render_one_post ~root_url ~all_articles:articles
                           ~prev_post ~next_post article
                       in
-                      emit article.art_url page_html)
+                      emit (Text.to_string article.art_url) page_html)
                     arr;
                   Ok ()
               | Standalone_page -> (
