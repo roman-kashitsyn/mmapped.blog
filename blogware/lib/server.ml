@@ -91,7 +91,7 @@ let find_article (articles : article list) (path : string) :
     (int * article) option =
   let rec go i = function
     | [] -> None
-    | a :: _ when a.art_url = path -> Some (i, a)
+    | a :: _ when Text.equal_string a.art_url path -> Some (i, a)
     | _ :: rest -> go (i + 1) rest
   in
   go 0 articles

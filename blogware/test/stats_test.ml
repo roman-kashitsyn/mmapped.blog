@@ -1,5 +1,9 @@
 open Blogware
 open Test_framework
+open Document
+
+let txt = Text.of_string
+let s x = Str (txt x)
 
 let tests : Test_framework.t list =
   group "stats"
@@ -10,39 +14,39 @@ let tests : Test_framework.t list =
                [
                  Para
                    [
-                     Str "Memory-mapped IO isn't slow.";
+                     s "Memory-mapped IO isn't slow.";
                      Numeric_space;
-                     Strong [ Str "It scales." ];
+                     Strong [ s "It scales." ];
                      Line_break;
-                     Link ("https://example.com", [ Str "Read more" ]);
+                     Link (txt "https://example.com", [ s "Read more" ]);
                    ];
                ]));
       test "word_count ignores code math and media" (fun () ->
           assert_equal_int 4
             (Stats.word_count
                [
-                 Para [ Str "Count this short paragraph." ];
-                 Code_block ([], [ Str "let x = 1" ]);
-                 Verbatim_block ([], "printfn \"hello\"");
+                 Para [ s "Count this short paragraph." ];
+                 Code_block ([], [ s "let x = 1" ]);
+                 Verbatim_block ([], Text.of_string "printfn \"hello\"");
                  Para [ Math (Math_inline, []) ];
-                 Image ([], "/images/example.svg");
+                 Image ([], txt "/images/example.svg");
                ]));
       test "word_count carries state across inline boundaries" (fun () ->
           assert_equal_int 1
-            (Stats.word_count [ Para [ Small_caps [ Str "llm" ]; Str "s" ] ]));
+            (Stats.word_count [ Para [ Small_caps [ s "llm" ]; s "s" ] ]));
       test "word_count treats inline separators as boundaries" (fun () ->
           assert_equal_int 4
             (Stats.word_count
                [
                  Para
                    [
-                     Str "one";
+                     s "one";
                      Numeric_space;
-                     Str "two";
+                     s "two";
                      Line_break;
-                     Str "three";
+                     s "three";
                      Math (Math_inline, []);
-                     Str "four";
+                     s "four";
                    ];
                ]));
       test "word_count includes headings notes tables and quotes" (fun () ->
@@ -50,10 +54,10 @@ let tests : Test_framework.t list =
             (Stats.word_count
                [
                  Section
-                   ( Some ("intro", [ Str "One heading" ]),
+                   ( Some (txt "intro", [ s "One heading" ]),
                      [
-                       Para [ Str "Two body words." ];
-                       Blockquote ([ Para [ Str "Three quoted words." ] ], []);
+                       Para [ s "Two body words." ];
+                       Blockquote ([ Para [ s "Three quoted words." ] ], []);
                        Table
                          {
                            table_spec = [ Col_left ];
@@ -68,7 +72,7 @@ let tests : Test_framework.t list =
                                        tc_colspan = 1;
                                        tc_align = Col_left;
                                        tc_content =
-                                         [ Str "Four header words here" ];
+                                         [ s "Four header words here" ];
                                      };
                                    ];
                                };
@@ -84,7 +88,8 @@ let tests : Test_framework.t list =
                                        tc_align = Col_left;
                                        tc_content =
                                          [
-                                           Margin_note ("n1", [ Str "Two note" ]);
+                                           Margin_note
+                                             (txt "n1", [ s "Two note" ]);
                                          ];
                                      };
                                    ];

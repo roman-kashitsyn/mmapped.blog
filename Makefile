@@ -60,6 +60,7 @@ help:
 	@echo "render       - render the website into the DEST directory"
 	@echo "test         - run the test suite"
 	@echo "test-verbose - run tests with verbose output"
+	@echo "utop         - launch utop with blogware libraries loaded"
 	@echo "format       - format all OCaml code"
 	@echo "bench-all    - benchmark all articles ($(BENCH_ITERATIONS) iterations each)"
 	@echo "snapshots    - update website rendering snapshots"
@@ -67,6 +68,7 @@ help:
 	@echo "distclean    - remove build artifacts and installed toolchains"
 	@echo "deps         - install the minimal build dependencies"
 	@echo "dev-deps     - install optional documentation tooling"
+	@echo "dir-locals   - generate .dir-locals.el for Emacs"
 
 $(OPAM_STATE_ROOT)/config: $(OPAM)
 	@echo "Initializing opam..."
@@ -85,7 +87,7 @@ $(OPAM_ROOT)/.deps: $(OPAMSWITCH)/_opam/.opam-switch/switch-config dune-project
 # Optional documentation tooling. Not required for CI or deployment.
 $(OPAM_ROOT)/.dev-deps: $(OPAM_ROOT)/.deps
 	@echo "Installing development dependencies..."
-	$(OPAM) install $(OPAM_COMMON_ARGS) merlin ocamlformat --yes
+	$(OPAM) install $(OPAM_COMMON_ARGS) merlin utop ocamlformat ocp-indent --yes
 	@touch $@
 
 .PHONY: serve
@@ -103,6 +105,10 @@ test: $(OPAM_ROOT)/.deps
 .PHONY: test-verbose
 test-verbose: $(OPAM_ROOT)/.deps
 	$(DUNE) exec ./blogware/test/test_main.exe -- -verbose
+
+.PHONY: utop
+utop: $(OPAM_ROOT)/.dev-deps
+	$(DUNE) utop $(BLOGWARE_DIR)/lib
 
 .PHONY: format
 format: $(OPAM_ROOT)/.dev-deps
@@ -125,6 +131,18 @@ deps: $(OPAM_ROOT)/.deps
 
 .PHONY: dev-deps
 dev-deps: $(OPAM_ROOT)/.dev-deps
+
+SWITCH_BIN := $(OPAM_SWITCH_ABS)/_opam/bin
+
+.PHONY: dir-locals
+dir-locals: $(OPAM_ROOT)/.dev-deps
+	@echo "Generating .dir-locals.el..."
+	@echo '((nil' > .dir-locals.el
+	@echo '  (opam-switch . "$(SWITCH_BIN)")' >> .dir-locals.el
+	@echo '  (dune-command . "$(SWITCH_BIN)/dune")' >> .dir-locals.el
+	@echo '  (ocamlformat-command . "$(SWITCH_BIN)/ocamlformat")' >> .dir-locals.el
+	@echo '  (ocp-indent-path . "$(SWITCH_BIN)/ocp-indent")' >> .dir-locals.el
+	@echo '  (utop-command . "$(abspath $(OPAM)) exec $(OPAM_COMMON_ARGS) -- dune utop . -- -emacs")))' >> .dir-locals.el
 
 .PHONY: clean
 clean:

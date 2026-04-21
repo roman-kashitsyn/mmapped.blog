@@ -23,33 +23,24 @@ let render (x : t) : string =
 let decl : t =
  fun buf -> Buffer.add_string buf "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 
-let escape_xml s =
-  let needs_escape =
-    let r = ref false in
-    String.iter
-      (fun c ->
-        if c = '<' || c = '>' || c = '&' || c = '"' || c = '\'' then r := true)
-      s;
-    !r
-  in
-  if not needs_escape then s
-  else begin
-    let b = Buffer.create (String.length s + 8) in
-    String.iter
+let is_special = function '<' | '>' | '&' | '"' | '\'' -> true | _ -> false
+
+let escape_xml (s : Text.t) (buf : Buffer.t) =
+  if not (Text.exists is_special s) then Text.output_to_buffer buf s
+  else
+    Text.iter
       (fun c ->
         match c with
-        | '<' -> Buffer.add_string b "&lt;"
-        | '>' -> Buffer.add_string b "&gt;"
-        | '&' -> Buffer.add_string b "&amp;"
-        | '"' -> Buffer.add_string b "&quot;"
-        | '\'' -> Buffer.add_string b "&apos;"
-        | c -> Buffer.add_char b c)
-      s;
-    Buffer.contents b
-  end
+        | '<' -> Buffer.add_string buf "&lt;"
+        | '>' -> Buffer.add_string buf "&gt;"
+        | '&' -> Buffer.add_string buf "&amp;"
+        | '"' -> Buffer.add_string buf "&quot;"
+        | '\'' -> Buffer.add_string buf "&apos;"
+        | c -> Buffer.add_char buf c)
+      s
 
-let text (s : string) : t = fun buf -> Buffer.add_string buf (escape_xml s)
-let raw (s : string) : t = fun buf -> Buffer.add_string buf s
+let text (s : Text.t) : t = fun buf -> escape_xml s buf
+let raw (s : Text.t) : t = fun buf -> Text.output_to_buffer buf s
 
 let tag (name : string) (content : t) : t =
  fun buf ->
@@ -61,12 +52,12 @@ let tag (name : string) (content : t) : t =
   Buffer.add_string buf name;
   Buffer.add_string buf ">\n"
 
-let tag_attr (name : string) (attrs : string) (content : t) : t =
+let tag_attr (name : string) (attrs : Text.t) (content : t) : t =
  fun buf ->
   Buffer.add_char buf '<';
   Buffer.add_string buf name;
   Buffer.add_char buf ' ';
-  Buffer.add_string buf attrs;
+  Text.output_to_buffer buf attrs;
   Buffer.add_char buf '>';
   content buf;
   Buffer.add_string buf "</";

@@ -22,19 +22,36 @@ let ( let* ) (r : 'a result_) (f : 'a -> 'b result_) : 'b result_ =
 
 let return x = Ok x
 
+let map_m (f : 'a -> 'b result_) (xs : 'a list) : 'b list result_ =
+  let rec go acc = function
+    | [] -> Ok (List.rev acc)
+    | x :: xs ->
+        let* y = f x in
+        go (y :: acc) xs
+  in
+  go [] xs
+
+(* Text shortcuts *)
+
+let text = Text.of_string
+let ( ^^ ) = Text.append
+
+let concat_text_map (f : 'a -> Text.t) (xs : 'a list) : Text.t =
+  let rec go acc = function
+    | [] -> Text.concat Text.empty (List.rev acc)
+    | x :: xs -> go (f x :: acc) xs
+  in
+  go [] xs
+
 (* --- Typography --- *)
 
-(* Apply TeX-style typographic replacements for characters that slip past
-   the parser-level quotation handler (unbalanced `` or ''). Balanced
-   ``...'' regions are already structured as [NQuotation] → [Quotation]
-   nodes before reaching this pass and never appear in a [Str]. *)
 let typographic_replacements : (string * string) list =
   [
     ("---", "\xE2\x80\x94" (* em dash — *));
     ("--", "\xE2\x80\x93" (* en dash – *));
-    ("``", "\xE2\x80\x9C" (* left double quote “ *));
-    ("''", "\xE2\x80\x9D" (* right double quote ” *));
-    ("'", "\xE2\x80\x99" (* right single quote ’ *));
+    ("``", "\xE2\x80\x9C" (* left double quote *));
+    ("''", "\xE2\x80\x9D" (* right double quote *));
+    ("'", "\xE2\x80\x99" (* right single quote *));
   ]
 
 let is_typography_special c =
@@ -43,8 +60,6 @@ let is_typography_special c =
 let is_whitespace c =
   match c with ' ' | '\x0C' | '\t' | '\n' | '\r' -> true | _ -> false
 
-(* Try each replacement at the start of [s]; return (replacement, rest_len)
-   on first match, or None. *)
 let try_replacement_at s i =
   let rec go = function
     | [] -> None
@@ -54,20 +69,22 @@ let try_replacement_at s i =
   in
   go typographic_replacements
 
-let apply_typography (input : string) : string =
-  if not (Strings.any input is_typography_special) then input
+let apply_typography (input : Text.t) : Text.t =
+  if not (Text.exists is_typography_special input) then input
   else begin
-    let b = Buffer.create (String.length input) in
-    let len = String.length input in
+    (* Using raw strings here is significantly faster than juggling Text.t. *)
+    let input, pos, len = Text.to_substr input in
+    let b = Buffer.create (len + 20) in
     let i = ref 0 in
     while !i < len do
-      let c = input.[!i] in
+      let idx = !i + pos in
+      let c = input.[idx] in
       if not (is_typography_special c) then begin
         Buffer.add_char b c;
         incr i
       end
       else
-        begin match try_replacement_at input !i with
+        begin match try_replacement_at input idx with
         | Some (rep, used) ->
             Buffer.add_string b rep;
             i := !i + used
@@ -76,36 +93,36 @@ let apply_typography (input : string) : string =
             incr i
         end
     done;
-    Buffer.contents b
+    text (Buffer.contents b)
   end
 
 (* --- Dingbats --- *)
 
-let dingbat_char = function
-  | "heavy-ballot-x" -> "\xE2\x9C\x97" (* ✗ *)
-  | "heavy-check" -> "\xE2\x9C\x94" (* ✔ *)
-  | "lower-right-pencil" -> "\xE2\x9C\x8E" (* ✎ *)
-  | name -> "[dingbat:" ^ name ^ "]"
+let dingbat_char name =
+  if Text.equal_string name "heavy-ballot-x" then text "\xE2\x9C\x97"
+  else if Text.equal_string name "heavy-check" then text "\xE2\x9C\x94"
+  else if Text.equal_string name "lower-right-pencil" then text "\xE2\x9C\x8E"
+  else text "[dingbat:" ^^ name ^^ text "]"
 
 (* --- Metadata extraction --- *)
 
 type meta = {
-  m_title : string;
-  m_subtitle : string;
+  m_title : Text.t;
+  m_subtitle : Text.t;
   m_featured : bool;
   m_created_at : Date.t;
   m_modified_at : Date.t;
-  m_keywords : string list;
-  m_reddit : string option;
-  m_hn : string option;
-  m_lobsters : string option;
+  m_keywords : Text.t list;
+  m_reddit : Text.t option;
+  m_hn : Text.t option;
+  m_lobsters : Text.t option;
 }
 
 let default_meta : meta =
   let epoch = Date.make ~year:1970 ~month:1 ~day:1 in
   {
-    m_title = "";
-    m_subtitle = "";
+    m_title = Text.empty;
+    m_subtitle = Text.empty;
     m_featured = false;
     m_created_at = epoch;
     m_modified_at = epoch;
@@ -115,50 +132,51 @@ let default_meta : meta =
     m_lobsters = None;
   }
 
-(* Parse a "YYYY-MM-DD" date; tie source position into the error. *)
 let parse_day pos t : Date.t result_ =
-  match Date.of_string t with
+  let s = Text.to_string t in
+  match Date.of_string s with
   | Some d -> Ok d
-  | None -> elab_error pos ("invalid date: " ^ t ^ " (expected YYYY-MM-DD)")
+  | None -> elab_error pos ("invalid date: " ^ s ^ " (expected YYYY-MM-DD)")
 
 (* Flatten text-like nodes back to a string for simple arg contexts. *)
-let rec node_text_of_nodes ns = String.concat "" (List.map node_text ns)
+let rec node_text_of_nodes ns = concat_text_map node_text ns
 
 and node_text = function
   | NText (_, t) -> t
-  | NCmd (_, name, _, args) ->
-      "\\" ^ name
-      ^ String.concat ""
-          (List.map
-             (function
-               | Arg_nodes (_, ns) -> "{" ^ node_text_of_nodes ns ^ "}"
-               | _ -> "")
-             args)
-  | _ -> ""
+  | NCmd (_, sym, _, args) ->
+      let rec go acc = function
+        | [] -> Text.concat Text.empty (List.rev acc)
+        | Arg_nodes (_, ns) :: rest ->
+            go (text "}" :: node_text_of_nodes ns :: text "{" :: acc) rest
+        | _ :: rest -> go acc rest
+      in
+      go [ text ("\\" ^ sym_to_string sym) ] args
+  | _ -> Text.empty
 
 (* Fold over top-level nodes collecting metadata. *)
 let extract_metadata (nodes : node list) : meta result_ =
   let rec go m = function
     | [] -> Ok m
-    | NCmd (_, "title", _, Arg_nodes (_, ns) :: _) :: rest ->
-        go { m with m_title = node_text_of_nodes ns } rest
-    | NCmd (_, "subtitle", _, Arg_nodes (_, ns) :: _) :: rest ->
-        go { m with m_subtitle = node_text_of_nodes ns } rest
-    | NCmd (_, "featured", _, _) :: rest -> go { m with m_featured = true } rest
-    | NCmd (_, "date", _, Arg_symbol (pos, d) :: _) :: rest ->
-        let* day = parse_day pos d in
-        go { m with m_created_at = day; m_modified_at = day } rest
-    | NCmd (_, "modified", _, Arg_symbol (pos, d) :: _) :: rest ->
-        let* day = parse_day pos d in
-        go { m with m_modified_at = day } rest
-    | NCmd (_, "keyword", _, Arg_symbol (_, k) :: _) :: rest ->
-        go { m with m_keywords = k :: m.m_keywords } rest
-    | NCmd (_, "reddit", _, Arg_url (_, u) :: _) :: rest ->
-        go { m with m_reddit = Some u } rest
-    | NCmd (_, "hackernews", _, Arg_url (_, u) :: _) :: rest ->
-        go { m with m_hn = Some u } rest
-    | NCmd (_, "lobsters", _, Arg_url (_, u) :: _) :: rest ->
-        go { m with m_lobsters = Some u } rest
+    | NCmd (_, sym, _, args) :: rest -> (
+        match (sym, args) with
+        | S_title, Arg_nodes (_, ns) :: _ ->
+            go { m with m_title = node_text_of_nodes ns } rest
+        | S_subtitle, Arg_nodes (_, ns) :: _ ->
+            go { m with m_subtitle = node_text_of_nodes ns } rest
+        | S_featured, _ -> go { m with m_featured = true } rest
+        | S_date, Arg_symbol (pos, d) :: _ ->
+            let* day = parse_day pos d in
+            go { m with m_created_at = day; m_modified_at = day } rest
+        | S_modified, Arg_symbol (pos, d) :: _ ->
+            let* day = parse_day pos d in
+            go { m with m_modified_at = day } rest
+        | S_keyword, Arg_symbol (_, k) :: _ ->
+            go { m with m_keywords = k :: m.m_keywords } rest
+        | S_reddit, Arg_url (_, u) :: _ -> go { m with m_reddit = Some u } rest
+        | S_hackernews, Arg_url (_, u) :: _ -> go { m with m_hn = Some u } rest
+        | S_lobsters, Arg_url (_, u) :: _ ->
+            go { m with m_lobsters = Some u } rest
+        | _ -> go m rest)
     | _ :: rest -> go m rest
   in
   go default_meta nodes
@@ -166,19 +184,16 @@ let extract_metadata (nodes : node list) : meta result_ =
 (* Find the body of \begin{document} ... \end{document}. *)
 let rec find_doc_body = function
   | [] -> []
-  | NEnv (_, _, "document", _, body) :: _ -> body
+  | NEnv (_, _, S_document, _, body) :: _ -> body
   | _ :: rest -> find_doc_body rest
 
-(* --- Block building ---
-   A [flat_block] captures either a real block or a section/subsection
-   marker. [wrap_sections] groups these into nested Section/Subsection
-   blocks. *)
+(* --- Block building --- *)
 
 type flat_block =
   | FB of block
-  | SectionMark of string * inline list
+  | SectionMark of Text.t * inline list
   | AnonSectionMark
-  | SubsectionMark of Parser.Pos.t * string * inline list
+  | SubsectionMark of Parser.Pos.t * Text.t * inline list
 
 type node_class =
   | CBlock of block
@@ -186,61 +201,48 @@ type node_class =
   | CInline of inline
   | CSkip
 
-(* Flatten inlines back to plain text (used for groups that appear in a
-   text context, e.g. inside \title{...\b{X}...}). *)
-let render_inlines_to_text (ils : inline list) : string =
-  let buf = Buffer.create 64 in
-  let rec add_inlines = function
-    | [] -> ()
-    | il :: rest ->
-        add_inline il;
-        add_inlines rest
-  and add_inline = function
-    | Str t -> Buffer.add_string buf t
-    | Strong ils
-    | Emph ils
-    | Underline ils
-    | Small_caps ils
-    | Strikethrough ils
-    | Kbd ils
-    | Sub ils
-    | Sup ils
-    | Quotation ils
-    | Fun ils
-    | Math_span ils
-    | Normal ils
-    | Code (_, ils)
-    | Link (_, ils)
-    | Margin_note (_, ils)
-    | Side_note (_, ils) ->
-        add_inlines ils
-    | Math _ | Anchor _ | Horizontal_rule | Circled_ref _ | Line_break
-    | Numeric_space | Nameref _ | Image_inline _ ->
-        ()
-  in
-  add_inlines ils;
-  Buffer.contents buf
+let rec inline_to_text = function
+  | Str t -> t
+  | Strong ils
+  | Emph ils
+  | Underline ils
+  | Small_caps ils
+  | Strikethrough ils
+  | Kbd ils
+  | Sub ils
+  | Sup ils
+  | Quotation ils
+  | Fun ils
+  | Math_span ils
+  | Normal ils
+  | Code (_, ils)
+  | Link (_, ils)
+  | Margin_note (_, ils)
+  | Side_note (_, ils) ->
+      inlines_to_text ils
+  | Math _ | Anchor _ | Horizontal_rule | Circled_ref _ | Line_break
+  | Numeric_space | Nameref _ | Image_inline _ ->
+      Text.empty
 
-(* Paragraph splitting. Text containing "\n\n" is split into separate Para
-   blocks. LineBreak and empty-string Str are trimmed at boundaries. *)
+and inlines_to_text (ils : inline list) : Text.t =
+  concat_text_map inline_to_text ils
 
-let is_paragraph_break = function
-  | Str t -> Strings.is_infix_of "\n\n" t
-  | _ -> false
-
-let expand_breaks_il (il : inline) : inline list =
-  match il with
-  | Str t ->
-      let rec go = function
-        | [] -> []
-        | [ x ] -> [ Str x ]
-        | x :: rest -> Str x :: Str "\n\n" :: go rest
-      in
-      go (Strings.split_on t "\n\n")
-  | il -> [ il ]
+let text_has_double_newline (t : Text.t) : bool =
+  let s, pos, len = Text.to_substr t in
+  if len < 2 then false
+  else
+    let i = ref pos in
+    let stop = pos + len - 1 in
+    let found = ref false in
+    while (not !found) && !i < stop do
+      if String.unsafe_get s !i = '\n' && String.unsafe_get s (!i + 1) = '\n'
+      then found := true
+      else incr i
+    done;
+    !found
 
 let trim_inlines (ils : inline list) : inline list =
-  let is_ws = function Str t -> Strings.all t is_whitespace | _ -> false in
+  let is_ws = function Str t -> Text.for_all is_whitespace t | _ -> false in
   let rec drop_left = function
     | [] -> []
     | x :: xs when is_ws x -> drop_left xs
@@ -249,61 +251,50 @@ let trim_inlines (ils : inline list) : inline list =
   let drop_right xs = List.rev (drop_left (List.rev xs)) in
   drop_right (drop_left ils)
 
-let split_on_pred (p : 'a -> bool) (xs : 'a list) : 'a list list =
-  let groups = ref [] in
-  let cur = ref [] in
-  List.iter
-    (fun x ->
-      if p x then begin
-        groups := List.rev !cur :: !groups;
-        cur := []
-      end
-      else cur := x :: !cur)
-    xs;
-  groups := List.rev !cur :: !groups;
-  List.rev !groups
-
-(* Side-content inlines (marginnotes, sidenotes, anchors) are rendered
-   inline by Go without paragraph wrapping. When a "paragraph" consists
-   entirely of such inlines, emit [Plain] to avoid a spurious <p>. *)
 let is_side_content = function
   | Margin_note _ | Side_note _ | Anchor _ -> true
   | _ -> false
 
+let paragraph_block trimmed =
+  if List.for_all is_side_content trimmed then Plain trimmed else Para trimmed
+
+let flush_paragraph_rev inlines_rev blocks_rev =
+  match trim_inlines (List.rev inlines_rev) with
+  | [] -> blocks_rev
+  | trimmed -> paragraph_block trimmed :: blocks_rev
+
+let add_text_to_paragraphs t inlines_rev blocks_rev =
+  if not (text_has_double_newline t) then (Str t :: inlines_rev, blocks_rev)
+  else
+    let s, pos, len = Text.to_substr t in
+    let stop = pos + len in
+    let rec loop start i inlines_rev blocks_rev =
+      if i + 1 >= stop then
+        (Str (Text.of_substr s start (stop - start)) :: inlines_rev, blocks_rev)
+      else if String.unsafe_get s i = '\n' && String.unsafe_get s (i + 1) = '\n'
+      then
+        let inlines_rev =
+          Str (Text.of_substr s start (i - start)) :: inlines_rev
+        in
+        let blocks_rev = flush_paragraph_rev inlines_rev blocks_rev in
+        loop (i + 2) (i + 2) [] blocks_rev
+      else loop start (i + 1) inlines_rev blocks_rev
+    in
+    loop pos pos inlines_rev blocks_rev
+
 let split_paragraphs (ils : inline list) : block list =
-  let expanded = List.concat_map expand_breaks_il ils in
-  let paras = split_on_pred is_paragraph_break expanded in
-  List.filter_map
-    (fun p ->
-      match trim_inlines p with
-      | [] -> None
-      | trimmed ->
-          if List.for_all is_side_content trimmed then Some (Plain trimmed)
-          else Some (Para trimmed))
-    paras
+  let rec go inlines_rev blocks_rev = function
+    | [] -> List.rev (flush_paragraph_rev inlines_rev blocks_rev)
+    | Str t :: rest ->
+        let inlines_rev, blocks_rev =
+          add_text_to_paragraphs t inlines_rev blocks_rev
+        in
+        go inlines_rev blocks_rev rest
+    | il :: rest -> go (il :: inlines_rev) blocks_rev rest
+  in
+  go [] [] ils
 
-(* --- Classification ---
-   classify_node is the big dispatch that decides, for a single parser
-   node, whether it becomes a block, an inline, a section marker, or
-   nothing. *)
-
-let replacement_cmd_set =
-  SMap.fold (fun k _ acc -> SSet.add k acc) replacements SSet.empty
-
-let metadata_cmd_set =
-  sset_of_list
-    [
-      "documentclass";
-      "title";
-      "subtitle";
-      "featured";
-      "date";
-      "modified";
-      "keyword";
-      "reddit";
-      "hackernews";
-      "lobsters";
-    ]
+(* --- Classification --- *)
 
 let rec classify_node (n : node) : node_class result_ =
   match n with
@@ -312,142 +303,142 @@ let rec classify_node (n : node) : node_class result_ =
       let* ils = elaborate_inlines ns in
       match ils with
       | [ il ] -> Ok (CInline il)
-      | _ -> Ok (CInline (Str (render_inlines_to_text ils))))
+      | _ -> Ok (CInline (Str (inlines_to_text ils))))
   | NQuotation (_, ns) ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Quotation ils))
   | NMath (_, disp, mnodes) -> Ok (CInline (Math (disp, mnodes)))
-  | NCmd (_, "section", _, Arg_symbol (_, anchor) :: Arg_nodes (_, title) :: _)
-    ->
+  | NCmd (pos, sym, opts, args) -> classify_cmd pos sym opts args
+  | NEnv (pos, _, sym, opts, body) -> classify_env pos sym opts body
+  | NTable (_, _, _sym, opts, spec, rows) ->
+      let name = sym_to_string _sym in
+      let* td = elaborate_table name opts spec rows in
+      Ok (CBlock (Table td))
+
+and classify_cmd pos sym opts args =
+  match (sym, args) with
+  | S_section, Arg_symbol (_, anchor) :: Arg_nodes (_, title) :: _ ->
       let* ils = elaborate_inlines title in
       Ok (CSection (SectionMark (anchor, ils)))
-  | NCmd (_, "section*", _, _) -> Ok (CSection AnonSectionMark)
-  | NCmd
-      (pos, "subsection", _, Arg_symbol (_, anchor) :: Arg_nodes (_, title) :: _)
-    ->
+  | S_section_star, _ -> Ok (CSection AnonSectionMark)
+  | S_subsection, Arg_symbol (_, anchor) :: Arg_nodes (_, title) :: _ ->
       let* ils = elaborate_inlines title in
       Ok (CSection (SubsectionMark (pos, anchor, ils)))
-  | NCmd (_, "b", _, Arg_nodes (_, ns) :: _) ->
+  | S_b, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Strong ils))
-  | NCmd (_, "emph", _, Arg_nodes (_, ns) :: _) ->
+  | S_emph, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Emph ils))
-  | NCmd (_, "u", _, Arg_nodes (_, ns) :: _) ->
+  | S_u, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Underline ils))
-  | NCmd (_, "textsc", _, Arg_nodes (_, ns) :: _) ->
+  | S_textsc, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Small_caps ils))
-  | NCmd (_, "strikethrough", _, Arg_nodes (_, ns) :: _) ->
+  | S_strikethrough, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Strikethrough ils))
-  | NCmd (_, "code", opts, Arg_nodes (_, ns) :: _) ->
+  | S_code, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_code_inlines ns in
       Ok (CInline (Code (opts, ils)))
-  | NCmd (_, "kbd", _, Arg_nodes (_, ns) :: _) ->
+  | S_kbd, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Kbd ils))
-  | NCmd (_, "sub", _, Arg_nodes (_, ns) :: _) ->
+  | S_sub, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Sub ils))
-  | NCmd (_, "sup", _, Arg_nodes (_, ns) :: _) ->
+  | S_sup, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Sup ils))
-  | NCmd (_, "fun", _, Arg_nodes (_, ns) :: _) ->
+  | S_fun, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Fun ils))
-  | NCmd (_, "math", _, Arg_nodes (_, ns) :: _) ->
+  | S_math, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Math_span ils))
-  | NCmd (_, "normal", _, Arg_nodes (_, ns) :: _) ->
+  | S_normal, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Normal ils))
-  | NCmd (_, "center", _, Arg_nodes (_, ns) :: _) ->
+  | S_center, Arg_nodes (_, ns) :: _ ->
       let* blocks = build_blocks ns in
       Ok (CBlock (Center blocks))
-  | NCmd (_, "href", _, Arg_url (_, url) :: Arg_nodes (_, ns) :: _) ->
+  | S_href, Arg_url (_, url) :: Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Link (url, ils)))
-  | NCmd (_, "nameref", _, Arg_symbol (_, r) :: _) -> Ok (CInline (Nameref r))
-  | NCmd (_, "label", _, Arg_symbol (_, anchor) :: _) ->
-      Ok (CInline (Anchor anchor))
-  | NCmd (_, "newline", _, _) -> Ok (CInline Line_break)
-  | NCmd (_, "numspace", _, _) -> Ok (CInline Numeric_space)
-  | NCmd (_, "hrule", _, _) -> Ok (CBlock HRule)
-  | NCmd (_, "qed", _, _) -> Ok (CInline (Str "\xE2\x88\x8E"))
-  | NCmd (_, "marginnote", _, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _)
-    ->
+  | S_nameref, Arg_symbol (_, r) :: _ -> Ok (CInline (Nameref r))
+  | S_label, Arg_symbol (_, anchor) :: _ -> Ok (CInline (Anchor anchor))
+  | S_newline, _ -> Ok (CInline Line_break)
+  | S_numspace, _ -> Ok (CInline Numeric_space)
+  | S_hrule, _ -> Ok (CBlock HRule)
+  | S_qed, _ -> Ok (CInline (Str (text "\xE2\x88\x8E")))
+  | S_marginnote, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Margin_note (anchor, ils)))
-  | NCmd (_, "sidenote", _, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _) ->
+  | S_sidenote, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Side_note (anchor, ils)))
-  | NCmd (_, "advice", _, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _) ->
+  | S_advice, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CBlock (Advice (anchor, ils)))
-  | NCmd (_, "epigraph", _, Arg_nodes (_, body) :: Arg_nodes (_, attrib) :: _)
-    ->
+  | S_epigraph, Arg_nodes (_, body) :: Arg_nodes (_, attrib) :: _ ->
       let* b_blocks = build_blocks body in
       let* a_ils = elaborate_inlines attrib in
       Ok (CBlock (Epigraph (b_blocks, a_ils)))
-  | NCmd (_, "blockquote", _, Arg_nodes (_, body) :: Arg_nodes (_, attrib) :: _)
-    ->
+  | S_blockquote, Arg_nodes (_, body) :: Arg_nodes (_, attrib) :: _ ->
       let* b_blocks = build_blocks body in
       let* a_ils = elaborate_inlines attrib in
       Ok (CBlock (Blockquote (b_blocks, a_ils)))
-  | NCmd (_, "details", _, Arg_nodes (_, summary) :: Arg_nodes (_, body) :: _)
-    ->
+  | S_details, Arg_nodes (_, summary) :: Arg_nodes (_, body) :: _ ->
       let* s_ils = elaborate_inlines summary in
       let* body_blocks = build_blocks body in
       Ok (CBlock (Details (s_ils, body_blocks)))
-  | NCmd (_, "term", _, Arg_nodes (_, dt) :: Arg_nodes (_, dd) :: _) ->
+  | S_term, Arg_nodes (_, dt) :: Arg_nodes (_, dd) :: _ ->
       let* dt_ils = elaborate_inlines dt in
       let* dd_ils = elaborate_inlines dd in
       Ok (CBlock (Description_list [ (dt_ils, [ Plain dd_ils ]) ]))
-  | NCmd (_, "dingbat", _, Arg_symbol (_, name) :: _) ->
+  | S_dingbat, Arg_symbol (_, name) :: _ ->
       Ok (CInline (Str (dingbat_char name)))
-  | NCmd (_, "circled", _, Arg_number (_, n) :: _) ->
-      Ok (CInline (Circled_ref n))
-  | NCmd (_, "includegraphics", opts, Arg_nodes (_, ns) :: _) ->
+  | S_circled, Arg_number (_, n) :: _ -> Ok (CInline (Circled_ref n))
+  | S_includegraphics, Arg_nodes (_, ns) :: _ ->
       Ok (CBlock (Image (opts, node_text_of_nodes ns)))
-  | NCmd (pos, "item", _, _) -> elab_error pos "hanging item command"
-  | NCmd (_, name, _, _) when SSet.mem name replacement_cmd_set ->
-      let repl = SMap.find name replacements in
-      Ok (CInline (Str repl))
-  | NCmd (_, name, _, _) when SSet.mem name metadata_cmd_set -> Ok CSkip
-  | NEnv (_, _, "abstract", _, body) ->
+  | S_item, _ -> elab_error pos "hanging item command"
+  | _ -> (
+      match replacement_text sym with
+      | Some repl -> Ok (CInline (Str (text repl)))
+      | None ->
+          if is_metadata_cmd sym then Ok CSkip
+          else elab_error pos ("unknown command: \\" ^ sym_to_string sym))
+
+and classify_env pos sym opts body =
+  match sym with
+  | S_abstract ->
       let* bs = build_blocks body in
       Ok (CBlock (Abstract bs))
-  | NEnv (_, _, "enumerate", _, body) ->
+  | S_enumerate ->
       let* items = split_list_items body in
       Ok (CBlock (Ordered_list items))
-  | NEnv (_, _, "itemize", _, body) ->
+  | S_itemize ->
       let* items = split_list_items body in
       Ok (CBlock (Bullet_list (Arrows, items)))
-  | NEnv (_, _, "checklist", _, body) ->
+  | S_checklist ->
       let* items = split_list_items body in
       Ok (CBlock (Bullet_list (Checklist, items)))
-  | NEnv (_, _, "figure", opts, body) ->
+  | S_figure ->
       let* bs = build_blocks body in
       Ok (CBlock (Figure (opts, bs)))
-  | NEnv (_, _, "description", _, body) ->
+  | S_description ->
       let* items = split_description_items body in
       Ok (CBlock (Description_list items))
-  | NEnv (_, _, "verbatim", opts, body) ->
+  | S_verbatim ->
       let txt =
-        String.concat ""
-          (List.map (function NText (_, t) -> t | _ -> "") body)
+        concat_text_map (function NText (_, t) -> t | _ -> Text.empty) body
       in
       Ok (CBlock (Verbatim_block (opts, txt)))
-  | NEnv (_, _, "code", opts, body) ->
+  | S_code ->
       let* ils = elaborate_code_inlines body in
       Ok (CBlock (Code_block (opts, ils)))
-  | NTable (_, _, name, opts, spec, rows) ->
-      let* td = elaborate_table name opts spec rows in
-      Ok (CBlock (Table td))
-  | NCmd (pos, name, _, _) -> elab_error pos ("unknown command: \\" ^ name)
-  | NEnv (pos, _, name, _, _) -> elab_error pos ("unknown environment: " ^ name)
+  | _ -> elab_error pos ("unknown environment: " ^ sym_to_string sym)
 
 and elaborate_inlines (ns : node list) : inline list result_ =
   let rec go acc = function
@@ -462,9 +453,6 @@ and elaborate_inlines (ns : node list) : inline list result_ =
   in
   go [] ns
 
-(* Code env body: like [elaborate_inlines] but skips typography on text
-   nodes. Inner command arguments also skip typography (matching Go's
-   renderCodeText, which never applies typographic substitutions). *)
 and elaborate_code_inlines (ns : node list) : inline list result_ =
   let rec go acc = function
     | [] -> Ok (List.rev acc)
@@ -472,112 +460,113 @@ and elaborate_code_inlines (ns : node list) : inline list result_ =
     | NGroup (_, body) :: rest ->
         let* ils = elaborate_code_inlines body in
         let il =
-          match ils with [ il ] -> il | _ -> Str (render_inlines_to_text ils)
+          match ils with [ il ] -> il | _ -> Str (inlines_to_text ils)
         in
         go (il :: acc) rest
     | NMath (_, disp, mnodes) :: rest -> go (Math (disp, mnodes) :: acc) rest
     | NQuotation (_, body) :: rest ->
         let* ils = elaborate_code_inlines body in
         go (Quotation ils :: acc) rest
-    | NCmd (_, "b", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Strong ils :: acc) rest
-    | NCmd (_, "emph", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Emph ils :: acc) rest
-    | NCmd (_, "u", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Underline ils :: acc) rest
-    | NCmd (_, "textsc", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Small_caps ils :: acc) rest
-    | NCmd (_, "strikethrough", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Strikethrough ils :: acc) rest
-    | NCmd (_, "code", opts, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Code (opts, ils) :: acc) rest
-    | NCmd (_, "kbd", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Kbd ils :: acc) rest
-    | NCmd (_, "sub", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Sub ils :: acc) rest
-    | NCmd (_, "sup", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Sup ils :: acc) rest
-    | NCmd (_, "href", _, Arg_url (_, url) :: Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Link (url, ils) :: acc) rest
-    | NCmd (_, "fun", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Fun ils :: acc) rest
-    | NCmd (_, "math", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Math_span ils :: acc) rest
-    | NCmd (_, "normal", _, Arg_nodes (_, ns) :: _) :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Normal ils :: acc) rest
-    | NCmd (_, "label", _, Arg_symbol (_, anchor) :: _) :: rest ->
-        go (Anchor anchor :: acc) rest
-    | NCmd (_, "newline", _, _) :: rest -> go (Line_break :: acc) rest
-    | NCmd (_, "numspace", _, _) :: rest -> go (Numeric_space :: acc) rest
-    | NCmd (_, "qed", _, _) :: rest -> go (Str "\xE2\x88\x8E" :: acc) rest
-    | NCmd (_, "hrule", _, _) :: rest -> go (Horizontal_rule :: acc) rest
-    | NCmd (_, "marginnote", _, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _)
-      :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Margin_note (anchor, ils) :: acc) rest
-    | NCmd (_, "sidenote", _, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _)
-      :: rest ->
-        let* ils = elaborate_code_inlines ns in
-        go (Side_note (anchor, ils) :: acc) rest
-    | NCmd (_, "dingbat", _, Arg_symbol (_, name) :: _) :: rest ->
-        go (Str (dingbat_char name) :: acc) rest
-    | NCmd (_, "circled", _, Arg_number (_, n) :: _) :: rest ->
-        go (Circled_ref n :: acc) rest
-    | NCmd (_, "nameref", _, Arg_symbol (_, r) :: _) :: rest ->
-        go (Nameref r :: acc) rest
-    | NCmd (_, "includegraphics", opts, Arg_nodes (_, ns) :: _) :: rest ->
-        go (Image_inline (opts, node_text_of_nodes ns) :: acc) rest
-    | NCmd (_, name, _, _) :: rest when SSet.mem name replacement_cmd_set ->
-        go (Str (SMap.find name replacements) :: acc) rest
+    | NCmd (_, sym, opts, args) :: rest -> (
+        match (sym, args) with
+        | S_b, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Strong ils :: acc) rest
+        | S_emph, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Emph ils :: acc) rest
+        | S_u, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Underline ils :: acc) rest
+        | S_textsc, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Small_caps ils :: acc) rest
+        | S_strikethrough, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Strikethrough ils :: acc) rest
+        | S_code, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Code (opts, ils) :: acc) rest
+        | S_kbd, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Kbd ils :: acc) rest
+        | S_sub, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Sub ils :: acc) rest
+        | S_sup, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Sup ils :: acc) rest
+        | S_href, Arg_url (_, url) :: Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Link (url, ils) :: acc) rest
+        | S_fun, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Fun ils :: acc) rest
+        | S_math, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Math_span ils :: acc) rest
+        | S_normal, Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Normal ils :: acc) rest
+        | S_label, Arg_symbol (_, anchor) :: _ -> go (Anchor anchor :: acc) rest
+        | S_newline, _ -> go (Line_break :: acc) rest
+        | S_numspace, _ -> go (Numeric_space :: acc) rest
+        | S_qed, _ -> go (Str (text "\xE2\x88\x8E") :: acc) rest
+        | S_hrule, _ -> go (Horizontal_rule :: acc) rest
+        | S_marginnote, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Margin_note (anchor, ils) :: acc) rest
+        | S_sidenote, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _ ->
+            let* ils = elaborate_code_inlines ns in
+            go (Side_note (anchor, ils) :: acc) rest
+        | S_dingbat, Arg_symbol (_, name) :: _ ->
+            go (Str (dingbat_char name) :: acc) rest
+        | S_circled, Arg_number (_, n) :: _ -> go (Circled_ref n :: acc) rest
+        | S_nameref, Arg_symbol (_, r) :: _ -> go (Nameref r :: acc) rest
+        | S_includegraphics, Arg_nodes (_, ns) :: _ ->
+            go (Image_inline (opts, node_text_of_nodes ns) :: acc) rest
+        | _ -> (
+            match replacement_text sym with
+            | Some repl -> go (Str (text repl) :: acc) rest
+            | None -> go acc rest))
     | _ :: rest -> go acc rest
   in
   go [] ns
 
 and build_flat_blocks (ns : node list) : flat_block list result_ =
   let is_block_level_only_content ils =
-    let trimmed = trim_inlines ils in
-    trimmed <> []
+    ils <> []
     && List.for_all
          (function
            | Margin_note _ | Side_note _ | Anchor _ | Line_break -> true
-           | Str t when Strings.all t is_whitespace -> true
+           | Str t when Text.for_all is_whitespace t -> true
            | _ -> false)
-         trimmed
+         ils
+  in
+  let has_para_break_before_first_lb =
+    let rec find = function
+      | [] -> false
+      | Line_break :: _ -> false
+      | Str t :: rest -> text_has_double_newline t || find rest
+      | _ :: rest -> find rest
+    in
+    find
+  in
+  let prepend_blocks_rev blocks blocks_rev =
+    List.fold_left (fun acc b -> FB b :: acc) blocks_rev blocks
   in
   let flush_para_rev inlines_acc blocks_rev =
     if inlines_acc = [] then blocks_rev
     else
       let ordered = List.rev inlines_acc in
       let trimmed = trim_inlines ordered in
-      let has_para_break_before_first_lb =
-        let rec find = function
-          | [] -> false
-          | Line_break :: _ -> false
-          | Str t :: _ when Strings.is_infix_of "\n\n" t -> true
-          | _ :: rest -> find rest
-        in
-        find ordered
-      in
       if
-        (not has_para_break_before_first_lb)
+        (not (has_para_break_before_first_lb ordered))
         && is_block_level_only_content trimmed
       then FB (Plain trimmed) :: blocks_rev
       else
         let paras = split_paragraphs ordered in
-        List.rev_append (List.map (fun b -> FB b) paras) blocks_rev
+        prepend_blocks_rev paras blocks_rev
   in
   let rec go inlines_acc blocks_rev = function
     | [] -> Ok (List.rev (flush_para_rev inlines_acc blocks_rev))
@@ -598,15 +587,13 @@ and build_blocks (ns : node list) : block list result_ =
   Ok (List.filter_map (function FB b -> Some b | _ -> None) fbs)
 
 and split_list_items (ns : node list) : block list list result_ =
-  let is_item = function NCmd (_, "item", _, _) -> true | _ -> false in
+  let is_item = function NCmd (_, S_item, _, _) -> true | _ -> false in
   let rec split acc cur = function
     | [] -> List.rev (List.rev cur :: acc)
     | n :: rest when is_item n -> split (List.rev cur :: acc) [] rest
     | n :: rest -> split acc (n :: cur) rest
   in
   let items = split [] [] ns in
-  (* Drop empty groups and build each one, then unwrap single-Para items.
-     Accumulate in reverse for O(1) cons. *)
   let rec build_rev acc = function
     | [] -> Ok acc
     | [] :: rest -> build_rev acc rest
@@ -627,20 +614,19 @@ and split_list_items (ns : node list) : block list list result_ =
 
 and split_description_items (ns : node list) :
     (inline list * block list) list result_ =
-  let rec go = function
-    | [] -> Ok []
-    | NCmd (_, "term", _, Arg_nodes (_, dt) :: Arg_nodes (_, dd) :: _) :: rest
+  let rec go acc = function
+    | [] -> Ok (List.rev acc)
+    | NCmd (_, S_term, _, Arg_nodes (_, dt) :: Arg_nodes (_, dd) :: _) :: rest
       ->
         let* dt_ils = elaborate_inlines dt in
         let* dd_blocks = build_blocks dd in
         let dd_wrapped =
           match dd_blocks with [ Para ils ] -> [ Plain ils ] | _ -> dd_blocks
         in
-        let* more = go rest in
-        Ok ((dt_ils, dd_wrapped) :: more)
-    | _ :: rest -> go rest
+        go ((dt_ils, dd_wrapped) :: acc) rest
+    | _ :: rest -> go acc rest
   in
-  go ns
+  go [] ns
 
 and elaborate_table _name opts spec rows : table_def result_ =
   let name = _name in
@@ -659,24 +645,10 @@ and elaborate_table _name opts spec rows : table_def result_ =
       }
   in
   let elaborate_row (r : row) : table_row result_ =
-    let rec map_m f = function
-      | [] -> Ok []
-      | x :: xs ->
-          let* y = f x in
-          let* ys = map_m f xs in
-          Ok (y :: ys)
-    in
     let* cells = map_m elaborate_cell r.row_cells in
     let top = r.row_borders = Border_top || r.row_borders = Border_both in
     let bot = r.row_borders = Border_bottom || r.row_borders = Border_both in
     Ok { tr_border_top = top; tr_border_bottom = bot; tr_cells = cells }
-  in
-  let rec map_m f = function
-    | [] -> Ok []
-    | x :: xs ->
-        let* y = f x in
-        let* ys = map_m f xs in
-        Ok (y :: ys)
   in
   let* header =
     match header_row with
@@ -757,9 +729,6 @@ let wrap_sections (fbs : flat_block list) : block list result_ =
   let* () = check_no_subsections preamble in
   let* sections = group_sections rest in
   let preamble_blocks = extract_blocks preamble in
-  (* Preamble blocks (before any \section) are emitted flat, not wrapped
-     in a <section>, to match Go's renderGenericCmd which only opens
-     <section> on SymSection/SymSectionS. *)
   Ok (preamble_blocks @ sections)
 
 (* --- Top-level entry point --- *)
@@ -771,16 +740,16 @@ let elaborate (slug : string) (nodes : node list) : article result_ =
   let* body = wrap_sections flat in
   Ok
     {
-      art_slug = slug;
+      art_slug = text slug;
       art_title = [ Str (apply_typography meta.m_title) ];
       art_subtitle = [ Str (apply_typography meta.m_subtitle) ];
       art_featured = meta.m_featured;
       art_created_at = meta.m_created_at;
       art_modified_at = meta.m_modified_at;
       art_word_count = Stats.word_count body;
-      art_keywords = List.sort compare meta.m_keywords;
+      art_keywords = List.sort Text.compare meta.m_keywords;
       art_body = body;
-      art_url = "/posts/" ^ slug ^ ".html";
+      art_url = text ("/posts/" ^ slug ^ ".html");
       art_reddit = meta.m_reddit;
       art_hn = meta.m_hn;
       art_lobsters = meta.m_lobsters;

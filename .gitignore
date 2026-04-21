@@ -4,3 +4,4 @@ _site/
 _opam/
 *.install
 .merlin
+.dir-locals.el

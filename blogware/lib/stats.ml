@@ -6,26 +6,27 @@ let is_ascii_alnum c =
 let is_word_byte c = is_ascii_alnum c || Char.code c >= 0x80
 
 type count_state = { words : int; in_word : bool }
+type scan_mode = Idle | InWord | AfterConnector
 
 let break_word state = { state with in_word = false }
 
-let count_words_in_string (state : count_state) (s : string) : count_state =
-  let len = String.length s in
-  let rec loop i state =
-    if i >= len then state
-    else
-      let c = s.[i] in
-      if is_word_byte c then
-        let words = if state.in_word then state.words else state.words + 1 in
-        loop (i + 1) { words; in_word = true }
-      else
-        match c with
-        | ('\'' | '-') when state.in_word ->
-            let continues = i + 1 < len && is_word_byte s.[i + 1] in
-            loop (i + 1) { state with in_word = continues }
-        | _ -> loop (i + 1) { state with in_word = false }
+let count_words_in_text (state : count_state) (s : Text.t) : count_state =
+  let mode = ref (if state.in_word then InWord else Idle) in
+  let words = ref state.words in
+  let f c =
+    match !mode with
+    | Idle ->
+        if is_word_byte c then (
+          incr words;
+          mode := InWord)
+    | InWord ->
+        if is_word_byte c then ()
+        else if c = '\'' || c = '-' then mode := AfterConnector
+        else mode := Idle
+    | AfterConnector -> if is_word_byte c then mode := InWord else mode := Idle
   in
-  loop 0 state
+  Text.iter f s;
+  { words = !words; in_word = !mode = InWord }
 
 let count_inlines (ils : inline list) : int =
   let rec go state = function
@@ -34,7 +35,7 @@ let count_inlines (ils : inline list) : int =
         let state = count_inline state il in
         go state rest
   and count_inline state = function
-    | Str s -> count_words_in_string state s
+    | Str t -> count_words_in_text state t
     | Strong ils
     | Emph ils
     | Underline ils

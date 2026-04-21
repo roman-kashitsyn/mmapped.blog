@@ -3,9 +3,12 @@
 open Html
 open Document
 
+let txt = Text.of_string
+let ( ^^ ) = Text.append
+
 (* --- Table of contents --- *)
 
-type toc_entry = { toc_id : string; toc_title : string }
+type toc_entry = { toc_id : Text.t; toc_title : Text.t }
 type toc_section = { sec_entry : toc_entry; sec_subsections : toc_entry list }
 
 let extract_toc (blocks : block list) : toc_section list =
@@ -16,7 +19,7 @@ let extract_toc (blocks : block list) : toc_section list =
             {
               toc_id = anchor;
               toc_title =
-                Html.render (Render.render_inlines Render.empty_ctx title);
+                txt (Html.render (Render.render_inlines Render.empty_ctx title));
             }
           in
           let subs =
@@ -27,7 +30,9 @@ let extract_toc (blocks : block list) : toc_section list =
                       {
                         toc_id = a;
                         toc_title =
-                          Html.render (Render.render_inlines Render.empty_ctx t);
+                          txt
+                            (Html.render
+                               (Render.render_inlines Render.empty_ctx t));
                       }
                 | _ -> None)
               body
@@ -44,7 +49,9 @@ let build_ref_table (all_articles : article list) (article : article) :
         RefTable.add a.art_slug
           {
             ref_title =
-              Html.render (Render.render_inlines Render.empty_ctx a.art_title);
+              txt
+                (Html.render
+                   (Render.render_inlines Render.empty_ctx a.art_title));
             ref_url = a.art_url;
           }
           acc)
@@ -57,14 +64,14 @@ let build_ref_table (all_articles : article list) (article : article) :
         RefTable.add section.sec_entry.toc_id
           {
             ref_title = section.sec_entry.toc_title;
-            ref_url = "#" ^ section.sec_entry.toc_id;
+            ref_url = txt "#" ^^ section.sec_entry.toc_id;
           }
           acc
       in
       List.fold_left
         (fun acc sub ->
           RefTable.add sub.toc_id
-            { ref_title = sub.toc_title; ref_url = "#" ^ sub.toc_id }
+            { ref_title = sub.toc_title; ref_url = txt "#" ^^ sub.toc_id }
             acc)
         acc section.sec_subsections)
     tbl toc
@@ -75,18 +82,17 @@ let find_similar_articles (articles : article list) (idx : int) : article list =
   let arr = Array.of_list articles in
   let n = Array.length arr in
   let target = arr.(idx) in
-  let target_kws = target.art_keywords in
+  let target_kws = Text.Set.of_list target.art_keywords in
+  let target_kw_count = Text.Set.cardinal target_kws in
   let candidates = ref [] in
   for i = 0 to n - 1 do
     if i <> idx then begin
       let a = arr.(i) in
       let common =
         List.length
-          (List.filter (fun k -> List.mem k target_kws) a.art_keywords)
+          (List.filter (fun k -> Text.Set.mem k target_kws) a.art_keywords)
       in
-      let total =
-        List.length a.art_keywords + List.length target_kws - common
-      in
+      let total = List.length a.art_keywords + target_kw_count - common in
       if total > 0 then begin
         let sim =
           (float_of_int common /. float_of_int total)
@@ -112,36 +118,35 @@ let find_similar_articles (articles : article list) (idx : int) : article list =
 
 let post_json_ld (type s) (module B : Json.Builder with type t = s)
     (root_url : string) (article : article) : s =
-  let url = root_url ^ article.art_url in
+  let url = txt root_url ^^ article.art_url in
   let author =
     B.obj
       [|
-        ("@type", B.str "Person");
-        ("givenName", B.str "Roman");
-        ("familyName", B.str "Kashitsyn");
+        ("@type", B.str (txt "Person"));
+        ("givenName", B.str (txt "Roman"));
+        ("familyName", B.str (txt "Kashitsyn"));
       |]
   in
   let fields =
     Dynarray.of_array
       [|
-        ("@context", B.str "https://schema.org");
-        ("@type", B.str "BlogPosting");
-        ("headline", B.str (Elaborate.render_inlines_to_text article.art_title));
+        ("@context", B.str (txt "https://schema.org"));
+        ("@type", B.str (txt "BlogPosting"));
+        ("headline", B.str (Elaborate.inlines_to_text article.art_title));
         ("url", B.str url);
         ( "mainEntityOfPage",
-          B.obj [| ("@type", B.str "WebPage"); ("@id", B.str url) |] );
-        ("datePublished", B.str (Date.to_string article.art_created_at));
-        ("dateModified", B.str (Date.to_string article.art_modified_at));
+          B.obj [| ("@type", B.str (txt "WebPage")); ("@id", B.str url) |] );
+        ("datePublished", B.str (txt (Date.to_string article.art_created_at)));
+        ("dateModified", B.str (txt (Date.to_string article.art_modified_at)));
         ("wordCount", B.num article.art_word_count);
-        ("license", B.str "http://creativecommons.org/licenses/by/4.0/");
+        ("license", B.str (txt "http://creativecommons.org/licenses/by/4.0/"));
         ("author", author);
         ("publisher", author);
       |]
   in
   if not (List.is_empty article.art_subtitle) then
     Dynarray.add_last fields
-      ( "description",
-        B.str (Elaborate.render_inlines_to_text article.art_subtitle) );
+      ("description", B.str (Elaborate.inlines_to_text article.art_subtitle));
   if not (List.is_empty article.art_keywords) then
     Dynarray.add_last fields
       ( "keywords",
@@ -150,7 +155,7 @@ let post_json_ld (type s) (module B : Json.Builder with type t = s)
 
 let render_json_ld (root_url : string) (article : article) : Html.t =
   parent "script"
-    [ type_ "application/ld+json" ]
+    [ type_ (txt "application/ld+json") ]
     (nl ++ post_json_ld (module Json.Render) root_url article ++ nl)
 
 (* --- Page head --- *)
@@ -161,32 +166,43 @@ let page_head (root_url : string) (article : article) : Html.t =
     else
       leaf "meta"
         [
-          name_ "description";
+          name_ (txt "description");
           content_
-            (Html.render
-               (Render.render_inlines Render.empty_ctx article.art_subtitle));
+            (txt
+               (Html.render
+                  (Render.render_inlines Render.empty_ctx article.art_subtitle)));
         ]
   in
   head_ []
-    (leaf "meta" [ charset_ "UTF-8" ]
+    (leaf "meta" [ charset_ (txt "UTF-8") ]
     ++ leaf "meta"
-         [ content_ "width=device-width, initial-scale=1"; name_ "viewport" ]
-    ++ leaf "meta" [ name_ "author"; content_ "Roman Kashitsyn" ]
+         [
+           content_ (txt "width=device-width, initial-scale=1");
+           name_ (txt "viewport");
+         ]
+    ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
     ++ leaf "meta"
-         [ name_ "keywords"; content_ (String.concat "," article.art_keywords) ]
+         [
+           name_ (txt "keywords");
+           content_ (Text.concat (txt ",") article.art_keywords);
+         ]
     ++ description_meta
     ++ title_ [] (Render.render_inlines Render.empty_ctx article.art_title)
-    ++ link_ [ rel_ "stylesheet"; href_ "/css/tufte.css" ]
-    ++ link_ [ rel_ "icon"; href_ "/images/favicon.svg" ]
+    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/tufte.css") ]
+    ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
     ++ link_
          [
-           rel_ "mask-icon";
-           href_ "/images/mask-icon.svg";
-           attr "color" "#000000";
+           rel_ (txt "mask-icon");
+           href_ (txt "/images/mask-icon.svg");
+           attr "color" (txt "#000000");
          ]
     ++ link_
-         [ rel_ "alternate"; type_ "application/atom+xml"; href_ "/feed.xml" ]
-    ++ link_ [ rel_ "canonical"; href_ (root_url ^ article.art_url) ]
+         [
+           rel_ (txt "alternate");
+           type_ (txt "application/atom+xml");
+           href_ (txt "/feed.xml");
+         ]
+    ++ link_ [ rel_ (txt "canonical"); href_ (txt root_url ^^ article.art_url) ]
     ++ render_json_ld root_url article)
 
 (* --- Site header / footer --- *)
@@ -197,39 +213,41 @@ let site_header : Html.t =
        (ul_ []
           (li_ []
              (a_
-                [ class_ "blog-title"; href_ "/index.html" ]
-                (raw "mmap(blog)"))
-          ++ li_ [] (a_ [ href_ "/posts.html" ] (raw "Posts"))
-          ++ li_ [] (a_ [ href_ "/about.html" ] (raw "About"))
-          ++ li_ [] (a_ [ href_ "/feed.xml" ] (raw "Atom Feed")))))
+                [ class_ (txt "blog-title"); href_ (txt "/index.html") ]
+                (raw (txt "mmap(blog)")))
+          ++ li_ [] (a_ [ href_ (txt "/posts.html") ] (raw (txt "Posts")))
+          ++ li_ [] (a_ [ href_ (txt "/about.html") ] (raw (txt "About")))
+          ++ li_ [] (a_ [ href_ (txt "/feed.xml") ] (raw (txt "Atom Feed"))))))
 
 let site_footer : Html.t =
   footer_ []
-    (span_ [] (raw "&copy;Roman Kashitsyn")
-    ++ raw "&nbsp;\n"
+    (span_ [] (raw (txt "&copy;Roman Kashitsyn"))
+    ++ raw (txt "&nbsp;\n")
     ++ a_
          [
-           rel_ "license";
-           href_ "http://creativecommons.org/licenses/by/4.0/";
-           attr "style" "vertical-align: text-top;";
+           rel_ (txt "license");
+           href_ (txt "http://creativecommons.org/licenses/by/4.0/");
+           attr "style" (txt "vertical-align: text-top;");
            attr "title"
-             "This work is licensed under a Creative Commons Attribution 4.0 \
-              International License";
+             (txt
+                "This work is licensed under a Creative Commons Attribution \
+                 4.0 International License");
          ]
          (leaf "img"
             [
-              alt_ "Creative Commons License";
+              alt_ (txt "Creative Commons License");
               attr "style"
-                "border-width:0;width:80px;height:15px;text-decoration:none;";
-              src_ "https://i.creativecommons.org/l/by/4.0/80x15.png";
+                (txt
+                   "border-width:0;width:80px;height:15px;text-decoration:none;");
+              src_ (txt "https://i.creativecommons.org/l/by/4.0/80x15.png");
             ])
     ++ br_ [] ++ nl
     ++ a_
          [
-           class_ "github-link";
-           href_ "https://github.com/roman-kashitsyn/mmapped.blog";
+           class_ (txt "github-link");
+           href_ (txt "https://github.com/roman-kashitsyn/mmapped.blog");
          ]
-         (raw "Source Code"))
+         (raw (txt "Source Code")))
 
 (* --- Post attributes (dates and social links) --- *)
 
@@ -241,39 +259,40 @@ let render_social_link link icon title_text alt_text extra_class : Html.t =
   | Some url ->
       a_
         [
-          class_ "icon-link";
+          class_ (txt "icon-link");
           href_ url;
-          attr "title" title_text;
-          rel_ "nofollow noopener noreferrer";
-          attr "target" "_blank";
+          attr "title" (txt title_text);
+          rel_ (txt "nofollow noopener noreferrer");
+          attr "target" (txt "_blank");
         ]
         (leaf "img"
            [
              class_
-               ("social-icon"
-               ^ if extra_class = "" then "" else " " ^ extra_class);
-             src_ icon;
-             alt_ alt_text;
+               (txt
+                  ("social-icon"
+                  ^ if extra_class = "" then "" else " " ^ extra_class));
+             src_ (txt icon);
+             alt_ (txt alt_text);
            ])
 
 let render_post_attributes (article : article) : Html.t =
   span_
-    [ class_ "post-attrs" ]
+    [ class_ (txt "post-attrs") ]
     (span_
-       [ attr "title" "First published" ]
-       (raw "\xE2\x9C\x8F " (* ✏ *)
+       [ attr "title" (txt "First published") ]
+       (raw (txt "\xE2\x9C\x8F ") (* ✏ *)
        ++ time_
-            [ datetime_ (Date.to_string article.art_created_at) ]
-            (raw (format_date article.art_created_at)))
-    ++ raw "&nbsp;\n"
+            [ datetime_ (txt (Date.to_string article.art_created_at)) ]
+            (raw (txt (format_date article.art_created_at))))
+    ++ raw (txt "&nbsp;\n")
     ++ span_
-         [ attr "title" "Last modified" ]
-         (raw "\xE2\x9C\x82 " (* ✂ *)
+         [ attr "title" (txt "Last modified") ]
+         (raw (txt "\xE2\x9C\x82 ") (* ✂ *)
          ++ time_
-              [ datetime_ (Date.to_string article.art_modified_at) ]
-              (raw (format_date article.art_modified_at)))
+              [ datetime_ (txt (Date.to_string article.art_modified_at)) ]
+              (raw (txt (format_date article.art_modified_at))))
     ++ span_
-         [ class_ "post-icons" ]
+         [ class_ (txt "post-icons") ]
          (render_social_link article.art_hn "/images/y18.svg"
             "Discuss on Hacker News" "Hacker News" ""
          ++ render_social_link article.art_reddit "/images/Reddit-Icon.svg"
@@ -288,23 +307,25 @@ let render_toc (sections : toc_section list) : Html.t =
   else
     let render_toc_sub sub =
       li_
-        [ class_ "toc toc-level-2" ]
-        (a_ [ href_ ("#" ^ sub.toc_id) ] (raw sub.toc_title))
+        [ class_ (txt "toc toc-level-2") ]
+        (a_ [ href_ (txt "#" ^^ sub.toc_id) ] (raw sub.toc_title))
     in
     let render_toc_section s =
       li_
-        [ class_ "toc toc-level-1" ]
-        (a_ [ href_ ("#" ^ s.sec_entry.toc_id) ] (raw s.sec_entry.toc_title)
+        [ class_ (txt "toc toc-level-1") ]
+        (a_
+           [ href_ (txt "#" ^^ s.sec_entry.toc_id) ]
+           (raw s.sec_entry.toc_title)
         ++
         if s.sec_subsections = [] then empty
         else
           ul_
-            [ class_ "toc toc-level-2" ]
+            [ class_ (txt "toc toc-level-2") ]
             (concat (List.map render_toc_sub s.sec_subsections)))
     in
     hr_ [] ++ nl
     ++ ul_
-         [ class_ "toc toc-level-1" ]
+         [ class_ (txt "toc toc-level-1") ]
          (concat (List.map render_toc_section sections))
     ++ hr_ [] ++ nl
 
@@ -313,9 +334,9 @@ let render_toc (sections : toc_section list) : Html.t =
 let render_similar : article list -> Html.t = function
   | [] -> empty
   | articles ->
-      h2_ [] (raw "Similar articles")
+      h2_ [] (raw (txt "Similar articles"))
       ++ ul_
-           [ class_ "arrows" ]
+           [ class_ (txt "arrows") ]
            (concat
               (List.map
                  (fun a ->
@@ -334,10 +355,10 @@ let render_navigation (prev : article option) (next : article option) : Html.t =
         | None -> empty
         | Some a ->
             div_
-              [ id_ "newer" ]
+              [ id_ (txt "newer") ]
               (a_
                  [ href_ a.art_url ]
-                 (raw " \xE2\x86\x90" (* ← *)
+                 (raw (txt " \xE2\x86\x90") (* ← *)
                  ++ Render.render_inlines Render.empty_ctx a.art_title))
       in
       let next_html =
@@ -345,13 +366,13 @@ let render_navigation (prev : article option) (next : article option) : Html.t =
         | None -> empty
         | Some a ->
             div_
-              [ id_ "older" ]
+              [ id_ (txt "older") ]
               (a_
                  [ href_ a.art_url ]
                  (Render.render_inlines Render.empty_ctx a.art_title
-                 ++ raw "\xE2\x86\x92 " (* → *)))
+                 ++ raw (txt "\xE2\x86\x92 ") (* → *)))
       in
-      div_ [ id_ "next-prev-nav" ] (prev_html ++ next_html) ++ nl
+      div_ [ id_ (txt "next-prev-nav") ] (prev_html ++ next_html) ++ nl
 
 (* --- Full post page --- *)
 
@@ -361,19 +382,20 @@ let render_post_page (root_url : string) (article : article)
     (body_html : string) : Html.t =
   doctype ++ nl
   ++ html_
-       [ lang_ "en" ]
+       [ lang_ (txt "en") ]
        (page_head root_url article
        ++ body_ []
             (article_ []
                (site_header
                ++ h1_
-                    [ class_ "article-title" ]
+                    [ class_ (txt "article-title") ]
                     (a_
                        [ href_ article.art_url ]
                        (Render.render_inlines Render.empty_ctx article.art_title))
                ++ render_post_attributes article
-               ++ nl ++ render_toc toc ++ nl ++ raw body_html ++ nl
-               ++ render_similar similar
+               ++ nl ++ render_toc toc ++ nl
+               ++ raw (txt body_html)
+               ++ nl ++ render_similar similar
                ++ render_navigation prev_post next_post
                ++ hr_ [] ++ nl ++ site_footer)))
   ++ nl
@@ -381,10 +403,13 @@ let render_post_page (root_url : string) (article : article)
 (* --- Post list page --- *)
 
 let render_post_entry (a : article) : Html.t =
-  let item_classes = if a.art_featured then [ class_ "featured" ] else [] in
+  let item_classes =
+    if a.art_featured then [ class_ (txt "featured") ] else []
+  in
   let title_class =
-    if a.art_featured then "article-title left-gutter-anchor featured-marker"
-    else "article-title"
+    if a.art_featured then
+      txt "article-title left-gutter-anchor featured-marker"
+    else txt "article-title"
   in
   li_ item_classes
     (h2_
@@ -393,27 +418,34 @@ let render_post_entry (a : article) : Html.t =
           [ href_ a.art_url ]
           (span_ [] (Render.render_inlines Render.empty_ctx a.art_title)))
     ++ div_
-         [ class_ "article-abstract" ]
+         [ class_ (txt "article-abstract") ]
          (Render.render_inlines Render.empty_ctx a.art_subtitle)
     ++ render_post_attributes a)
 
 let list_page_head (title_text : string) : Html.t =
   head_ []
-    (leaf "meta" [ charset_ "UTF-8" ]
+    (leaf "meta" [ charset_ (txt "UTF-8") ]
     ++ leaf "meta"
-         [ content_ "width=device-width, initial-scale=1"; name_ "viewport" ]
-    ++ leaf "meta" [ name_ "author"; content_ "Roman Kashitsyn" ]
-    ++ title_ [] (raw title_text)
-    ++ link_ [ rel_ "stylesheet"; href_ "/css/tufte.css" ]
-    ++ link_ [ rel_ "icon"; href_ "/images/favicon.svg" ]
+         [
+           content_ (txt "width=device-width, initial-scale=1");
+           name_ (txt "viewport");
+         ]
+    ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
+    ++ title_ [] (raw (txt title_text))
+    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/tufte.css") ]
+    ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
     ++ link_
          [
-           rel_ "mask-icon";
-           href_ "/images/mask-icon.svg";
-           attr "color" "#000000";
+           rel_ (txt "mask-icon");
+           href_ (txt "/images/mask-icon.svg");
+           attr "color" (txt "#000000");
          ]
     ++ link_
-         [ rel_ "alternate"; type_ "application/atom+xml"; href_ "/feed.xml" ])
+         [
+           rel_ (txt "alternate");
+           type_ (txt "application/atom+xml");
+           href_ (txt "/feed.xml");
+         ])
 
 (* Mirrors Go's page.tmpl — used only for standalone pages (about.html).
    Differs from [page_head] and [list_page_head]: includes the
@@ -423,39 +455,42 @@ let standalone_page_head (title_text : string) : Html.t =
   let preload path ty =
     link_
       [
-        rel_ "preload";
-        href_ path;
-        attr "as" "font";
-        type_ ty;
-        attr "crossorigin" "";
+        rel_ (txt "preload");
+        href_ (txt path);
+        attr "as" (txt "font");
+        type_ (txt ty);
+        attr "crossorigin" Text.empty;
       ]
   in
   head_ []
-    (leaf "meta" [ charset_ "UTF-8" ]
+    (leaf "meta" [ charset_ (txt "UTF-8") ]
     ++ leaf "meta"
-         [ content_ "width=device-width, initial-scale=1"; name_ "viewport" ]
-    ++ leaf "meta" [ name_ "tdm-reservation"; content_ "0" ]
-    ++ leaf "meta" [ name_ "author"; content_ "Roman Kashitsyn" ]
-    ++ title_ [] (raw title_text)
+         [
+           content_ (txt "width=device-width, initial-scale=1");
+           name_ (txt "viewport");
+         ]
+    ++ leaf "meta" [ name_ (txt "tdm-reservation"); content_ (txt "0") ]
+    ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
+    ++ title_ [] (raw (txt title_text))
     ++ preload "/fonts/LibertinusSans-Regular.woff2" "font/woff2"
     ++ preload "/fonts/LibertinusSans-Bold.woff2" "font/woff2"
     ++ preload "/fonts/LibertinusSerif-Regular.woff2" "font/woff2"
     ++ preload "/fonts/LibertinusSerif-Bold.woff2" "font/woff2"
     ++ preload "/fonts/YanoneKaffeesatz-Regular.otf" "font/otf"
-    ++ link_ [ rel_ "stylesheet"; href_ "/css/tufte.css" ]
-    ++ link_ [ rel_ "icon"; href_ "/images/favicon.svg" ]
+    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/tufte.css") ]
+    ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
     ++ link_
          [
-           rel_ "mask-icon";
-           href_ "/images/mask-icon.svg";
-           attr "color" "#000000";
+           rel_ (txt "mask-icon");
+           href_ (txt "/images/mask-icon.svg");
+           attr "color" (txt "#000000");
          ])
 
 let render_post_list_page (title_text : string) (articles : article list) :
     Html.t =
   doctype ++ nl
   ++ html_
-       [ lang_ "en" ]
+       [ lang_ (txt "en") ]
        (list_page_head title_text
        ++ body_ []
             (article_ []
@@ -463,7 +498,7 @@ let render_post_list_page (title_text : string) (articles : article list) :
                ++ (if articles = [] then empty
                    else
                      ul_
-                       [ class_ "posts" ]
+                       [ class_ (txt "posts") ]
                        (concat (List.map render_post_entry articles)))
                ++ nl ++ hr_ [] ++ nl ++ site_footer)))
   ++ nl
@@ -472,13 +507,15 @@ let render_standalone_page (title_text : string) (url : string)
     (body_html : string) : Html.t =
   doctype ++ nl
   ++ html_
-       [ lang_ "en" ]
+       [ lang_ (txt "en") ]
        (standalone_page_head title_text
        ++ body_ []
             (article_ []
                (site_header
                ++ h1_
-                    [ class_ "article-title" ]
-                    (a_ [ href_ url ] (raw title_text))
-               ++ hr_ [] ++ raw body_html ++ hr_ [] ++ nl ++ site_footer)))
+                    [ class_ (txt "article-title") ]
+                    (a_ [ href_ (txt url) ] (raw (txt title_text)))
+               ++ hr_ []
+               ++ raw (txt body_html)
+               ++ hr_ [] ++ nl ++ site_footer)))
   ++ nl

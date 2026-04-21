@@ -19,12 +19,14 @@ let parse_math input : (math_node list, Error.parse_error) result =
 
 let show_math_list ns =
   let rec go = function
-    | Math_text s -> "text(" ^ s ^ ")"
-    | Math_num s -> "num(" ^ s ^ ")"
-    | Math_op (s, _) -> "op(" ^ s ^ ")"
+    | Math_text s -> "text(" ^ Text.to_string s ^ ")"
+    | Math_num s -> "num(" ^ Text.to_string s ^ ")"
+    | Math_op (s, _) -> "op(" ^ Text.to_string s ^ ")"
     | Math_sym c -> "sym(" ^ String.make 1 c ^ ")"
     | Math_cmd (n, args) ->
-        "cmd(" ^ n ^ "," ^ String.concat "," (List.map go args) ^ ")"
+        "cmd(" ^ sym_to_string n ^ ","
+        ^ String.concat "," (List.map go args)
+        ^ ")"
     | Math_group xs -> "grp[" ^ String.concat ";" (List.map go xs) ^ "]"
     | Math_term (nuc, sub, sup) ->
         "term(" ^ go nuc ^ ","

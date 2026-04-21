@@ -30,35 +30,27 @@ let render (h : t) : string =
    HTML body and in double-quoted attribute values, matching the Haskell
    escaper. *)
 
-let escape_html (s : string) : string =
-  let needs =
-    let r = ref false in
-    String.iter
-      (fun c -> if c = '<' || c = '>' || c = '&' || c = '"' then r := true)
-      s;
-    !r
-  in
-  if not needs then s
-  else begin
-    let b = Buffer.create (String.length s + 8) in
-    String.iter
+let is_special c = match c with '<' | '>' | '&' | '"' -> true | _ -> false
+
+let escape_html (s : Text.t) (buf : Buffer.t) : unit =
+  if not (Text.exists is_special s) then Text.output_to_buffer buf s
+  else
+    Text.iter
       (fun c ->
         match c with
-        | '<' -> Buffer.add_string b "&lt;"
-        | '>' -> Buffer.add_string b "&gt;"
-        | '&' -> Buffer.add_string b "&amp;"
-        | '"' -> Buffer.add_string b "&quot;"
-        | c -> Buffer.add_char b c)
-      s;
-    Buffer.contents b
-  end
+        | '<' -> Buffer.add_string buf "&lt;"
+        | '>' -> Buffer.add_string buf "&gt;"
+        | '&' -> Buffer.add_string buf "&amp;"
+        | '"' -> Buffer.add_string buf "&quot;"
+        | c -> Buffer.add_char buf c)
+      s
 
 (* --- Primitives --- *)
 
-let text (s : string) : t = fun buf -> Buffer.add_string buf (escape_html s)
-let raw (s : string) : t = fun buf -> Buffer.add_string buf s
-let nl : t = raw "\n"
-let doctype : t = raw "<!DOCTYPE html>"
+let text (s : Text.t) : t = escape_html s
+let raw (s : Text.t) : t = fun buf -> Text.output_to_buffer buf s
+let nl : t = raw (Text.of_string "\n")
+let doctype : t = raw (Text.of_string "<!DOCTYPE html>")
 
 (* --- Attributes --- *)
 
@@ -66,12 +58,12 @@ let doctype : t = raw "<!DOCTYPE html>"
    emitting its own leading space, mirroring the Haskell encoding. *)
 type attribute = Buffer.t -> unit
 
-let attr (key : string) (value : string) : attribute =
+let attr (key : string) (value : Text.t) : attribute =
  fun buf ->
   Buffer.add_char buf ' ';
   Buffer.add_string buf key;
   Buffer.add_string buf "=\"";
-  Buffer.add_string buf (escape_html value);
+  escape_html value buf;
   Buffer.add_char buf '"'
 
 let class_ v = attr "class" v

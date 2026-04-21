@@ -5,6 +5,14 @@ open Blogware
 open Test_framework
 open Html
 
+let txt = Text.of_string
+let text s = text (txt s)
+let raw s = raw (txt s)
+let class_ s = class_ (txt s)
+let href_ s = href_ (txt s)
+let src_ s = src_ (txt s)
+let alt_ s = alt_ (txt s)
+
 let t name expected actual : Test_framework.t =
   test name (fun () -> assert_equal_string expected (render actual))
 

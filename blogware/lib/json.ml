@@ -2,7 +2,7 @@ module type Builder = sig
   type t
 
   val null : t
-  val str : string -> t
+  val str : Text.t -> t
   val num : int -> t
   val arr : t array -> t
   val obj : (string * t) array -> t
@@ -15,7 +15,7 @@ module Render = struct
 
   let str s buf =
     Buffer.add_char buf '"';
-    String.iter
+    Text.iter
       (function
         | '"' -> Buffer.add_string buf "\\\""
         | '\\' -> Buffer.add_string buf "\\\\"
@@ -48,7 +48,7 @@ module Render = struct
     Array.iteri
       (fun i (name, value) ->
         if i > 0 then Buffer.add_char buf ',';
-        str name buf;
+        str (Text.of_string name) buf;
         Buffer.add_char buf ':';
         value buf)
       fields;

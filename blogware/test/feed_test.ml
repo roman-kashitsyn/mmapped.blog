@@ -4,18 +4,20 @@ open Blogware
 open Test_framework
 open Document
 
+let txt = Text.of_string
+
 let hello_article : article =
   {
-    art_slug = "hello";
-    art_title = [ Str "Hello" ];
-    art_subtitle = [ Str "World" ];
+    art_slug = txt "hello";
+    art_title = [ Str (txt "Hello") ];
+    art_subtitle = [ Str (txt "World") ];
     art_featured = false;
     art_created_at = Date.make ~year:2024 ~month:1 ~day:2;
     art_modified_at = Date.make ~year:2024 ~month:1 ~day:3;
     art_word_count = 2;
-    art_keywords = [ "ocaml"; "port" ];
+    art_keywords = [ txt "ocaml"; txt "port" ];
     art_body = [];
-    art_url = "/posts/hello.html";
+    art_url = txt "/posts/hello.html";
     art_reddit = None;
     art_hn = None;
     art_lobsters = None;
