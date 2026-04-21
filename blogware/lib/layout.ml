@@ -218,40 +218,44 @@ let site_header : Html.t =
           ++ li_ [] (a_ [ href_ (txt "/posts.html") ] (raw (txt "Posts")))
           ++ li_ [] (a_ [ href_ (txt "/about.html") ] (raw (txt "About")))
           ++ li_ [] (a_ [ href_ (txt "/feed.xml") ] (raw (txt "Atom Feed"))))))
+  ++ hr_ []
 
 let site_footer : Html.t =
-  footer_ []
-    (span_ [] (raw (txt "&copy;Roman Kashitsyn"))
-    ++ raw (txt "&nbsp;\n")
-    ++ a_
-         [
-           rel_ (txt "license");
-           href_ (txt "http://creativecommons.org/licenses/by/4.0/");
-           attr "style" (txt "vertical-align: text-top;");
-           attr "title"
-             (txt
-                "This work is licensed under a Creative Commons Attribution \
-                 4.0 International License");
-         ]
-         (leaf "img"
+  nl ++ hr_ []
+  ++ footer_ []
+       (span_ [] (raw (txt "&copy;Roman Kashitsyn"))
+       ++ raw (txt "&nbsp;\n")
+       ++ a_
             [
-              alt_ (txt "Creative Commons License");
-              attr "style"
+              rel_ (txt "license");
+              href_ (txt "http://creativecommons.org/licenses/by/4.0/");
+              attr "style" (txt "vertical-align: text-top;");
+              attr "title"
                 (txt
-                   "border-width:0;width:80px;height:15px;text-decoration:none;");
-              src_ (txt "https://i.creativecommons.org/l/by/4.0/80x15.png");
-            ])
-    ++ br_ [] ++ nl
-    ++ a_
-         [
-           class_ (txt "github-link");
-           href_ (txt "https://github.com/roman-kashitsyn/mmapped.blog");
-         ]
-         (raw (txt "Source Code")))
+                   "This work is licensed under a Creative Commons Attribution \
+                    4.0 International License");
+            ]
+            (leaf "img"
+               [
+                 alt_ (txt "Creative Commons License");
+                 attr "style"
+                   (txt
+                      "border-width:0;width:80px;height:15px;text-decoration:none;");
+                 src_ (txt "https://i.creativecommons.org/l/by/4.0/80x15.png");
+               ])
+       ++ br_ [] ++ nl
+       ++ a_
+            [
+              class_ (txt "github-link");
+              href_ (txt "https://github.com/roman-kashitsyn/mmapped.blog");
+            ]
+            (raw (txt "Source Code")))
 
 (* --- Post attributes (dates and social links) --- *)
 
-let format_date (d : Date.t) : string = Date.to_string d
+let render_date (d : Date.t) : Html.t =
+  let s = txt (Date.to_string d) in
+  time_ [ datetime_ s ] (raw s)
 
 let render_social_link link icon title_text alt_text extra_class : Html.t =
   match link with
@@ -280,17 +284,12 @@ let render_post_attributes (article : article) : Html.t =
     [ class_ (txt "post-attrs") ]
     (span_
        [ attr "title" (txt "First published") ]
-       (raw (txt "\xE2\x9C\x8F ") (* ✏ *)
-       ++ time_
-            [ datetime_ (txt (Date.to_string article.art_created_at)) ]
-            (raw (txt (format_date article.art_created_at))))
+       (raw (txt "\xE2\x9C\x8F ") (* ✏ *) ++ render_date article.art_created_at)
     ++ raw (txt "&nbsp;\n")
     ++ span_
          [ attr "title" (txt "Last modified") ]
          (raw (txt "\xE2\x9C\x82 ") (* ✂ *)
-         ++ time_
-              [ datetime_ (txt (Date.to_string article.art_modified_at)) ]
-              (raw (txt (format_date article.art_modified_at))))
+         ++ render_date article.art_modified_at)
     ++ span_
          [ class_ (txt "post-icons") ]
          (render_social_link article.art_hn "/images/y18.svg"
@@ -329,75 +328,52 @@ let render_toc (sections : toc_section list) : Html.t =
          (concat (List.map render_toc_section sections))
     ++ hr_ [] ++ nl
 
+(* --- Compact article list (used on index page and "Similar articles") --- *)
+
+let render_compact_entry (a : article) : Html.t =
+  let title_attrs =
+    let base = [ class_ (txt "compact-title"); href_ a.art_url ] in
+    let subtitle = Elaborate.inlines_to_text a.art_subtitle in
+    if Text.is_empty subtitle then base else base @ [ attr "title" subtitle ]
+  in
+  li_ []
+    (a_ title_attrs (Render.render_inlines Render.empty_ctx a.art_title)
+    ++ raw (txt "&ensp;")
+    ++ span_ [ class_ (txt "compact-date") ] (render_date a.art_created_at))
+
+let render_compact_list (heading : string) (articles : article list) : Html.t =
+  if articles = [] then empty
+  else
+    h2_ [] (raw (txt heading))
+    ++ ul_
+         [ class_ (txt "article-list") ]
+         (concat (List.map render_compact_entry articles))
+
 (* --- Similar and navigation --- *)
 
 let render_similar : article list -> Html.t = function
   | [] -> empty
-  | articles ->
-      h2_ [] (raw (txt "Similar articles"))
-      ++ ul_
-           [ class_ (txt "arrows") ]
-           (concat
-              (List.map
-                 (fun a ->
-                   li_ []
-                     (a_
-                        [ href_ a.art_url ]
-                        (Render.render_inlines Render.empty_ctx a.art_title)))
-                 articles))
-
-let render_navigation (prev : article option) (next : article option) : Html.t =
-  match (prev, next) with
-  | None, None -> empty
-  | _ ->
-      let prev_html =
-        match prev with
-        | None -> empty
-        | Some a ->
-            div_
-              [ id_ (txt "newer") ]
-              (a_
-                 [ href_ a.art_url ]
-                 (raw (txt " \xE2\x86\x90") (* ← *)
-                 ++ Render.render_inlines Render.empty_ctx a.art_title))
-      in
-      let next_html =
-        match next with
-        | None -> empty
-        | Some a ->
-            div_
-              [ id_ (txt "older") ]
-              (a_
-                 [ href_ a.art_url ]
-                 (Render.render_inlines Render.empty_ctx a.art_title
-                 ++ raw (txt "\xE2\x86\x92 ") (* → *)))
-      in
-      div_ [ id_ (txt "next-prev-nav") ] (prev_html ++ next_html) ++ nl
+  | articles -> render_compact_list "Similar articles" articles
 
 (* --- Full post page --- *)
 
 let render_post_page (root_url : string) (article : article)
-    (toc : toc_section list) (similar : article list)
-    (prev_post : article option) (next_post : article option)
-    (body_html : string) : Html.t =
+    (toc : toc_section list) (similar : article list) (body : Html.t) : Html.t =
   doctype ++ nl
   ++ html_
        [ lang_ (txt "en") ]
        (page_head root_url article
        ++ body_ []
-            (article_ []
-               (site_header
-               ++ h1_
+            (site_header
+            ++ article_ []
+                 (h1_
                     [ class_ (txt "article-title") ]
                     (a_
                        [ href_ article.art_url ]
                        (Render.render_inlines Render.empty_ctx article.art_title))
-               ++ render_post_attributes article
-               ++ nl ++ render_toc toc ++ nl
-               ++ raw (txt body_html)
-               ++ nl ++ render_similar similar
-               ++ render_navigation prev_post next_post
-               ++ hr_ [] ++ nl ++ site_footer)))
+                 ++ render_post_attributes article
+                 ++ nl ++ render_toc toc ++ nl ++ body ++ nl)
+            ++ render_similar similar ++ nl ++ site_footer))
   ++ nl
 
 (* --- Post list page --- *)
@@ -451,7 +427,7 @@ let list_page_head (title_text : string) : Html.t =
    Differs from [page_head] and [list_page_head]: includes the
    tdm-reservation meta and five font preloads, omits keywords/description/
    alternate feed/canonical. *)
-let standalone_page_head (title_text : string) : Html.t =
+let standalone_page_head (title : Html.t) : Html.t =
   let preload path ty =
     link_
       [
@@ -471,7 +447,7 @@ let standalone_page_head (title_text : string) : Html.t =
          ]
     ++ leaf "meta" [ name_ (txt "tdm-reservation"); content_ (txt "0") ]
     ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
-    ++ title_ [] (raw (txt title_text))
+    ++ title_ [] title
     ++ preload "/fonts/LibertinusSans-Regular.woff2" "font/woff2"
     ++ preload "/fonts/LibertinusSans-Bold.woff2" "font/woff2"
     ++ preload "/fonts/LibertinusSerif-Regular.woff2" "font/woff2"
@@ -493,29 +469,45 @@ let render_post_list_page (title_text : string) (articles : article list) :
        [ lang_ (txt "en") ]
        (list_page_head title_text
        ++ body_ []
-            (article_ []
-               (site_header ++ hr_ [] ++ nl
-               ++ (if articles = [] then empty
-                   else
-                     ul_
-                       [ class_ (txt "posts") ]
-                       (concat (List.map render_post_entry articles)))
-               ++ nl ++ hr_ [] ++ nl ++ site_footer)))
-  ++ nl
+            (site_header
+            ++ article_ []
+                 (if articles = [] then empty
+                  else
+                    ul_
+                      [ class_ (txt "posts") ]
+                      (concat (List.map render_post_entry articles)))
+            ++ site_footer)
+       ++ nl)
 
-let render_standalone_page (title_text : string) (url : string)
-    (body_html : string) : Html.t =
+let render_standalone_page (title : Html.t) (url : string) (body : Html.t) :
+    Html.t =
   doctype ++ nl
   ++ html_
        [ lang_ (txt "en") ]
-       (standalone_page_head title_text
+       (standalone_page_head title
        ++ body_ []
-            (article_ []
-               (site_header
-               ++ h1_
+            (site_header
+            ++ article_ []
+                 (h1_
                     [ class_ (txt "article-title") ]
-                    (a_ [ href_ (txt url) ] (raw (txt title_text)))
-               ++ hr_ []
-               ++ raw (txt body_html)
-               ++ hr_ [] ++ nl ++ site_footer)))
+                    (a_ [ href_ (txt url) ] title)
+                 ++ body)
+            ++ site_footer))
+  ++ nl
+
+(* --- Index page --- *)
+
+let render_index_page (body : Html.t) (featured : article list)
+    (latest : article list) : Html.t =
+  doctype ++ nl
+  ++ html_
+       [ lang_ (txt "en") ]
+       (list_page_head "mmap(blog)"
+       ++ body_ []
+            (site_header
+            ++ article_ []
+                 (body
+                 ++ render_compact_list "Featured" featured
+                 ++ render_compact_list "Latest" latest)
+            ++ site_footer))
   ++ nl

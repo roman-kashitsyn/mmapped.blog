@@ -203,7 +203,7 @@ let compare l r =
 
 let hash t =
   let prime = 16_777_619 in
-  let mix h c = ((h lxor Char.code c) * prime) land max_int in
+  let mix h c = h lxor Char.code c * prime land max_int in
   let rec go h = function
     | Empty -> h
     | Char c -> mix h c

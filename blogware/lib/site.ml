@@ -145,23 +145,22 @@ let strip_leading_slash s =
 (* Replace the ".html" suffix with ".tex". *)
 let html_to_tex path = Filename.remove_extension path ^ ".tex"
 
-(* Render one article as its own post page, with neighbour links. *)
-let render_one_post ~root_url ~all_articles ~prev_post ~next_post article =
-  let toc = Layout.extract_toc article.art_body in
-  let similar =
-    let rec index_of i = function
-      | [] -> 0
-      | a :: _ when Text.equal a.art_slug article.art_slug -> i
-      | _ :: rest -> index_of (i + 1) rest
-    in
-    Layout.find_similar_articles all_articles (index_of 0 all_articles)
+let take n lst =
+  let rec aux acc n = function
+    | _ when n <= 0 -> List.rev acc
+    | [] -> List.rev acc
+    | x :: rest -> aux (x :: acc) (n - 1) rest
   in
+  aux [] n lst
+
+(* Render one article as its own post page. *)
+let render_one_post ~root_url ~all_articles ~idx article =
+  let toc = Layout.extract_toc article.art_body in
+  let similar = Layout.find_similar_articles all_articles idx in
   let ref_table = Layout.build_ref_table all_articles article in
   let ctx = { Render.ref_table } in
-  let body_html = Html.render (Render.render_blocks ctx article.art_body) in
-  Html.render
-    (Layout.render_post_page root_url article toc similar prev_post next_post
-       body_html)
+  let body = Render.render_blocks ctx article.art_body in
+  Html.render (Layout.render_post_page root_url article toc similar body)
 
 (* Render the standalone page at [page_path] (e.g. "/about.html"). The
    source file is the sibling [.tex] in [input_dir]. *)
@@ -176,16 +175,11 @@ let render_standalone_from ~input_dir page_path : (string, string) result =
       | Error err ->
           Error (Error.format_elab_error ~source_name:tex_path content err)
       | Ok article ->
-          let body_html =
-            Html.render (Render.render_blocks Render.empty_ctx article.art_body)
+          let body = Render.render_blocks Render.empty_ctx article.art_body in
+          let title =
+            Render.render_inlines Render.empty_ctx article.art_title
           in
-          let title_text =
-            Html.render
-              (Render.render_inlines Render.empty_ctx article.art_title)
-          in
-          Ok
-            (Html.render
-               (Layout.render_standalone_page title_text page_path body_html)))
+          Ok (Html.render (Layout.render_standalone_page title page_path body)))
 
 (* Copy [src] to [dst], handling both files and directories. *)
 let copy_recursively src dst =
@@ -224,7 +218,6 @@ let rendered_outputs (config : site_config) :
   | Error _ as e -> e
   | Ok articles ->
       let arr = Array.of_list articles in
-      let n = Array.length arr in
       let outputs = ref [] in
       let emit path content =
         outputs := (strip_leading_slash path, content) :: !outputs
@@ -235,30 +228,43 @@ let rendered_outputs (config : site_config) :
             (match le_type with
               | Static_files -> Ok ()
               | Index_page -> (
-                  match articles with
-                  | [] -> Ok ()
-                  | article :: rest_articles ->
-                      let next_post =
-                        match rest_articles with x :: _ -> Some x | [] -> None
-                      in
-                      let page_html =
-                        render_one_post ~root_url ~all_articles:articles
-                          ~prev_post:None ~next_post article
-                      in
-                      emit le_path page_html;
-                      Ok ())
+                  let index_tex = input_dir // "index.tex" in
+                  if not (is_regular_file index_tex) then
+                    Error ("Index file not found: " ^ index_tex)
+                  else
+                    let content = read_file_contents index_tex in
+                    match
+                      Tex_parser.parse_document ~source_name:index_tex content
+                    with
+                    | Error err -> Error (Error.format_parse_error content err)
+                    | Ok nodes -> (
+                        match Elaborate.elaborate "index" nodes with
+                        | Error err ->
+                            Error
+                              (Error.format_elab_error ~source_name:index_tex
+                                 content err)
+                        | Ok index_article ->
+                            let body =
+                              Render.render_blocks Render.empty_ctx
+                                index_article.art_body
+                            in
+                            let featured =
+                              take 5
+                                (List.filter (fun a -> a.art_featured) articles)
+                            in
+                            let latest = take 5 articles in
+                            let page_html =
+                              Html.render
+                                (Layout.render_index_page body featured latest)
+                            in
+                            emit le_path page_html;
+                            Ok ()))
               | TeX_articles ->
                   Array.iteri
                     (fun i article ->
-                      let prev_post =
-                        if i > 0 then Some arr.(i - 1) else None
-                      in
-                      let next_post =
-                        if i < n - 1 then Some arr.(i + 1) else None
-                      in
                       let page_html =
-                        render_one_post ~root_url ~all_articles:articles
-                          ~prev_post ~next_post article
+                        render_one_post ~root_url ~all_articles:articles ~idx:i
+                          article
                       in
                       emit (Text.to_string article.art_url) page_html)
                     arr;
@@ -299,8 +305,6 @@ let render_site (config : site_config) : unit =
         (fun { le_path; le_type } ->
           let src = input_dir // strip_leading_slash le_path in
           let dst = output_dir // strip_leading_slash le_path in
-          (* Create the directory for trailing-slash entries up front, like
-         RenderSite() does in the Go reference. *)
           let is_dir_entry =
             String.length le_path > 0
             && le_path.[String.length le_path - 1] = '/'

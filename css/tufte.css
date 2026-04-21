@@ -279,6 +279,28 @@ ul.posts > li {
     font-size: 1.5em;
 }
 
+/* Compact article list (index page, similar articles) */
+ul.article-list {
+    padding-left: 0;
+    list-style: none;
+}
+
+ul.article-list > li {
+    margin-top: 0.3rem;
+    line-height: 1.4;
+}
+
+.compact-title {
+    font-family: "Yanone Kaffeesatz", sans-serif;
+    font-size: 1.4rem;
+}
+
+.compact-date {
+    font-size: 1rem;
+    font-variant-numeric: oldstyle-nums;
+    opacity: 0.6;
+}
+
 nav ul {
     padding: 0px;
 }
@@ -477,19 +499,6 @@ footer {
     width: 55%;
 }
 
-#next-prev-nav {
-    width: 55%;
-    min-height: 2em;
-}
-
-#newer {
-    float: left;
-}
-
-#older {
-    float: right;
-}
-
 pre.good > code {
     background-color: #dcedc8;
 }
@@ -626,10 +635,6 @@ p.subtitle {
 
 .danger {
     color: red;
-}
-
-article {
-    padding: 5rem 0rem;
 }
 
 section {
