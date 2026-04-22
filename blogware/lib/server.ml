@@ -97,22 +97,35 @@ let find_article (articles : article list) (path : string) :
   go 0 articles
 
 let serve_index fd (config : site_config) : unit =
+  let index_tex = Filename.concat config.site_input "index.tex" in
   match Site.load_articles config.site_input with
   | Error err -> send_response fd 500 "text/plain" err
-  | Ok [] -> send_response fd 404 "text/plain" "No posts yet"
-  | Ok (article :: rest as all_articles) ->
-      let toc = Layout.extract_toc article.art_body in
-      let similar = Layout.find_similar_articles all_articles 0 in
-      let next_post = match rest with x :: _ -> Some x | [] -> None in
-      let ref_table = Layout.build_ref_table all_articles article in
-      let ctx = { Render.ref_table } in
-      let body_html = Html.render (Render.render_blocks ctx article.art_body) in
-      let page_html =
-        Html.render
-          (Layout.render_post_page config.site_root article toc similar None
-             next_post body_html)
-      in
-      send_response fd 200 "text/html; charset=utf-8" page_html
+  | Ok articles -> (
+      if not (Sys.file_exists index_tex) then
+        send_response fd 404 "text/plain" ("Index file not found: " ^ index_tex)
+      else
+        let content = Site.read_file_contents index_tex in
+        match Tex_parser.parse_document ~source_name:index_tex content with
+        | Error err ->
+            send_response fd 500 "text/plain"
+              (Error.format_parse_error content err)
+        | Ok nodes -> (
+            match Elaborate.elaborate "index" nodes with
+            | Error err ->
+                send_response fd 500 "text/plain"
+                  (Error.format_elab_error ~source_name:index_tex content err)
+            | Ok index_article ->
+                let body =
+                  Render.render_blocks Render.empty_ctx index_article.art_body
+                in
+                let featured =
+                  Site.take 5 (List.filter (fun a -> a.art_featured) articles)
+                in
+                let latest = Site.take 5 articles in
+                let page_html =
+                  Html.render (Layout.render_index_page body featured latest)
+                in
+                send_response fd 200 "text/html; charset=utf-8" page_html))
 
 let serve_post fd (config : site_config) (path : string) : unit =
   match Site.load_articles config.site_input with
@@ -121,21 +134,14 @@ let serve_post fd (config : site_config) (path : string) : unit =
       match find_article articles path with
       | None -> send_response fd 404 "text/plain" ("No post at path " ^ path)
       | Some (i, article) ->
-          let arr = Array.of_list articles in
-          let n = Array.length arr in
           let toc = Layout.extract_toc article.art_body in
           let similar = Layout.find_similar_articles articles i in
-          let prev_post = if i > 0 then Some arr.(i - 1) else None in
-          let next_post = if i < n - 1 then Some arr.(i + 1) else None in
           let ref_table = Layout.build_ref_table articles article in
           let ctx = { Render.ref_table } in
-          let body_html =
-            Html.render (Render.render_blocks ctx article.art_body)
-          in
+          let body = Render.render_blocks ctx article.art_body in
           let page_html =
             Html.render
-              (Layout.render_post_page config.site_root article toc similar
-                 prev_post next_post body_html)
+              (Layout.render_post_page config.site_root article toc similar body)
           in
           send_response fd 200 "text/html; charset=utf-8" page_html)
 
@@ -178,19 +184,15 @@ let serve_page fd (config : site_config) (name : string) : unit =
             send_response fd 500 "text/plain"
               (Error.format_elab_error ~source_name:path content err)
         | Ok article ->
-            let body_html =
-              Html.render
-                (Render.render_blocks Render.empty_ctx article.art_body)
-            in
-            let title_text =
-              Html.render
-                (Render.render_inlines Render.empty_ctx article.art_title)
+            let body = Render.render_blocks Render.empty_ctx article.art_body in
+            let title =
+              Render.render_inlines Render.empty_ctx article.art_title
             in
             let page_html =
               Html.render
-                (Layout.render_standalone_page title_text
+                (Layout.render_standalone_page title
                    ("/" ^ name ^ ".html")
-                   body_html)
+                   body)
             in
             send_response fd 200 "text/html; charset=utf-8" page_html)
 

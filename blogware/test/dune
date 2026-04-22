@@ -10,6 +10,7 @@
  (deps
   (source_tree ../../posts)
   ../../about.tex
+  ../../index.tex
   (source_tree snapshots))
  (action
   (progn
