@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="personal,programming"><meta name="description" content="Software that makes you a better programmer."><title>Enlightenmentware</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/28-enlightenmentware.html"><script type="application/ld+json">
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="personal,programming"><meta name="description" content="Software that makes you a better programmer."><title>Enlightenmentware</title><link rel="stylesheet" href="/css/mmapped.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/28-enlightenmentware.html"><script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","headline":"Enlightenmentware","url":"https://mmapped.blog/posts/28-enlightenmentware.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/28-enlightenmentware.html"},"datePublished":"2024-05-20","dateModified":"2024-05-20","wordCount":2609,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"Software that makes you a better programmer.","keywords":["personal","programming"]}
-</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/28-enlightenmentware.html">Enlightenmentware</a></h1><span class="post-attrs"><span title="First published">✏ <time datetime="2024-05-20">2024-05-20</time></span>&nbsp;
-<span title="Last modified">✂ <time datetime="2024-05-20">2024-05-20</time></span><span class="post-icons"><a class="icon-link" href="https://news.ycombinator.com/item?id=40419856" title="Discuss on Hacker News" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/y18.svg" alt="Hacker News"></a><a class="icon-link" href="https://www.reddit.com/r/programming/comments/1cwa1m8/blog_post_enlightenmentware/" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a><a class="icon-link" href="https://lobste.rs/s/qrrc6x/enlightenmentware" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
+</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/28-enlightenmentware.html">Enlightenmentware</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2024-05-20">2024-05-20</time></span><span class="post-icons"><a class="icon-link" href="https://news.ycombinator.com/item?id=40419856" title="Discuss on Hacker News" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/y18.svg" alt="Hacker News"></a><a class="icon-link" href="https://www.reddit.com/r/programming/comments/1cwa1m8/blog_post_enlightenmentware/" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a><a class="icon-link" href="https://lobste.rs/s/qrrc6x/enlightenmentware" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#unix">UNIX</a></li><li class="toc toc-level-1"><a href="#git">Git</a></li><li class="toc toc-level-1"><a href="#emacs">Emacs</a></li><li class="toc toc-level-1"><a href="#boost-graph">Boost.Graph</a></li><li class="toc toc-level-1"><a href="#bazel">Bazel</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
 
@@ -20,9 +19,9 @@ I won’t focus on languages, however, since the effects of language learning on
 <p>In this article, I praise the software that contributed the most to my enlightenment.</p>
 </section>
 <section><h2 id="unix"><a href="#unix">UNIX</a></h2>
-<div class="epigraph"><blockquote><p><span class="smallcaps">unix</span> is user-friendly—it’s just choosy about who its friends are.</p><footer>
-  Anonymous, in the <q>Art of <span class="smallcaps">unix</span> Programming</q> by Eric S. Raymond
-</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p><span class="smallcaps">unix</span> is user-friendly—it’s just choosy about who its friends are.</p></blockquote><figcaption>
+  Anonymous, in the <cite>Art of <span class="smallcaps">unix</span> Programming</cite> by Eric S. Raymond
+</figcaption></figure>
 <p>I started looking for my first real programming job around 2008 while studying at a university in my hometown of Nizhny Novgorod.
 Almost all the open positions required knowledge of mysterious things called <span class="smallcaps">unix</span> and <em>sockets</em>.
 My curriculum didn’t offer a course on <span class="smallcaps">unix</span> or operating systems in general, so I decided to get a textbook and master the topic myself. </p>
@@ -46,9 +45,9 @@ and to the overwhelmed parent stage of becoming a happy macOS user.</p>
 Most of the software I wrote operates in a <span class="smallcaps">unix</span> environment, and I still occasionally consult my copy of <a href="https://www.goodreads.com/book/show/603263.Advanced_Programming_in_the_UNIX_Environment">Advanced Programming in the <span class="smallcaps">unix</span> Environment</a>.</p>
 </section>
 <section><h2 id="git"><a href="#git">Git</a></h2>
-<div class="epigraph"><blockquote><p>It is easy to shoot your foot off with git, but also easy to revert to a previous foot and merge it with your current leg.</p><footer>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>It is easy to shoot your foot off with git, but also easy to revert to a previous foot and merge it with your current leg.</p></blockquote><figcaption>
   Jack William Bell
-</footer></blockquote></div>
+</figcaption></figure>
 <p>I encountered version control systems in early 2009; the company I worked for used <a href="https://en.wikipedia.org/wiki/IBM_Rational_ClearCase">Rational ClearCase</a> to manage their code.
 The system versioned each file separately and relied on large configuration files—<em>config specs</em>—to construct a consistent snapshot of the source tree.
 The tool was utterly confusing and intimidating, so I avoided dealing with it beyond the minimal requirements of my job.</p>
@@ -72,7 +71,7 @@ Merging branches with Git didn’t cause anxiety disorders.
 The staging area—confusingly named <em>index</em>—became essential to my workflows.
 But my favorite feature was the breathtaking beauty of Git’s design, the elegant mix of distributed systems, acyclic graphs, and content-addressed storage.</p>
 <p>Learning about Git’s internals was so much fun that I became interested in the bits and bolts of other version control systems.
-I travelled through time from <a href="https://darcs.net/">Darcs</a> to <a href="https://www.mercurial-scm.org/">Mercurial</a>, <a href="https://www.bitkeeper.org/">BitKeeper</a>, and the ultimate origin, <a href="https://en.wikipedia.org/wiki/Source_Code_Control_System">SCCS</a>.
+I travelled through time from <a href="https://darcs.net/">Darcs</a> to <a href="https://www.mercurial-scm.org/">Mercurial</a>, <a href="https://www.bitkeeper.org/">BitKeeper</a>, and the ultimate origin, <a href="https://en.wikipedia.org/wiki/Source_Code_Control_System"><span class="smallcaps">sccs</span></a>.
 I also built a toy one-file version control system while learning Rust.</p>
 <p>Will Git ever be replaced with something better?
 Just as it was hard to imagine an improvement over Subversion before Git came along, it’s hard to imagine a significant improvement over Git now.
@@ -84,7 +83,7 @@ Git, Mercurial, and most other tools make it challenging to separate original co
 Systems based on <a href="https://en.m.wikibooks.org/wiki/Understanding_Darcs/Patch_theory">patch theory</a>, such as <a href="https://pijul.org/">Pijul</a> and <a href="https://darcs.net/">Darcs</a>, might address these issues.</p>
 </section>
 <section><h2 id="emacs"><a href="#emacs">Emacs</a></h2>
-<div class="epigraph"><blockquote><p>While any text editor can save your files, only Emacs can save your soul.</p><footer>Per Abrahamsen</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>While any text editor can save your files, only Emacs can save your soul.</p></blockquote><figcaption>Per Abrahamsen</figcaption></figure>
 <p>I edited my first programs in a friendly blue window of <a href="https://en.wikipedia.org/wiki/Turbo_Pascal">Turbo Pascal 7.0</a>.
 The environment had little friction: no project or build configuration, no noticeable build time; you type your code and run it.
 That was a perfect tool for learning.</p>
@@ -127,10 +126,10 @@ It’s also my editor of choice if I need to implement an extension.
 Programming Emacs Lisp is a joy, especially compared to writing Vimscript.</p>
 </section>
 <section><h2 id="boost-graph"><a href="#boost-graph">Boost.Graph</a></h2>
-<div class="epigraph"><blockquote><p>I also must confess to a strong bias against the fashion for reusable code.
-  To me, <q>re-editable code</q> is much, much better than an untouchable black box or toolkit.</p><footer>
-  Donald Knuth, <a href="https://www.informit.com/articles/article.aspx?p=1193856">Interview with Andrew Binstock</a>
-</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>I also must confess to a strong bias against the fashion for reusable code.
+  To me, <q>re-editable code</q> is much, much better than an untouchable black box or toolkit.</p></blockquote><figcaption>
+  Donald Knuth, <a href="https://www.informit.com/articles/article.aspx?p=1193856"><cite>Interview with Andrew Binstock</cite></a>
+</figcaption></figure>
 <p>The evening of 2013 New Year’s Eve didn’t go as planned.
 I was on a cruise ship crossing the stormy Baltic Sea and couldn’t stay on my feet because of the seasickness.
 Instead of consuming tasty treats with the rest of the passengers, I was lying in bed and reading a book I took for the trip: <a href="https://www.goodreads.com/book/show/1705806.The_Boost_Graph_Library">The Boost Graph Library</a> by Jeremy G. Siek et al.</p>
@@ -146,13 +145,13 @@ It also helped me understand the motivation for advanced type-level programming 
 Overall, Boost.Graph is one of the most enlightening pieces of software that I’ve never used.</p>
 </section>
 <section><h2 id="bazel"><a href="#bazel">Bazel</a></h2>
-<div class="epigraph"><blockquote><p>If make doesn’t do what you expect it to, it’s a good chance the makefile is wrong.</p><footer>
-  Adam de Boor, <q><a href="https://docs-archive.freebsd.org/44doc/psd/12.make/paper.pdf">PMake—A Tutorial</a></q>
-</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>If make doesn’t do what you expect it to, it’s a good chance the makefile is wrong.</p></blockquote><figcaption>
+  Adam de Boor, <a href="https://docs-archive.freebsd.org/44doc/psd/12.make/paper.pdf"><cite>PMake—A Tutorial</cite></a>
+</figcaption></figure>
 <p>I wrote my first <code>Makefile</code> around 2009 while working on a research project in computational mathematics for my degree.
 I already used <a href="https://en.wikipedia.org/wiki/Make_(software)"><code>make</code></a> at work, but I didn’t need to understand how it worked.
 This time, I had to compile a <span class="smallcaps">fortran</span> program mixing sources adhering to different language standards: from venerable <span class="smallcaps">fortran</span> 77 to hip Fortran 2003.
-To get a deeper understanding of the tool, I referred to <a href="https://www.oreilly.com/library/view/managing-projects-with/0596006101/">Managing Projects with GNU Make</a> by Robert Mecklenburg.</p>
+To get a deeper understanding of the tool, I referred to <a href="https://www.oreilly.com/library/view/managing-projects-with/0596006101/">Managing Projects with <span class="smallcaps">gnu</span> Make</a> by Robert Mecklenburg.</p>
 <p>Most books on technology excite me: I become enthusiastic about the subject and want to try it out in practice. 
 The book on <code>make</code> had the opposite effect.
 The complexity required to make builds correct and ergonomic made me yearn for a better tool<label class="margin-toggle sidenote-number" for="sn-modern-cpp-design"></label><input type="checkbox" id="sn-modern-cpp-design" class="margin-toggle"><span class="sidenote">
@@ -200,8 +199,7 @@ For me, these are the key points:</p>
 <p>What’s your enlightenmentware? Tell me on <a href="https://news.ycombinator.com/item?id=40419856">Hacker News</a> or <a href="https://www.reddit.com/r/programming/comments/1cwa1m8/blog_post_enlightenmentware/">Reddit</a>!</p>
 </section>
 
-</article><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/23-numeric-tower-fiasco.html" title="OOP inheritance had one job to do.">The numeric tower fiasco</a>&ensp;<span class="compact-date"><time datetime="2023-11-22">2023-11-22</time></span></li><li><a class="compact-title" href="/posts/31-effective-design-docs.html" title="An opinionated guide to writing software design docs.">Effective design docs</a>&ensp;<span class="compact-date"><time datetime="2024-09-15">2024-09-15</time></span></li><li><a class="compact-title" href="/posts/37-onnx-intro.html" title="A gentle introduction to the Open Neural Network eXchange format.">ONNX introduction</a>&ensp;<span class="compact-date"><time datetime="2025-02-17">2025-02-17</time></span></li><li><a class="compact-title" href="/posts/41-box-combinators.html" title="The most visual way to print a table.">Box combinators</a>&ensp;<span class="compact-date"><time datetime="2025-06-01">2025-06-01</time></span></li><li><a class="compact-title" href="/posts/44-tag-based-logging.html" title="#tags #logs">Tag-based logging</a>&ensp;<span class="compact-date"><time datetime="2025-08-19">2025-08-19</time></span></li></ul>
+</article><section><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/23-numeric-tower-fiasco.html" title="OOP had one job to do.">The numeric tower fiasco</a><span class="compact-date"><time datetime="2023-11-22">2023-11-22</time></span></li><li><a class="compact-title" href="/posts/31-effective-design-docs.html" title="An opinionated guide to writing software design docs.">Effective design docs</a><span class="compact-date"><time datetime="2024-09-15">2024-09-15</time></span></li><li><a class="compact-title" href="/posts/37-onnx-intro.html" title="An introduction to the Open Neural Network eXchange format.">ONNX introduction</a><span class="compact-date"><time datetime="2025-02-17">2025-02-17</time></span></li><li><a class="compact-title" href="/posts/41-box-combinators.html" title="The most visual way to print a table.">Box combinators</a><span class="compact-date"><time datetime="2025-06-01">2025-06-01</time></span></li><li><a class="compact-title" href="/posts/44-tag-based-logging.html" title="#tags #logs">Tag-based logging</a><span class="compact-date"><time datetime="2025-08-19">2025-08-19</time></span></li></ul></section>
 
-<hr><footer><span>&copy;Roman Kashitsyn</span>&nbsp;
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<hr><footer class="contentinfo"><span>&amp;copy;Roman Kashitsyn</span>&nbsp;<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
 <a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></body></html>

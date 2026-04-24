@@ -25,7 +25,7 @@ The following quote from one of my favorite books on software design illustrates
 \blockquote{
   It took six months, but I eventually found and fixed the bug. [\ldots]
   At one point in the code there was a \code{block} variable containing a logical block number, but it was accidentally used in a context where a physical block number was needed.
-}{John Ousterhout, ``A Philosophy of Software Design'', Chapter 14, ``Choosing names''}
+}{John Ousterhout, \cite{A Philosophy of Software Design, Chapter 14}}
 
 The author attributes the bug to poor variable naming, but this blame is misplaced.
 If the programmer had defined \emph{distinct types} for logical and physical block numbers, the compiler would have caught this mistake immediately.
@@ -103,7 +103,7 @@ There is a more systematic way to think about domain types.
 \section{domain-type-classes}{Domain type classes}
 
 \epigraph{A constraint on component design leads to freedom and power when putting those components together into systems.}{
-  Rúnar Bjarnason, \href{https://www.youtube.com/watch?v=GqmsQeSzMdw}{Constraints Liberate, Liberties Constrain}.
+  Rúnar Bjarnason, \href{https://www.youtube.com/watch?v=GqmsQeSzMdw}{\cite{Constraints Liberate, Liberties Constrain}}.
 }
 
 Over the years, I found that specific classes of domain types appear repeatedly in most applications I work on.
@@ -279,7 +279,7 @@ A financial application might need to multiply the dollar amount by the conversi
 
 We can model complex type interactions using methods of \href{https://en.wikipedia.org/wiki/Dimensional_analysis}{dimensional analysis}.
 If we view \href{#amounts}{amounts} as values with an attached label identifying their unit, then our new types are a natural extension demanding a more structured label equivalent to a vector of base units raised to rational powers.
-For example, acceleration would have label \math{(distance \times  time\sup{-2})}, and the \textsc{usd}/\textsc{eur} \href{https://en.wikipedia.org/wiki/Currency_pair}{pair} exchange rate would have label \math{(eur \times  usd\sup{-1})}.
+For example, acceleration would have label $\mathrm{distance} \times  \mathrm{time}^{-2}$, and the \textsc{usd}/\textsc{eur} \href{https://en.wikipedia.org/wiki/Currency_pair}{pair} exchange rate would have label $\mathrm{eur} \times  \mathrm{usd}^{-1}$.
 I call types with such rich label structure \emph{quantities}.
 
 Quantities are a proper extension of amounts: addition, subtraction, and scalar multiplication work the same way, leaving the label structure untouched.

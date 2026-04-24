@@ -1,7 +1,7 @@
 \documentclass{article}
 
 \title{The numeric tower fiasco}
-\subtitle{OOP inheritance had one job to do.}
+\subtitle{OOP had one job to do.}
 \date{2023-11-22}
 \modified{2023-11-22}
 \keyword{oop}
@@ -310,7 +310,7 @@ The code is easy to extend to support more numeric types, which is left as an ex
 
 \section{conclusion}{Conclusion}
 
-\epigraph{I find OOP technically unsound\ldots  I find OOP philosophically unsound\ldots  I find OOP methodologically wrong.}{From \href{http://stlport.org/resources/StepanovUSA.html}{An Interview with A. Stepanov}}
+\epigraph{I find OOP technically unsound\ldots  I find OOP philosophically unsound\ldots  I find OOP methodologically wrong.}{From \href{http://stlport.org/resources/StepanovUSA.html}{\cite{An Interview with A. Stepanov}}}
 
 When I use a tool and get unsatisfactory results, I blame myself for not using the tool correctly.
 At first, I felt the same about the numeric tower case, but now I'm sure the problem is not me; it's the class hierarchies.
@@ -324,7 +324,7 @@ but my favorite is how inheriting \code{ColorPoint} from \code{Point} breaks the
 \blockquote{
     There is no way to extend an instantiable class and add a value component while preserving the \code{equals} contract,
     unless you're willing to forgo the benefits of object-oriented abstraction.
-}{Joshua Bloch, ``Effective Java'', 3rd edition, item 10, p. 42}
+}{Joshua Bloch, \cite{Effective Java, 3rd edition, item 10, p. 42}}
 
 If something doesn't work on small examples, why do we expect it to work in large codebases?
 When was the last time you looked in a complex class hierarchy and admired how easy to understand the code was?

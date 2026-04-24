@@ -12,8 +12,8 @@
 \begin{document}
 \section{intro}{Introduction}
 
-I am currently involved in the effort to deliver the \href{https://github.com/dfinity/ICRC-1}{ICRC-1} fungible token standard for the \href{https://internetcomputer.org}{Internet Computer}.
-The two topics the \href{https://forum.dfinity.org/t/announcing-token-standard-as-topic-of-the-first-meeting-of-the-ledger-tokenization-working-group/11925}{Ledger \& Tokenization} working group discussed most heatedly are the use of \href{#subaccounts}{subaccounts} and the core payment flow for smart contracts (in particular, the \code{approve}/\code{transferFrom} flow popularized by the \href{https://eips.ethereum.org/EIPS/eip-20}{ERC-20} token standard).
+I am currently involved in the effort to deliver the \href{https://github.com/dfinity/ICRC-1}{\textsc{icrc-1}} fungible token standard for the \href{https://internetcomputer.org}{Internet Computer}.
+The two topics the \href{https://forum.dfinity.org/t/announcing-token-standard-as-topic-of-the-first-meeting-of-the-ledger-tokenization-working-group/11925}{Ledger \& Tokenization} working group discussed most heatedly are the use of \href{#subaccounts}{subaccounts} and the core payment flow for smart contracts (in particular, the \code{approve}/\code{transferFrom} flow popularized by the \href{https://eips.ethereum.org/EIPS/eip-20}{\textsc{erc-20}} token standard).
 At first glance, these issues seemed unrelated, but surprising connections revealed themselves under closer scrutiny, begging for analysis and exploration.
 
 This article is a gentle introduction to fungible tokens and ledgers.
@@ -23,7 +23,7 @@ We shall frame the concept of the ledger and options available when designing a 
 \epigraph{
 Gold is gold everywhere, fungible and indifferent.
 But when a disk of gold is stamped by a coiner with certain pompous words and the picture of a King, it takes on added value---seigneurage. It has that value only in that people believe that it does---it is a shared phant'sy.
-}{Neal Stephenson, The Confusion}
+}{Neal Stephenson, \cite{The Confusion}}
 
 The concept of \href{https://www.investopedia.com/terms/f/fungibility.asp}{fungible} tokens is ancient and intimately familiar to us, though we rarely use this learned term of \href{https://en.wiktionary.org/wiki/fungible}{latin origin} in everyday life.
 Fungible tokens are interchangeable items you can trade, such as coins of equal value or gold pieces of identical form, weight, and purity.
@@ -35,7 +35,7 @@ You did not care which instance of the desired sort of ice cream\sidenote{plombi
 
 \subsection{asset-ledgers}{Asset ledgers}
 
-The most prominent examples of fungible tokens in the digital world are digital assets such as \href{https://bitcoin.org/}{Bitcoin}, \href{https://ethereum.org/en/eth/}{Ether}, and \href{https://wiki.internetcomputer.org/wiki/ICP_token}{ICP} utility tokens.
+The most prominent examples of fungible tokens in the digital world are digital assets such as \href{https://bitcoin.org/}{Bitcoin}, \href{https://ethereum.org/en/eth/}{Ether}, and \href{https://wiki.internetcomputer.org/wiki/ICP_token}{\textsc{icp}} utility tokens.
 An \href{https://www.investopedia.com/terms/a/asset-ledger.asp}{asset ledger} is a concept lying at the heart of these systems.
 Ledgers are journals of transactions the system executed; they keep track of fund movements between accounts.
 Each purchase you make using bitcoin becomes a record in the Bitcoin ledger packed into a block in the blockchain.
@@ -89,7 +89,7 @@ But how do the first tokens get into the system?
 
 All ledgers have a way to produce, or \emph{mint}\sidenote{sn-newton-ming}{Did you know that Sir Isaac Newton worked at the \href{https://newtonandthemint.history.ox.ac.uk/}{Royal Mint} for three decades?}, tokens out of thin air.
 Bitcoin network mints tokens as a reward for participants that help the ledger grow.
-The IC mints ICP utility tokens to reward participants in the network governance and node providers.
+The IC mints \textsc{icp} utility tokens to reward participants in the network governance and node providers.
 
 Another popular scheme is \emph{wrapped tokens}, where the ledger mints tokens as proxies for other assets.
 Let us extend the tip ledger example to make it operate on wrapped dollars.
@@ -280,7 +280,7 @@ Peppy pursed her lips, wrote four more records to the notebook, and visited Mrs.
 Fees are an essential instrument in ledger design.
 The bitcoin network uses fees to protect the system against spam transactions and incentivize the nodes to include transactions into blocks.
 The higher the fee the transaction sender is willing to pay, the more likely the nodes to process the transaction.
-The ICP ledger also uses fees as a mechanism for spam prevention.
+The \textsc{icp} ledger also uses fees as a mechanism for spam prevention.
 
 \section{summary}{Summary}
 

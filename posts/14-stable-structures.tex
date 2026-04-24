@@ -12,7 +12,7 @@
 
 \epigraph{
   Only purpose of any code is to transform data.
-}{Mike Acton, ``\href{https://youtu.be/rX0ItVEVjHc?t=1360}{Data-Oriented Design and C++}'', CppCon 2014}
+}{Mike Acton, \href{https://youtu.be/rX0ItVEVjHc?t=1360}{\cite{Data-Oriented Design and C++}}, CppCon 2014}
 
 \section{introduction}{Introduction}
 
@@ -32,7 +32,7 @@ This article explains the philosophy behind the library\sidenote{sn-library-vers
 \section{design-principles}{Design principles}
 \epigraph{
     The point is that you must decide, in advance, what the coding priorities and quality bars will be; otherwise, the team will have to waste time rewriting misconceived or substandard code.
-}{Steve Maguire, ``Debugging the Development Process'', \textsc{the groundwork}, p. 19}
+}{Steve Maguire, \cite{Debugging the Development Process, p. 19}}
 
 Software designs reflect their creators' values.
 The following principles shaped the \code{stable-structures} library design.
@@ -75,7 +75,7 @@ There are other libraries with similar goals whose authors chose a slightly diff
 \epigraph{
   In solving a problem with or without a computer it is necessary to choose an abstraction of reality, i.e., to define a set of data that is to represent the real situation.
   The choice must be guided by the problem to be solved.
-}{Niklaus Wirth, ``Algorithms + Data Structures = Programs'', \textsc{fundamental data structures}, p. 1}
+}{Niklaus Wirth, \cite{Algorithms + Data Structures = Programs, p. 1}}
 
 \subsection{memory}{Memory}
 
@@ -203,7 +203,7 @@ For example, you can persist an IC \href{https://internetcomputer.org/docs/curre
 \section{data-structures}{Data structures}
 \epigraph{
     One has an intuitive feeling that data precede algorithms: you must have some objects before you can perform operations on them.
-}{Niklaus Wirth, ``Algorithms + Data Structures = Programs'', \textsc{preface}, p. xiii}
+}{Niklaus Wirth, \cite{Algorithms + Data Structures = Programs, p. xiii}}
 
 The heart of the \code{stable-structures} library is a collection of data structures, each spanning one or more \href{#memory}{memories}.
 
@@ -326,7 +326,7 @@ The \href{/posts/11-ii-stable-memory.html#ii-memory-layout}{stable structure} po
 \subsection{stable-log}{Stable log}
 \epigraph{
   Sometimes called write-ahead logs or commit logs or transaction logs, logs have been around almost as long as computers and are at the heart of many distributed data systems and real-time application architectures.
-}{Jay Kreps, \href{https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying}{The Log}}
+}{Jay Kreps, \href{https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying}{\cite{The Log}}}
 
 A \href{https://docs.rs/ic-stable-structures/latest/ic_stable_structures/log/struct.Log.html}{Log} is an append-only list of arbitrary-sized values, similar to \href{https://redis.io/docs/data-types/streams/}{streams} in Redis.
 The log requires two memories: the \emph{index} storing entry offsets and the \emph{data} storing raw entry bytes.
@@ -380,7 +380,7 @@ The log is a versatile data structure that can be helpful in almost any applicat
 \subsection{stable-btree}{Stable B-tree}
 \epigraph{
     \emph{Deletion} of items from a B-tree is fairly straightforward in principle, but it is complicated in the details.
-}{Niklaus Wirth, ``Algorithms + Data Structures = Programs'', \textsc{dynamic information structures}, p. 250}
+}{Niklaus Wirth, \cite{Algorithms + Data Structures = Programs, p. 250}}
 
 The \href{https://docs.rs/ic-stable-structures/0.4.0/ic_stable_structures/btreemap/struct.BTreeMap.html}{\code{BTreeMap}} stable structure is an associative container that can hold any \href{#storable-types}{bounded storable type}.
   The map must know the sizes of the keys and values because it allocates nodes from a pool of fixed-size tree nodes\sidenote{sn-}{
@@ -474,7 +474,7 @@ For example, the bitcoin canister uses this data structure to store bitcoin \hre
 \section{constructing-ss}{Constructing stable structures}
 \epigraph{
   Make sure that objects are initialized before they're used.
-}{Scott Meyers, ``Effective C++'', third edition, Item 4, p. 26}
+}{Scott Meyers, \cite{Effective C++, third edition, Item 4, p. 26}}
 
 We have to declare stable structures before we can use them.
 Each data structure \code{T} in the library declares at least three constructors:

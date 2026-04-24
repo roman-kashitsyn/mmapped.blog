@@ -50,6 +50,8 @@ let escape_html (s : Text.t) (buf : Buffer.t) : unit =
 let text (s : Text.t) : t = escape_html s
 let raw (s : Text.t) : t = fun buf -> Text.output_to_buffer buf s
 let nl : t = raw (Text.of_string "\n")
+let nbsp : t = raw (Text.of_string "&nbsp;")
+let endash : t = raw (Text.of_string "&ndash;")
 let doctype : t = raw (Text.of_string "<!DOCTYPE html>")
 
 (* --- Attributes --- *)
@@ -67,6 +69,7 @@ let attr (key : string) (value : Text.t) : attribute =
   Buffer.add_char buf '"'
 
 let class_ v = attr "class" v
+let role_ v = attr "class" v
 let href_ v = attr "href" v
 let id_ v = attr "id" v
 let for_ v = attr "for" v
@@ -118,6 +121,8 @@ let footer_ a c = parent "footer" a c
 let nav_ a c = parent "nav" a c
 let aside_ a c = parent "aside" a c
 let figure_ a c = parent "figure" a c
+let figcaption_ a c = parent "figcaption" a c
+let cite_ a c = parent "cite" a c
 
 (* Headings *)
 let h1_ a c = parent "h1" a c
@@ -165,6 +170,7 @@ let br_ a = leaf "br" a
 let meta_ a = leaf "meta" a
 let link_ a = leaf "link" a
 let input_ a = leaf "input" a
+let img_ a = leaf "img" a
 
 (* MathML *)
 let math_ a c = parent "math" a c

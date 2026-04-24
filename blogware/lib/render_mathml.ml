@@ -103,6 +103,7 @@ and render_math_cmd sym args =
              (mrow_ [] (render_math_node n) ++ mrow_ [] (render_math_node k))
         ++ mo_ [] (raw (Text.of_string ")")))
   | S_operatorname, [ Math_op (s, stretchy) ] -> render_op s stretchy
+  | S_mathrm, [ Math_op (s, _) ] -> mi_ [] (escape_math_text s)
   | S_left, [ Math_op (op, stretchy) ] -> render_op op stretchy
   | S_right, [ Math_op (op, stretchy) ] -> render_op op stretchy
   | _, [] ->

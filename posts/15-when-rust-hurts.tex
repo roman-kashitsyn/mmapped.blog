@@ -15,7 +15,7 @@
 \begin{document}
 \epigraph{
   Functional programming deals with values; imperative programming deals with objects.
-}{Alexander Stepanov, ``Elements of Programming'', p. 5}
+}{Alexander Stepanov, \cite{Elements of Programming, p. 5}}
 
 \section{intro}{Introduction}
 
@@ -33,7 +33,7 @@ This article details on how frustrating Rust can be if you approach it with a fu
     Values and objects play complementary roles.
     Values are unchanging and independent of any particular implementation in the computer.
     Objects are changeable and have computer-specific implementations.
-}{Alexander Stepanov, ``Elements of Programming'', p. 5}
+}{Alexander Stepanov, \cite{Elements of Programming, p. 5}}
 
 Understanding the difference between objects, values, and references is helpful before diving deeper into Rust.
 
@@ -461,7 +461,7 @@ Despite these claims, my \href{https://en.wikipedia.org/wiki/Cortisol}{cortisol}
 \epigraph{
     So it's perfectly ``fine'' for a Safe Rust program to get deadlocked or do something nonsensical with incorrect synchronization.
     Obviously such a program isn't very good, but Rust can only hold your hand so far.
-}{The Rustonomicon, \href{https://doc.rust-lang.org/nomicon/races.html}{Data Races and Race Conditions}}
+}{The Rustonomicon, \href{https://doc.rust-lang.org/nomicon/races.html}{\cite{Data Races and Race Conditions}}}
 
 Safe Rust prevents a specific type of concurrency bug called \emph{data race}.
 Concurrent Rust programs have plenty of other ways to behave incorrectly.
@@ -502,7 +502,7 @@ Two technologies that approach the problem fundamentally are \href{https://en.wi
     We can view a path as an \emph{address}.
     Then a string representing a path is a pointer, and accessing a file through a path is a pointer dereference.
     Thus, component interference due to file overwriting can be viewed as an address collision problem: two components occupy overlapping parts of the address space.
-}{Eelco Dolstra, \href{https://edolstra.github.io/pubs/phd-thesis.pdf}{The Purely Functional Software Deployment Model}, p. 53}
+}{Eelco Dolstra, \cite{\href{https://edolstra.github.io/pubs/phd-thesis.pdf}{The Purely Functional Software Deployment Model}, p. 53}}
 
 Rust gives us powerful tools to deal with shared memory.
 However, once our programs need to interact with the outside world (e.g., use a network interface or a filesystem), we are on our own.
@@ -516,7 +516,7 @@ For example, as of February 2023, I still experience a six-year-old \href{https:
 \subsection{implicit-async-runtimes}{Implicit async runtimes}
 \epigraph{
     I cannot seriously believe in it because the theory cannot be reconciled with the idea that physics should represent a reality in time and space, free from spooky action at a distance.
-}{Albert Einstein, \href{https://books.google.ch/books?redir_esc=y&hl=de&id=HvZAAQAAIAAJ&focus=searchwithinvolume&q=spooky+action}{The Born-Einstein letters}, p. 158.}
+}{Albert Einstein, \cite{\href{https://books.google.ch/books?redir_esc=y&hl=de&id=HvZAAQAAIAAJ&focus=searchwithinvolume&q=spooky+action}{The Born-Einstein letters}, p. 158.}}
 
 The value of Rust that I like the most is its focus on local reasoning.
 Looking at the function's type signature often gives you a solid understanding of what the function can do.
@@ -566,7 +566,7 @@ Some might argue that threading ubiquitous arguments through the entire call sta
 \subsection{functions-have-colors}{Functions have colors}
 \epigraph{
     At this point, a reasonable person might think the language hates us.
-}{Bob Nystrom, \href{https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/}{What Color is Your Function?}}
+}{Bob Nystrom, \href{https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/}{\cite{What Color is Your Function?}}}
 
 Rust's \code{async/.await} syntax simplifies the composition of asynchronous algorithms.
 In return, it brings a fair amount of complexity, \href{https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/}{painting every function} in \emph{blue} (sync) or \emph{red} (async) color.

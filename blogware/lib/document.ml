@@ -22,6 +22,7 @@ type inline =
   | Sub of inline list
   | Sup of inline list
   | Quotation of inline list (* ``...'' → <q>...</q> *)
+  | Cite of inline list
   | Fun of inline list (* \fun → <span class="fun"> *)
   | Math_span of inline list (* \math → <span class="math"> *)
   | Normal of inline list (* \normal → <span class="normal"> *)

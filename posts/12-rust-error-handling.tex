@@ -40,7 +40,7 @@ However, the core \href{#empathy}{principle of empathy} applies equally well to 
   These are the things that you should strive for in your code, that are not always easy to accomplish.
   And maybe you can't always pull them off.
   But the closer you come, the better your code will be.
-}{Sean Parent, ``\href{https://youtu.be/W2tWOdzgXHA?t=107}{C++ Seasoning}''}
+}{Sean Parent, \href{https://youtu.be/W2tWOdzgXHA?t=107}{\cite{C++ Seasoning}}}
 
 Most issues in the error type design stem from the same root: making error cases easy for the code author at the expense of the caller.
 All the strategies I describe in this article are applications of the following mantra:
@@ -139,7 +139,7 @@ fn test_frobnicate_on_mondays() {
 \subsection{avoid-panics}{Reserve panics for bugs in your code}
 \epigraph{
   The \code{panic!} macro is used to construct errors that represent a bug that has been detected in your program.
-}{The Rust Standard Library, \href{https://doc.rust-lang.org/std/macro.panic.html#when-to-use-panic-vs-result}{When to use \code{panic!} vs \code{Result}}.}
+}{The Rust Standard Library, \href{https://doc.rust-lang.org/std/macro.panic.html#when-to-use-panic-vs-result}{\cite{When to use \code{panic!} vs \code{Result}}}.}
 
 The primary purpose of \href{https://doc.rust-lang.org/std/macro.panic.html}{\code{panics}} in Rust is to indicate bugs in your program.
 Resist the temptation to use panics for input validation if there is a chance that the inputs come from the end user, even if you document panics meticulously.

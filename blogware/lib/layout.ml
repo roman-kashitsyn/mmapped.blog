@@ -188,7 +188,7 @@ let page_head (root_url : string) (article : article) : Html.t =
          ]
     ++ description_meta
     ++ title_ [] (Render.render_inlines Render.empty_ctx article.art_title)
-    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/tufte.css") ]
+    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/mmapped.css") ]
     ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
     ++ link_
          [
@@ -207,6 +207,14 @@ let page_head (root_url : string) (article : article) : Html.t =
 
 (* --- Site header / footer --- *)
 
+let logo_img =
+  img_
+    [
+      class_ (txt "logo grayscale");
+      src_ (txt "/images/logo.svg");
+      alt_ (txt "logo: circled capital letter M");
+    ]
+
 let site_header : Html.t =
   header_ []
     (nav_ []
@@ -214,22 +222,26 @@ let site_header : Html.t =
           (li_ []
              (a_
                 [ class_ (txt "blog-title"); href_ (txt "/index.html") ]
-                (raw (txt "mmap(blog)")))
-          ++ li_ [] (a_ [ href_ (txt "/posts.html") ] (raw (txt "Posts")))
-          ++ li_ [] (a_ [ href_ (txt "/about.html") ] (raw (txt "About")))
-          ++ li_ [] (a_ [ href_ (txt "/feed.xml") ] (raw (txt "Atom Feed"))))))
+                (logo_img ++ text (txt "mmap(blog)")))
+          ++ li_ []
+               (a_ [ href_ (txt "/posts.html") ] (escape_html (txt "Posts")))
+          ++ li_ []
+               (a_ [ href_ (txt "/about.html") ] (escape_html (txt "About")))
+          ++ li_ []
+               (a_ [ href_ (txt "/feed.xml") ] (escape_html (txt "Atom Feed")))
+          )))
   ++ hr_ []
 
 let site_footer : Html.t =
   nl ++ hr_ []
-  ++ footer_ []
-       (span_ [] (raw (txt "&copy;Roman Kashitsyn"))
-       ++ raw (txt "&nbsp;\n")
+  ++ footer_
+       [ role_ (txt "contentinfo") ]
+       (span_ [] (escape_html (txt "&copy;Roman Kashitsyn"))
+       ++ nbsp
        ++ a_
             [
               rel_ (txt "license");
               href_ (txt "http://creativecommons.org/licenses/by/4.0/");
-              attr "style" (txt "vertical-align: text-top;");
               attr "title"
                 (txt
                    "This work is licensed under a Creative Commons Attribution \
@@ -249,13 +261,13 @@ let site_footer : Html.t =
               class_ (txt "github-link");
               href_ (txt "https://github.com/roman-kashitsyn/mmapped.blog");
             ]
-            (raw (txt "Source Code")))
+            (text (txt "Source Code")))
 
 (* --- Post attributes (dates and social links) --- *)
 
 let render_date (d : Date.t) : Html.t =
   let s = txt (Date.to_string d) in
-  time_ [ datetime_ s ] (raw s)
+  time_ [ datetime_ s ] (escape_html s)
 
 let render_social_link link icon title_text alt_text extra_class : Html.t =
   match link with
@@ -283,13 +295,15 @@ let render_post_attributes (article : article) : Html.t =
   span_
     [ class_ (txt "post-attrs") ]
     (span_
-       [ attr "title" (txt "First published") ]
-       (raw (txt "\xE2\x9C\x8F ") (* ✏ *) ++ render_date article.art_created_at)
-    ++ raw (txt "&nbsp;\n")
-    ++ span_
-         [ attr "title" (txt "Last modified") ]
-         (raw (txt "\xE2\x9C\x82 ") (* ✂ *)
-         ++ render_date article.art_modified_at)
+       [ class_ (txt "attr-date"); attr "title" (txt "First published") ]
+       (span_ [ class_ (txt "icon") ] (text (txt "✑"))
+       ++ render_date article.art_created_at)
+    ++ (if Date.equal article.art_modified_at article.art_created_at then empty
+        else
+          span_
+            [ class_ (txt "attr-date"); attr "title" (txt "Last modified") ]
+            (span_ [ class_ (txt "icon") ] (text (txt "✂"))
+            ++ render_date article.art_modified_at))
     ++ span_
          [ class_ (txt "post-icons") ]
          (render_social_link article.art_hn "/images/y18.svg"
@@ -307,14 +321,14 @@ let render_toc (sections : toc_section list) : Html.t =
     let render_toc_sub sub =
       li_
         [ class_ (txt "toc toc-level-2") ]
-        (a_ [ href_ (txt "#" ^^ sub.toc_id) ] (raw sub.toc_title))
+        (a_ [ href_ (txt "#" ^^ sub.toc_id) ] (escape_html sub.toc_title))
     in
     let render_toc_section s =
       li_
         [ class_ (txt "toc toc-level-1") ]
         (a_
            [ href_ (txt "#" ^^ s.sec_entry.toc_id) ]
-           (raw s.sec_entry.toc_title)
+           (escape_html s.sec_entry.toc_title)
         ++
         if s.sec_subsections = [] then empty
         else
@@ -338,13 +352,12 @@ let render_compact_entry (a : article) : Html.t =
   in
   li_ []
     (a_ title_attrs (Render.render_inlines Render.empty_ctx a.art_title)
-    ++ raw (txt "&ensp;")
     ++ span_ [ class_ (txt "compact-date") ] (render_date a.art_created_at))
 
 let render_compact_list (heading : string) (articles : article list) : Html.t =
   if articles = [] then empty
   else
-    h2_ [] (raw (txt heading))
+    h2_ [] (escape_html (txt heading))
     ++ ul_
          [ class_ (txt "article-list") ]
          (concat (List.map render_compact_entry articles))
@@ -353,7 +366,7 @@ let render_compact_list (heading : string) (articles : article list) : Html.t =
 
 let render_similar : article list -> Html.t = function
   | [] -> empty
-  | articles -> render_compact_list "Similar articles" articles
+  | articles -> section_ [] (render_compact_list "Similar articles" articles)
 
 (* --- Full post page --- *)
 
@@ -394,7 +407,7 @@ let render_post_entry (a : article) : Html.t =
           [ href_ a.art_url ]
           (span_ [] (Render.render_inlines Render.empty_ctx a.art_title)))
     ++ div_
-         [ class_ (txt "article-abstract") ]
+         [ class_ (txt "article-subtitle") ]
          (Render.render_inlines Render.empty_ctx a.art_subtitle)
     ++ render_post_attributes a)
 
@@ -407,8 +420,8 @@ let list_page_head (title_text : string) : Html.t =
            name_ (txt "viewport");
          ]
     ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
-    ++ title_ [] (raw (txt title_text))
-    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/tufte.css") ]
+    ++ title_ [] (escape_html (txt title_text))
+    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/mmapped.css") ]
     ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
     ++ link_
          [
@@ -452,8 +465,7 @@ let standalone_page_head (title : Html.t) : Html.t =
     ++ preload "/fonts/LibertinusSans-Bold.woff2" "font/woff2"
     ++ preload "/fonts/LibertinusSerif-Regular.woff2" "font/woff2"
     ++ preload "/fonts/LibertinusSerif-Bold.woff2" "font/woff2"
-    ++ preload "/fonts/YanoneKaffeesatz-Regular.otf" "font/otf"
-    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/tufte.css") ]
+    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/mmapped.css") ]
     ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
     ++ link_
          [
@@ -470,7 +482,8 @@ let render_post_list_page (title_text : string) (articles : article list) :
        (list_page_head title_text
        ++ body_ []
             (site_header
-            ++ article_ []
+            ++ section_
+                 [ class_ (txt "post-list") ]
                  (if articles = [] then empty
                   else
                     ul_
@@ -507,7 +520,7 @@ let render_index_page (body : Html.t) (featured : article list)
             (site_header
             ++ article_ []
                  (body
-                 ++ render_compact_list "Featured" featured
-                 ++ render_compact_list "Latest" latest)
+                 ++ section_ [] (render_compact_list "Featured" featured)
+                 ++ section_ [] (render_compact_list "Latest" latest))
             ++ site_footer))
   ++ nl

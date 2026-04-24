@@ -14,7 +14,7 @@
 \section*
 \epigraph{
   Good judgment is the result of experience and experience the result of bad judgment.
-}{Attributed to Mark Twain.}
+}{Mark Twain}
 
 The \href{https://internetcomputer.org}{Internet Computer} (IC) \href{https://github.com/dfinity/ic}{Rust code base} grew from an empty repository in June 2019 to almost 350,000 lines of code in early 2022.
 This rapid growth taught me that decisions working fine for relatively small projects might start dragging the project down over time.
@@ -28,7 +28,7 @@ For example, the first edition of the venerable \href{https://doc.rust-lang.org/
 \blockquote{
   Rust has two distinct terms that relate to the module system: ‘crate’ and ‘module’. A crate is synonymous with a ‘library’ or ‘package’ in other languages.
   Hence “Cargo” as the name of Rust’s package management tool: you ship your crates to others with Cargo. Crates can produce an executable or a library, depending on the project.
-}{``\href{https://doc.rust-lang.org/1.25.0/book/}{The Rust Programming Language}'', version 1.25.0}
+}{\cite{\href{https://doc.rust-lang.org/1.25.0/book/}{The Rust Programming Language}, version 1.25.0}}
 
 Wait a minute, a library and a package are different concepts, aren't they?
 Mixing up these concepts leads to frustration, even if you already have a few months of Rust exposure.
@@ -263,7 +263,7 @@ The official documentation of the venerable \href{https://crates.io/crates/slog}
   Especially libraries should expose full flexibility to their users, and not use implicit logging behaviour.
 
   Usually \code{Logger} instances fit pretty neatly into data structures in your code representing resources, so it's not that hard to pass them in constructors, and use \code{info!(self.log, ...)} everywhere.
-}{\href{https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around}{\code{slog} \textsc{faq}}}
+}{\href{https://github.com/slog-rs/slog/wiki/FAQ#do-i-have-to-pass-logger-around}{\cite{\code{slog} \textsc{faq}}}}
 
 By passing state implicitly, you gain temporary convenience but make your code less clear, less testable, and more error-prone.
 Every type of resource we passed implicitly\sidenote{sn-resource-types}{\href{https://crates.io/crates/slog-scope}{scoped} loggers, \href{https://crates.io/crates/prometheus}{Prometheus} metrics registries, \href{https://crates.io/crates/rayon}{Rayon} thread pools, \href{https://crates.io/crates/tokio}{Tokio} runtimes, to name a few.} caused hard-to-diagnose issues and wasted a lot of engineering time.

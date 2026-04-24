@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="glasperlenspiel"><meta name="description" content="Why is it so hard to change things?"><title>Mach’s principle</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/21-machs-principle.html"><script type="application/ld+json">
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="glasperlenspiel"><meta name="description" content="Why is it so hard to change things?"><title>Mach’s principle</title><link rel="stylesheet" href="/css/mmapped.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/21-machs-principle.html"><script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","headline":"Mach’s principle","url":"https://mmapped.blog/posts/21-machs-principle.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/21-machs-principle.html"},"datePublished":"2023-07-02","dateModified":"2023-07-02","wordCount":1370,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"Why is it so hard to change things?","keywords":["glasperlenspiel"]}
-</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/21-machs-principle.html">Mach’s principle</a></h1><span class="post-attrs"><span title="First published">✏ <time datetime="2023-07-02">2023-07-02</time></span>&nbsp;
-<span title="Last modified">✂ <time datetime="2023-07-02">2023-07-02</time></span><span class="post-icons"></span></span>
+</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/21-machs-principle.html">Mach’s principle</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2023-07-02">2023-07-02</time></span><span class="post-icons"></span></span>
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#inertia-mystery">The mystery of inertia</a></li><li class="toc toc-level-1"><a href="#relations-as-inertia">Relations as inertia</a></li><li class="toc toc-level-1"><a href="#inertia-in-software">Inertia in software</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
 
 <section><h2 id="inertia-mystery"><a href="#inertia-mystery">The mystery of inertia</a></h2>
-<div class="epigraph"><blockquote><p>…inertia originates in a kind of interaction between bodies…</p><footer>
-  Albert Einstein, letter to Ernst Mach, Zurich, 25 June 1913
-</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>…inertia originates in a kind of interaction between bodies…</p></blockquote><figcaption>
+  Albert Einstein, <cite>letter to Ernst Mach, Zurich, 25 June 1913</cite>
+</figcaption></figure>
 <p>If you have ever tried to move a closet, you know how much sweat you must shed before the damn thing ends up where you want it to be.
 Physicists call this mysterious property of objects <em>inertia</em><label class="margin-toggle sidenote-number" for="sn-inertia"></label><input type="checkbox" id="sn-inertia" class="margin-toggle"><span class="sidenote">
   More formally, inertia is the tendency of a body to stay at rest or continue moving in a straight line unless some force acts on the body.
@@ -27,14 +26,14 @@ In Mach’s view, we wouldn’t notice the rotation because the relative positio
 <p>In Mach’s universe, space is meaningless without matter.
 If only one body is flying in an empty universe, inertia disappears because no other objects are around to measure movement.</p>
 <p>I first learned about Mach and his ideas from a controversial book by Alexander Unzicker:</p>
-<blockquote><p>Mach had also argued that a body’s inertial resistance to acceleration, and hence the concept of mass itself, should depend on the body’s motion relative to the rest of the universe.
-    Even remote galaxies would influence the speed at which an apple falls from the tree!</p><footer>Alexander Unzicker, <a href="https://www.amazon.com/Einsteins-Lost-Key-Overlooked-Century/dp/1519473435">Einstein’s Lost Key: How We Overlooked the Best Idea of the 20th Century</a>, Chapter 1</footer></blockquote>
+<figure class="bq left-gutter-anchor"><blockquote><p>Mach had also argued that a body’s inertial resistance to acceleration, and hence the concept of mass itself, should depend on the body’s motion relative to the rest of the universe.
+    Even remote galaxies would influence the speed at which an apple falls from the tree!</p></blockquote><figcaption>Alexander Unzicker, <cite><a href="https://www.amazon.com/Einsteins-Lost-Key-Overlooked-Century/dp/1519473435">Einstein’s Lost Key: How We Overlooked the Best Idea of the 20th Century</a>, Chapter 1</cite></figcaption></figure>
 <p>Once that idea settled in my mind, I had an epiphany.
 It gave a form to my implicit intuitive knowledge about the world.
 I started seeing the principle’s consequences everywhere: in human relationships, project management, team dynamics, and software development.</p>
 </section>
 <section><h2 id="relations-as-inertia"><a href="#relations-as-inertia">Relations as inertia</a></h2>
-<div class="epigraph"><blockquote><p>…once you get up steam, you are carried helplessly along.</p><footer>Attributed to Aleksandr Solzhenitsyn</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>…once you get up steam, you are carried helplessly along.</p></blockquote><figcaption>Attributed to Aleksandr Solzhenitsyn</figcaption></figure>
 <p>Imagine you’re twenty-three, single and live in a rented apartment.
 A respectable company offers you a dream job on the other side of the globe.
 The compensation is so high you don’t feel comfortable saying the number out loud.
@@ -59,7 +58,7 @@ These include your loved ones, friends, community, church, and places you enjoy 
 Relationships make our lives worth living, but they also resist drastic changes.</p>
 </section>
 <section><h2 id="inertia-in-software"><a href="#inertia-in-software">Inertia in software</a></h2>
-<div class="epigraph"><blockquote><p>Complexity is caused by two things: <em>dependencies</em> and <em>obscurity</em>.</p><footer>John Ousterhout, <a href="https://www.amazon.com/Philosophy-Software-Design-2nd/dp/173210221X">A Philosophy of Software Design, 2nd Edition</a>.</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Complexity is caused by two things: <em>dependencies</em> and <em>obscurity</em>.</p></blockquote><figcaption>John Ousterhout, <cite><a href="https://www.amazon.com/Philosophy-Software-Design-2nd/dp/173210221X">A Philosophy of Software Design, 2nd Edition</a></cite>.</figcaption></figure>
 <p>Changing software is hard.
 Ask a programmer to add an innocent looking feature and watch them throw up their hands.
 They might even tell you it would be easier to write a new program than to change the existing one.</p>
@@ -115,8 +114,7 @@ Despite all the progress in theoretical physics, inertia seems just as puzzling 
 There is no consensus on whether Mach’s principle is the right piece in this puzzle, but its connection to everyday experience makes it compelling nevertheless.</p>
 </section>
 
-</article><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/26-good-names-form-galois-connections.html" title="A quest for defining what it means to name things well.">Good names form Galois connections</a>&ensp;<span class="compact-date"><time datetime="2024-04-01">2024-04-01</time></span></li><li><a class="compact-title" href="/posts/05-debug-like-feynman.html" title="Apply scientific method in everyday software engineering.">Debug like Feynman, test like Faraday</a>&ensp;<span class="compact-date"><time datetime="2022-04-01">2022-04-01</time></span></li><li><a class="compact-title" href="/posts/38-static-types-perfectionism.html" title="Scherzo in e-moll on programming and authenticity.">Static types are for perfectionists</a>&ensp;<span class="compact-date"><time datetime="2025-04-01">2025-04-01</time></span></li><li><a class="compact-title" href="/posts/48-the-third-hard-problem.html" title="It’s not off-by-one errors.">The third hard problem</a>&ensp;<span class="compact-date"><time datetime="2026-02-28">2026-02-28</time></span></li></ul>
+</article><section><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/26-good-names-form-galois-connections.html" title="A quest for defining what it means to name things well.">Good names form Galois connections</a><span class="compact-date"><time datetime="2024-04-01">2024-04-01</time></span></li><li><a class="compact-title" href="/posts/05-debug-like-feynman.html" title="Applying scientific method in software engineering.">Debug like Feynman, test like Faraday</a><span class="compact-date"><time datetime="2022-04-01">2022-04-01</time></span></li><li><a class="compact-title" href="/posts/38-static-types-perfectionism.html" title="Scherzo in e-moll on programming and authenticity.">Static types are for perfectionists</a><span class="compact-date"><time datetime="2025-04-01">2025-04-01</time></span></li><li><a class="compact-title" href="/posts/48-the-third-hard-problem.html" title="It’s not off-by-one errors.">The third hard problem</a><span class="compact-date"><time datetime="2026-02-28">2026-02-28</time></span></li></ul></section>
 
-<hr><footer><span>&copy;Roman Kashitsyn</span>&nbsp;
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<hr><footer class="contentinfo"><span>&amp;copy;Roman Kashitsyn</span>&nbsp;<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
 <a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></body></html>

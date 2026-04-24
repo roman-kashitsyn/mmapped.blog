@@ -1,31 +1,75 @@
 @charset "UTF-8";
 
 :root {
-    --left-gutter-width: 1em;
-    --left-gutter-gap: 0.5rem;
+    color-scheme: light dark;
+
+    --left-gutter-width: var(--sp-default);
+    --left-gutter-gap: var(--sp-default);
+
+    /* Fonts */
+    --font-serif: "Libertinus Serif", "Linux Libertine O", "Linux Libertine", serif;
+    --font-sans:  "Libertinus Sans", "Linux Biolinum O", "Linux Biolinum", -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --font-mono-apl: "APL385 Unicode", monospace;
+    --font-mono-settings: "ss02", "zero";
+    --font-comic: "Comic Sans Mono", "Comic Sans", cursive;
+    --font-icons: var(--font-math);
+    --font-kbd: "Libertinus Keyboard";
+    --font-math: "STIX Two Math", math;
+    --font-display: var(--font-sans);
+
+    /* Font sizes */
+    --fs-footnotesize: 0.78rem;
+    --fs-small: 1.05rem;
+    --fs-normal: 1.4rem;
+    --fs-large: 1.87rem;
+    --fs-xlarge: 2.5rem;
+
+    --fs-code-small: calc(0.78 * var(--fs-small));
+    --fs-code-normal: calc(0.78 * var(--fs-normal));
+
+    --fs-math-small: calc(0.92 * var(--fs-small));
+    --fs-math-normal: calc(0.92 * var(--fs-normal));
+    
+    /* Colors */
+    --page: #FBF7EE;
+    --page-sunk: #F3EDDF;
+
+    --ink: #1B1814;
+    --ink-subtle: #55504A;
+    --ink-faint: #8A857B;
+
+    --rule: #D6CDBB;
+    --rule-soft: #E8E0CD;
+
+    --accent-1: #A6392B;
+    --accent-1-ink: #8A2F24;
+
+    --accent-2: #1F6B6B;
+    --accent-2-ink: #1A5A5A;
+    --selection: #F2D8B6;
+
+    --code-good: #3E6A3A;
+    --code-good-bg: #E9EFDE;
+    --code-bad: #A6392B;
+    --code-bad-bg: #F4E4DE;
+
+
+    /* Spacing */
+    --sp-tight: 0.25rem;
+    --sp-inline: 0.5rem;
+    --sp-default: 1rem;
+    --sp-para-gap: 1.4rem;
+    --sp-line: 2rem;
+    --sp-large: 2.8rem;
+
+    /* Line heights */
+    --lh-compact: 1.12rem;
+    --lh-medium: 1.5rem;
+    --lh-body: var(--sp-line);
 }
 
 /* Font faces */
-
-@font-face {
-    font-family: "Yanone Kaffeesatz";
-    font-style: normal;
-    font-weight: 400;
-    src:
-        local(Yanone Kaffeesatz),
-        url("/fonts/YanoneKaffeesatz-Regular.otf") format("opentype");
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Yanone Kaffeesatz";
-    font-style: normal;
-    font-weight: 800;
-    src:
-        local(Yanone Kaffeesatz),
-        url("/fonts/YanoneKaffeesatz-Bold.otf") format("opentype");
-    font-display: swap;
-}
 
 @font-face {
     font-family: "Libertinus Serif";
@@ -174,9 +218,18 @@
     font-display: swap;
 }
 
-/* Customized styles */
+::selection {
+    background-color: var(--selection);
+}
+
+a:link, a:visited {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    color: var(--accent-2-ink);
+}
+
 .post-icons {
-    margin-left: 1em;
+    white-space: nowrap;
 }
 
 a.icon-link:link,
@@ -187,8 +240,10 @@ a.icon-link:visited {
 }
 
 .social-icon {
-    height: 16px;
-    width: 16px;
+    height: var(--fs-small);
+    width: var(--fs-small);
+    margin-right: var(--sp-inline);
+    vertical-align: text-bottom;
 }
 
 .lobsters-icon {
@@ -196,56 +251,72 @@ a.icon-link:visited {
 }
 
 .post-attrs {
-    font-size: 1rem;
-    font-variant-numeric: normal;
+    font-size: var(--fs-small);
+    line-height: var(--lh-compact);
+    color: var(--ink-subtle);
+    font-variant-numeric: oldstyle-nums;
 }
 
-.github-link::before {
-    background-size: 1em 1em;
-    width: 1em;
-    height: 1em;
-    display: inline-block;
-    vertical-align: middle;
-    content: "";
-    margin-right: 5px;
+.post-attrs .attr-date {
+    margin-right: var(--sp-default);
+    white-space: nowrap;
 }
 
-.github-link::before {
-    background-image: url(/images/GitHub-Mark-32px.png);
+.post-attrs .icon {
+    margin-right: var(--sp-inline);
+    font-family: var(--font-icons);
+    font-size: var(--fs-normal);
+    line-height: var(--lh-compact);
+    vertical-align: sub;
 }
 
 .posts .article-title {
-    font-size: 3rem;
     font-weight: normal;
+    margin: 0 0 0 0;
+    line-height: var(--lh-body);
 }
 
 .article-title {
-    font-family: "Yanone Kaffeesatz", sans-serif;
+    font-family: var(--font-sans);
+    font-variant-caps: small-caps;
 }
 
-.article-abstract {
-    font-family: "Libertinus Sans", sans-serif;
-}
+.article-subtitle {
+    font-family: var(--font-sans);
+    font-size: var(--fs-small);
+    line-height: var(--lh-medium);
+    color: var(--ink-subtle);
+ }
 
 figure > div.source-container {
     width: 100%;
 }
 
-div.source-container > pre.good > code,
-div.source-container > pre.bad > code {
-    padding: 1rem;
+div.source-container > pre > code {
+    padding: var(--sp-default);
 }
 
-div.source-container > pre > code {
-    padding: 1rem 0;
+div.source-container > pre.linenumbers > code {
+    padding: var(--sp-default) 0;
 }
 
 ul.posts {
     padding-left: 0px;
+    margin-top: 0px;
+    width: 55%;
 }
-
-.posts h2 {
-    margin-bottom: 0.1em;
+ul.posts li {
+    padding-top: var(--sp-default);
+    padding-bottom: var(--sp-default);
+}
+ul.posts li:nth-child(1) {
+    padding-top: 0px;
+}
+ul.posts li:nth-last-child(1) {
+    padding-bottom: 0px;
+}
+ul.posts li:nth-child(n+2) {
+    border-top: 1px solid var(--rule-soft);
 }
 
 .left-gutter-anchor {
@@ -256,27 +327,108 @@ ul.posts {
     position: absolute;
     right: calc(100% + var(--left-gutter-gap));
     width: var(--left-gutter-width);
-    text-align: center;
-    font-family: "Libertinus Sans", sans-serif;
+    text-align: right;
+    color: var(--accent-1);
+    font-family: var(--font-icons);
 }
 
 ul.posts > li {
     list-style: none;
 }
 
+/* Icons for future use: ⏱ ☀ ⏾*/
+
+/* Chapter Epigraphs */
+
+figure.epigraph {
+    position: relative;
+    border-left: 1px solid var(--rule);
+    color: var(--ink-subtle);
+
+    padding-left: var(--sp-para-gap);
+    margin-right: var(--sp-para-gap);
+    margin-top: var(--sp-default);
+    margin-bottom: var(--sp-large);
+
+    width: 50%;
+}
+
+figure.epigraph > blockquote,
+figure.epigraph > blockquote > p {
+    font-size: var(--fs-small);
+    font-style: italic;
+    line-height: var(--lh-medium);
+    width: 100%;
+}
+
+figure.epigraph > blockquote > figcaption > cite {
+    font-style: italic;
+}
+
+figure.epigraph figcaption::before,
+figure.bq figcaption::before {
+    content: "— ";
+}
+
+figure.epigraph figcaption, figure.bq figcaption {
+    float: none;
+    margin-top: var(--sp-inline);
+    text-align: right;
+    font-family: var(--font-sans);
+    font-variant-caps: small-caps;
+    letter-spacing: 0.04em;
+    font-size: var(--fs-footnotesize);
+    color: var(--ink-faint);
+    max-width: 100%;
+}
+
+figure.epigraph blockquote {
+    margin: 0;
+}
+
+figure.bq::before, figure.epigraph::before {
+    line-height: var(--lh-medium);
+    color: var(--ink-faint);
+    font-size: var(--fs-large);
+    content: "❝";
+}
+
+figure.bq::before {
+    line-height: var(--lh-body);
+}
+
+figure.bq {
+    width: 50%;
+    padding-left: var(--sp-para-gap);
+    padding-right: var(--sp-para-gap);
+}
+
+figure.bq blockquote {
+    margin: 0;
+}
+
+figure.bq figcaption {
+    color: var(--ink-subtle);
+    margin: 0;
+}
+
+figure.bq cite, .epigraph cite {
+    font-style: italic;
+    /* italic work title, not small caps */
+    font-variant-caps: normal;
+    letter-spacing: 0;
+}
+
 .featured-marker::before {
     content: "★";
-    top: 50%;
-    transform: translateY(-50%);
+    font-size: var(--fs-normal);
+    line-height: var(--lh-body);
+    vertical-align: top;
 }
 
 .advice-anchor::before {
     /* content: "§"; */
-    content: "☛";
-    top: 0;
-    transform: none;
-    font-style: normal;
-    font-size: 1.5em;
+    content: "☞";
 }
 
 /* Compact article list (index page, similar articles) */
@@ -286,19 +438,27 @@ ul.article-list {
 }
 
 ul.article-list > li {
-    margin-top: 0.3rem;
-    line-height: 1.4;
+    line-height: var(--lh-medium);
 }
 
 .compact-title {
-    font-family: "Yanone Kaffeesatz", sans-serif;
-    font-size: 1.4rem;
+    font-family: var(--font-sans);
+    font-variant-caps: small-caps;
+    font-size: var(--fs-normal);
 }
 
 .compact-date {
-    font-size: 1rem;
+    font-size: var(--fs-small);
     font-variant-numeric: oldstyle-nums;
-    opacity: 0.6;
+    color: var(--ink-subtle);
+    margin-left: var(--sp-inline);
+}
+
+img.logo {
+    height: 100%;
+    width: 28px;
+    vertical-align: middle;
+    padding-right: var(--sp-default);
 }
 
 nav ul {
@@ -313,16 +473,19 @@ nav li {
     display: inline;
     margin: 0 1.5em 0 0;
     font-feature-settings: "smcp" on;
-    text-transform: lowercase;
+    text-transform: lowercase; 
+    font-family: var(--font-sans);
 }
 
-nav a:link {
+nav a:link, nav a:visited {
     background: none;
+    text-decoration: none;
+    color: var(--ink);
 }
 
 img.portrait {
     float: left;
-    margin: 10px 20px 20px 0px;
+    margin: 0px var(--sp-default) var(--sp-tight) 0px;
 }
 
 figure.medium-size svg {
@@ -353,51 +516,60 @@ figure.p75 img {
     width: 75%;
 }
 
-ul.arrows > li:before {
+ul.arrows > li:before,
+ul.checklist > li:before,
+ol.circled > li:before {
     position: absolute;
-    margin-left: -2.5rem;
-    content: "➞ ";
+    margin-left: calc(-1 * var(--sp-line));
+    font-family: var(--font-icons);
+    vertical-align: text-top;
+}
+
+ul.arrows > li:before {
+    content: "→";
+    vertical-align: sup;
 }
 
 ul.checklist > li:before {
-    position: absolute;
-    margin-left: -2.5rem;
-    content: "☐ ";
+    content: "☐";
+}
+
+ol.circled > li:before {
+    content: attr(data-num-glyph);
 }
 
 ul.arrows > li,
 ul.checklist > li,
 ol.circled > li {
     list-style: none;
-}
-
-ol.circled > li:before {
-    position: absolute;
-    margin-left: -2.5rem;
-    content: attr(data-num-glyph);
+    clear: both;
 }
 
 .circled-ref {
-    font-family: "Libertinus Serif", et-book, Palatino, serif;
-    font-size: 1.4rem;
+    font-family: var(--font-icons);
+    font-size: var(--fs-normal);
+    vertical-align: text-top;
+    color: var(--accent-1);
 }
 
 code .circled-ref {
-    font-size: 0.9rem;
+    font-size: var(--fs-code-normal);
+    vertical-align: middle;
 }
 
 li.toc {
     list-style: none;
-    line-height: 1.2rem;
+    line-height: var(--lh-compact);
 }
 
-ul.toc a:link {
+ul.toc a:link, ul.toc a:visited {
     font-feature-settings: normal;
     text-transform: initial;
     text-decoration: none;
     background: none;
-    font-family: "Libertinus Sans", sans-serif;
-    font-size: 1rem;
+    font-family: var(--font-sans);
+    color: var(--ink);
+    font-size: var(--fs-small);
 }
 
 ul.toc-level-1 {
@@ -409,50 +581,7 @@ ul.toc-level-1 > li > a {
 }
 
 ul.toc-level-2 {
-    padding-left: 1em;
-}
-
-a:link,
-.tufte-underline,
-.hover-tufte-underline:hover {
-    text-decoration: none;
-    background:
-        -webkit-linear-gradient(#fffff8, #fffff8),
-        -webkit-linear-gradient(#fffff8, #fffff8),
-        -webkit-linear-gradient(currentColor, currentColor);
-    background: linear-gradient(#fffff8, #fffff8),
-        linear-gradient(#fffff8, #fffff8),
-        linear-gradient(currentColor, currentColor);
-    -webkit-background-size:
-        0.05em 1px,
-        0.05em 1px,
-        1px 1px;
-    -moz-background-size:
-        0.05em 1px,
-        0.05em 1px,
-        1px 1px;
-    background-size:
-        0.05em 1px,
-        0.05em 1px,
-        1px 1px;
-    background-repeat: no-repeat, no-repeat, repeat-x;
-    text-shadow:
-        0.03em 0 #fffff8,
-        -0.03em 0 #fffff8,
-        0 0.03em #fffff8,
-        0 -0.03em #fffff8,
-        0.06em 0 #fffff8,
-        -0.06em 0 #fffff8,
-        0.09em 0 #fffff8,
-        -0.09em 0 #fffff8,
-        0.12em 0 #fffff8,
-        -0.12em 0 #fffff8,
-        0.15em 0 #fffff8,
-        -0.15em 0 #fffff8;
-    background-position:
-        0% 93%,
-        100% 93%,
-        0% 93%;
+    padding-left: var(--sp-default);
 }
 
 a.anchor {
@@ -463,13 +592,36 @@ a.anchor {
     vertical-align: baseline;
 }
 
+a.license, a.github-link {
+    background: none;
+    line-height: var(--lh-medium);
+}
+
+a[rel=license] {
+    vertical-align: middle;
+}
+
+.github-link::before {
+    background-size: 16px 16px;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: sub;
+    content: "";
+    margin-right: var(--sp-tight);
+    line-height: var(--lh-medium);
+}
+
+.github-link::before {
+    background-image: url(/images/GitHub-Mark-32px.png);
+}
+
 a > code {
     text-transform: none;
 }
 
 a {
     text-decoration-color: initial;
-    font-style: normal;
     hyphens: none;
 }
 
@@ -500,38 +652,33 @@ footer {
 }
 
 pre.good > code {
-    background-color: #dcedc8;
+    color: var(--code-good);
+    background-color: var(--code-good-bg);
 }
 
 pre.bad > code {
-    background-color: #ffe6d8;
+    color: var(--code-bad);
+    background-color: var(--code-bad-bg);
 }
 
 pre.apl > code {
-    font-family: "APL385 Unicode";
-    font-size: 1.5rem;
+    font-family: var(--font-mono-apl);
+    font-size: var(--fs-large);
 }
 
 .math {
-    font-family: "STIX Two Math", math;
+    font-family: var(--font-math);
     white-space: nowrap;
     font-variant-numeric: normal;
-    /* To match the x-height of STIX font and Libertinus. */
-    font-size: 1.3rem;
+    font-size: var(--fs-math-normal);
 }
 
 .marginnote .math {
-    /* To match the x-height of STIX font and Libertinus. */
-    font-size: 1.03rem;
+    font-size: var(--fs-math-small);
 }
 
 kbd {
-    font-family: "Libertinus Keyboard";
-}
-
-/* Tufte CSS styles */
-html {
-    font-size: 15px;
+    font-family: var(--font-kbd);
 }
 
 body {
@@ -539,26 +686,37 @@ body {
     margin-left: auto;
     margin-right: auto;
     padding-left: 12.5%;
-    font-family: "Libertinus Serif", et-book, Palatino, serif;
-    background-color: #fffff8;
-    color: #111;
+    font-family: var(--font-serif);
+    background-color: var(--page);
+    color: var(--ink);
     max-width: 1400px;
     counter-reset: sidenote-counter;
 }
 
 /* Adds dark mode */
 @media (prefers-color-scheme: dark) {
-    body {
-        background-color: #151515;
-        color: #ddd;
-    }
+    :root {
+        --page: #15120F;
+        --page-sunk: #1D1915;
 
-    pre.good > code {
-        background-color: rgba(38, 205, 77, 0.3);
-    }
+        --ink: #EDE5D2;
+        --ink-subtle: #BCB3A0;
+        --ink-faint: #7F7868;
 
-    pre.bad > code {
-        background-color: rgba(255, 106, 105, 0.15);
+        --rule: #3A342A;
+        --rule-soft: #2A251E;
+
+        --accent-1: #E2695A;
+        --accent-1-ink: #E89B8E;
+
+        --accent-2: #6FC3C3;
+        --accent-2-ink: #9AD7D7;
+        --selection: #453219;
+
+        --code-good: #7FB76A;
+        --code-good-bg: #1E2A1B;
+        --code-bad: #E2695A;
+        --code-bad-bg: #2A1A16;
     }
 
     .github-link::before {
@@ -574,40 +732,41 @@ body {
 
 h1 {
     font-weight: 400;
-    margin-top: 4rem;
-    margin-bottom: 1.5rem;
-    font-size: 3rem;
+    margin-top: var(--sp-large);
+    margin-bottom: var(--sp-inline);
+    font-size: var(--fs-xlarge);
     line-height: 1;
-    font-family: "Yanone Kaffeesatz", sans-serif;
+    font-family: var(--font-display);
     hyphens: none;
 }
 
 h2 {
     font-weight: bold;
-    margin-top: 2.1rem;
-    margin-bottom: 1.4rem;
-    font-size: 2.2rem;
+    margin-top: var(--sp-line);
+    margin-bottom: var(--sp-inline);
+    font-size: var(--fs-large);
     line-height: 1;
-    font-family: "Libertinus Sans", sans-serif;
+    font-family: var(--font-sans);
     hyphens: none;
 }
 
-h1 a:link,
-h2 a:link,
-h3 a:link {
+h1 a:link, h1 a:visited,
+h2 a:link, h2 a:visited,
+h3 a:link, h3 a:visited {
     background: none;
     text-decoration: none;
     font-feature-settings: normal;
     text-transform: initial;
+    color: var(--ink);
 }
 
 h3 {
     font-weight: bold;
-    font-size: 1.5rem;
-    margin-top: 2rem;
-    margin-bottom: 1.4rem;
+    font-size: var(--fs-normal);
+    margin-top: var(--sp-large);
+    margin-bottom: var(--sp-inline);
     line-height: 1;
-    font-family: "Libertinus Sans", sans-serif;
+    font-family: var(--font-sans);
 }
 
 hr {
@@ -615,45 +774,27 @@ hr {
     height: 1px;
     width: 55%;
     border: 0;
-    border-top: 1px solid #ccc;
-    margin: 1em 0;
+    border-top: 1px solid var(--rule);
+    margin: var(--sp-default) 0;
     padding: 0;
 }
 
-p.subtitle {
-    font-style: italic;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    font-size: 1.8rem;
-    display: block;
-    line-height: 1;
-}
-
-.numeral {
-    font-family: "Libertinus Serif", sans-serif;
-}
-
-.danger {
-    color: red;
-}
-
 section {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding-top: var(--sp-line);
 }
 
 p,
 dl,
 ol,
 ul {
-    font-size: 1.4rem;
-    line-height: 2rem;
+    font-size: var(--fs-normal);
+    line-height: var(--lh-body);
     font-variant-numeric: oldstyle-nums;
 }
 
 p {
-    margin-top: 1.4rem;
-    margin-bottom: 1.4rem;
+    margin-block-start: var(--sp-para-gap);
+    margin-block-end: var(--sp-para-gap);
     padding-right: 0;
     vertical-align: baseline;
     hyphens: auto;
@@ -664,42 +805,9 @@ p.hanging-quote {
     text-indent: -0.375em;
 }
 
-/* Chapter Epigraphs */
-
-div.epigraph > blockquote {
-    margin-top: 1.5em;
-    margin-bottom: 3em;
-}
-
-div.epigraph > blockquote,
-div.epigraph > blockquote > p {
-    font-style: italic;
-}
-
-div.epigraph > blockquote > footer {
-    font-style: normal;
-}
-
-div.epigraph > blockquote > footer > cite {
-    font-style: italic;
-}
-
-/* end chapter epigraphs styles */
-
-blockquote {
-    font-size: 1.4rem;
-}
-
-blockquote p {
-    width: 55%;
-    margin-right: 40px;
-}
-
-blockquote footer {
-    width: 55%;
-    font-size: 1.1rem;
-    text-align: right;
-    font-variant-numeric: oldstyle-nums;
+figure.bq blockquote {
+    font-size: var(--fs-normal);
+    position: relative;
 }
 
 div.container > p,
@@ -711,17 +819,16 @@ section > table {
     width: 55%;
 }
 
-/* 50 + 5 == 55, to be the same width as paragraph */
 section > dl,
 section > ol,
 section > ul {
-    width: 50%;
-    -webkit-padding-start: 5%;
+    width: calc(55% - var(--sp-line));
+    padding-left: var(--sp-line);
 }
 
 dt:not(:first-child),
 li:not(:first-child) {
-    margin-top: 0.25rem;
+    margin-top: var(--sp-tight);
 }
 
 figure {
@@ -741,7 +848,7 @@ figcaption {
     clear: right;
     margin-top: 0;
     margin-bottom: 0;
-    font-size: 1.1rem;
+    font-size: var(--fs-small);
     line-height: 1.6;
     vertical-align: baseline;
     position: relative;
@@ -750,59 +857,6 @@ figcaption {
 
 figure.fullwidth figcaption {
     margin-right: 24%;
-}
-
-/* Links: replicate underline that clears descenders */
-a:link,
-a:visited {
-    color: inherit;
-}
-
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-    a:link,
-    .tufte-underline,
-    .hover-tufte-underline:hover {
-        background-position-y: 87%, 87%, 87%;
-    }
-}
-
-/* Adds dark mode */
-@media (prefers-color-scheme: dark) {
-    a:link,
-    .tufte-underline,
-    .hover-tufte-underline:hover {
-        text-shadow:
-            0.03em 0 #151515,
-            -0.03em 0 #151515,
-            0 0.03em #151515,
-            0 -0.03em #151515,
-            0.06em 0 #151515,
-            -0.06em 0 #151515,
-            0.09em 0 #151515,
-            -0.09em 0 #151515,
-            0.12em 0 #151515,
-            -0.12em 0 #151515,
-            0.15em 0 #151515,
-            -0.15em 0 #151515;
-    }
-}
-
-a:link::selection,
-a:link::-moz-selection {
-    text-shadow:
-        0.03em 0 #b4d5fe,
-        -0.03em 0 #b4d5fe,
-        0 0.03em #b4d5fe,
-        0 -0.03em #b4d5fe,
-        0.06em 0 #b4d5fe,
-        -0.06em 0 #b4d5fe,
-        0.09em 0 #b4d5fe,
-        -0.09em 0 #b4d5fe,
-        0.12em 0 #b4d5fe,
-        -0.12em 0 #b4d5fe,
-        0.15em 0 #b4d5fe,
-        -0.15em 0 #b4d5fe;
-    background: #b4d5fe;
 }
 
 /* Sidenotes, margin notes, figures, captions */
@@ -816,10 +870,10 @@ img {
     clear: right;
     margin-right: -60%;
     width: 50%;
-    margin-top: 0.3rem;
+    margin-top: var(--sp-tight);
     margin-bottom: 0;
-    font-size: 1.1rem;
-    line-height: 1.3;
+    font-size: var(--fs-small);
+    line-height: var(--lh-medium);
     vertical-align: baseline;
     position: relative;
 }
@@ -830,7 +884,7 @@ img {
 
 .sidenote-number:after,
 .sidenote:before {
-    font-family: "Libertinus Serif", sans-serif;
+    font-family: var(--font-serif);
     font-variant-numeric: normal;
     position: relative;
     vertical-align: baseline;
@@ -838,15 +892,15 @@ img {
 
 .sidenote-number:after {
     content: counter(sidenote-counter);
-    font-size: 1rem;
-    top: -0.5rem;
+    font-size: var(--fs-small);
+    top: calc(-1 * var(--sp-inline));
     left: 0.1rem;
 }
 
 .sidenote:before {
     content: counter(sidenote-counter) " ";
-    font-size: 1rem;
-    top: -0.5rem;
+    font-size: var(--fs-small);
+    top: calc(-1 * var(--sp-inline));
 }
 
 blockquote .sidenote,
@@ -861,18 +915,15 @@ table.fullwidth {
     width: 100%;
 }
 
-div.table-wrapper {
-    overflow-x: auto;
-    font-family: "Trebuchet MS", "Gill Sans", "Gill Sans MT", sans-serif;
-}
-
 table {
     border-collapse: collapse;
 }
 
-table .math,
-table .code {
-    font-size: 1rem;
+table .math {
+    font-size: var(--fs-math-small);
+}
+table code {
+    font-size: var(--fs-code-small);
 }
 
 th,
@@ -883,7 +934,7 @@ td {
 table > thead > tr:last-child > td,
 table > thead > tr:last-child > th,
 table > tbody > tr:last-child > th {
-    padding-bottom: 0.5rem;
+    padding-bottom: var(--sp-inline);
     font-variant: all-small-caps;
 }
 
@@ -928,7 +979,7 @@ table > tbody > tr:last-child > th {
 
 table > tbody > tr:first-child > td,
 table > tbody > tr:first-child > th {
-    padding-top: 0.5rem;
+    padding-top: var(--sp-inline);
 }
 
 tr.border-top {
@@ -940,24 +991,22 @@ tr.border-bot {
 }
 
 .sans {
-    font-family: "Libertinus Sans", "Gill Sans", "Gill Sans MT", Calibri,
-        sans-serif;
+    font-family: var(--font-sans);
     letter-spacing: 0.03em;
 }
 
 .fun {
-    font-family: "Comic Sans Mono", "Comic Sans", cursive;
+    font-family: var(--font-comic);
 }
 
 code,
 pre > code {
-    font-family: "JetBrains Mono", monospace;
-    font-feature-settings: "ss02", "zero";
-    font-size: 0.75em;
-    line-height: 1.42;
+    font-family: var(--font-mono);
+    font-feature-settings: var(--font-mono-settings);
+    font-size: var(--fs-code-normal);
+    line-height: var(--lh-compact);
     font-variant-numeric: normal;
     -webkit-text-size-adjust: 100%;
-    /* Prevent adjustments of font size after orientation changes in iOS. See https://github.com/edwardtufte/tufte-css/issues/81#issuecomment-261953409 */
 }
 
 pre.linenumbers > code > span.line:before {
@@ -967,8 +1016,9 @@ pre.linenumbers > code > span.line:before {
     padding-right: 0.5ch;
     margin-right: 1ch;
     text-align: right;
-    opacity: 0.35;
+    color: var(--ink-faint);
     border-right: 1px solid;
+    border-color: var(--rule);
 }
 
 pre.linenumbers > code > span.line {
@@ -976,22 +1026,23 @@ pre.linenumbers > code > span.line {
 }
 
 .sans > code {
-    font-size: 0.75em;
+    font-size: var(--fs-code-normal);
 }
 
 .marginnote > code,
 .marginnote > a > code,
 .sidenote > code,
 .sidenote > a > code {
-    font-size: 0.95rem;
+    font-size: var(--fs-code-small);
 }
 
 pre > code a > code {
-    font-size: 0.9rem;
+    font-size: var(--fs-code-small);
 }
 
 pre > code {
-    font-size: 0.9rem;
+    background: var(--page-sunk);
+    font-size: var(--fs-code-small);
     overflow-x: auto;
     display: block;
 }
@@ -1029,7 +1080,7 @@ input.margin-toggle {
 
 label.sidenote-number {
     display: inline-block;
-    max-height: 2rem;
+    max-height: var(--lh-body);
     /* should be less than or equal to paragraph line-height */
 }
 
@@ -1091,6 +1142,11 @@ p.svg {
         width: 90%;
     }
 
+    ul.posts {
+        width: 100%;
+    }
+
+
     figure {
         max-width: 90%;
     }
@@ -1102,12 +1158,15 @@ p.svg {
     }
 
     blockquote {
-        margin-left: 1.5em;
+        margin-left: var(--sp-para-gap);
         margin-right: 0em;
     }
 
-    blockquote p,
-    blockquote footer {
+    blockquote p {
+        width: 100%;
+    }
+
+    .epigraph figcaption {
         width: 100%;
     }
 
@@ -1128,10 +1187,10 @@ p.svg {
     .margin-toggle:checked + .marginnote {
         display: block;
         float: left;
-        left: 1rem;
+        left: var(--sp-default);
         clear: both;
         width: 95%;
-        margin: 1rem 2.5%;
+        margin: var(--sp-default) 2.5%;
         vertical-align: baseline;
         position: relative;
     }
@@ -1140,8 +1199,14 @@ p.svg {
         position: static;
         display: inline-block;
         width: auto;
-        margin-right: 0.35em;
+        margin-right: var(--sp-inline);
+        font-size: var(--fs-normal);
+        vertical-align: middle;
         transform: none;
+    }
+
+    figure.epigraph::before {
+        display: none;
     }
 
     .advice-anchor {
@@ -1172,6 +1237,14 @@ p.svg {
     }
 
     img {
+        width: 100%;
+    }
+
+    p.svg {
+        clear: both;
+    }
+
+    footer {
         width: 100%;
     }
 }
