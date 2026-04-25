@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="glasperlenspiel,programming"><meta name="description" content="Apply scientific method in everyday software engineering."><title>Debug like Feynman, test like Faraday</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/05-debug-like-feynman.html"><script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","headline":"Debug like Feynman, test like Faraday","url":"https://mmapped.blog/posts/05-debug-like-feynman.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/05-debug-like-feynman.html"},"datePublished":"2022-04-01","dateModified":"2024-09-26","wordCount":2786,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"Apply scientific method in everyday software engineering.","keywords":["glasperlenspiel","programming"]}
-</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/05-debug-like-feynman.html">Debug like Feynman, test like Faraday</a></h1><span class="post-attrs"><span title="First published">✏ <time datetime="2022-04-01">2022-04-01</time></span>&nbsp;
-<span title="Last modified">✂ <time datetime="2024-09-26">2024-09-26</time></span><span class="post-icons"><a class="icon-link" href="https://www.reddit.com/r/programming/comments/ttld4n/1st_april_blog_post_debug_like_feynman_test_like/" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a></span></span>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="glasperlenspiel,programming"><meta name="description" content="Applying scientific method in software engineering."><title>Debug like Feynman, test like Faraday</title><link rel="stylesheet" href="/css/mmapped.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/05-debug-like-feynman.html"><script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Debug like Feynman, test like Faraday","url":"https://mmapped.blog/posts/05-debug-like-feynman.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/05-debug-like-feynman.html"},"datePublished":"2022-04-01","dateModified":"2024-09-26","wordCount":2781,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"Applying scientific method in software engineering.","keywords":["glasperlenspiel","programming"]}
+</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/05-debug-like-feynman.html">Debug like Feynman, test like Faraday</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2022-04-01">2022-04-01</time></span><span class="attr-date" title="Last modified"><span class="icon">✂</span><time datetime="2024-09-26">2024-09-26</time></span><span class="post-icons"><a class="icon-link" href="https://www.reddit.com/r/programming/comments/ttld4n/1st_april_blog_post_debug_like_feynman_test_like/" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a></span></span>
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#scientific-method">Scientific method</a></li><li class="toc toc-level-1"><a href="#think-like-a-scientist">Think like a scientist</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#record-your-observations">Record your observations</a></li><li class="toc toc-level-2"><a href="#test-causality">Test causality</a></li><li class="toc toc-level-2"><a href="#know-your-data">Know your data</a></li><li class="toc toc-level-2"><a href="#debug-mental-models">Debug mental models</a></li><li class="toc toc-level-2"><a href="#formalize-your-models">Formalize your models</a></li><li class="toc toc-level-2"><a href="#question-method">Question your method</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li><li class="toc toc-level-1"><a href="#acknowledgements">Acknowledgements</a></li></ul><hr>
 
@@ -29,9 +28,9 @@ The main difference is that our systems are human-made and sometimes come with s
 valuing data, investing in informal and formal models, and using the scientific method in all aspects of the trade.</p>
 </section>
 <section><h2 id="scientific-method"><a href="#scientific-method">Scientific method</a></h2>
-<div class="epigraph"><blockquote><p>It doesn’t matter how beautiful your theory is,
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>It doesn’t matter how beautiful your theory is,
   it doesn’t matter how smart you are.
-  If it doesn’t agree with experiment, it’s wrong.</p><footer>Richard Feynman</footer></blockquote></div>
+  If it doesn’t agree with experiment, it’s wrong.</p></blockquote><figcaption>Richard Feynman</figcaption></figure>
 <p>For most of human history, people tried to understand the world by telling compelling stories.
 We believed that <a href="https://en.wikipedia.org/wiki/Celestial_spheres">planets move on surfaces of spheres made of quintessence</a>,
 and that all illnesses come from the <a href="https://en.wikipedia.org/wiki/Humorism">disbalance of bodily fluids</a>.</p>
@@ -55,7 +54,7 @@ In later sections, we will see more applications of the method to software engin
 </section>
 <section><h2 id="think-like-a-scientist"><a href="#think-like-a-scientist">Think like a scientist</a></h2>
 <h3 id="record-your-observations"><a href="#record-your-observations">Record your observations</a></h3>
-<div class="epigraph"><blockquote><p>Remember, kids, the only difference between screwing around and science is writing it down.</p><footer><a href="https://www.reddit.com/r/mythbusters/comments/3wgqgv/the_origin_of_the_remember_kids_the_only/">Alex Jason</a></footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Remember, kids, the only difference between screwing around and science is writing it down.</p></blockquote><figcaption><a href="https://www.reddit.com/r/mythbusters/comments/3wgqgv/the_origin_of_the_remember_kids_the_only/">Alex Jason</a></figcaption></figure>
 <p>It’s only a few days before the next major release, and the application you work on crashed on you.
 You open the bug tracker and search for the error message it spat out.
 What a luck!
@@ -77,7 +76,7 @@ You might find flaws in your analysis in the process.
 </li></ul>
 <p>Make your bug reports and user stories an interesting read.</p>
 <h3 id="test-causality"><a href="#test-causality">Test causality</a></h3>
-<div class="epigraph"><blockquote><p>The invalid assumption that correlation implies cause is probably among the two or three most serious and common errors of human reasoning.</p><footer>Stephen Jay Gould, <q>The Mismeasure of Man (Revised &amp; Expanded)</q>, p.178</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>The invalid assumption that correlation implies cause is probably among the two or three most serious and common errors of human reasoning.</p></blockquote><figcaption>Stephen Jay Gould, <cite>The Mismeasure of Man (Revised &amp; Expanded), p.178</cite></figcaption></figure>
 <p>Phew, hunting down that bug took you a while.
 You fix the code and add a unit test demonstrating the problem.
 The test is green, and your change lands on the main branch.
@@ -102,10 +101,10 @@ If you can’t force yourself to write tests before fixing the code (I can’t),
 check that removing the fix makes the test fail.
 I wish there existed tools checking that each test we write used to fail before it became green.</p>
 <h3 id="know-your-data"><a href="#know-your-data">Know your data</a></h3>
-<div class="epigraph"><blockquote><p>About 40 seconds after the explosion the air blast reached me.
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>About 40 seconds after the explosion the air blast reached me.
   I tried to estimate its strength by dropping from about six feet small pieces of paper before, during and after the passage of the blast wave.
   […]
-  The shift was about 2½ meters, which, at the time, I estimated to correspond to the blast that would be produced by ten thousand tons of <span class="smallcaps">t.n.t.</span></p><footer>Enrico Fermi, <a href="https://www.atomicarchive.com/resources/documents/trinity/fermi.html">My Observations During the Explosion at Trinity on July 16, 1945</a></footer></blockquote></div>
+  The shift was about 2½ meters, which, at the time, I estimated to correspond to the blast that would be produced by ten thousand tons of <span class="smallcaps">t.n.t.</span></p></blockquote><figcaption>Enrico Fermi, <a href="https://www.atomicarchive.com/resources/documents/trinity/fermi.html"><cite>My Observations During the Explosion at Trinity on July 16, 1945</cite></a></figcaption></figure>
 <p>A guy from the ops team stops by your desk. You feel uncomfortable because you forgot his name again.</p>
 <p class="hanging-quote"><q>Hi! I need to order machines for that new project you are working on.
 How many servers do we need?
@@ -141,8 +140,8 @@ the <a href="https://carlos.bueno.org/optimization/">Mature Optimization Handboo
 The next time that <span class="smallcaps">ops</span> guy<label class="margin-toggle sidenote-number" for="sn-josh"></label><input type="checkbox" id="sn-josh" class="margin-toggle"><span class="sidenote">Josh. His name is Josh.</span> comes to your desk,
 you will have an answer for him.</p>
 <h3 id="debug-mental-models"><a href="#debug-mental-models">Debug mental models</a></h3>
-<div class="epigraph"><blockquote><p>So the guy says, <q>What are you doing? You come to fix the radio, but you’re only walking back and forth!</q>
-    I say, <q>I’m thinking!</q></p><footer>Richard Feynman, <q>Surely You’re Joking, Mr. Feynman!</q>, <q>He Fixes Radios by Thinking!</q></footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>So the guy says, <q>What are you doing? You come to fix the radio, but you’re only walking back and forth!</q>
+    I say, <q>I’m thinking!</q></p></blockquote><figcaption>Richard Feynman, <cite>Surely You’re Joking, Mr. Feynman!</cite></figcaption></figure>
 <p>Your team lead rushes into your cubicle to tell you the production system barely works.
 You look at the symptoms and have no clue where to start.
 You launch the debugger and step through the code.
@@ -163,16 +162,16 @@ Try stepping through that.
 <p>If using a debugger isn’t an option, creating a good mental model is your best bet.
 As <a href="https://en.wikipedia.org/wiki/Linus_Torvalds">Linus Torvalds</a> put it:
 </p>
-<blockquote><p>It’s that you have to look at the level <em>above</em> sources.
+<figure class="bq left-gutter-anchor"><blockquote><p>It’s that you have to look at the level <em>above</em> sources.
   At the meaning of things.
   Without a debugger, you basically have to go the next step: understand what the program does.
-  Not just that particular line.</p><footer>Linus Torvalds, <q><a href="https://lkml.org/lkml/2000/9/6/65">Re: Availability of kdb</a></q></footer></blockquote>
+  Not just that particular line.</p></blockquote><figcaption>Linus Torvalds, <a href="https://lkml.org/lkml/2000/9/6/65"><cite>Re: Availability of kdb</cite></a></figcaption></figure>
 <p>Or as <a href="https://en.wikipedia.org/wiki/Rob_Pike">Rob Pike</a> wrote about <a href="https://en.wikipedia.org/wiki/Ken_Thompson">Ken Thompson</a>:</p>
-<blockquote><p>When something went wrong, I’d reflexively start to dig in to the problem, examining stack traces, sticking in print statements, invoking a debugger, and so on.
+<figure class="bq left-gutter-anchor"><blockquote><p>When something went wrong, I’d reflexively start to dig in to the problem, examining stack traces, sticking in print statements, invoking a debugger, and so on.
   But Ken would just stand and think, ignoring me and the code we’d just written.
   After a while I noticed a pattern: Ken would often understand the problem before I would, and would suddenly announce, &quot;I know what’s wrong.&quot;
   He was usually correct.
-  I realized that Ken was building a mental model of the code and when something broke it was an error in the model.</p><footer>Rob Pike, <a href="https://www.informit.com/articles/article.aspx?p=1941206">The Best Programming Advice I Ever Got</a></footer></blockquote>
+  I realized that Ken was building a mental model of the code and when something broke it was an error in the model.</p></blockquote><figcaption>Rob Pike, <a href="https://www.informit.com/articles/article.aspx?p=1941206"><cite>The Best Programming Advice I Ever Got</cite></a></figcaption></figure>
 <p>Mental models are essential to the scientific method.
 Raw observations do not exist;
 we always interpret observations based on a theory or a model.
@@ -193,7 +192,7 @@ This method is my go-to approach to building mental models<label class="margin-t
 </span>.
 </li></ul>
 <h3 id="formalize-your-models"><a href="#formalize-your-models">Formalize your models</a></h3>
-<div class="epigraph"><blockquote><p>In every department of physical science there is only so much science, properly so-called, as there is mathematics.</p><footer>Immanuel Kant</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>In every department of physical science there is only so much science, properly so-called, as there is mathematics.</p></blockquote><figcaption>Immanuel Kant</figcaption></figure>
 <p>You are proud of your multi-threaded lock-free queue implementation.
 Your colleagues reviewed it thoroughly and couldn’t find any flaws, and hours of testing did not reveal any issues.
 You deployed your optimization in production, and the servers stopped handling transactions after two weeks.</p>
@@ -226,7 +225,7 @@ Unlike other formal methods I tried, this tool is relatively easy to pick up.
 As a side effect, it teaches you to reason about your systems in terms of state machines,
 an essential skill for a software engineer.</p>
 <h3 id="question-method"><a href="#question-method">Question your method</a></h3>
-<div class="epigraph"><blockquote><p>There’s nothing quite as frightening as someone who knows they are right.</p><footer>Michael Faraday</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>There’s nothing quite as frightening as someone who knows they are right.</p></blockquote><figcaption>Michael Faraday</figcaption></figure>
 <p>We are living in the best of times.
 The ideas of rapid iteration, <a href="https://agilemanifesto.org/">agile development</a>, and <a href="https://continuousdelivery.com/">continuous delivery</a> are taking over the world.
 Software shops are churning features at a stunning rate.</p>
@@ -281,8 +280,7 @@ And behave like one.</p>
 <p>Thanks to Nikolay Komarevskiy for his suggestions for the original version of this article.</p>
 </section>
 
-</article><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/26-good-names-form-galois-connections.html" title="A quest for defining what it means to name things well.">Good names form Galois connections</a>&ensp;<span class="compact-date"><time datetime="2024-04-01">2024-04-01</time></span></li><li><a class="compact-title" href="/posts/38-static-types-perfectionism.html" title="Scherzo in e-moll on programming and authenticity.">Static types are for perfectionists</a>&ensp;<span class="compact-date"><time datetime="2025-04-01">2025-04-01</time></span></li><li><a class="compact-title" href="/posts/48-the-third-hard-problem.html" title="It’s not off-by-one errors.">The third hard problem</a>&ensp;<span class="compact-date"><time datetime="2026-02-28">2026-02-28</time></span></li><li><a class="compact-title" href="/posts/18-if-composers-were-hackers.html" title="What programming language would J.S. Bach use?">If composers were hackers</a>&ensp;<span class="compact-date"><time datetime="2023-04-01">2023-04-01</time></span></li><li><a class="compact-title" href="/posts/21-machs-principle.html" title="Why is it so hard to change things?">Mach’s principle</a>&ensp;<span class="compact-date"><time datetime="2023-07-02">2023-07-02</time></span></li></ul>
+</article><section><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/26-good-names-form-galois-connections.html" title="A quest for defining what it means to name things well.">Good names form Galois connections</a><span class="compact-date"><time datetime="2024-04-01">2024-04-01</time></span></li><li><a class="compact-title" href="/posts/38-static-types-perfectionism.html" title="Scherzo in e-moll on programming and authenticity.">Static types are for perfectionists</a><span class="compact-date"><time datetime="2025-04-01">2025-04-01</time></span></li><li><a class="compact-title" href="/posts/48-the-third-hard-problem.html" title="It’s not off-by-one errors.">The third hard problem</a><span class="compact-date"><time datetime="2026-02-28">2026-02-28</time></span></li><li><a class="compact-title" href="/posts/18-if-composers-were-hackers.html" title="What programming language would J.S. Bach use?">If composers were hackers</a><span class="compact-date"><time datetime="2023-04-01">2023-04-01</time></span></li><li><a class="compact-title" href="/posts/21-machs-principle.html" title="Why is it so hard to change things?">Mach’s principle</a><span class="compact-date"><time datetime="2023-07-02">2023-07-02</time></span></li></ul></section>
 
-<hr><footer><span>&copy;Roman Kashitsyn</span>&nbsp;
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<hr><footer role="contentinfo"><span>©Roman Kashitsyn</span>&nbsp;<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
 <a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></body></html>

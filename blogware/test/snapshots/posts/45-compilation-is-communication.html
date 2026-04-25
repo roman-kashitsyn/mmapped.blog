@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="programming"><meta name="description" content="An ode to M-x compile."><title>Compilation is communication</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/45-compilation-is-communication.html"><script type="application/ld+json">
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="programming"><meta name="description" content="An ode to M-x compile."><title>Compilation is communication</title><link rel="stylesheet" href="/css/mmapped.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/45-compilation-is-communication.html"><script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","headline":"Compilation is communication","url":"https://mmapped.blog/posts/45-compilation-is-communication.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/45-compilation-is-communication.html"},"datePublished":"2025-10-13","dateModified":"2025-10-13","wordCount":1484,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"An ode to M-x compile.","keywords":["programming"]}
-</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/45-compilation-is-communication.html">Compilation is communication</a></h1><span class="post-attrs"><span title="First published">✏ <time datetime="2025-10-13">2025-10-13</time></span>&nbsp;
-<span title="Last modified">✂ <time datetime="2025-10-13">2025-10-13</time></span><span class="post-icons"><a class="icon-link" href="https://lobste.rs/s/huqrbu" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
+</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/45-compilation-is-communication.html">Compilation is communication</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2025-10-13">2025-10-13</time></span><span class="post-icons"><a class="icon-link" href="https://lobste.rs/s/huqrbu" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#constant-interaction">The perils of constant interaction</a></li><li class="toc toc-level-1"><a href="#batching">The power of batching</a></li><li class="toc toc-level-1"><a href="#expertise">Tools and expertise</a></li><li class="toc toc-level-1"><a href="#my-workflow">My workflow</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
 
-<section><div class="epigraph"><blockquote><p>Never show a half-finished job to a fool.</p><footer>A Russian proverb</footer></blockquote></div>
+<section><figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Never show a half-finished job to a fool.</p></blockquote><figcaption>A Russian proverb</figcaption></figure>
 <figure class="p25 left"><p class="svg"><img src="/images/45-chat.svg"></p>
 </figure>
 <p>However the exchange unfolds,
@@ -71,14 +70,14 @@ until the <a href="https://blog.reedsy.com/live/draft-zero-sj-watson/">draft zer
 <p>Steven Pressfield summarized the last point well:
   
 </p>
-<blockquote><p>Let’s talk about the actual process—the writing/composing/idea generation process.
+<figure class="bq left-gutter-anchor"><blockquote><p>Let’s talk about the actual process—the writing/composing/idea generation process.
   It progresses in two stages: action and reflection.
   Act, reflect. Act, reflect.
   NEVER act and reflect at the same time. […]
   In writing, <q>action</q> means putting words on paper.
   <q>Reflection</q> means evaluating what we have on paper.
   For this first draft,
-  we’ll go light on reflection and heavy on action.</p><footer>Steven Pressfield, <q>Do the Work</q></footer></blockquote>
+  we’ll go light on reflection and heavy on action.</p></blockquote><figcaption>Steven Pressfield, <cite>Do the Work</cite></figcaption></figure>
 <p>
 Writers like Neil Gaiman and J.K. Rowling draft longhand,
 partly because paper makes revision hard and nudges them toward action<label class="margin-toggle sidenote-number" for="sn-longhand"></label><input type="checkbox" id="sn-longhand" class="margin-toggle"><span class="sidenote">
@@ -131,9 +130,9 @@ and the task’s cognitive load demands.</p>
 <p><a href="https://en.wikipedia.org/wiki/John_Carmack">John Carmack</a>,
 one of the most influential programmers in history,
 relies heavily on <span class="smallcaps">ide</span>s and visual debuggers:</p>
-<blockquote><p>The first thing I do after writing code is set a breakpoint and step through the function.</p><footer>
-  John Carmack, <a href="https://www.youtube.com/watch?v=tzr7hRXcwkw">interview with Lex Fridman</a>
-</footer></blockquote>
+<figure class="bq left-gutter-anchor"><blockquote><p>The first thing I do after writing code is set a breakpoint and step through the function.</p></blockquote><figcaption>
+  John Carmack, <a href="https://www.youtube.com/watch?v=tzr7hRXcwkw"><cite>interview with Lex Fridman</cite></a>
+</figcaption></figure>
 <p>
 This approach is common among game developers and graphics programmers,
 where the <q>right</q> results don’t follow logically from the first principles.
@@ -200,8 +199,7 @@ they can help us stay more focused and engaged for longer.
 Conversations need pauses. Music is the space between the notes.</p>
 </section>
 
-</article><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/44-tag-based-logging.html" title="#tags #logs">Tag-based logging</a>&ensp;<span class="compact-date"><time datetime="2025-08-19">2025-08-19</time></span></li><li><a class="compact-title" href="/posts/41-box-combinators.html" title="The most visual way to print a table.">Box combinators</a>&ensp;<span class="compact-date"><time datetime="2025-06-01">2025-06-01</time></span></li><li><a class="compact-title" href="/posts/37-onnx-intro.html" title="A gentle introduction to the Open Neural Network eXchange format.">ONNX introduction</a>&ensp;<span class="compact-date"><time datetime="2025-02-17">2025-02-17</time></span></li><li><a class="compact-title" href="/posts/31-effective-design-docs.html" title="An opinionated guide to writing software design docs.">Effective design docs</a>&ensp;<span class="compact-date"><time datetime="2024-09-15">2024-09-15</time></span></li><li><a class="compact-title" href="/posts/43-stepanovs-biggest-blunder.html" title="How STL algorithms parallel the fundamental theorem of calculus.">Stepanov’s biggest blunder</a>&ensp;<span class="compact-date"><time datetime="2025-07-13">2025-07-13</time></span></li></ul>
+</article><section><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/44-tag-based-logging.html" title="#tags #logs">Tag-based logging</a><span class="compact-date"><time datetime="2025-08-19">2025-08-19</time></span></li><li><a class="compact-title" href="/posts/41-box-combinators.html" title="The most visual way to print a table.">Box combinators</a><span class="compact-date"><time datetime="2025-06-01">2025-06-01</time></span></li><li><a class="compact-title" href="/posts/37-onnx-intro.html" title="An introduction to the Open Neural Network eXchange format.">ONNX introduction</a><span class="compact-date"><time datetime="2025-02-17">2025-02-17</time></span></li><li><a class="compact-title" href="/posts/31-effective-design-docs.html" title="An opinionated guide to writing software design docs.">Effective design docs</a><span class="compact-date"><time datetime="2024-09-15">2024-09-15</time></span></li><li><a class="compact-title" href="/posts/43-stepanovs-biggest-blunder.html" title="How STL algorithms parallel the fundamental theorem of calculus.">Stepanov’s biggest blunder</a><span class="compact-date"><time datetime="2025-07-13">2025-07-13</time></span></li></ul></section>
 
-<hr><footer><span>&copy;Roman Kashitsyn</span>&nbsp;
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<hr><footer role="contentinfo"><span>©Roman Kashitsyn</span>&nbsp;<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
 <a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></body></html>

@@ -1,7 +1,7 @@
 \documentclass{article}
 
 \title{Debug like Feynman, test like Faraday}
-\subtitle{Apply scientific method in everyday software engineering.}
+\subtitle{Applying scientific method in software engineering.}
 \date{2022-04-01}
 \modified{2024-09-26}
 \reddit{https://www.reddit.com/r/programming/comments/ttld4n/1st_april_blog_post_debug_like_feynman_test_like/}
@@ -104,7 +104,7 @@ Make your bug reports and user stories an interesting read.
 \subsection{test-causality}{Test causality}
 \epigraph{
   The invalid assumption that correlation implies cause is probably among the two or three most serious and common errors of human reasoning.
-}{Stephen Jay Gould, ``The Mismeasure of Man (Revised \& Expanded)'', p.178}
+}{Stephen Jay Gould, \cite{The Mismeasure of Man (Revised \& Expanded), p.178}}
 
 Phew, hunting down that bug took you a while.
 You fix the code and add a unit test demonstrating the problem.
@@ -139,7 +139,7 @@ I wish there existed tools checking that each test we write used to fail before 
   I tried to estimate its strength by dropping from about six feet small pieces of paper before, during and after the passage of the blast wave.
   [\ldots]
   The shift was about 2½ meters, which, at the time, I estimated to correspond to the blast that would be produced by ten thousand tons of \textsc{t.n.t.}
-}{Enrico Fermi, \href{https://www.atomicarchive.com/resources/documents/trinity/fermi.html}{My Observations During the Explosion at Trinity on July 16, 1945}}
+}{Enrico Fermi, \href{https://www.atomicarchive.com/resources/documents/trinity/fermi.html}{\cite{My Observations During the Explosion at Trinity on July 16, 1945}}}
 
 A guy from the ops team stops by your desk. You feel uncomfortable because you forgot his name again.
 
@@ -188,7 +188,7 @@ you will have an answer for him.
 \epigraph{
     So the guy says, ``What are you doing? You come to fix the radio, but you're only walking back and forth!''
     I say, ``I'm thinking!''
-}{Richard Feynman, ``Surely You're Joking, Mr. Feynman!'', ``He Fixes Radios by Thinking!''}
+}{Richard Feynman, \cite{Surely You're Joking, Mr. Feynman!}}
 
 Your team lead rushes into your cubicle to tell you the production system barely works.
 You look at the symptoms and have no clue where to start.
@@ -216,7 +216,7 @@ As \href{https://en.wikipedia.org/wiki/Linus_Torvalds}{Linus Torvalds} put it:
   At the meaning of things.
   Without a debugger, you basically have to go the next step: understand what the program does.
   Not just that particular line.
-}{Linus Torvalds, ``\href{https://lkml.org/lkml/2000/9/6/65}{Re: Availability of kdb}''}
+}{Linus Torvalds, \href{https://lkml.org/lkml/2000/9/6/65}{\cite{Re: Availability of kdb}}}
 
 Or as \href{https://en.wikipedia.org/wiki/Rob_Pike}{Rob Pike} wrote about \href{https://en.wikipedia.org/wiki/Ken_Thompson}{Ken Thompson}:
 
@@ -226,7 +226,7 @@ Or as \href{https://en.wikipedia.org/wiki/Rob_Pike}{Rob Pike} wrote about \href{
   After a while I noticed a pattern: Ken would often understand the problem before I would, and would suddenly announce, "I know what's wrong."
   He was usually correct.
   I realized that Ken was building a mental model of the code and when something broke it was an error in the model.
-}{Rob Pike, \href{https://www.informit.com/articles/article.aspx?p=1941206}{The Best Programming Advice I Ever Got}}
+}{Rob Pike, \href{https://www.informit.com/articles/article.aspx?p=1941206}{\cite{The Best Programming Advice I Ever Got}}}
 
 Mental models are essential to the scientific method.
 Raw observations do not exist;

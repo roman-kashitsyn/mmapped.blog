@@ -50,6 +50,7 @@ let count_inlines (ils : inline list) : int =
     | Normal ils
     | Link (_, ils)
     | Margin_note (_, ils)
+    | Cite ils
     | Side_note (_, ils) ->
         go state ils
     | Code _ | Math _ | Horizontal_rule | Circled_ref _ | Line_break

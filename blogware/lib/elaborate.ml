@@ -212,6 +212,7 @@ let rec inline_to_text = function
   | Sub ils
   | Sup ils
   | Quotation ils
+  | Cite ils
   | Fun ils
   | Math_span ils
   | Normal ils
@@ -389,6 +390,9 @@ and classify_cmd pos sym opts args =
       let* b_blocks = build_blocks body in
       let* a_ils = elaborate_inlines attrib in
       Ok (CBlock (Blockquote (b_blocks, a_ils)))
+  | S_cite, Arg_nodes (_, body) :: _ ->
+      let* ils = elaborate_inlines body in
+      Ok (CInline (Cite ils))
   | S_details, Arg_nodes (_, summary) :: Arg_nodes (_, body) :: _ ->
       let* s_ils = elaborate_inlines summary in
       let* body_blocks = build_blocks body in

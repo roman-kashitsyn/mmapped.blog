@@ -27,7 +27,7 @@ The minter is a complicated system that must maintain a lot of state variables:
     \item
     Pending Bitcoin transactions fulfilling the withdrawal requests.
     \item
-    Fees owed to the \href{https://thepaypers.com/expert-opinion/know-your-transaction-kyt-the-key-to-combating-transaction-laundering--1246231}{Know Your Transaction} (KYT) service providers.
+    Fees owed to the \href{https://thepaypers.com/expert-opinion/know-your-transaction-kyt-the-key-to-combating-transaction-laundering--1246231}{Know Your Transaction} (\textsc{kyt}) service providers.
 \end{itemize}
 
 How to preserve this state across canister upgrades?
@@ -38,7 +38,7 @@ We preferred to avoid pre-upgrade hooks altogether to eliminate the possibility 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-traditional-upgrade}{
     The traditional canister state management scheme.
-    The canister applies \emph{state transitions} \math{T\sub{i}} to its states \math{S\sub{i}} on the Wasm heap (designated with a circle) and marshals the state through stable memory on upgrades.
+    The canister applies \emph{state transitions} $T_i$ to its states $S_i$ on the Wasm heap (designated with a circle) and marshals the state through stable memory on upgrades.
     This approach requires state representations to be backward compatible only within the scope of a single upgrade.
     The number of instructions needed for an upgrade is proportional to the state size.
   }
@@ -51,7 +51,7 @@ We preferred to avoid pre-upgrade hooks altogether to eliminate the possibility 
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-stable-memory}{
     Managing the canister state in directly stable memory.
-    The canister applies \emph{state transitions} \math{T\sub{i}} to its states \math{S\sub{i}} persisted in stable memory.
+    The canister applies \emph{state transitions} $T_i$ to its states $S_i$ persisted in stable memory.
     This approach trades the flexibility of state representation for the predictability and safety of upgrades.
     The number of instructions needed for an upgrade is constant.
   }
@@ -74,7 +74,7 @@ The event carries enough context to allow us to reproduce the state modification
 \begin{figure}[grayscale-diagram]
   \marginnote{mn-event-log-upgrade}{
     Managing the canister state using the event log.
-    As in the traditional scheme, the canister applies state transitions \math{T\sub{i}} to its states on the Wasm heap, but it also records the state transitions to an append-only log data structure in stable memory.
+    As in the traditional scheme, the canister applies state transitions $T_i$ to its states on the Wasm heap, but it also records the state transitions to an append-only log data structure in stable memory.
     The \code{post_upgrade} hook applies all recorded transitions to the initial state to recompute the last snapshot.
     The number of instructions required for an upgrade is proporional to the number of state transitions.
     Note the absense of \code{pre_upgrade} hook.

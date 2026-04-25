@@ -56,6 +56,7 @@ type sym =
   | S_hrule
   | S_epigraph
   | S_blockquote
+  | S_cite
   | S_multicolumn
   | S_term
   | S_kbd
@@ -76,6 +77,7 @@ type sym =
   | S_frac
   | S_binom
   | S_operatorname
+  | S_mathrm
   | S_left
   | S_right
   (* text replacement commands *)
@@ -166,6 +168,7 @@ let sym_table : sym SMap.t =
       ("hrule", S_hrule);
       ("epigraph", S_epigraph);
       ("blockquote", S_blockquote);
+      ("cite", S_cite);
       ("multicolumn", S_multicolumn);
       ("term", S_term);
       ("kbd", S_kbd);
@@ -186,6 +189,7 @@ let sym_table : sym SMap.t =
       ("frac", S_frac);
       ("binom", S_binom);
       ("operatorname", S_operatorname);
+      ("mathrm", S_mathrm);
       ("left", S_left);
       ("right", S_right);
       (* replacements *)
@@ -269,6 +273,7 @@ let sym_to_string = function
   | S_hrule -> "hrule"
   | S_epigraph -> "epigraph"
   | S_blockquote -> "blockquote"
+  | S_cite -> "cite"
   | S_multicolumn -> "multicolumn"
   | S_term -> "term"
   | S_kbd -> "kbd"
@@ -287,6 +292,7 @@ let sym_to_string = function
   | S_frac -> "frac"
   | S_binom -> "binom"
   | S_operatorname -> "operatorname"
+  | S_mathrm -> "mathrm"
   | S_left -> "left"
   | S_right -> "right"
   | S_ldots -> "ldots"
@@ -425,6 +431,7 @@ let cmd_args : arg_type list SMap.t =
       ("hrule", []);
       ("epigraph", [ At_seq; At_seq ]);
       ("blockquote", [ At_seq; At_seq ]);
+      ("cite", [ At_seq ]);
       ("multicolumn", [ At_num; At_align_spec; At_seq ]);
       ("term", [ At_seq; At_seq ]);
       ("kbd", [ At_seq ]);
@@ -437,6 +444,7 @@ let math_cmds : math_arg_type list SMap.t =
       ("frac", [ Math_arg_expr; Math_arg_expr ]);
       ("binom", [ Math_arg_expr; Math_arg_expr ]);
       ("operatorname", [ Math_arg_sym ]);
+      ("mathrm", [ Math_arg_sym ]);
       ("left", []);
       ("right", []);
     ]

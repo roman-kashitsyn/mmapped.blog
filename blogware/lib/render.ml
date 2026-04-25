@@ -93,6 +93,7 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Kbd ils -> kbd_ [] (render_inlines ctx ils)
   | Sub ils -> sub_ [] (render_inlines ctx ils)
   | Sup ils -> sup_ [] (render_inlines ctx ils)
+  | Cite ils -> cite_ [] (render_inlines ctx ils)
   | Quotation ils -> parent "q" [] (render_inlines ctx ils)
   | Fun ils -> span_ [ class_ (txt "fun") ] (render_inlines ctx ils)
   | Math_span ils -> span_ [ class_ (txt "math") ] (render_inlines ctx ils)
@@ -278,9 +279,10 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
               items))
       ++ nl
   | Blockquote (body, attribution) ->
-      blockquote_ []
-        (render_quote_blocks ctx body
-        ++ footer_ [] (render_inlines ctx attribution))
+      figure_
+        [ class_ (txt "bq left-gutter-anchor") ]
+        (blockquote_ [] (render_quote_blocks ctx body)
+        ++ figcaption_ [] (render_inlines ctx attribution))
       ++ nl
   | Table td -> render_table ctx td ++ nl
   | Image (classes, path) ->
@@ -298,11 +300,12 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
         (render_blocks ~wrap_images:false ctx body)
       ++ nl
   | Epigraph (body, attribution) ->
-      div_
-        [ class_ (txt "epigraph") ]
-        (blockquote_ []
-           (render_quote_blocks ctx body
-           ++ footer_ [] (render_inlines ctx attribution)))
+      figure_
+        [
+          class_ (txt "epigraph left-gutter-anchor"); rel_ (txt "doc-epigraph");
+        ]
+        (blockquote_ [] (render_quote_blocks ctx body)
+        ++ figcaption_ [] (render_inlines ctx attribution))
       ++ nl
   | Abstract body ->
       div_ [ class_ (txt "abstract") ] (render_blocks ctx body) ++ nl

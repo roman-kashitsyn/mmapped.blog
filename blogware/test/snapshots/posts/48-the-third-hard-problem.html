@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="glasperlenspiel,programming"><meta name="description" content="It’s not off-by-one errors."><title>The third hard problem</title><link rel="stylesheet" href="/css/tufte.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/48-the-third-hard-problem.html"><script type="application/ld+json">
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="glasperlenspiel,programming"><meta name="description" content="It’s not off-by-one errors."><title>The third hard problem</title><link rel="stylesheet" href="/css/mmapped.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/48-the-third-hard-problem.html"><script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","headline":"The third hard problem","url":"https://mmapped.blog/posts/48-the-third-hard-problem.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/48-the-third-hard-problem.html"},"datePublished":"2026-02-28","dateModified":"2026-02-28","wordCount":1931,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"It’s not off-by-one errors.","keywords":["glasperlenspiel","programming"]}
-</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/48-the-third-hard-problem.html">The third hard problem</a></h1><span class="post-attrs"><span title="First published">✏ <time datetime="2026-02-28">2026-02-28</time></span>&nbsp;
-<span title="Last modified">✂ <time datetime="2026-02-28">2026-02-28</time></span><span class="post-icons"></span></span>
+</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/48-the-third-hard-problem.html">The third hard problem</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2026-02-28">2026-02-28</time></span><span class="post-icons"></span></span>
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#spaces-trees-webs">Spaces, trees, and webs</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#file-systems">File systems</a></li><li class="toc toc-level-2"><a href="#writing">Writing</a></li><li class="toc toc-level-2"><a href="#architecture">Architecture</a></li><li class="toc toc-level-2"><a href="#biology">Biology</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
 
@@ -40,9 +39,9 @@ and abstract syntax trees organize linear token sequences in compilers.</p>
 Thus, <em>tree mapping</em> is a problem that requires embedding a web into a tree in a way that distorts the web structure.</p>
 <p>Let’s look at a few examples.</p>
 <h3 id="file-systems"><a href="#file-systems">File systems</a></h3>
-<div class="epigraph"><blockquote><p>The digital world thereby allows us to transcend the most fundamental rule of ordering the real world:
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>The digital world thereby allows us to transcend the most fundamental rule of ordering the real world:
 Instead of everything having its place,
-it’s better if things can get assigned multiple places simultaneously.</p><footer>David Weinberger, <q>Everything Is Miscellaneous</q></footer></blockquote></div>
+it’s better if things can get assigned multiple places simultaneously.</p></blockquote><figcaption>David Weinberger, <cite>Everything Is Miscellaneous</cite></figcaption></figure>
 <p>Imagine receiving a bill from your dentist.
 How do you file it?
 In a common <q>archive</q> folder?
@@ -89,7 +88,7 @@ However,
 as tags and links enter the public consciousness through web services,
 filesystems might follow the lead and evolve into webs over time.</p>
 <h3 id="writing"><a href="#writing">Writing</a></h3>
-<div class="epigraph"><blockquote><p>the writer’s goal is to encode a web of ideas into a string of words using a tree of phrases.</p><footer>Steven Pinker, <q>The Sense of Style</q></footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>the writer’s goal is to encode a web of ideas into a string of words using a tree of phrases.</p></blockquote><figcaption>Steven Pinker, <cite>The Sense of Style</cite></figcaption></figure>
 <p>Books are the epitome of hierarchy:
 they have chapters that contain paragraphs with sentences composed of words made of letters,
 all sliced into neat numbered pages.
@@ -99,7 +98,7 @@ the storyteller describes events in the order they occurred,
 with chapter boundaries marking scene changes and time jumps.
 But beneath every story lies a web of ideas.
 Untangling this web into a sequence of words that recreates the web in another mind is the primordial struggle of every writer.</p>
-<div class="epigraph"><blockquote><p>Writing is easy. All you do is stare at a blank sheet of paper until drops of blood form on your forehead.</p><footer>Gene Fowler</footer></blockquote></div>
+<figure class="bq left-gutter-anchor"><blockquote><p>Writing is easy. All you do is stare at a blank sheet of paper until drops of blood form on your forehead.</p></blockquote><figcaption>Gene Fowler</figcaption></figure>
 <p>In fiction, the <em>web</em> involves relationships between characters and the emotional connections that the reader is meant to form with them.
 Best fiction uses the limitations of the medium to its advantage, presenting events in an order that puzzles and engages the reader most.
 Its ultimate goal is to deliver the joy of connecting the dots and assembling the complete web.</p>
@@ -119,7 +118,7 @@ so no two math books have the same table of contents.</p>
 be kind to yourself.
 You’re solving a hard problem.</p>
 <h3 id="architecture"><a href="#architecture">Architecture</a></h3>
-<div class="epigraph"><blockquote><p>The units of which an artificial city is made up are always organized to form a tree.</p><footer>Christopher Alexander, <q>A City is not a Tree</q>.</footer></blockquote></div>
+<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>The units of which an artificial city is made up are always organized to form a tree.</p></blockquote><figcaption>Christopher Alexander, <cite>A City is not a Tree.</cite></figcaption></figure>
 <figure><label class="margin-toggle" for="mn-levittown-siena">⊕</label><input type="checkbox" id="mn-levittown-siena" class="margin-toggle"><span class="marginnote">
   Panoramas of Levittown (left, public domain, source: <a href="https://commons.wikimedia.org/wiki/File:LevittownPA.jpg">Wikipedia</a>) and Siena (right, copyright <a href="https://www.vascoplanet.com/">Vyacheslav Argenberg</a> under <a href="https://creativecommons.org/licenses/by/4.0/deed.en">CC BY 4.0 license</a>).</span><img src="/images/48-levittown-siena.webp">
 </figure>
@@ -138,9 +137,9 @@ Work, leisure, and play coincide and interact.</p>
 <p>The city design is a tree-mapping problem that demands embedding a semilattice of human relationships into a particular terrain.
 No canonical mapping exists,
 so it’s natural that Christopher Alexander couldn’t provide a universal blueprint for a natural city.</p>
-<div class="epigraph"><blockquote><p>You are no doubt wondering by now what a city looks like which is a semilattice, but not a tree.
+<figure class="bq left-gutter-anchor"><blockquote><p>You are no doubt wondering by now what a city looks like which is a semilattice, but not a tree.
   I must confess that I cannot yet show you plans or sketches.
-  It is not enough merely to make a demonstration of overlap — the overlap must be the right overlap.</p><footer>Christopher Alexander, <q>A City is not a Tree</q></footer></blockquote></div>
+  It is not enough merely to make a demonstration of overlap — the overlap must be the right overlap.</p></blockquote><figcaption>Christopher Alexander, <cite>A City is not a Tree</cite></figcaption></figure>
 <p>In other words, natural cities preserve deeper connections when they lay out the web of human lives within the hierarchy of quarters and buildings.
 No algorithm can tell you what these connections are.</p>
 <h3 id="biology"><a href="#biology">Biology</a></h3>
@@ -160,7 +159,7 @@ and their inclusions form graphs that are more general than trees (<a href="http
 Jorge Luis Borges mocked such taxonomies in his essay, <q><a href="https://www.crockford.com/wilkins.html">The Analytical Language of John Wilkins</a></q>,
 quoting a fictional ancient Chinese encyclopedia,
 <q>The Celestial Emporium of Benevolent Knowledge</q>:</p>
-<blockquote><p>the animals are divided into:
+<figure class="bq left-gutter-anchor"><blockquote><p>the animals are divided into:
 (a) belonging to the Emperor
 (b) embalmed
 (c) trained
@@ -174,7 +173,7 @@ quoting a fictional ancient Chinese encyclopedia,
 (k) drawn with a very fine camelhair brush
 (l) et cetera
 (m) just broke the vase
-(n) from a distance look like flies</p><footer>Jorge Luis Borges, <q>The Analytical Language of John Wilkins</q></footer></blockquote>
+(n) from a distance look like flies</p></blockquote><figcaption>Jorge Luis Borges, <cite>The Analytical Language of John Wilkins</cite></figcaption></figure>
 <p><a href="https://en.wikipedia.org/wiki/Cladistics">Cladistics</a> is a modern system that classifies organisms based on their common ancestry and genetics.
 Even though this mapping is imperfect due to <a href="https://en.wikipedia.org/wiki/Horizontal_gene_transfer">horizontal gene transfer</a>,
 it’s more accurate and revealing than the traditional classification because it preserves existing connections rather than imposing artificial ones.</p>
@@ -196,8 +195,7 @@ And, most importantly, must the target medium be a tree in the first place?
 </p>
 </section>
 
-</article><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/38-static-types-perfectionism.html" title="Scherzo in e-moll on programming and authenticity.">Static types are for perfectionists</a>&ensp;<span class="compact-date"><time datetime="2025-04-01">2025-04-01</time></span></li><li><a class="compact-title" href="/posts/26-good-names-form-galois-connections.html" title="A quest for defining what it means to name things well.">Good names form Galois connections</a>&ensp;<span class="compact-date"><time datetime="2024-04-01">2024-04-01</time></span></li><li><a class="compact-title" href="/posts/05-debug-like-feynman.html" title="Apply scientific method in everyday software engineering.">Debug like Feynman, test like Faraday</a>&ensp;<span class="compact-date"><time datetime="2022-04-01">2022-04-01</time></span></li><li><a class="compact-title" href="/posts/18-if-composers-were-hackers.html" title="What programming language would J.S. Bach use?">If composers were hackers</a>&ensp;<span class="compact-date"><time datetime="2023-04-01">2023-04-01</time></span></li><li><a class="compact-title" href="/posts/45-compilation-is-communication.html" title="An ode to M-x compile.">Compilation is communication</a>&ensp;<span class="compact-date"><time datetime="2025-10-13">2025-10-13</time></span></li></ul>
+</article><section><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/38-static-types-perfectionism.html" title="Scherzo in e-moll on programming and authenticity.">Static types are for perfectionists</a><span class="compact-date"><time datetime="2025-04-01">2025-04-01</time></span></li><li><a class="compact-title" href="/posts/26-good-names-form-galois-connections.html" title="A quest for defining what it means to name things well.">Good names form Galois connections</a><span class="compact-date"><time datetime="2024-04-01">2024-04-01</time></span></li><li><a class="compact-title" href="/posts/05-debug-like-feynman.html" title="Applying scientific method in software engineering.">Debug like Feynman, test like Faraday</a><span class="compact-date"><time datetime="2022-04-01">2022-04-01</time></span></li><li><a class="compact-title" href="/posts/18-if-composers-were-hackers.html" title="What programming language would J.S. Bach use?">If composers were hackers</a><span class="compact-date"><time datetime="2023-04-01">2023-04-01</time></span></li><li><a class="compact-title" href="/posts/45-compilation-is-communication.html" title="An ode to M-x compile.">Compilation is communication</a><span class="compact-date"><time datetime="2025-10-13">2025-10-13</time></span></li></ul></section>
 
-<hr><footer><span>&copy;Roman Kashitsyn</span>&nbsp;
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" style="vertical-align: text-top;" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<hr><footer role="contentinfo"><span>©Roman Kashitsyn</span>&nbsp;<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
 <a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></body></html>
