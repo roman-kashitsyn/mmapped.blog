@@ -61,6 +61,7 @@ type sym =
   | S_term
   | S_kbd
   | S_nameref
+  | S_figcaption
   (* environments *)
   | S_document
   | S_abstract
@@ -173,6 +174,7 @@ let sym_table : sym SMap.t =
       ("term", S_term);
       ("kbd", S_kbd);
       ("nameref", S_nameref);
+      ("figcaption", S_figcaption);
       (* environments *)
       ("document", S_document);
       ("abstract", S_abstract);
@@ -278,6 +280,7 @@ let sym_to_string = function
   | S_term -> "term"
   | S_kbd -> "kbd"
   | S_nameref -> "nameref"
+  | S_figcaption -> "figcaption"
   | S_document -> "document"
   | S_abstract -> "abstract"
   | S_enumerate -> "enumerate"
@@ -386,57 +389,58 @@ type arg_type =
 type math_arg_type = Math_arg_expr | Math_arg_sym
 
 (* Command argument type registry *)
-let cmd_args : arg_type list SMap.t =
-  smap_of_list
-    [
-      ("begin", [ At_sym ]);
-      ("end", [ At_sym ]);
-      ("label", [ At_sym ]);
-      ("dingbat", [ At_sym ]);
-      ("section", [ At_sym; At_seq ]);
-      ("section*", []);
-      ("subsection", [ At_sym; At_seq ]);
-      ("href", [ At_url; At_seq ]);
-      ("reddit", [ At_url ]);
-      ("hackernews", [ At_url ]);
-      ("lobsters", [ At_url ]);
-      ("documentclass", [ At_sym ]);
-      ("includegraphics", [ At_seq ]);
-      ("date", [ At_sym ]);
-      ("details", [ At_seq; At_seq ]);
-      ("modified", [ At_sym ]);
-      ("keyword", [ At_sym ]);
-      ("title", [ At_seq ]);
-      ("subtitle", [ At_seq ]);
-      ("b", [ At_seq ]);
-      ("u", [ At_seq ]);
-      ("normal", [ At_seq ]);
-      ("emph", [ At_seq ]);
-      ("textsc", [ At_seq ]);
-      ("circled", [ At_num ]);
-      ("code", [ At_seq ]);
-      ("center", [ At_seq ]);
-      ("item", []);
-      ("math", [ At_seq ]);
-      ("sub", [ At_seq ]);
-      ("sup", [ At_seq ]);
-      ("fun", [ At_seq ]);
-      ("strikethrough", [ At_seq ]);
-      ("qed", []);
-      ("advice", [ At_sym; At_seq ]);
-      ("marginnote", [ At_sym; At_seq ]);
-      ("sidenote", [ At_sym; At_seq ]);
-      ("newline", []);
-      ("numspace", []);
-      ("hrule", []);
-      ("epigraph", [ At_seq; At_seq ]);
-      ("blockquote", [ At_seq; At_seq ]);
-      ("cite", [ At_seq ]);
-      ("multicolumn", [ At_num; At_align_spec; At_seq ]);
-      ("term", [ At_seq; At_seq ]);
-      ("kbd", [ At_seq ]);
-      ("nameref", [ At_sym ]);
-    ]
+let cmd_args (s : sym) : arg_type list =
+  match s with
+  | S_begin -> [ At_sym ]
+  | S_end -> [ At_sym ]
+  | S_label -> [ At_sym ]
+  | S_dingbat -> [ At_sym ]
+  | S_section -> [ At_sym; At_seq ]
+  | S_section_star -> []
+  | S_subsection -> [ At_sym; At_seq ]
+  | S_href -> [ At_url; At_seq ]
+  | S_reddit -> [ At_url ]
+  | S_hackernews -> [ At_url ]
+  | S_lobsters -> [ At_url ]
+  | S_documentclass -> [ At_sym ]
+  | S_includegraphics -> [ At_seq ]
+  | S_date -> [ At_sym ]
+  | S_details -> [ At_seq; At_seq ]
+  | S_modified -> [ At_sym ]
+  | S_keyword -> [ At_sym ]
+  | S_title -> [ At_seq ]
+  | S_subtitle -> [ At_seq ]
+  | S_b -> [ At_seq ]
+  | S_u -> [ At_seq ]
+  | S_normal -> [ At_seq ]
+  | S_emph -> [ At_seq ]
+  | S_textsc -> [ At_seq ]
+  | S_circled -> [ At_num ]
+  | S_code -> [ At_seq ]
+  | S_center -> [ At_seq ]
+  | S_item -> []
+  | S_math -> [ At_seq ]
+  | S_sub -> [ At_seq ]
+  | S_sup -> [ At_seq ]
+  | S_fun -> [ At_seq ]
+  | S_strikethrough -> [ At_seq ]
+  | S_qed -> []
+  | S_advice -> [ At_sym; At_seq ]
+  | S_marginnote -> [ At_sym; At_seq ]
+  | S_sidenote -> [ At_sym; At_seq ]
+  | S_newline -> []
+  | S_numspace -> []
+  | S_hrule -> []
+  | S_epigraph -> [ At_seq; At_seq ]
+  | S_blockquote -> [ At_seq; At_seq ]
+  | S_cite -> [ At_seq ]
+  | S_multicolumn -> [ At_num; At_align_spec; At_seq ]
+  | S_term -> [ At_seq; At_seq ]
+  | S_kbd -> [ At_seq ]
+  | S_nameref -> [ At_sym ]
+  | S_figcaption -> [ At_seq ]
+  | S_featured -> []
+  | _ -> []
 
 let math_cmds : math_arg_type list SMap.t =
   smap_of_list

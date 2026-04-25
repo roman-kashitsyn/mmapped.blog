@@ -86,6 +86,7 @@ type block =
   | Advice of Text.t * inline list (* anchor, content *)
   | Details of inline list * block list (* summary, body *)
   | Center of block list
+  | Figcaption of inline list
   | HRule
 
 (* Reference table for nameref resolution *)

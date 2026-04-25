@@ -394,14 +394,12 @@ and parse_cmd st =
          unexpected "\\end without matching \\begin"
        else
          let sym = resolve_sym name in
-         parse_command_with_args pos sym name)
+         parse_command_with_args pos sym)
     st
 
-and parse_command_with_args pos sym name st =
+and parse_command_with_args pos sym st =
   (let* opts = parse_options in
-   let arg_types =
-     match SMap.find_opt name cmd_args with Some xs -> xs | None -> []
-   in
+   let arg_types = cmd_args sym in
    let* args = collect_list parse_arg arg_types in
    return (NCmd (pos, sym, opts, args)))
     st

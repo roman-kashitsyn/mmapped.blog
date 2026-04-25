@@ -329,6 +329,7 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
       ++ nl
   | Center body ->
       parent "center" [] (render_blocks ~wrap_images:false ctx body) ++ nl
+  | Figcaption ils -> figcaption_ [] (render_inlines ctx ils) ++ nl
   | HRule -> hr_ [] ++ nl
 
 and render_blocks ?(wrap_images = true) (ctx : ctx) (bs : block list) : Html.t =

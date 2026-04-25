@@ -90,7 +90,7 @@ let rec count_block (b : block) : int =
       header_count
       + List.fold_left (fun acc row -> acc + count_row row) 0 td.table_rows
   | Figure (_, body) | Abstract body | Center body -> count_blocks body
-  | Advice (_, ils) -> count_inlines ils
+  | Advice (_, ils) | Figcaption ils -> count_inlines ils
   | Details (summary, body) -> count_inlines summary + count_blocks body
 
 and count_blocks (blocks : block list) : int =
