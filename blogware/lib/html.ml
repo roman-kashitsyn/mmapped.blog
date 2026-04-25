@@ -69,7 +69,7 @@ let attr (key : string) (value : Text.t) : attribute =
   Buffer.add_char buf '"'
 
 let class_ v = attr "class" v
-let role_ v = attr "class" v
+let role_ v = attr "role" v
 let href_ v = attr "href" v
 let id_ v = attr "id" v
 let for_ v = attr "for" v

@@ -236,7 +236,7 @@ let site_footer : Html.t =
   nl ++ hr_ []
   ++ footer_
        [ role_ (txt "contentinfo") ]
-       (span_ [] (escape_html (txt "&copy;Roman Kashitsyn"))
+       (span_ [] (text (txt "©Roman Kashitsyn"))
        ++ nbsp
        ++ a_
             [
