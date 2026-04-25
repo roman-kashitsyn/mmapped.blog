@@ -848,8 +848,9 @@ figcaption {
     clear: right;
     margin-top: 0;
     margin-bottom: 0;
+    margin-right: -60%;
     font-size: var(--fs-small);
-    line-height: 1.6;
+    line-height: var(--lh-medium);
     vertical-align: baseline;
     position: relative;
     max-width: 40%;

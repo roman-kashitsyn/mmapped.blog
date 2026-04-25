@@ -393,6 +393,9 @@ and classify_cmd pos sym opts args =
   | S_cite, Arg_nodes (_, body) :: _ ->
       let* ils = elaborate_inlines body in
       Ok (CInline (Cite ils))
+  | S_figcaption, Arg_nodes (_, ns) :: _ ->
+      let* ils = elaborate_inlines ns in
+      Ok (CBlock (Figcaption ils))
   | S_details, Arg_nodes (_, summary) :: Arg_nodes (_, body) :: _ ->
       let* s_ils = elaborate_inlines summary in
       let* body_blocks = build_blocks body in
