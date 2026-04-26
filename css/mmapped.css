@@ -36,8 +36,8 @@
     --page-sunk: #F3EDDF;
 
     --ink: #1B1814;
-    --ink-subtle: #55504A;
-    --ink-faint: #8A857B;
+    --ink-subtle: #3A332C;
+    --ink-faint: #55504A;
 
     --rule: #D6CDBB;
     --rule-soft: #E8E0CD;
@@ -403,6 +403,12 @@ figure.bq {
     padding-right: var(--sp-para-gap);
 }
 
+li figure.bq {
+    width: auto;
+    max-width: 100%;
+}
+
+
 figure.bq blockquote {
     margin: 0;
 }
@@ -542,7 +548,6 @@ ul.arrows > li,
 ul.checklist > li,
 ol.circled > li {
     list-style: none;
-    clear: both;
 }
 
 .circled-ref {
@@ -700,8 +705,8 @@ body {
         --page-sunk: #1D1915;
 
         --ink: #EDE5D2;
-        --ink-subtle: #BCB3A0;
-        --ink-faint: #7F7868;
+        --ink-subtle: #D2C9B5;
+        --ink-faint: #BCB3A0;
 
         --rule: #3A342A;
         --rule-soft: #2A251E;
@@ -1143,10 +1148,13 @@ p.svg {
         width: 90%;
     }
 
+    li {
+        clear: both;
+    }
+
     ul.posts {
         width: 100%;
     }
-
 
     figure {
         max-width: 90%;
@@ -1161,10 +1169,15 @@ p.svg {
     blockquote {
         margin-left: var(--sp-para-gap);
         margin-right: 0em;
+        width: auto;
     }
 
     blockquote p {
         width: 100%;
+    }
+
+    figure.epigraph, figure.bq {
+        width: auto;
     }
 
     .epigraph figcaption {
@@ -1206,7 +1219,7 @@ p.svg {
         transform: none;
     }
 
-    figure.epigraph::before {
+    figure.epigraph::before, figure.bq::before {
         display: none;
     }
 
