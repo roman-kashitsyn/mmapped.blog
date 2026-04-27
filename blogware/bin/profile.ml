@@ -1,5 +1,4 @@
-(* Profiling harness: parse, elaborate, and render a single .tex file.
-   Mirror of Profile.hs. *)
+(* Profiling harness: parse, elaborate, and render a single .tex file. *)
 
 open Blogware
 

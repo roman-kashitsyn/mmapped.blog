@@ -1,10 +1,7 @@
 (* Error types and pretty formatter with source-context underlines.
-   Mirror of Blogware.Error. The Haskell version uses Parsec's ParseError;
-   the OCaml port has its own [Parser.parse_error] type that carries
-   a source position and message. *)
 
-(* The parser-side error type lives in Parser to avoid a cycle;
-   this module only formats it. *)
+   The parser-side error type lives in Parser to avoid a cycle.
+   This module only formats it. *)
 
 type parse_error = Parser.parse_error = {
   pe_source_name : string;

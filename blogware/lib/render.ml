@@ -1,4 +1,4 @@
-(* Document → HTML renderer. Mirror of Blogware.Render. *)
+(* Document → HTML renderer. *)
 
 open Html
 open Document

@@ -1,13 +1,6 @@
-(* HTML builder. Mirror of Blogware.Html.
-
-   The Haskell version uses an [HtmlM a] phantom-type Builder monad so it
-   can use do-notation. OCaml has no do-notation, so the port replaces the
-   monadic interface with simple buffer-passing functions: a value of type
-   [t] is "a function that appends its content to a buffer". Composition
-   is just function composition (sequencing two writes), exposed as [++].
-
-   Tag helpers (~100 of them) all delegate to [parent] / [leaf] one-liners
-   below, exactly as in the Haskell version. *)
+(* HTML builder is based on simple buffer-passing functions: a value of type
+   [t] is "a function that appends its content to a buffer".
+   Composition is just function composition (sequencing two writes), exposed as [++]. *)
 
 type t = Buffer.t -> unit
 
@@ -56,8 +49,8 @@ let doctype : t = raw (Text.of_string "<!DOCTYPE html>")
 
 (* --- Attributes --- *)
 
-(* An attribute is also a buffer-writing function. It is responsible for
-   emitting its own leading space, mirroring the Haskell encoding. *)
+(* An attribute is also a buffer-writing function.
+   It is responsible for emitting its own leading space. *)
 type attribute = Buffer.t -> unit
 
 let attr (key : string) (value : Text.t) : attribute =

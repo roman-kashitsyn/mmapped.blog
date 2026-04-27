@@ -1,13 +1,7 @@
-(* MathML renderer. Mirror of Blogware.Render.MathML.
-
-   Renders Syntax.math_node trees (produced by Parser_math) into MathML
-   elements using the Html builder. *)
+(* Renders Syntax.math_node trees into MathML elements using the Html builder. *)
 
 open Html
 open Syntax
-
-(* MathML text escaping: only <, >, &. Matches Blogware.Render.MathML's
-   escapeMathText exactly. *)
 
 let is_math_special c = match c with '<' | '>' | '&' -> true | _ -> false
 
@@ -23,22 +17,8 @@ let escape_math_text (t : Text.t) (buf : Buffer.t) : unit =
         | c -> Buffer.add_char buf c)
       t
 
-(* Map bit-index -> tag helper. Encoding (from the Haskell source):
+(* Map bit-index -> tag helper.
      bit 2 = big-op, bit 1 = has-sub, bit 0 = has-sup *)
-let sub_sup_tag idx =
-  match idx with
-  | 0b010 -> msub_
-  | 0b001 -> msup_
-  | 0b011 -> msubsup_
-  | 0b110 -> munder_
-  | 0b101 -> mover_
-  | 0b111 -> munderover_
-  | _ -> mrow_
-
-let nucleus_is_big_op = function
-  | Math_cmd (sym, _) -> is_big_op sym
-  | _ -> false
-
 let col_align_attrs (specs : col_spec list) : attribute list =
   if specs = [] then []
   else
@@ -119,20 +99,19 @@ and render_math_cmd sym args =
       ++ concat (List.map render_math_node args)
 
 and render_math_term nucleus msub msup =
-  match (msub, msup) with
-  | None, None -> render_math_node nucleus
-  | _ ->
-      let is_big = nucleus_is_big_op nucleus in
-      let idx =
-        (if is_big then 4 else 0)
-        + (match msub with Some _ -> 2 | None -> 0)
-        + match msup with Some _ -> 1 | None -> 0
-      in
-      let tag = sub_sup_tag idx in
-      tag []
-        (render_math_node nucleus
-        ++ (match msub with Some n -> render_math_node n | None -> empty)
-        ++ match msup with Some n -> render_math_node n | None -> empty)
+  let n = render_math_node nucleus in
+  let sub_sup =
+    match nucleus with
+    | Math_cmd ((S_sum | S_prod | S_int | S_lim), _) ->
+        (munder_, mover_, munderover_)
+    | _ -> (msub_, msup_, msubsup_)
+  in
+  match (sub_sup, msub, msup) with
+  | _, None, None -> n
+  | (tag, _, _), Some sub, None -> tag [] (n ++ render_math_node sub)
+  | (_, tag, _), None, Some sup -> tag [] (n ++ render_math_node sup)
+  | (_, _, tag), Some sub, Some sup ->
+      tag [] (n ++ render_math_node sub ++ render_math_node sup)
 
 (* Render a full math element. *)
 let render_math (disp : math_display) (nodes : math_node list) : Html.t =

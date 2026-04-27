@@ -1,4 +1,4 @@
-(* Semantic document model. Mirror of Blogware.Document. *)
+(* Semantic document model. *)
 
 (* Reuse math types and column spec from Syntax *)
 type math_display = Syntax.math_display

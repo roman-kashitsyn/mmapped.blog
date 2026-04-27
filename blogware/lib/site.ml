@@ -1,8 +1,5 @@
-(* Full-site loader and renderer. Mirror of Blogware.Site.
-
-   This is the only module that touches the filesystem. It loads all
-   posts/*.tex, runs them through parser → elaborate, then writes the
-   rendered HTML/XML output. *)
+(* Full-site loader and renderer.
+   It loads all posts/*.tex, parses, elaborates, and writes the rendered HTML/XML output. *)
 
 open Document
 
@@ -104,10 +101,9 @@ let load_articles (input_dir : string) : (article list, string) result =
 
 (* --- Site layout spec --- *)
 
-(* Mirror of [SiteLayout] from ../mmapped.blog/blogware/layout.go. Each
-   entry says what to produce at a given output path. The site renderer
-   walks this list top-to-bottom; order decides which posts exist before
-   the index page renders. *)
+(* Each entry says what to produce at a given output path.
+   The site renderer walks this list top-to-bottom.
+   Order decides which posts exist before the index page renders. *)
 
 type asset_type =
   | Static_files

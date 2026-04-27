@@ -1,4 +1,4 @@
-(* Dev HTTP server. Mirror of Blogware.Server.
+(* Dev HTTP server.
 
    On every request, re-parses posts from disk and re-renders the
    requested page. This is deliberate: the intent is a low-friction

@@ -1,4 +1,4 @@
-(* Blogware CLI. Mirror of Haskell Main.
+(* Blogware CLI.
 
    Supports two modes:
      -output DIR    static site generation

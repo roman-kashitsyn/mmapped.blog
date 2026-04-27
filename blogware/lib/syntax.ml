@@ -1,4 +1,4 @@
-(* TeX AST and command/environment registries. Mirror of Blogware.Syntax. *)
+(* TeX AST and command/environment registries. *)
 
 type pos = Parser.Pos.t
 
@@ -496,6 +496,3 @@ let is_metadata_cmd = function
   | S_keyword | S_reddit | S_hackernews | S_lobsters ->
       true
   | _ -> false
-
-(* Big math operators that use munder/mover. *)
-let is_big_op = function S_sum | S_prod | S_int | S_lim -> true | _ -> false

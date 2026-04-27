@@ -1,10 +1,5 @@
-(* Elaborator. Mirror of Blogware.Elaborate.
-
-   Transforms a flat [Syntax.node list] (the parser's output) into a
-   high-level [Document.article], dispatching on command name. This is the
-   largest module in the port. The logic is a faithful translation of the
-   Haskell original, with Haskell's [Data.Sequence] replaced by [list]
-   everywhere. *)
+(* Elaborator transforms a flat [Syntax.node list] (the parser's output)
+   into a high-level [Document.article], dispatching on command name. *)
 
 open Syntax
 open Document
@@ -157,26 +152,26 @@ and node_text = function
 let extract_metadata (nodes : node list) : meta result_ =
   let rec go m = function
     | [] -> Ok m
-    | NCmd (_, sym, _, args) :: rest -> (
-        match (sym, args) with
-        | S_title, Arg_nodes (_, ns) :: _ ->
-            go { m with m_title = node_text_of_nodes ns } rest
-        | S_subtitle, Arg_nodes (_, ns) :: _ ->
-            go { m with m_subtitle = node_text_of_nodes ns } rest
-        | S_featured, _ -> go { m with m_featured = true } rest
-        | S_date, Arg_symbol (pos, d) :: _ ->
-            let* day = parse_day pos d in
-            go { m with m_created_at = day; m_modified_at = day } rest
-        | S_modified, Arg_symbol (pos, d) :: _ ->
-            let* day = parse_day pos d in
-            go { m with m_modified_at = day } rest
-        | S_keyword, Arg_symbol (_, k) :: _ ->
-            go { m with m_keywords = k :: m.m_keywords } rest
-        | S_reddit, Arg_url (_, u) :: _ -> go { m with m_reddit = Some u } rest
-        | S_hackernews, Arg_url (_, u) :: _ -> go { m with m_hn = Some u } rest
-        | S_lobsters, Arg_url (_, u) :: _ ->
-            go { m with m_lobsters = Some u } rest
-        | _ -> go m rest)
+    | NCmd (_, S_title, _, Arg_nodes (_, ns) :: _) :: rest ->
+        go { m with m_title = node_text_of_nodes ns } rest
+    | NCmd (_, S_subtitle, _, Arg_nodes (_, ns) :: _) :: rest ->
+        go { m with m_subtitle = node_text_of_nodes ns } rest
+    | NCmd (_, S_featured, _, _) :: rest -> go { m with m_featured = true } rest
+    | NCmd (_, S_date, _, Arg_symbol (pos, d) :: _) :: rest ->
+        let* day = parse_day pos d in
+        go { m with m_created_at = day; m_modified_at = day } rest
+    | NCmd (_, S_modified, _, Arg_symbol (pos, d) :: _) :: rest ->
+        let* day = parse_day pos d in
+        go { m with m_modified_at = day } rest
+    | NCmd (_, S_keyword, _, Arg_symbol (_, k) :: _) :: rest ->
+        go { m with m_keywords = k :: m.m_keywords } rest
+    | NCmd (_, S_reddit, _, Arg_url (_, u) :: _) :: rest ->
+        go { m with m_reddit = Some u } rest
+    | NCmd (_, S_hackernews, _, Arg_url (_, u) :: _) :: rest ->
+        go { m with m_hn = Some u } rest
+    | NCmd (_, S_lobsters, _, Arg_url (_, u) :: _) :: rest ->
+        go { m with m_lobsters = Some u } rest
+    | NCmd _ :: rest -> go m rest
     | _ :: rest -> go m rest
   in
   go default_meta nodes
@@ -474,68 +469,72 @@ and elaborate_code_inlines (ns : node list) : inline list result_ =
     | NQuotation (_, body) :: rest ->
         let* ils = elaborate_code_inlines body in
         go (Quotation ils :: acc) rest
-    | NCmd (_, sym, opts, args) :: rest -> (
-        match (sym, args) with
-        | S_b, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Strong ils :: acc) rest
-        | S_emph, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Emph ils :: acc) rest
-        | S_u, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Underline ils :: acc) rest
-        | S_textsc, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Small_caps ils :: acc) rest
-        | S_strikethrough, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Strikethrough ils :: acc) rest
-        | S_code, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Code (opts, ils) :: acc) rest
-        | S_kbd, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Kbd ils :: acc) rest
-        | S_sub, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Sub ils :: acc) rest
-        | S_sup, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Sup ils :: acc) rest
-        | S_href, Arg_url (_, url) :: Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Link (url, ils) :: acc) rest
-        | S_fun, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Fun ils :: acc) rest
-        | S_math, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Math_span ils :: acc) rest
-        | S_normal, Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Normal ils :: acc) rest
-        | S_label, Arg_symbol (_, anchor) :: _ -> go (Anchor anchor :: acc) rest
-        | S_newline, _ -> go (Line_break :: acc) rest
-        | S_numspace, _ -> go (Numeric_space :: acc) rest
-        | S_qed, _ -> go (Str (text "\xE2\x88\x8E") :: acc) rest
-        | S_hrule, _ -> go (Horizontal_rule :: acc) rest
-        | S_marginnote, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Margin_note (anchor, ils) :: acc) rest
-        | S_sidenote, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _ ->
-            let* ils = elaborate_code_inlines ns in
-            go (Side_note (anchor, ils) :: acc) rest
-        | S_dingbat, Arg_symbol (_, name) :: _ ->
-            go (Str (dingbat_char name) :: acc) rest
-        | S_circled, Arg_number (_, n) :: _ -> go (Circled_ref n :: acc) rest
-        | S_nameref, Arg_symbol (_, r) :: _ -> go (Nameref r :: acc) rest
-        | S_includegraphics, Arg_nodes (_, ns) :: _ ->
-            go (Image_inline (opts, node_text_of_nodes ns) :: acc) rest
-        | _ -> (
-            match replacement_text sym with
-            | Some repl -> go (Str (text repl) :: acc) rest
-            | None -> go acc rest))
+    | NCmd (_, S_b, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Strong ils :: acc) rest
+    | NCmd (_, S_emph, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Emph ils :: acc) rest
+    | NCmd (_, S_u, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Underline ils :: acc) rest
+    | NCmd (_, S_textsc, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Small_caps ils :: acc) rest
+    | NCmd (_, S_strikethrough, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Strikethrough ils :: acc) rest
+    | NCmd (_, S_code, opts, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Code (opts, ils) :: acc) rest
+    | NCmd (_, S_kbd, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Kbd ils :: acc) rest
+    | NCmd (_, S_sub, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Sub ils :: acc) rest
+    | NCmd (_, S_sup, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Sup ils :: acc) rest
+    | NCmd (_, S_href, _, Arg_url (_, url) :: Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Link (url, ils) :: acc) rest
+    | NCmd (_, S_fun, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Fun ils :: acc) rest
+    | NCmd (_, S_math, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Math_span ils :: acc) rest
+    | NCmd (_, S_normal, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Normal ils :: acc) rest
+    | NCmd (_, S_label, _, Arg_symbol (_, anchor) :: _) :: rest ->
+        go (Anchor anchor :: acc) rest
+    | NCmd (_, S_newline, _, _) :: rest -> go (Line_break :: acc) rest
+    | NCmd (_, S_numspace, _, _) :: rest -> go (Numeric_space :: acc) rest
+    | NCmd (_, S_qed, _, _) :: rest ->
+        go (Str (text "\xE2\x88\x8E") :: acc) rest
+    | NCmd (_, S_hrule, _, _) :: rest -> go (Horizontal_rule :: acc) rest
+    | NCmd (_, S_marginnote, _, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _)
+      :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Margin_note (anchor, ils) :: acc) rest
+    | NCmd (_, S_sidenote, _, Arg_symbol (_, anchor) :: Arg_nodes (_, ns) :: _)
+      :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Side_note (anchor, ils) :: acc) rest
+    | NCmd (_, S_dingbat, _, Arg_symbol (_, name) :: _) :: rest ->
+        go (Str (dingbat_char name) :: acc) rest
+    | NCmd (_, S_circled, _, Arg_number (_, n) :: _) :: rest ->
+        go (Circled_ref n :: acc) rest
+    | NCmd (_, S_nameref, _, Arg_symbol (_, r) :: _) :: rest ->
+        go (Nameref r :: acc) rest
+    | NCmd (_, S_includegraphics, opts, Arg_nodes (_, ns) :: _) :: rest ->
+        go (Image_inline (opts, node_text_of_nodes ns) :: acc) rest
+    | NCmd (_, sym, _, _) :: rest -> (
+        match replacement_text sym with
+        | Some repl -> go (Str (text repl) :: acc) rest
+        | None -> go acc rest)
     | _ :: rest -> go acc rest
   in
   go [] ns

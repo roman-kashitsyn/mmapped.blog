@@ -1,9 +1,4 @@
-(* Minimal XML builder, mirror of Blogware.Xml.
-
-   The Haskell version wraps Data.Text.Lazy.Builder in a newtype with a
-   Semigroup/Monoid instance. The OCaml version uses buffer-passing
-   functions, which is the same trick as the Html module: a value of type
-   [t] is a function that appends its content to a buffer. *)
+(* Minimal XML builder. *)
 
 type t = Buffer.t -> unit
 
@@ -42,24 +37,37 @@ let escape_xml (s : Text.t) (buf : Buffer.t) =
 let text (s : Text.t) : t = fun buf -> escape_xml s buf
 let raw (s : Text.t) : t = fun buf -> Text.output_to_buffer buf s
 
-let tag (name : string) (content : t) : t =
+(* --- Attributes --- *)
+
+type attribute = Buffer.t -> unit
+
+let attr (key : string) (value : Text.t) : attribute =
+ fun buf ->
+  Buffer.add_char buf ' ';
+  Buffer.add_string buf key;
+  Buffer.add_string buf "=\"";
+  escape_xml value buf;
+  Buffer.add_char buf '"'
+
+let render_attrs (attrs : attribute list) (buf : Buffer.t) : unit =
+  List.iter (fun a -> a buf) attrs
+
+(* --- Generic tag constructors --- *)
+
+let parent (tag : string) (attrs : attribute list) (content : t) : t =
  fun buf ->
   Buffer.add_char buf '<';
-  Buffer.add_string buf name;
+  Buffer.add_string buf tag;
+  render_attrs attrs buf;
   Buffer.add_char buf '>';
   content buf;
   Buffer.add_string buf "</";
-  Buffer.add_string buf name;
+  Buffer.add_string buf tag;
   Buffer.add_string buf ">\n"
 
-let tag_attr (name : string) (attrs : Text.t) (content : t) : t =
+let leaf (tag : string) (attrs : attribute list) : t =
  fun buf ->
   Buffer.add_char buf '<';
-  Buffer.add_string buf name;
-  Buffer.add_char buf ' ';
-  Text.output_to_buffer buf attrs;
-  Buffer.add_char buf '>';
-  content buf;
-  Buffer.add_string buf "</";
-  Buffer.add_string buf name;
-  Buffer.add_string buf ">\n"
+  Buffer.add_string buf tag;
+  render_attrs attrs buf;
+  Buffer.add_string buf "/>\n"

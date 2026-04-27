@@ -1,4 +1,4 @@
-(* Page templates. Mirror of Blogware.Layout. *)
+(* Page templates. *)
 
 open Html
 open Document
@@ -436,8 +436,7 @@ let list_page_head (title_text : string) : Html.t =
            href_ (txt "/feed.xml");
          ])
 
-(* Mirrors Go's page.tmpl — used only for standalone pages (about.html).
-   Differs from [page_head] and [list_page_head]: includes the
+(* Differs from [page_head] and [list_page_head]: includes the
    tdm-reservation meta and five font preloads, omits keywords/description/
    alternate feed/canonical. *)
 let standalone_page_head (title : Html.t) : Html.t =

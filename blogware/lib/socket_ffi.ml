@@ -1,9 +1,4 @@
-(* Sockets. Thin wrapper over the OCaml [Unix] stdlib.
-
-   The Haskell original (Server/Socket.hsc) uses [hsc2hs] and raw POSIX
-   FFI because GHC's [network] package is heavyweight. OCaml's [Unix]
-   already exposes [socket]/[bind]/[listen]/[accept]/[read]/[write]/[close]
-   directly, so this module is just type-laundering. *)
+(* A thin wrapper around the [Unix] module. *)
 
 type fd = Unix.file_descr
 
