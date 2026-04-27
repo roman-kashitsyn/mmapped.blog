@@ -1,0 +1,98 @@
+\documentclass{note}
+
+\title{Expression problem}
+\date{2026-04-26}
+\modified{2026-04-26}
+
+\begin{document}
+
+The \emph{expression problem} observes the inherent conflict between adding new types and new operations to open systems.
+
+Let's use the classical \code{Shape} types as an example.
+We start with two types (\code{Rectangle} and \code{Circle}) and two operations (\code{area} and \code{perimeter}).
+
+\section{adding-types}{Adding types}
+
+Object-oriented paradigm facilitates adding new types (e.g., \code{Triangle}).
+
+\begin{code}[ruby]
+class Rectangle
+  def area
+    @width * @height
+  end
+
+  def perimeter
+    2 * (@width + @height)
+  end
+end
+
+class Circle
+  def area
+    Math::PI * @radius * @radius
+  end
+
+  def perimeter
+    2 * Math::PI * @radius
+  end
+end
+\end{code}
+
+Adding a new method (e.g., \code{vertex\_count}) requires changes in every class.
+
+\section{adding-functions}{Adding functions}
+
+Functional programming with algebraic data types makes adding new operations easy.
+
+\begin{code}[ocaml]
+type shape =
+  | Rectangle of float * float
+  | Circle of float
+
+let area = function
+  | Rectangle (w, h) -> w *. h
+  | Circle r -> Float.pi *. r *. r
+
+let perimeter = function
+  | Rectangle (w, h) -> 2.0 *. (w +. h)
+  | Circle r -> 2.0 *. Float.pi *. r
+\end{code}
+
+Adding new shapes requires changes in all existing functions.
+
+The visitor design pattern in \textsc{oop} trades one type of extensibility for another,
+mimicking the functional style and inheriting its limitations.
+
+\begin{code}[ruby]
+class Visitor
+  def visit\_rectangle(w, h)
+    raise NotImplementedError
+  end
+
+  def visit\_circle(r)
+    raise NotImplementedError
+  end
+end
+
+class Rectangle
+  def visit(v)
+    return v.visit\_rectangle(@w, @h)
+  end
+end
+
+class Circle
+  def visit(v)
+    return v.visit\_circle(@r)
+  end
+end
+
+class Area
+  def visit\_rectangle(w, h)
+    return w * h
+  end
+
+  def visit\_circle(r)
+    return Math::PI * r * r
+  end
+end
+\end{code}
+\end{document}

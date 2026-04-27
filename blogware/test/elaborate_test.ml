@@ -26,6 +26,15 @@ let elab_article_ok name input check_article : Test_framework.t =
           | Error e -> Fail ("elab error: " ^ e.Error.ee_message)
           | Ok art -> check_article art))
 
+let elab_note_ok name input check_note : Test_framework.t =
+  test name (fun () ->
+      match Tex_parser.parse_document ~source_name:"<test>" input with
+      | Error e -> Fail ("parse error: " ^ e.pe_message)
+      | Ok nodes -> (
+          match Elaborate.elaborate_note "slug" nodes with
+          | Error e -> Fail ("elab error: " ^ e.Error.ee_message)
+          | Ok note -> check_note note))
+
 open Document
 
 let str_eq t expected =
@@ -97,4 +106,38 @@ let tests : Test_framework.t list =
       elab_article_ok "featured metadata"
         "\\featured\n\\begin{document}hello\\end{document}" (fun article ->
           assert_bool "marks article as featured" article.art_featured);
+      elab_note_ok "note documentclass accepted"
+        "\\documentclass{note}\n\\begin{document}hello\\end{document}"
+        (fun note ->
+          match note.note_body with
+          | [ Para [ body ] ] when str_eq body "hello" -> Pass
+          | _ -> Fail "expected one note paragraph");
+      test "article rejects note documentclass" (fun () ->
+          match
+            Tex_parser.parse_document ~source_name:"<test>"
+              "\\documentclass{note}\n\\begin{document}hello\\end{document}"
+          with
+          | Error e -> Fail ("parse error: " ^ e.pe_message)
+          | Ok nodes -> (
+              match Elaborate.elaborate "slug" nodes with
+              | Ok _ -> Fail "expected article elaboration to reject note"
+              | Error e ->
+                  assert_equal_string
+                    "expected \\documentclass{article} but found \
+                     \\documentclass{note}"
+                    e.Error.ee_message));
+      test "note rejects article documentclass" (fun () ->
+          match
+            Tex_parser.parse_document ~source_name:"<test>"
+              "\\documentclass{article}\n\\begin{document}hello\\end{document}"
+          with
+          | Error e -> Fail ("parse error: " ^ e.pe_message)
+          | Ok nodes -> (
+              match Elaborate.elaborate_note "slug" nodes with
+              | Ok _ -> Fail "expected note elaboration to reject article"
+              | Error e ->
+                  assert_equal_string
+                    "expected \\documentclass{note} but found \
+                     \\documentclass{article}"
+                    e.Error.ee_message));
     ]

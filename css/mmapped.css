@@ -270,6 +270,24 @@ a.icon-link:visited {
     vertical-align: sub;
 }
 
+.post-keywords {
+    margin-right: var(--sp-default);
+}
+
+.keyword-link {
+    color: var(--ink-subtle);
+    text-decoration: none;
+    margin-right: var(--sp-inline);
+}
+
+.keyword-link::before {
+    content: "#";
+}
+
+.keyword-link:hover {
+    color: var(--accent-1-ink);
+}
+
 .posts .article-title {
     font-weight: normal;
     margin: 0 0 0 0;

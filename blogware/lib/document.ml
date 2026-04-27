@@ -112,3 +112,13 @@ type article = {
   art_hn : Text.t option;
   art_lobsters : Text.t option;
 }
+
+(* Note: a lighter document type for the digital garden *)
+type note = {
+  note_slug : Text.t;
+  note_title : inline list;
+  note_created_at : Date.t;
+  note_modified_at : Date.t;
+  note_body : block list;
+  note_url : Text.t;
+}

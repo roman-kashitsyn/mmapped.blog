@@ -149,32 +149,48 @@ and node_text = function
   | _ -> Text.empty
 
 (* Fold over top-level nodes collecting metadata. *)
-let extract_metadata (nodes : node list) : meta result_ =
-  let rec go m = function
-    | [] -> Ok m
+let extract_metadata ~expected_class (nodes : node list) : meta result_ =
+  let rec go seen_documentclass m = function
+    | [] ->
+        if seen_documentclass || String.equal expected_class "article" then Ok m
+        else
+          Error
+            (Error.make_elab
+               (Printf.sprintf
+                  "expected \\documentclass{%s} but found \\documentclass{article}"
+                  expected_class))
+    | NCmd (_, S_documentclass, _, Arg_symbol (pos, cls) :: _) :: rest ->
+        if Text.equal_string cls expected_class then go true m rest
+        else
+          elab_error pos
+            (Printf.sprintf
+               "expected \\documentclass{%s} but found \\documentclass{%s}"
+               expected_class
+               (Text.to_string cls))
     | NCmd (_, S_title, _, Arg_nodes (_, ns) :: _) :: rest ->
-        go { m with m_title = node_text_of_nodes ns } rest
+        go seen_documentclass { m with m_title = node_text_of_nodes ns } rest
     | NCmd (_, S_subtitle, _, Arg_nodes (_, ns) :: _) :: rest ->
-        go { m with m_subtitle = node_text_of_nodes ns } rest
-    | NCmd (_, S_featured, _, _) :: rest -> go { m with m_featured = true } rest
+        go seen_documentclass { m with m_subtitle = node_text_of_nodes ns } rest
+    | NCmd (_, S_featured, _, _) :: rest ->
+        go seen_documentclass { m with m_featured = true } rest
     | NCmd (_, S_date, _, Arg_symbol (pos, d) :: _) :: rest ->
         let* day = parse_day pos d in
-        go { m with m_created_at = day; m_modified_at = day } rest
+        go seen_documentclass { m with m_created_at = day; m_modified_at = day } rest
     | NCmd (_, S_modified, _, Arg_symbol (pos, d) :: _) :: rest ->
         let* day = parse_day pos d in
-        go { m with m_modified_at = day } rest
+        go seen_documentclass { m with m_modified_at = day } rest
     | NCmd (_, S_keyword, _, Arg_symbol (_, k) :: _) :: rest ->
-        go { m with m_keywords = k :: m.m_keywords } rest
+        go seen_documentclass { m with m_keywords = k :: m.m_keywords } rest
     | NCmd (_, S_reddit, _, Arg_url (_, u) :: _) :: rest ->
-        go { m with m_reddit = Some u } rest
+        go seen_documentclass { m with m_reddit = Some u } rest
     | NCmd (_, S_hackernews, _, Arg_url (_, u) :: _) :: rest ->
-        go { m with m_hn = Some u } rest
+        go seen_documentclass { m with m_hn = Some u } rest
     | NCmd (_, S_lobsters, _, Arg_url (_, u) :: _) :: rest ->
-        go { m with m_lobsters = Some u } rest
-    | NCmd _ :: rest -> go m rest
-    | _ :: rest -> go m rest
+        go seen_documentclass { m with m_lobsters = Some u } rest
+    | NCmd _ :: rest -> go seen_documentclass m rest
+    | _ :: rest -> go seen_documentclass m rest
   in
-  go default_meta nodes
+  go false default_meta nodes
 
 (* Find the body of \begin{document} ... \end{document}. *)
 let rec find_doc_body = function
@@ -735,15 +751,21 @@ let wrap_sections (fbs : flat_block list) : block list result_ =
   let* () = check_no_subsections preamble in
   let* sections = group_sections rest in
   let preamble_blocks = extract_blocks preamble in
-  Ok (preamble_blocks @ sections)
+  match (preamble_blocks, sections) with
+  | [], _ | _, [] -> Ok (preamble_blocks @ sections)
+  | _ -> Ok (Section (None, preamble_blocks) :: sections)
 
 (* --- Top-level entry point --- *)
 
-let elaborate (slug : string) (nodes : node list) : article result_ =
-  let* meta = extract_metadata nodes in
+let elaborate_body ~expected_class (nodes : node list) : (meta * block list) result_ =
+  let* meta = extract_metadata ~expected_class nodes in
   let doc_body = find_doc_body nodes in
   let* flat = build_flat_blocks doc_body in
   let* body = wrap_sections flat in
+  Ok (meta, body)
+
+let elaborate (slug : string) (nodes : node list) : article result_ =
+  let* meta, body = elaborate_body ~expected_class:"article" nodes in
   Ok
     {
       art_slug = text slug;
@@ -759,4 +781,16 @@ let elaborate (slug : string) (nodes : node list) : article result_ =
       art_reddit = meta.m_reddit;
       art_hn = meta.m_hn;
       art_lobsters = meta.m_lobsters;
+    }
+
+let elaborate_note (slug : string) (nodes : node list) : note result_ =
+  let* meta, body = elaborate_body ~expected_class:"note" nodes in
+  Ok
+    {
+      note_slug = text slug;
+      note_title = [ Str (apply_typography meta.m_title) ];
+      note_created_at = meta.m_created_at;
+      note_modified_at = meta.m_modified_at;
+      note_body = body;
+      note_url = text ("/notes/" ^ slug ^ ".html");
     }

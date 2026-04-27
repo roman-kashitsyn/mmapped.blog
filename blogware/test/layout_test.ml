@@ -24,6 +24,17 @@ let article_with slug keywords : article =
     art_lobsters = None;
   }
 
+let note_with slug : note =
+  let slug_t = txt slug in
+  {
+    note_slug = slug_t;
+    note_title = [ Str slug_t ];
+    note_created_at = Date.make ~year:2024 ~month:1 ~day:1;
+    note_modified_at = Date.make ~year:2024 ~month:1 ~day:1;
+    note_body = [];
+    note_url = txt ("/notes/" ^ slug ^ ".html");
+  }
+
 let all checks =
   let rec go = function
     | [] -> Pass
@@ -136,6 +147,17 @@ let tests : Test_framework.t list =
                  && List.length s2.sec_subsections = 1 ->
               Pass
           | _ -> Fail "unexpected TOC");
+      test "article ref table includes note refs" (fun () ->
+          let article = article_with "hello" [ "ocaml" ] in
+          let note = note_with "garden" in
+          match RefTable.find_opt (txt "garden")
+                  (Layout.build_ref_table [ article ] [ note ] article)
+          with
+          | Some ref_
+            when Text.equal_string ref_.ref_title "garden"
+                 && Text.equal_string ref_.ref_url "/notes/garden.html" ->
+              Pass
+          | _ -> Fail "expected note ref in article ref table");
       test "similar articles by keyword" (fun () ->
           let a = article_with "a" [ "x"; "y" ] in
           let b = article_with "b" [ "x"; "y"; "z" ] in

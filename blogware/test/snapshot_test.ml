@@ -4,7 +4,16 @@ let ( // ) = Filename.concat
 
 module StringSet = Set.Make (String)
 
-let source_root () = Sys.getcwd ()
+let rec find_source_root dir =
+  if Sys.file_exists (dir // "dune-project") then Some dir
+  else
+    let parent = Filename.dirname dir in
+    if parent = dir then None else find_source_root parent
+
+let source_root () =
+  match find_source_root (Sys.getcwd ()) with
+  | Some root -> root
+  | None -> Sys.getcwd ()
 
 let excluded_snapshots =
   StringSet.of_list [ "feed.xml"; "index.html"; "posts.html" ]

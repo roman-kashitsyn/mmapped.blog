@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><title>Expression problem</title><link rel="stylesheet" href="/css/mmapped.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/notes/index.html">Notes</a></li><li><a href="/about.html">About</a></li><li><a href="/feed.xml">Atom Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/notes/expression-problem.html">Expression problem</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2026-04-26">2026-04-26</time></span></span>
+<section><p>The <em>expression problem</em> observes the inherent conflict between adding new types and new operations to open systems.</p>
+<p>Let’s use the classical <code>Shape</code> types as an example.
+We start with two types (<code>Rectangle</code> and <code>Circle</code>) and two operations (<code>area</code> and <code>perimeter</code>).</p>
+</section>
+<section><h2 id="adding-types"><a href="#adding-types">Adding types</a></h2>
+<p>Object-oriented paradigm facilitates adding new types (e.g., <code>Triangle</code>).</p>
+<div class="source-container"><pre class="source ruby"><code><span class="line">class Rectangle</span>
+<span class="line">  def area</span>
+<span class="line">    @width * @height</span>
+<span class="line">  end</span>
+<span class="line"></span>
+<span class="line">  def perimeter</span>
+<span class="line">    2 * (@width + @height)</span>
+<span class="line">  end</span>
+<span class="line">end</span>
+<span class="line"></span>
+<span class="line">class Circle</span>
+<span class="line">  def area</span>
+<span class="line">    Math::PI * @radius * @radius</span>
+<span class="line">  end</span>
+<span class="line"></span>
+<span class="line">  def perimeter</span>
+<span class="line">    2 * Math::PI * @radius</span>
+<span class="line">  end</span>
+<span class="line">end</span>
+</code></pre></div>
+<p>Adding a new method (e.g., <code>vertex_count</code>) requires changes in every class.</p>
+</section>
+<section><h2 id="adding-functions"><a href="#adding-functions">Adding functions</a></h2>
+<p>Functional programming with algebraic data types makes adding new operations easy.</p>
+<div class="source-container"><pre class="source ocaml"><code><span class="line">type shape =</span>
+<span class="line">  | Rectangle of float * float</span>
+<span class="line">  | Circle of float</span>
+<span class="line"></span>
+<span class="line">let area = function</span>
+<span class="line">  | Rectangle (w, h) -&gt; w *. h</span>
+<span class="line">  | Circle r -&gt; Float.pi *. r *. r</span>
+<span class="line"></span>
+<span class="line">let perimeter = function</span>
+<span class="line">  | Rectangle (w, h) -&gt; 2.0 *. (w +. h)</span>
+<span class="line">  | Circle r -&gt; 2.0 *. Float.pi *. r</span>
+</code></pre></div>
+<p>Adding new shapes requires changes in all existing functions.</p>
+<p>The visitor design pattern in <span class="smallcaps">oop</span> trades one type of extensibility for another,
+mimicking the functional style and inheriting its limitations.</p>
+<div class="source-container"><pre class="source ruby"><code><span class="line">class Visitor</span>
+<span class="line">  def visit_rectangle(w, h)</span>
+<span class="line">    raise NotImplementedError</span>
+<span class="line">  end</span>
+<span class="line"></span>
+<span class="line">  def visit_circle(r)</span>
+<span class="line">    raise NotImplementedError</span>
+<span class="line">  end</span>
+<span class="line">end</span>
+<span class="line"></span>
+<span class="line">class Rectangle</span>
+<span class="line">  def visit(v)</span>
+<span class="line">    return v.visit_rectangle(@w, @h)</span>
+<span class="line">  end</span>
+<span class="line">end</span>
+<span class="line"></span>
+<span class="line">class Circle</span>
+<span class="line">  def visit(v)</span>
+<span class="line">    return v.visit_circle(@r)</span>
+<span class="line">  end</span>
+<span class="line">end</span>
+<span class="line"></span>
+<span class="line">class Area</span>
+<span class="line">  def visit_rectangle(w, h)</span>
+<span class="line">    return w * h</span>
+<span class="line">  end</span>
+<span class="line"></span>
+<span class="line">  def visit_circle(r)</span>
+<span class="line">    return Math::PI * r * r</span>
+<span class="line">  end</span>
+<span class="line">end</span>
+</code></pre></div>
+</section>
+
+</article>
+<hr><footer role="contentinfo"><span>©Roman Kashitsyn</span>&nbsp;<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a></footer></body></html>

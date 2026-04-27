@@ -41,23 +41,35 @@ let extract_toc (blocks : block list) : toc_section list =
       | _ -> None)
     blocks
 
-let build_ref_table (all_articles : article list) (article : article) :
-    ref_table =
-  let tbl =
-    List.fold_left
-      (fun acc a ->
-        RefTable.add a.art_slug
-          {
-            ref_title =
-              txt
-                (Html.render
-                   (Render.render_inlines Render.empty_ctx a.art_title));
-            ref_url = a.art_url;
-          }
-          acc)
-      RefTable.empty all_articles
-  in
-  let toc = extract_toc article.art_body in
+let add_article_refs (tbl : ref_table) (all_articles : article list) : ref_table =
+  List.fold_left
+    (fun acc a ->
+      RefTable.add a.art_slug
+        {
+          ref_title =
+            txt
+              (Html.render
+                 (Render.render_inlines Render.empty_ctx a.art_title));
+          ref_url = a.art_url;
+        }
+        acc)
+    tbl all_articles
+
+let add_note_refs (tbl : ref_table) (all_notes : note list) : ref_table =
+  List.fold_left
+    (fun acc (n : note) ->
+      RefTable.add n.note_slug
+        {
+          ref_title =
+            txt
+              (Html.render
+                 (Render.render_inlines Render.empty_ctx n.note_title));
+          ref_url = n.note_url;
+        }
+        acc)
+    tbl all_notes
+
+let add_toc_refs (tbl : ref_table) (toc : toc_section list) : ref_table =
   List.fold_left
     (fun acc section ->
       let acc =
@@ -75,6 +87,21 @@ let build_ref_table (all_articles : article list) (article : article) :
             acc)
         acc section.sec_subsections)
     tbl toc
+
+let build_ref_table (all_articles : article list) (all_notes : note list)
+    (article : article) : ref_table =
+  let toc = extract_toc article.art_body in
+  let tbl = add_article_refs RefTable.empty all_articles in
+  let tbl = add_note_refs tbl all_notes in
+  add_toc_refs tbl toc
+
+(* Build a ref_table that spans both articles and notes, plus local TOC. *)
+let build_note_ref_table (all_articles : article list) (all_notes : note list)
+    (note : note) : ref_table =
+  let tbl = add_article_refs RefTable.empty all_articles in
+  let tbl = add_note_refs tbl all_notes in
+  let toc = extract_toc note.note_body in
+  add_toc_refs tbl toc
 
 (* --- Similar articles (Jaccard keyword similarity with tiebreaker) --- *)
 
@@ -226,6 +253,10 @@ let site_header : Html.t =
           ++ li_ []
                (a_ [ href_ (txt "/posts.html") ] (escape_html (txt "Posts")))
           ++ li_ []
+               (a_
+                  [ href_ (txt "/notes/index.html") ]
+                  (escape_html (txt "Notes")))
+          ++ li_ []
                (a_ [ href_ (txt "/about.html") ] (escape_html (txt "About")))
           ++ li_ []
                (a_ [ href_ (txt "/feed.xml") ] (escape_html (txt "Atom Feed")))
@@ -291,6 +322,18 @@ let render_social_link link icon title_text alt_text extra_class : Html.t =
              alt_ (txt alt_text);
            ])
 
+let render_keyword_link (kw : Text.t) : Html.t =
+  a_
+    [ class_ (txt "keyword-link"); href_ (txt "/notes/" ^^ kw ^^ txt ".html") ]
+    (escape_html kw)
+
+let render_keywords (keywords : Text.t list) : Html.t =
+  if keywords = [] then empty
+  else
+    span_
+      [ class_ (txt "post-keywords") ]
+      (concat (List.map render_keyword_link keywords))
+
 let render_post_attributes (article : article) : Html.t =
   span_
     [ class_ (txt "post-attrs") ]
@@ -304,6 +347,7 @@ let render_post_attributes (article : article) : Html.t =
             [ class_ (txt "attr-date"); attr "title" (txt "Last modified") ]
             (span_ [ class_ (txt "icon") ] (text (txt "✂"))
             ++ render_date article.art_modified_at))
+    ++ render_keywords article.art_keywords
     ++ span_
          [ class_ (txt "post-icons") ]
          (render_social_link article.art_hn "/images/y18.svg"
@@ -504,6 +548,92 @@ let render_standalone_page (title : Html.t) (url : string) (body : Html.t) :
                     [ class_ (txt "article-title") ]
                     (a_ [ href_ (txt url) ] title)
                  ++ body)
+            ++ site_footer))
+  ++ nl
+
+(* --- Note list page --- *)
+
+let render_note_entry (n : note) : Html.t =
+  li_ []
+    (a_
+       [ class_ (txt "compact-title"); href_ n.note_url ]
+       (Render.render_inlines Render.empty_ctx n.note_title)
+    ++ span_ [ class_ (txt "compact-date") ] (render_date n.note_modified_at))
+
+let render_note_list_page (notes : note list) : Html.t =
+  doctype ++ nl
+  ++ html_
+       [ lang_ (txt "en") ]
+       (list_page_head "Notes"
+       ++ body_ []
+            (site_header
+            ++ section_
+                 [ class_ (txt "post-list") ]
+                 (h1_ [ class_ (txt "article-title") ] (escape_html (txt "Notes"))
+                 ++ (if notes = [] then empty
+                     else
+                       ul_
+                         [ class_ (txt "article-list") ]
+                         (concat (List.map render_note_entry notes))))
+            ++ site_footer)
+       ++ nl)
+
+(* --- Note page --- *)
+
+let note_page_head (note : note) : Html.t =
+  head_ []
+    (leaf "meta" [ charset_ (txt "UTF-8") ]
+    ++ leaf "meta"
+         [
+           content_ (txt "width=device-width, initial-scale=1");
+           name_ (txt "viewport");
+         ]
+    ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
+    ++ title_ [] (Render.render_inlines Render.empty_ctx note.note_title)
+    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/mmapped.css") ]
+    ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
+    ++ link_
+         [
+           rel_ (txt "mask-icon");
+           href_ (txt "/images/mask-icon.svg");
+           attr "color" (txt "#000000");
+         ])
+
+let render_note_attributes (note : note) : Html.t =
+  span_
+    [ class_ (txt "post-attrs") ]
+    (span_
+       [ class_ (txt "attr-date"); attr "title" (txt "First published") ]
+       (span_ [ class_ (txt "icon") ] (text (txt "✑"))
+       ++ render_date note.note_created_at)
+    ++
+    if Date.equal note.note_modified_at note.note_created_at then empty
+    else
+      span_
+        [ class_ (txt "attr-date"); attr "title" (txt "Last modified") ]
+        (span_ [ class_ (txt "icon") ] (text (txt "✂"))
+        ++ render_date note.note_modified_at))
+
+let render_note_page (note : note) (body : Html.t)
+    (referencing_articles : article list) : Html.t =
+  let articles_section =
+    render_compact_list "Articles" referencing_articles
+  in
+  doctype ++ nl
+  ++ html_
+       [ lang_ (txt "en") ]
+       (note_page_head note
+       ++ body_ []
+            (site_header
+            ++ article_ []
+                 (h1_
+                    [ class_ (txt "article-title") ]
+                    (a_
+                       [ href_ note.note_url ]
+                       (Render.render_inlines Render.empty_ctx note.note_title))
+                 ++ render_note_attributes note
+                 ++ nl ++ body ++ nl)
+            ++ section_ [] articles_section
             ++ site_footer))
   ++ nl
 
