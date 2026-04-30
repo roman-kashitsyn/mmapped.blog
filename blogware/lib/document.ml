@@ -32,6 +32,7 @@ type inline =
   | Line_break
   | Numeric_space
   | Nameref of Text.t (* label for \nameref *)
+  | Ref of Text.t * inline list (* \ref{ID}{NODES} *)
   | Image_inline of
       Text.t list
       * Text.t (* css classes, src path (for inline/table contexts) *)

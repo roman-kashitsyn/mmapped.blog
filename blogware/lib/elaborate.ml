@@ -232,6 +232,7 @@ let rec inline_to_text = function
   | Margin_note (_, ils)
   | Side_note (_, ils) ->
       inlines_to_text ils
+  | Ref (_, ils) -> inlines_to_text ils
   | Math _ | Anchor _ | Horizontal_rule | Circled_ref _ | Line_break
   | Numeric_space | Nameref _ | Image_inline _ ->
       Text.empty
@@ -379,6 +380,9 @@ and classify_cmd pos sym opts args =
       let* ils = elaborate_inlines ns in
       Ok (CInline (Link (url, ils)))
   | S_nameref, Arg_symbol (_, r) :: _ -> Ok (CInline (Nameref r))
+  | S_ref, Arg_symbol (_, r) :: Arg_nodes (_, ns) :: _ ->
+      let* ils = elaborate_inlines ns in
+      Ok (CInline (Ref (r, ils)))
   | S_label, Arg_symbol (_, anchor) :: _ -> Ok (CInline (Anchor anchor))
   | S_newline, _ -> Ok (CInline Line_break)
   | S_numspace, _ -> Ok (CInline Numeric_space)
@@ -545,6 +549,9 @@ and elaborate_code_inlines (ns : node list) : inline list result_ =
         go (Circled_ref n :: acc) rest
     | NCmd (_, S_nameref, _, Arg_symbol (_, r) :: _) :: rest ->
         go (Nameref r :: acc) rest
+    | NCmd (_, S_ref, _, Arg_symbol (_, r) :: Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Ref (r, ils) :: acc) rest
     | NCmd (_, S_includegraphics, opts, Arg_nodes (_, ns) :: _) :: rest ->
         go (Image_inline (opts, node_text_of_nodes ns) :: acc) rest
     | NCmd (_, sym, _, _) :: rest -> (
@@ -752,7 +759,7 @@ let wrap_sections (fbs : flat_block list) : block list result_ =
   let* sections = group_sections rest in
   let preamble_blocks = extract_blocks preamble in
   match (preamble_blocks, sections) with
-  | [], _ | _, [] -> Ok (preamble_blocks @ sections)
+  | [], _ -> Ok sections
   | _ -> Ok (Section (None, preamble_blocks) :: sections)
 
 (* --- Top-level entry point --- *)

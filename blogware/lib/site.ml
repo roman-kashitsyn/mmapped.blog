@@ -160,7 +160,6 @@ let site_layout : layout_entry list =
     { le_path = "/notes/"; le_type = TeX_notes };
     { le_path = "/posts.html"; le_type = Post_list };
     { le_path = "/notes/index.html"; le_type = Note_list };
-    { le_path = "/about.html"; le_type = Standalone_page };
     { le_path = "/feed.xml"; le_type = Atom_xml_feed };
     { le_path = "/index.html"; le_type = Index_page };
   ]
@@ -203,33 +202,6 @@ let build_keyword_map (articles : article list) : article list Text.Map.t =
        Date.compare b.art_created_at a.art_created_at))
     unsorted
 
-(* Generate a synthetic note for each keyword. *)
-let keyword_notes (articles : article list) : note list =
-  let kw_map = build_keyword_map articles in
-  Text.Map.fold
-    (fun kw arts acc ->
-      let earliest =
-        List.fold_left
-          (fun d a -> if Date.compare a.art_created_at d < 0 then a.art_created_at else d)
-          (List.hd arts).art_created_at (List.tl arts)
-      in
-      let latest =
-        List.fold_left
-          (fun d a -> if Date.compare a.art_modified_at d > 0 then a.art_modified_at else d)
-          (List.hd arts).art_modified_at (List.tl arts)
-      in
-      let note : note =
-        {
-          note_slug = kw;
-          note_title = [ Str kw ];
-          note_created_at = earliest;
-          note_modified_at = latest;
-          note_body = [];
-          note_url = Text.of_string ("/notes/" ^ Text.to_string kw ^ ".html");
-        }
-      in
-      note :: acc)
-    kw_map []
 
 (* Render one article as its own post page. *)
 let render_one_post ~root_url ~all_articles ~all_notes ~idx article =
@@ -254,7 +226,8 @@ let render_one_note ~all_articles ~all_notes ~keyword_articles (note : note) =
 
 (* Render the standalone page at [page_path] (e.g. "/about.html"). The
    source file is the sibling [.tex] in [input_dir]. *)
-let render_standalone_from ~input_dir page_path : (string, string) result =
+let render_standalone_from ~input_dir ~all_articles ~all_notes page_path :
+    (string, string) result =
   let tex_path = input_dir // strip_leading_slash (html_to_tex page_path) in
   let slug = take_base_name tex_path in
   let content = read_file_contents tex_path in
@@ -265,10 +238,12 @@ let render_standalone_from ~input_dir page_path : (string, string) result =
       | Error err ->
           Error (Error.format_elab_error ~source_name:tex_path content err)
       | Ok article ->
-          let body = Render.render_blocks Render.empty_ctx article.art_body in
-          let title =
-            Render.render_inlines Render.empty_ctx article.art_title
+          let ref_table =
+            Layout.build_global_ref_table all_articles all_notes
           in
+          let ctx = { Render.ref_table } in
+          let body = Render.render_blocks ctx article.art_body in
+          let title = Render.render_inlines ctx article.art_title in
           Ok (Html.render (Layout.render_standalone_page title page_path body)))
 
 (* Copy [src] to [dst], handling both files and directories. *)
@@ -279,18 +254,6 @@ let copy_recursively src dst =
     copy_file src dst
   end
 
-let merge_keyword_notes (articles : article list) (notes : note list) : note list =
-  let existing_slugs =
-    List.fold_left
-      (fun acc (n : note) -> Text.Set.add n.note_slug acc)
-      Text.Set.empty notes
-  in
-  let kw_notes =
-    List.filter
-      (fun (n : note) -> not (Text.Set.mem n.note_slug existing_slugs))
-      (keyword_notes articles)
-  in
-  notes @ kw_notes
 
 let generated_output_paths (input_dir : string) : (string list, string) result =
   match load_articles input_dir with
@@ -299,7 +262,6 @@ let generated_output_paths (input_dir : string) : (string list, string) result =
       match load_notes input_dir with
       | Error _ as e -> e
       | Ok notes ->
-          let notes = merge_keyword_notes articles notes in
           let paths =
             List.concat
               (List.map
@@ -333,7 +295,6 @@ let rendered_outputs (config : site_config) :
       match load_notes input_dir with
       | Error _ as e -> e
       | Ok notes ->
-          let notes = merge_keyword_notes articles notes in
           let keyword_articles = build_keyword_map articles in
           let arr = Array.of_list articles in
           let outputs = ref [] in
@@ -364,8 +325,12 @@ let rendered_outputs (config : site_config) :
                                   (Error.format_elab_error
                                      ~source_name:index_tex content err)
                             | Ok index_article ->
+                                let ref_table =
+                                  Layout.build_global_ref_table articles notes
+                                in
+                                let ctx = { Render.ref_table } in
                                 let body =
-                                  Render.render_blocks Render.empty_ctx
+                                  Render.render_blocks ctx
                                     index_article.art_body
                                 in
                                 let featured =
@@ -403,7 +368,10 @@ let rendered_outputs (config : site_config) :
                         notes;
                       Ok ()
                   | Standalone_page -> (
-                      match render_standalone_from ~input_dir le_path with
+                      match
+                        render_standalone_from ~input_dir
+                          ~all_articles:articles ~all_notes:notes le_path
+                      with
                       | Ok html ->
                           emit le_path html;
                           Ok ()

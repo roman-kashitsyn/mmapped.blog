@@ -103,6 +103,11 @@ let build_note_ref_table (all_articles : article list) (all_notes : note list)
   let toc = extract_toc note.note_body in
   add_toc_refs tbl toc
 
+let build_global_ref_table (all_articles : article list) (all_notes : note list)
+    : ref_table =
+  let tbl = add_article_refs RefTable.empty all_articles in
+  add_note_refs tbl all_notes
+
 (* --- Similar articles (Jaccard keyword similarity with tiebreaker) --- *)
 
 let find_similar_articles (articles : article list) (idx : int) : article list =
@@ -257,9 +262,7 @@ let site_header : Html.t =
                   [ href_ (txt "/notes/index.html") ]
                   (escape_html (txt "Notes")))
           ++ li_ []
-               (a_ [ href_ (txt "/about.html") ] (escape_html (txt "About")))
-          ++ li_ []
-               (a_ [ href_ (txt "/feed.xml") ] (escape_html (txt "Atom Feed")))
+               (a_ [ href_ (txt "/feed.xml") ] (escape_html (txt "Feed")))
           )))
   ++ hr_ []
 
@@ -292,7 +295,15 @@ let site_footer : Html.t =
               class_ (txt "github-link");
               href_ (txt "https://github.com/roman-kashitsyn/mmapped.blog");
             ]
-            (text (txt "Source Code")))
+            (text (txt "Source Code"))
+       ++ text (txt " · ")
+       ++ a_
+            [
+              href_
+                (txt
+                   "https://github.com/roman-kashitsyn/mmapped.blog/issues/new");
+            ]
+            (text (txt "Report Issue")))
 
 (* --- Post attributes (dates and social links) --- *)
 

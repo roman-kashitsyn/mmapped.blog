@@ -52,26 +52,29 @@ let tests : Test_framework.t list =
       elab_ok "single paragraph" "\\begin{document}hello\\end{document}"
         (fun blocks ->
           match blocks with
-          | [ Para [ il ] ] when str_eq il "hello" -> Pass
-          | _ -> Fail "expected one para (flat preamble)");
+          | [ Section (None, [ Para [ il ] ]) ] when str_eq il "hello" -> Pass
+          | _ -> Fail "expected one para in anonymous section");
       elab_ok "two paragraphs" "\\begin{document}one\n\ntwo\\end{document}"
         (fun blocks ->
           match blocks with
-          | [ Para [ a ]; Para [ b ] ] when str_eq a "one" && str_eq b "two" ->
+          | [ Section (None, [ Para [ a ]; Para [ b ] ]) ]
+            when str_eq a "one" && str_eq b "two" ->
               Pass
-          | _ -> Fail "expected two paragraphs (flat preamble)");
+          | _ -> Fail "expected two paragraphs in anonymous section");
       elab_ok "empty paragraphs are skipped"
         "\\begin{document}\n\none\n\ntwo\n\n\\end{document}" (fun blocks ->
           match blocks with
-          | [ Para [ a ]; Para [ b ] ] when str_eq a "one" && str_eq b "two" ->
+          | [ Section (None, [ Para [ a ]; Para [ b ] ]) ]
+            when str_eq a "one" && str_eq b "two" ->
               Pass
-          | _ -> Fail "expected only non-empty paragraphs");
+          | _ -> Fail "expected only non-empty paragraphs in anonymous section");
       elab_ok "side-only paragraph is plain"
         "\\begin{document}\\label{side-only}\\end{document}" (fun blocks ->
           match blocks with
-          | [ Plain [ Anchor id ] ] when Text.equal_string id "side-only" ->
+          | [ Section (None, [ Plain [ Anchor id ] ]) ]
+            when Text.equal_string id "side-only" ->
               Pass
-          | _ -> Fail "expected side-only paragraph to stay plain");
+          | _ -> Fail "expected side-only paragraph in anonymous section");
       elab_ok "section wrap"
         "\\begin{document}\\section{id}{Title}body\\end{document}"
         (fun blocks ->
@@ -84,25 +87,34 @@ let tests : Test_framework.t list =
       elab_ok "anonymous preamble before section"
         "\\begin{document}pre\\section{id}{T}body\\end{document}" (fun blocks ->
           match blocks with
-          | [ Para [ pre ]; Section (Some (id, [ t ]), [ Para [ body ] ]) ]
-            when Text.equal_string id "id" && str_eq pre "pre" && str_eq t "T"
+          | [
+              Section (None, [ Para [ pre ] ]);
+              Section (Some (id, [ t ]), [ Para [ body ] ]);
+            ]
+            when str_eq pre "pre" && Text.equal_string id "id" && str_eq t "T"
                  && str_eq body "body" ->
               Pass
-          | _ -> Fail "expected flat preamble + named section");
+          | _ -> Fail "expected anonymous preamble section + named section");
       elab_ok "strong inline" "\\begin{document}\\b{bold}\\end{document}"
         (fun blocks ->
           match blocks with
-          | [ Para [ Strong [ il ] ] ] when str_eq il "bold" -> Pass
-          | _ -> Fail "expected strong inline");
+          | [ Section (None, [ Para [ Strong [ il ] ] ]) ]
+            when str_eq il "bold" ->
+              Pass
+          | _ -> Fail "expected strong inline in anonymous section");
       elab_ok "hrule block" "\\begin{document}\\hrule\\end{document}"
         (fun blocks ->
-          match blocks with [ HRule ] -> Pass | _ -> Fail "expected hrule");
+          match blocks with
+          | [ Section (None, [ HRule ]) ] -> Pass
+          | _ -> Fail "expected hrule in anonymous section");
       elab_ok "itemize list"
         "\\begin{document}\\begin{itemize}\\item a\\item \
          b\\end{itemize}\\end{document}" (fun blocks ->
           match blocks with
-          | [ Bullet_list (Arrows, items) ] when List.length items = 2 -> Pass
-          | _ -> Fail "expected bullet list with 2 items");
+          | [ Section (None, [ Bullet_list (Arrows, items) ]) ]
+            when List.length items = 2 ->
+              Pass
+          | _ -> Fail "expected bullet list in anonymous section");
       elab_article_ok "featured metadata"
         "\\featured\n\\begin{document}hello\\end{document}" (fun article ->
           assert_bool "marks article as featured" article.art_featured);
@@ -110,8 +122,9 @@ let tests : Test_framework.t list =
         "\\documentclass{note}\n\\begin{document}hello\\end{document}"
         (fun note ->
           match note.note_body with
-          | [ Para [ body ] ] when str_eq body "hello" -> Pass
-          | _ -> Fail "expected one note paragraph");
+          | [ Section (None, [ Para [ body ] ]) ] when str_eq body "hello" ->
+              Pass
+          | _ -> Fail "expected one note paragraph in anonymous section");
       test "article rejects note documentclass" (fun () ->
           match
             Tex_parser.parse_document ~source_name:"<test>"
