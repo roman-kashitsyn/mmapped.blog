@@ -61,6 +61,7 @@ type sym =
   | S_term
   | S_kbd
   | S_nameref
+  | S_ref
   | S_figcaption
   (* environments *)
   | S_document
@@ -174,6 +175,7 @@ let sym_table : sym SMap.t =
       ("term", S_term);
       ("kbd", S_kbd);
       ("nameref", S_nameref);
+      ("ref", S_ref);
       ("figcaption", S_figcaption);
       (* environments *)
       ("document", S_document);
@@ -280,6 +282,7 @@ let sym_to_string = function
   | S_term -> "term"
   | S_kbd -> "kbd"
   | S_nameref -> "nameref"
+  | S_ref -> "ref"
   | S_figcaption -> "figcaption"
   | S_document -> "document"
   | S_abstract -> "abstract"
@@ -438,6 +441,7 @@ let cmd_args (s : sym) : arg_type list =
   | S_term -> [ At_seq; At_seq ]
   | S_kbd -> [ At_seq ]
   | S_nameref -> [ At_sym ]
+  | S_ref -> [ At_sym; At_seq ]
   | S_figcaption -> [ At_seq ]
   | S_featured -> []
   | _ -> []

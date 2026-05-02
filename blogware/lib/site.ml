@@ -76,6 +76,39 @@ let load_article (dir : string) (file : string) : (article, string) result =
                 Text.of_string ("/posts/" ^ take_base_name file ^ ".html");
             })
 
+(* --- Note loading --- *)
+
+let load_note (dir : string) (file : string) : (note, string) result =
+  let path = dir // file in
+  let slug = take_base_name file in
+  let content = read_file_contents path in
+  match Tex_parser.parse_document ~source_name:path content with
+  | Error err -> Error (Error.format_parse_error content err)
+  | Ok nodes -> (
+      match Elaborate.elaborate_note slug nodes with
+      | Error err ->
+          Error (Error.format_elab_error ~source_name:path content err)
+      | Ok note -> Ok note)
+
+let load_notes (input_dir : string) : (note list, string) result =
+  let notes_dir = input_dir // "notes" in
+  if not (is_directory notes_dir) then Ok []
+  else begin
+    let files = list_dir notes_dir in
+    let tex_files =
+      List.filter (fun f -> Filename.extension f = ".tex") files
+    in
+    let sorted = List.sort compare tex_files in
+    let rec load_all acc = function
+      | [] -> Ok (List.rev acc)
+      | f :: rest -> (
+          match load_note notes_dir f with
+          | Error _ as e -> e
+          | Ok n -> load_all (n :: acc) rest)
+    in
+    load_all [] sorted
+  end
+
 (* Load and sort all *.tex files under {input}/posts, newest-first. *)
 let load_articles (input_dir : string) : (article list, string) result =
   let posts_dir = input_dir // "posts" in
@@ -109,8 +142,10 @@ type asset_type =
   | Static_files
   | Index_page
   | TeX_articles
+  | TeX_notes
   | Standalone_page
   | Post_list
+  | Note_list
   | Atom_xml_feed
 
 type layout_entry = { le_path : string; le_type : asset_type }
@@ -122,8 +157,9 @@ let site_layout : layout_entry list =
     { le_path = "/images/"; le_type = Static_files };
     { le_path = "/robots.txt"; le_type = Static_files };
     { le_path = "/posts/"; le_type = TeX_articles };
+    { le_path = "/notes/"; le_type = TeX_notes };
     { le_path = "/posts.html"; le_type = Post_list };
-    { le_path = "/about.html"; le_type = Standalone_page };
+    { le_path = "/notes/index.html"; le_type = Note_list };
     { le_path = "/feed.xml"; le_type = Atom_xml_feed };
     { le_path = "/index.html"; le_type = Index_page };
   ]
@@ -149,18 +185,49 @@ let take n lst =
   in
   aux [] n lst
 
+(* Build keyword → article list map from all articles, newest first. *)
+let build_keyword_map (articles : article list) : article list Text.Map.t =
+  let unsorted =
+    List.fold_left
+      (fun acc (a : article) ->
+        List.fold_left
+          (fun acc kw ->
+            let prev = match Text.Map.find_opt kw acc with Some l -> l | None -> [] in
+            Text.Map.add kw (a :: prev) acc)
+          acc a.art_keywords)
+      Text.Map.empty articles
+  in
+  Text.Map.map
+    (List.sort (fun (a : article) (b : article) ->
+       Date.compare b.art_created_at a.art_created_at))
+    unsorted
+
+
 (* Render one article as its own post page. *)
-let render_one_post ~root_url ~all_articles ~idx article =
+let render_one_post ~root_url ~all_articles ~all_notes ~idx article =
   let toc = Layout.extract_toc article.art_body in
   let similar = Layout.find_similar_articles all_articles idx in
-  let ref_table = Layout.build_ref_table all_articles article in
+  let ref_table = Layout.build_ref_table all_articles all_notes article in
   let ctx = { Render.ref_table } in
   let body = Render.render_blocks ctx article.art_body in
   Html.render (Layout.render_post_page root_url article toc similar body)
 
+(* Render one note as its own page. *)
+let render_one_note ~all_articles ~all_notes ~keyword_articles (note : note) =
+  let ref_table = Layout.build_note_ref_table all_articles all_notes note in
+  let ctx = { Render.ref_table } in
+  let body = Render.render_blocks ctx note.note_body in
+  let articles =
+    match Text.Map.find_opt note.note_slug keyword_articles with
+    | Some l -> l
+    | None -> []
+  in
+  Html.render (Layout.render_note_page note body articles)
+
 (* Render the standalone page at [page_path] (e.g. "/about.html"). The
    source file is the sibling [.tex] in [input_dir]. *)
-let render_standalone_from ~input_dir page_path : (string, string) result =
+let render_standalone_from ~input_dir ~all_articles ~all_notes page_path :
+    (string, string) result =
   let tex_path = input_dir // strip_leading_slash (html_to_tex page_path) in
   let slug = take_base_name tex_path in
   let content = read_file_contents tex_path in
@@ -171,10 +238,12 @@ let render_standalone_from ~input_dir page_path : (string, string) result =
       | Error err ->
           Error (Error.format_elab_error ~source_name:tex_path content err)
       | Ok article ->
-          let body = Render.render_blocks Render.empty_ctx article.art_body in
-          let title =
-            Render.render_inlines Render.empty_ctx article.art_title
+          let ref_table =
+            Layout.build_global_ref_table all_articles all_notes
           in
+          let ctx = { Render.ref_table } in
+          let body = Render.render_blocks ctx article.art_body in
+          let title = Render.render_inlines ctx article.art_title in
           Ok (Html.render (Layout.render_standalone_page title page_path body)))
 
 (* Copy [src] to [dst], handling both files and directories. *)
@@ -185,26 +254,36 @@ let copy_recursively src dst =
     copy_file src dst
   end
 
+
 let generated_output_paths (input_dir : string) : (string list, string) result =
   match load_articles input_dir with
   | Error _ as e -> e
-  | Ok articles ->
-      let paths =
-        List.concat
-          (List.map
-             (fun { le_path; le_type } ->
-               match le_type with
-               | Static_files -> []
-               | TeX_articles ->
-                   List.map
-                     (fun article ->
-                       strip_leading_slash (Text.to_string article.art_url))
-                     articles
-               | Index_page | Standalone_page | Post_list | Atom_xml_feed ->
-                   [ strip_leading_slash le_path ])
-             site_layout)
-      in
-      Ok paths
+  | Ok articles -> (
+      match load_notes input_dir with
+      | Error _ as e -> e
+      | Ok notes ->
+          let paths =
+            List.concat
+              (List.map
+                 (fun { le_path; le_type } ->
+                   match le_type with
+                   | Static_files -> []
+                   | TeX_articles ->
+                       List.map
+                         (fun article ->
+                           strip_leading_slash (Text.to_string article.art_url))
+                         articles
+                   | TeX_notes ->
+                       List.map
+                         (fun (note : note) ->
+                           strip_leading_slash (Text.to_string note.note_url))
+                         notes
+                   | Index_page | Standalone_page | Post_list | Note_list
+                   | Atom_xml_feed ->
+                       [ strip_leading_slash le_path ])
+                 site_layout)
+          in
+          Ok paths)
 
 let rendered_outputs (config : site_config) :
     ((string * string) list, string) result =
@@ -212,81 +291,113 @@ let rendered_outputs (config : site_config) :
   let root_url = config.site_root in
   match load_articles input_dir with
   | Error _ as e -> e
-  | Ok articles ->
-      let arr = Array.of_list articles in
-      let outputs = ref [] in
-      let emit path content =
-        outputs := (strip_leading_slash path, content) :: !outputs
-      in
-      let rec collect = function
-        | [] -> Ok (List.rev !outputs)
-        | { le_path; le_type } :: rest -> (
-            (match le_type with
-              | Static_files -> Ok ()
-              | Index_page -> (
-                  let index_tex = input_dir // "index.tex" in
-                  if not (is_regular_file index_tex) then
-                    Error ("Index file not found: " ^ index_tex)
-                  else
-                    let content = read_file_contents index_tex in
-                    match
-                      Tex_parser.parse_document ~source_name:index_tex content
-                    with
-                    | Error err -> Error (Error.format_parse_error content err)
-                    | Ok nodes -> (
-                        match Elaborate.elaborate "index" nodes with
+  | Ok articles -> (
+      match load_notes input_dir with
+      | Error _ as e -> e
+      | Ok notes ->
+          let keyword_articles = build_keyword_map articles in
+          let arr = Array.of_list articles in
+          let outputs = ref [] in
+          let emit path content =
+            outputs := (strip_leading_slash path, content) :: !outputs
+          in
+          let rec collect = function
+            | [] -> Ok (List.rev !outputs)
+            | { le_path; le_type } :: rest -> (
+                (match le_type with
+                  | Static_files -> Ok ()
+                  | Index_page -> (
+                      let index_tex = input_dir // "index.tex" in
+                      if not (is_regular_file index_tex) then
+                        Error ("Index file not found: " ^ index_tex)
+                      else
+                        let content = read_file_contents index_tex in
+                        match
+                          Tex_parser.parse_document ~source_name:index_tex
+                            content
+                        with
                         | Error err ->
-                            Error
-                              (Error.format_elab_error ~source_name:index_tex
-                                 content err)
-                        | Ok index_article ->
-                            let body =
-                              Render.render_blocks Render.empty_ctx
-                                index_article.art_body
-                            in
-                            let featured =
-                              take 5
-                                (List.filter (fun a -> a.art_featured) articles)
-                            in
-                            let latest = take 5 articles in
-                            let page_html =
-                              Html.render
-                                (Layout.render_index_page body featured latest)
-                            in
-                            emit le_path page_html;
-                            Ok ()))
-              | TeX_articles ->
-                  Array.iteri
-                    (fun i article ->
-                      let page_html =
-                        render_one_post ~root_url ~all_articles:articles ~idx:i
-                          article
+                            Error (Error.format_parse_error content err)
+                        | Ok nodes -> (
+                            match Elaborate.elaborate "index" nodes with
+                            | Error err ->
+                                Error
+                                  (Error.format_elab_error
+                                     ~source_name:index_tex content err)
+                            | Ok index_article ->
+                                let ref_table =
+                                  Layout.build_global_ref_table articles notes
+                                in
+                                let ctx = { Render.ref_table } in
+                                let body =
+                                  Render.render_blocks ctx
+                                    index_article.art_body
+                                in
+                                let featured =
+                                  take 5
+                                    (List.filter
+                                       (fun a -> a.art_featured)
+                                       articles)
+                                in
+                                let latest = take 5 articles in
+                                let page_html =
+                                  Html.render
+                                    (Layout.render_index_page body featured
+                                       latest)
+                                in
+                                emit le_path page_html;
+                                Ok ()))
+                  | TeX_articles ->
+                      Array.iteri
+                        (fun i article ->
+                          let page_html =
+                            render_one_post ~root_url ~all_articles:articles
+                              ~all_notes:notes ~idx:i article
+                          in
+                          emit (Text.to_string article.art_url) page_html)
+                        arr;
+                      Ok ()
+                  | TeX_notes ->
+                      List.iter
+                        (fun (note : note) ->
+                          let page_html =
+                            render_one_note ~all_articles:articles
+                              ~all_notes:notes ~keyword_articles note
+                          in
+                          emit (Text.to_string note.note_url) page_html)
+                        notes;
+                      Ok ()
+                  | Standalone_page -> (
+                      match
+                        render_standalone_from ~input_dir
+                          ~all_articles:articles ~all_notes:notes le_path
+                      with
+                      | Ok html ->
+                          emit le_path html;
+                          Ok ()
+                      | Error _ as e -> e)
+                  | Post_list ->
+                      let html =
+                        Html.render
+                          (Layout.render_post_list_page "All Posts" articles)
                       in
-                      emit (Text.to_string article.art_url) page_html)
-                    arr;
-                  Ok ()
-              | Standalone_page -> (
-                  match render_standalone_from ~input_dir le_path with
-                  | Ok html ->
                       emit le_path html;
                       Ok ()
-                  | Error _ as e -> e)
-              | Post_list ->
-                  let html =
-                    Html.render
-                      (Layout.render_post_list_page "All Posts" articles)
-                  in
-                  emit le_path html;
-                  Ok ()
-              | Atom_xml_feed ->
-                  let feed_xml = Feed.render_atom_feed root_url articles in
-                  emit le_path feed_xml;
-                  Ok ())
-            |> function
-            | Error _ as e -> e
-            | Ok () -> collect rest)
-      in
-      collect site_layout
+                  | Note_list ->
+                      let html =
+                        Html.render (Layout.render_note_list_page notes)
+                      in
+                      emit le_path html;
+                      Ok ()
+                  | Atom_xml_feed ->
+                      let feed_xml = Feed.render_atom_feed root_url articles in
+                      emit le_path feed_xml;
+                      Ok ())
+                |> function
+                | Error _ as e -> e
+                | Ok () -> collect rest)
+          in
+          collect site_layout)
 
 let render_site (config : site_config) : unit =
   let input_dir = config.site_input in
@@ -311,8 +422,8 @@ let render_site (config : site_config) : unit =
           end;
           match le_type with
           | Static_files -> if Sys.file_exists src then copy_recursively src dst
-          | Index_page | TeX_articles | Standalone_page | Post_list
-          | Atom_xml_feed ->
+          | Index_page | TeX_articles | TeX_notes | Standalone_page | Post_list
+          | Note_list | Atom_xml_feed ->
               ())
         site_layout;
       List.iter

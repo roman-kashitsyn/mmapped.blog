@@ -32,6 +32,7 @@ type inline =
   | Line_break
   | Numeric_space
   | Nameref of Text.t (* label for \nameref *)
+  | Ref of Text.t * inline list (* \ref{ID}{NODES} *)
   | Image_inline of
       Text.t list
       * Text.t (* css classes, src path (for inline/table contexts) *)
@@ -111,4 +112,14 @@ type article = {
   art_reddit : Text.t option;
   art_hn : Text.t option;
   art_lobsters : Text.t option;
+}
+
+(* Note: a lighter document type for the digital garden *)
+type note = {
+  note_slug : Text.t;
+  note_title : inline list;
+  note_created_at : Date.t;
+  note_modified_at : Date.t;
+  note_body : block list;
+  note_url : Text.t;
 }

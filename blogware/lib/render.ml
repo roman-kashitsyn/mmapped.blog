@@ -115,6 +115,11 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
       | Some r -> a_ [ href_ r.ref_url ] (text r.ref_title)
       | None ->
           text (Text.concat Text.empty [ txt "[unresolved:"; label; txt "]" ]))
+  | Ref (label, ils) -> (
+      match RefTable.find_opt label ctx.ref_table with
+      | Some r -> a_ [ href_ r.ref_url ] (render_inlines ctx ils)
+      | None ->
+          text (Text.concat Text.empty [ txt "[unresolved:"; label; txt "]" ]))
 
 and render_inlines (ctx : ctx) (ils : inline list) : Html.t =
   concat (List.map (render_inline ctx) ils)

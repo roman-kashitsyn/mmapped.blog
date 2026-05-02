@@ -9,7 +9,7 @@
 (rule
  (deps
   (source_tree ../../posts)
-  ../../about.tex
+  (source_tree ../../notes)
   ../../index.tex
   (source_tree snapshots))
  (action
