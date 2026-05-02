@@ -190,13 +190,7 @@ let serve_note_list fd (config : site_config) : unit =
   match Site.load_notes config.site_input with
   | Error err -> send_response fd 500 "text/plain" err
   | Ok notes ->
-      let sorted =
-        List.sort
-          (fun (a : note) (b : note) ->
-            Date.compare b.note_modified_at a.note_modified_at)
-          notes
-      in
-      let page_html = Html.render (Layout.render_note_list_page sorted) in
+      let page_html = Html.render (Layout.render_note_list_page notes) in
       send_response fd 200 "text/html; charset=utf-8" page_html
 
 let serve_post_list fd (config : site_config) : unit =

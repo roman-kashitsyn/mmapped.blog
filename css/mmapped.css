@@ -476,6 +476,29 @@ ul.article-list > li {
     font-variant-numeric: oldstyle-nums;
     color: var(--ink-subtle);
     margin-left: var(--sp-inline);
+    white-space: nowrap;
+}
+
+/* Note list and note pages */
+.note-title {
+    font-family: var(--font-sans);
+    font-variant-caps: normal;
+}
+
+ul.note-list {
+    padding-left: 0;
+    list-style: none;
+}
+
+ul.note-list > li {
+    margin-top: 0;
+    margin-bottom: 0;
+    line-height: var(--lh-medium);
+}
+
+.note-list-title {
+    font-family: var(--font-sans);
+    font-size: var(--fs-small);
 }
 
 img.logo {
@@ -1182,6 +1205,12 @@ p.svg {
     figure.fullwidth figcaption {
         margin-right: 0%;
         max-width: none;
+    }
+
+    /* Display diagrams at full width on small screens. */
+    figure.medium-size img,
+    figure.p75 img {
+        width: 100%;
     }
 
     blockquote {

@@ -384,14 +384,8 @@ let rendered_outputs (config : site_config) :
                       emit le_path html;
                       Ok ()
                   | Note_list ->
-                      let sorted =
-                        List.sort
-                          (fun (a : note) (b : note) ->
-                            Date.compare b.note_modified_at a.note_modified_at)
-                          notes
-                      in
                       let html =
-                        Html.render (Layout.render_note_list_page sorted)
+                        Html.render (Layout.render_note_list_page notes)
                       in
                       emit le_path html;
                       Ok ()

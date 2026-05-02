@@ -567,11 +567,18 @@ let render_standalone_page (title : Html.t) (url : string) (body : Html.t) :
 let render_note_entry (n : note) : Html.t =
   li_ []
     (a_
-       [ class_ (txt "compact-title"); href_ n.note_url ]
-       (Render.render_inlines Render.empty_ctx n.note_title)
-    ++ span_ [ class_ (txt "compact-date") ] (render_date n.note_modified_at))
+       [ class_ (txt "note-list-title"); href_ n.note_url ]
+       (Render.render_inlines Render.empty_ctx n.note_title))
 
 let render_note_list_page (notes : note list) : Html.t =
+  let sorted =
+    List.sort
+      (fun (a : note) (b : note) ->
+        Text.compare
+          (Elaborate.inlines_to_text a.note_title)
+          (Elaborate.inlines_to_text b.note_title))
+      notes
+  in
   doctype ++ nl
   ++ html_
        [ lang_ (txt "en") ]
@@ -579,13 +586,13 @@ let render_note_list_page (notes : note list) : Html.t =
        ++ body_ []
             (site_header
             ++ section_
-                 [ class_ (txt "post-list") ]
-                 (h1_ [ class_ (txt "article-title") ] (escape_html (txt "Notes"))
-                 ++ (if notes = [] then empty
+                 [ class_ (txt "note-index") ]
+                 (h1_ [ class_ (txt "note-title") ] (escape_html (txt "Notes"))
+                 ++ (if sorted = [] then empty
                      else
                        ul_
-                         [ class_ (txt "article-list") ]
-                         (concat (List.map render_note_entry notes))))
+                         [ class_ (txt "note-list") ]
+                         (concat (List.map render_note_entry sorted))))
             ++ site_footer)
        ++ nl)
 
@@ -628,7 +635,7 @@ let render_note_attributes (note : note) : Html.t =
 let render_note_page (note : note) (body : Html.t)
     (referencing_articles : article list) : Html.t =
   let articles_section =
-    render_compact_list "Articles" referencing_articles
+    render_compact_list "Tagged articles" referencing_articles
   in
   doctype ++ nl
   ++ html_
@@ -638,7 +645,7 @@ let render_note_page (note : note) (body : Html.t)
             (site_header
             ++ article_ []
                  (h1_
-                    [ class_ (txt "article-title") ]
+                    [ class_ (txt "note-title") ]
                     (a_
                        [ href_ note.note_url ]
                        (Render.render_inlines Render.empty_ctx note.note_title))
