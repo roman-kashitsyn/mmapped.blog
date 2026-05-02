@@ -17,7 +17,7 @@
   What influences our choice of technology more: careful analysis or upbringing?
   I found that the latter matters more than I expected.
   As a result,
-  I learned to accept other people's preferences without judgment
+  I learned to accept other people's preferences
   and seek environments that reward my choices.
 \end{abstract}
 
@@ -30,47 +30,39 @@
 For most of my career,
 I thought I understood programming.
 People who disagreed with me hadn't seen the light yet.
-Give them time and relevant experience, and they will see what I saw.
+Give them time and relevant experience,
+and they will agree that statically-typed languages are the only way to build robust software.
+That dependencies are evil and trade freedom for short-term comfort.
 
-That statically-typed programming languages are the only way to develop robust software.
-That programmers must know their systems in-and-out.
-That dependencies are evil and trade short-term comfort for freedom.
-
-Things changed when I became a parent and started reading books on psychology.
-I started to see how the hostility of my formative years affected my relationships, values, and core beliefs.
+My convictions waned when I became a parent and started reading books on psychology.
+I could see how my formative years affected my relationships, values, core beliefs,
+and even technology preferences.
 
 When I was a kid, mistakes were costly.
-Breaking a glass or getting a bad grade could get me beaten.
-My brain learned to avoid or hide mistakes.
-Only perfection was good enough.
-When I asked for help, people humiliated me.
-My brain's responded with \href{https://en.wikipedia.org/wiki/Counterdependency}{counterdependency}.
-I became averse to seeking or accepting help.
+Breaking a glass or getting a bad grade could get me beaten,
+so my brain learned to avoid mistakes and demand perfection.
+When I asked for help, people humiliated me,
+so my brain became averse to seeking or accepting help.
 
-The more I reflected on my adverse experiences,
-the clearer I saw their effect on my life choices.
-In fact, they also explained my professional preferences better than logic.
-
-Type systems, compilers, and formal methods help me feel safe, even though there's \href{https://danluu.com/empirical-pl/}{little empirical evidence} to justify my feelings.
+Type systems, compilers, and formal methods help me feel safe, even though there's \href{https://danluu.com/empirical-pl/}{scant empirical evidence} to justify my feelings.
 Grokking my programs and eliminating dependencies puts me in control.
-I can fix bugs without other people or fancy tools by simulating the system in my head.
 
-Does my conditioning help me write better programs? Maybe.
-My fixation on understanding exterminates bugs.
+Do my adaptations help me write better programs? Maybe.
+My fixation on understanding prevents bugs.
 When mistakes pop up, they usually come from wrong premises, not bad logic.
 
 Do I stick to my principles \emph{because} they produce better programs?
 Probably not.
-In the end, it boils down to feelings.
-Fighting a compiler for an hour to craft a program that works on the first run feels terrific.
+But they are comfortable.
+Fighting a compiler to craft a program that works on the first run feels terrific.
 Squeezing out bugs from a Python script doesn't.
 
 I met many people whose approach was my opposite.
 They pulled in behemoth frameworks.
 They moved on when their programs seemed to work.
 They feared less and experimented more.
-I don't have any issues with their ways, not anymore.
-In the long run, they probably bring more value to the world than me.
+I no longer take issue with their ways.
+They can build things I never would.
 
 \section{authenticity-spiral}{The authenticity spiral}
 
@@ -95,19 +87,18 @@ and studied frameworks that promised ``extensibility.''
 Exposure to new ideas and languages helped me realize
 that most ``rules'' I learned didn't improve my programs.
 That frameworks brought accidental complexity and bloat.
-That I didn't need to write extensible code in futile attempts to predict the future.
+That ``extensible code'' was a futile attempt to predict the future.
 I could start with \href{https://programmingisterrible.com/post/139222674273/write-code-that-is-easy-to-delete-not-easy-to}{code that was easy to delete} and rewrite it when the problem changed.
 
-The transformation took over five years
-and interlapped with a deep dive into pure functional programming,
+The transformation took years
+and overlapped with a deep dive into pure functional programming,
 from which I also eventually recovered.
 Each new obsession made me wiser and helped me discover something about myself.
 
 Like artists, programmers grow in spirals.
 Beginners reach for the most straightforward tools.
 Their code is awkward, but every line serves a purpose.
-They then learn and imitate ``good practices.''
-They accept that things must be done in a particular way.
+Then they learn ``good practices'' and abide by them.
 This path leads them astray, but it's necessary for growth.
 With time, they regain their \href{https://en.wikipedia.org/wiki/Shoshin}{beginner's mind}.
 Conventions fade.
@@ -124,15 +115,7 @@ This time, it's also elegant.
 \includegraphics{/images/38-auth-spiral.svg}
 \end{figure}
 
-The Japanese martial arts concept of \href{https://en.wikipedia.org/wiki/Shuhari}{shuhari} describes three stages of mastery that chart the same spiral.
-At the \emph{shu} stage, the practitioner learns the fundamentals, memorizes the moves, and obeys rules.
-That's the upward curve on the spiral.
-At the \emph{ha} stage, she innovates, breaks rules, and connects with reality.
-That's the backward trend.
-At the \emph{ri} stage, she transcends the forms and performs moves naturally.
-The spiral winds around her authentic core.
-
-If your views on technology don't resonate with your core beliefs,
+When your views on technology don't resonate with your core beliefs,
 your spiral might not have completed its cycle yet.
 
 \section{finding-your-place}{Finding your place}
@@ -145,12 +128,13 @@ Let's say I convinced you that your technological preferences come mostly from y
 What are the implications? I can think of at least two.
 
 Firstly, we should stop shaming people who don't share our preferences.
-Using a memory-unsafe language isn't a moral crime, and a preference for dynamic typing doesn't say anything about the programmer's intelligence.
-Type theory maximalists should give up their aura of intellectual superiority and accept that they need therapy just as badly as everyone else (if not more).
+Using a memory-unsafe language isn't a moral crime.
+A preference for dynamic typing doesn't say anything about the programmer's intelligence.
+Type theory maximalists should drop their pretense of intellectual superiority and accept that they need therapy just as badly as everyone else (if not more).
 
 \begin{figure}[medium-size]
 \marginnote{mn-galois-credit}{
-  The lack of self-awareness produces elegant mathematics.
+  The sleep of self-awareness produces elegant mathematics.
   Source: \href{https://x.com/LongFormMath/status/1526564036405391361}{Jay Cummings}.
 }
 \center{
@@ -161,35 +145,34 @@ Type theory maximalists should give up their aura of intellectual superiority an
 Secondly, we should pay more attention to how technology makes us feel
 and feed these signals into our career choices.
 
-My environment defined my productivity and job satisfaction.
+My team and culture---not skills---defined my productivity and job satisfaction.
 Yandex felt like sharing a dormitory with best pals.
 Google---like high-school politics.
-\textsc{dfinity}---like Hesse's Castalia:
-it was so stimulating that, for a brief moment,
-I thought I had finally cracked the productivity code.
+\textsc{dfinity}---like an intellectual utopia:
+so stimulating that, for a brief moment,
+I thought I'd finally mastered productivity.
 My next job burnt me out in three months.
 
-I didn't change much between my experiences.
-I've never cracked the code.
+I didn't change much between these experiences.
 I just needed the right project and team to function well\sidenote{sn-productivity-books}{
   Productivity systems like \href{https://www.goodreads.com/book/show/1633.Getting_Things_Done}{Getting Things Done} and \href{https://www.goodreads.com/book/show/10009377-the-12-week-year}{The 12 Week Year}
   promise to turn anyone into an efficiency ninja.
   They lie.
 }.
-A team who's values and beliefs align with mine.
+A team whose values and beliefs align with mine.
 
 The right environment won't make life easy.
 You'll still get frustrated and face challenges.
-But getting through these challenges will feel like growth.
+But getting through these challenges will feel like growth, not struggle.
 
-\section{final-words}{Final words}
+\section{final-words}{Closing words}
 
 \epigraph{
   Haskell will still be used in 20 years,
   because there will always be people looking for a productive way to weaponize their autism.
 }{\href{https://x.com/effectfully/status/1901124439258894769}{@effectfully}}
 
-Unfortunately, I couldn't find any research that could disprove or confirm my anecdotal evidence.
+Unfortunately, I couldn't find any research that addresses my anecdotal evidence.
 If you're a researcher working in the intersection of psychology and computer science, consider investigating the effects of childhood experience and neurodiversity\sidenote{sn-haskell-nd}{
   As a frequent \href{https://zfoh.ch/zurihac2024/}{ZuriHac} guest,
   I got an impression that hard-core compiled language communities have an unusually large fraction of neurodiverse people.
@@ -197,14 +180,15 @@ If you're a researcher working in the intersection of psychology and computer sc
 I can't wait to read your papers!
 
 If you liked this article,
-consider listening to the \href{https://corecursive.com/leaving-stripe-with-jon-de-le-motte/}{Leaving Stripe} episode of the \href{https://corecursive.com/}{CoRecursive} podcast.
-In this episode, Jon de la Motte shares his struggles with mental health and traces his career choices to his family dynamics.
+consider listening to the \href{https://corecursive.com/leaving-stripe-with-jon-de-le-motte/}{Leaving Stripe} episode of the \href{https://corecursive.com/}{CoRecursive} podcast,
+in which Jon de la Motte shares his struggles with mental health and traces his career choices to his family dynamics.
 
+Finally, don't hesitate to book a therapy appointment.
+Even the best of us need it.
 \blockquote{
   If you're making games, you should be getting therapy.
 }{
-  Mike Acton on the \href{https://youtu.be/rW1KMO2O6ak?si=GYOgrDPfKVGAbUJ_&t=2938)}{\cite{Wizardology podcast}}
+  Mike Acton on the \href{https://youtu.be/rW1KMO2O6ak?si=GYOgrDPfKVGAbUJ_&t=2938}{\cite{Wizardology podcast}}
 }
-
 
 \end{document}
