@@ -5,7 +5,7 @@
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#personae">Dramatis Personae</a></li><li class="toc toc-level-1"><a href="#modules-vs-crates">Modules vs Crates</a></li><li class="toc toc-level-1"><a href="#code-organization-advice">Advice on code organization</a></li><li class="toc toc-level-1"><a href="#common-pitfalls">Common pitfalls</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#confusing-crates-and-packages">Confusing crates and packages</a></li><li class="toc toc-level-2"><a href="#quasi-circular">Quasi-circular dependencies</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li><li class="toc toc-level-1"><a href="#links">Further reading</a></li></ul><hr>
 
-<section><figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Good judgment is the result of experience and experience the result of bad judgment.</p></blockquote><figcaption>Mark Twain</figcaption></figure>
+<section><figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>Good judgment is the result of experience and experience the result of bad judgment.</p></blockquote><figcaption>Mark Twain</figcaption></figure>
 <p>The <a href="https://internetcomputer.org">Internet Computer</a> (IC) <a href="https://github.com/dfinity/ic">Rust code base</a> grew from an empty repository in June 2019 to almost 350,000 lines of code in early 2022.
 This rapid growth taught me that decisions working fine for relatively small projects might start dragging the project down over time.
 This article evaluates Rust code organization options and suggests ways to use them effectively.</p>

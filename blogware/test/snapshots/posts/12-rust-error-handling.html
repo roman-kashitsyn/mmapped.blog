@@ -23,7 +23,7 @@ Libraries do their job well when they recover from errors transparently and prov
 However, the core <a href="#empathy">principle of empathy</a> applies equally well to designing machine-machine, human-machine, and human-human interfaces.</p>
 </section>
 <section><h2 id="design-heuristics"><a href="#design-heuristics">Design goals</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>I didn’t want to call these guidelines, and I didn’t want to call these rules.
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>I didn’t want to call these guidelines, and I didn’t want to call these rules.
   I wanted them to be goals.
   These are the things that you should strive for in your code, that are not always easy to accomplish.
   And maybe you can’t always pull them off.
@@ -96,7 +96,7 @@ I am still looking for Rust code that went overboard with distinct error types.<
 </code></pre></div>
 </figure>
 <h3 id="avoid-panics"><a href="#avoid-panics">Reserve panics for bugs in your code</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>The <code>panic!</code> macro is used to construct errors that represent a bug that has been detected in your program.</p></blockquote><figcaption>The Rust Standard Library, <a href="https://doc.rust-lang.org/std/macro.panic.html#when-to-use-panic-vs-result"><cite>When to use <code>panic!</code> vs <code>Result</code></cite></a>.</figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>The <code>panic!</code> macro is used to construct errors that represent a bug that has been detected in your program.</p></blockquote><figcaption>The Rust Standard Library, <a href="https://doc.rust-lang.org/std/macro.panic.html#when-to-use-panic-vs-result"><cite>When to use <code>panic!</code> vs <code>Result</code></cite></a>.</figcaption></figure>
 <p>The primary purpose of <a href="https://doc.rust-lang.org/std/macro.panic.html"><code>panics</code></a> in Rust is to indicate bugs in your program.
 Resist the temptation to use panics for input validation if there is a chance that the inputs come from the end user, even if you document panics meticulously.
 People rarely read documentation; they can easily miss your warnings.

@@ -5,7 +5,7 @@
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#intro">Introduction</a></li><li class="toc toc-level-1"><a href="#objects-values-references">Objects, values, and references</a></li><li class="toc toc-level-1"><a href="#abstraction-hurts">When abstraction hurts</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#common-expression-elimination">Common expression elimination</a></li><li class="toc toc-level-2"><a href="#monomorphism-restriction">Monomorphism restriction</a></li><li class="toc toc-level-2"><a href="#functional-abstraction">Functional abstraction</a></li><li class="toc toc-level-2"><a href="#newtype-abstrction">Newtype abstraction</a></li><li class="toc toc-level-2"><a href="#views-and-bundles">Views and bundles</a></li></ul></li><li class="toc toc-level-1"><a href="#composition-hurts">When composition hurts</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#object-composition">Object composition</a></li><li class="toc toc-level-2"><a href="#pattern-matching-boxes">Pattern matching cannot see through boxes</a></li><li class="toc toc-level-2"><a href="#orphan-rules">Orphan rules</a></li></ul></li><li class="toc toc-level-1"><a href="#fearless-concurrency">Fearless concurrency is a lie</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#deadlocks">Deadlocks</a></li><li class="toc toc-level-2"><a href="#filesystem-shared-resource">Filesystem is a shared resource</a></li><li class="toc toc-level-2"><a href="#implicit-async-runtimes">Implicit async runtimes</a></li><li class="toc toc-level-2"><a href="#functions-have-colors">Functions have colors</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
 
-<section><figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Functional programming deals with values; imperative programming deals with objects.</p></blockquote><figcaption>Alexander Stepanov, <cite>Elements of Programming, p. 5</cite></figcaption></figure>
+<section><figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>Functional programming deals with values; imperative programming deals with objects.</p></blockquote><figcaption>Alexander Stepanov, <cite>Elements of Programming, p. 5</cite></figcaption></figure>
 </section>
 <section><h2 id="intro"><a href="#intro">Introduction</a></h2>
 <p><a href="https://www.rust-lang.org/">Rust</a> is in a sweet spot in the language design space.
@@ -16,7 +16,7 @@ In almost all cases, these issues are not defects of the compiler but direct con
 <p>This article details on how frustrating Rust can be if you approach it with a functional programming mindset and why Rust has no choice but to frustrate you.</p>
 </section>
 <section><h2 id="objects-values-references"><a href="#objects-values-references">Objects, values, and references</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Values and objects play complementary roles.
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>Values and objects play complementary roles.
     Values are unchanging and independent of any particular implementation in the computer.
     Objects are changeable and have computer-specific implementations.</p></blockquote><figcaption>Alexander Stepanov, <cite>Elements of Programming, p. 5</cite></figcaption></figure>
 <p>Understanding the difference between objects, values, and references is helpful before diving deeper into Rust.</p>
@@ -344,7 +344,7 @@ Orphan rules often stay in the way of trimming dependency graphs.</p>
 <p>The Rust team coined the term <a href="https://blog.rust-lang.org/2015/04/10/Fearless-Concurrency.html">Fearless Concurrency</a> to indicate that Rust helps you avoid common pitfalls associated with parallel and concurrent programming.
 Despite these claims, my <a href="https://en.wikipedia.org/wiki/Cortisol">cortisol</a> level goes up every time I introduce concurrency to my Rust programs.</p>
 <h3 id="deadlocks"><a href="#deadlocks">Deadlocks</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>So it’s perfectly <q>fine</q> for a Safe Rust program to get deadlocked or do something nonsensical with incorrect synchronization.
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>So it’s perfectly <q>fine</q> for a Safe Rust program to get deadlocked or do something nonsensical with incorrect synchronization.
     Obviously such a program isn’t very good, but Rust can only hold your hand so far.</p></blockquote><figcaption>The Rustonomicon, <a href="https://doc.rust-lang.org/nomicon/races.html"><cite>Data Races and Race Conditions</cite></a></figcaption></figure>
 <p>Safe Rust prevents a specific type of concurrency bug called <em>data race</em>.
 Concurrent Rust programs have plenty of other ways to behave incorrectly.</p>
@@ -374,7 +374,7 @@ The Clang compiler has <a href="https://clang.llvm.org/docs/ThreadSafetyAnalysis
 However, the best way to avoid deadlocks is not to have locks.
 Two technologies that approach the problem fundamentally are <a href="https://en.wikipedia.org/wiki/Software_transactional_memory">Software Transaction Memory</a> (implemented in <a href="https://wiki.haskell.org/Software_transactional_memory">Haskell</a>, <a href="https://clojure.org/reference/refs">Clojure</a>, and <a href="https://nbronson.github.io/scala-stm/">Scala</a>) and the <a href="https://en.wikipedia.org/wiki/Actor_model">actor model</a> (<a href="https://www.erlang.org/">Erlang</a> was the first language that fully embraced it).</p>
 <h3 id="filesystem-shared-resource"><a href="#filesystem-shared-resource">Filesystem is a shared resource</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>We can view a path as an <em>address</em>.
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>We can view a path as an <em>address</em>.
     Then a string representing a path is a pointer, and accessing a file through a path is a pointer dereference.
     Thus, component interference due to file overwriting can be viewed as an address collision problem: two components occupy overlapping parts of the address space.</p></blockquote><figcaption>Eelco Dolstra, <cite><a href="https://edolstra.github.io/pubs/phd-thesis.pdf">The Purely Functional Software Deployment Model</a>, p. 53</cite></figcaption></figure>
 <p>Rust gives us powerful tools to deal with shared memory.
@@ -385,7 +385,7 @@ However, it can give you a false sense of security.</p>
 Most file operations are inherently unsafe and can lead to data races (in a broad sense) if you do not correctly synchronize file access.
 For example, as of February 2023, I still experience a six-year-old <a href="https://github.com/rust-lang/rustup/issues/988">concurrency bug</a> in <a href="https://rustup.rs/">rustup</a>.</p>
 <h3 id="implicit-async-runtimes"><a href="#implicit-async-runtimes">Implicit async runtimes</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>I cannot seriously believe in it because the theory cannot be reconciled with the idea that physics should represent a reality in time and space, free from spooky action at a distance.</p></blockquote><figcaption>Albert Einstein, <cite><a href="https://books.google.ch/books?redir_esc=y&amp;hl=de&amp;id=HvZAAQAAIAAJ&amp;focus=searchwithinvolume&amp;q=spooky+action">The Born-Einstein letters</a>, p. 158.</cite></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>I cannot seriously believe in it because the theory cannot be reconciled with the idea that physics should represent a reality in time and space, free from spooky action at a distance.</p></blockquote><figcaption>Albert Einstein, <cite><a href="https://books.google.ch/books?redir_esc=y&amp;hl=de&amp;id=HvZAAQAAIAAJ&amp;focus=searchwithinvolume&amp;q=spooky+action">The Born-Einstein letters</a>, p. 158.</cite></figcaption></figure>
 <p>The value of Rust that I like the most is its focus on local reasoning.
 Looking at the function’s type signature often gives you a solid understanding of what the function can do.
 State mutations are explicit thanks to mutability and lifetime annotations.
@@ -423,7 +423,7 @@ What should have been a compile error turns into a debugging adventure:</p>
 <p>Some might argue that threading ubiquitous arguments through the entire call stack is unergonomic.
 <a href="/posts/03-rust-packages-crates-modules.html#explicit-dependencies">Explicitly passing all arguments</a> is the only approach that scales well.</p>
 <h3 id="functions-have-colors"><a href="#functions-have-colors">Functions have colors</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>At this point, a reasonable person might think the language hates us.</p></blockquote><figcaption>Bob Nystrom, <a href="https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/"><cite>What Color is Your Function?</cite></a></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>At this point, a reasonable person might think the language hates us.</p></blockquote><figcaption>Bob Nystrom, <a href="https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/"><cite>What Color is Your Function?</cite></a></figcaption></figure>
 <p>Rust’s <code>async/.await</code> syntax simplifies the composition of asynchronous algorithms.
 In return, it brings a fair amount of complexity, <a href="https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/">painting every function</a> in <em>blue</em> (sync) or <em>red</em> (async) color.
 There are new rules to follow:
@@ -449,7 +449,7 @@ Such packages tend to be bug silos, waiting for enough system load to manifest a
 Building a concurrent program from independent components is easier and safer in such languages.</p>
 </section>
 <section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>There are only two kinds of languages: the ones people complain about and the ones nobody uses.</p></blockquote><figcaption><a href="https://www.stroustrup.com/quotes.html">Bjarne Stroustrup</a></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>There are only two kinds of languages: the ones people complain about and the ones nobody uses.</p></blockquote><figcaption><a href="https://www.stroustrup.com/quotes.html">Bjarne Stroustrup</a></figcaption></figure>
 <p>Rust is a disciplined language that got many important decisions right, such as an uncompromising focus on safety, the trait system design<label class="margin-toggle sidenote-number" for="sn-trait-system-cpp"></label><input type="checkbox" id="sn-trait-system-cpp" class="margin-toggle"><span class="sidenote">I’m looking at you, <a href="https://en.cppreference.com/w/cpp/language/constraints">C++ Concepts</a>.</span>, the lack of implicit conversions, and a holistic approach to <a href="/posts/12-rust-error-handling.html">error handling</a>.
 It allows us to develop robust and memory-safe programs relatively quickly without compromising execution speed.</p>
 <p>Yet, I often find myself overwhelmed with accidental complexity, especially when I care little about performance and want to get something working quickly (for example, in test code).

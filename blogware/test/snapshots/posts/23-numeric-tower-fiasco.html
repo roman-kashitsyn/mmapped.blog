@@ -5,7 +5,7 @@
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#introduction">Introduction</a></li><li class="toc toc-level-1"><a href="#the-numeric-tower">The numeric tower</a></li><li class="toc toc-level-1"><a href="#oop-design">The OOP design</a></li><li class="toc toc-level-1"><a href="#the-functional-design">The functional design</a></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li></ul><hr>
 
-<section><figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Object-oriented programming is an exceptionally bad idea which could only have originated in California.</p></blockquote><figcaption>Edsger Dijkstra</figcaption></figure>
+<section><figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>Object-oriented programming is an exceptionally bad idea which could only have originated in California.</p></blockquote><figcaption>Edsger Dijkstra</figcaption></figure>
 </section>
 <section><h2 id="introduction"><a href="#introduction">Introduction</a></h2>
 <p>Object-oriented programming<label class="margin-toggle sidenote-number" for="sn-oop"></label><input type="checkbox" id="sn-oop" class="margin-toggle"><span class="sidenote">
@@ -20,7 +20,7 @@ I grew more frustrated with object-oriented programming and eventually entirely 
 This article describes one example that stuck with me from the start of my programming career: modeling the hierarchy of number types.</p>
 </section>
 <section><h2 id="the-numeric-tower"><a href="#the-numeric-tower">The numeric tower</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>God made the integers, all the rest is the work of man.</p></blockquote><figcaption>Leopold Kronecker</figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>God made the integers, all the rest is the work of man.</p></blockquote><figcaption>Leopold Kronecker</figcaption></figure>
 <p>I like math, so one of the first structures I tried to model with classes was the most precisely specified and well-studied hierarchy in human history: the <a href="https://en.wikipedia.org/wiki/Numerical_tower">numerical tower</a>.</p>
 <p>Mathematicians discovered<label class="margin-toggle sidenote-number" for="sn-motivation"></label><input type="checkbox" id="sn-motivation" class="margin-toggle"><span class="sidenote">
   The primary motivation for introducing integers was to create a numeric space where equations of the form <span class="math">a + x = c</span>, where <span class="math">a</span> and <span class="math">c</span> are naturals, always have a solution.
@@ -244,7 +244,7 @@ The code is easy to extend to support more numeric types, which is left as an ex
 </span>.</p>
 </section>
 <section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>I find OOP technically unsound… I find OOP philosophically unsound… I find OOP methodologically wrong.</p></blockquote><figcaption>From <a href="http://stlport.org/resources/StepanovUSA.html"><cite>An Interview with A. Stepanov</cite></a></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>I find OOP technically unsound… I find OOP philosophically unsound… I find OOP methodologically wrong.</p></blockquote><figcaption>From <a href="http://stlport.org/resources/StepanovUSA.html"><cite>An Interview with A. Stepanov</cite></a></figcaption></figure>
 <p>When I use a tool and get unsatisfactory results, I blame myself for not using the tool correctly.
 At first, I felt the same about the numeric tower case, but now I’m sure the problem is not me; it’s the class hierarchies.</p>
 <p>The approach of piling classes on top of one another and trying to make this stack coherent is fundamentally flawed.

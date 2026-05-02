@@ -28,7 +28,7 @@ The main difference is that our systems are human-made and sometimes come with s
 valuing data, investing in informal and formal models, and using the scientific method in all aspects of the trade.</p>
 </section>
 <section><h2 id="scientific-method"><a href="#scientific-method">Scientific method</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>It doesn’t matter how beautiful your theory is,
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>It doesn’t matter how beautiful your theory is,
   it doesn’t matter how smart you are.
   If it doesn’t agree with experiment, it’s wrong.</p></blockquote><figcaption>Richard Feynman</figcaption></figure>
 <p>For most of human history, people tried to understand the world by telling compelling stories.
@@ -54,7 +54,7 @@ In later sections, we will see more applications of the method to software engin
 </section>
 <section><h2 id="think-like-a-scientist"><a href="#think-like-a-scientist">Think like a scientist</a></h2>
 <h3 id="record-your-observations"><a href="#record-your-observations">Record your observations</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Remember, kids, the only difference between screwing around and science is writing it down.</p></blockquote><figcaption><a href="https://www.reddit.com/r/mythbusters/comments/3wgqgv/the_origin_of_the_remember_kids_the_only/">Alex Jason</a></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>Remember, kids, the only difference between screwing around and science is writing it down.</p></blockquote><figcaption><a href="https://www.reddit.com/r/mythbusters/comments/3wgqgv/the_origin_of_the_remember_kids_the_only/">Alex Jason</a></figcaption></figure>
 <p>It’s only a few days before the next major release, and the application you work on crashed on you.
 You open the bug tracker and search for the error message it spat out.
 What a luck!
@@ -76,7 +76,7 @@ You might find flaws in your analysis in the process.
 </li></ul>
 <p>Make your bug reports and user stories an interesting read.</p>
 <h3 id="test-causality"><a href="#test-causality">Test causality</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>The invalid assumption that correlation implies cause is probably among the two or three most serious and common errors of human reasoning.</p></blockquote><figcaption>Stephen Jay Gould, <cite>The Mismeasure of Man (Revised &amp; Expanded), p.178</cite></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>The invalid assumption that correlation implies cause is probably among the two or three most serious and common errors of human reasoning.</p></blockquote><figcaption>Stephen Jay Gould, <cite>The Mismeasure of Man (Revised &amp; Expanded), p.178</cite></figcaption></figure>
 <p>Phew, hunting down that bug took you a while.
 You fix the code and add a unit test demonstrating the problem.
 The test is green, and your change lands on the main branch.
@@ -101,7 +101,7 @@ If you can’t force yourself to write tests before fixing the code (I can’t),
 check that removing the fix makes the test fail.
 I wish there existed tools checking that each test we write used to fail before it became green.</p>
 <h3 id="know-your-data"><a href="#know-your-data">Know your data</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>About 40 seconds after the explosion the air blast reached me.
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>About 40 seconds after the explosion the air blast reached me.
   I tried to estimate its strength by dropping from about six feet small pieces of paper before, during and after the passage of the blast wave.
   […]
   The shift was about 2½ meters, which, at the time, I estimated to correspond to the blast that would be produced by ten thousand tons of <span class="smallcaps">t.n.t.</span></p></blockquote><figcaption>Enrico Fermi, <a href="https://www.atomicarchive.com/resources/documents/trinity/fermi.html"><cite>My Observations During the Explosion at Trinity on July 16, 1945</cite></a></figcaption></figure>
@@ -140,7 +140,7 @@ the <a href="https://carlos.bueno.org/optimization/">Mature Optimization Handboo
 The next time that <span class="smallcaps">ops</span> guy<label class="margin-toggle sidenote-number" for="sn-josh"></label><input type="checkbox" id="sn-josh" class="margin-toggle"><span class="sidenote">Josh. His name is Josh.</span> comes to your desk,
 you will have an answer for him.</p>
 <h3 id="debug-mental-models"><a href="#debug-mental-models">Debug mental models</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>So the guy says, <q>What are you doing? You come to fix the radio, but you’re only walking back and forth!</q>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>So the guy says, <q>What are you doing? You come to fix the radio, but you’re only walking back and forth!</q>
     I say, <q>I’m thinking!</q></p></blockquote><figcaption>Richard Feynman, <cite>Surely You’re Joking, Mr. Feynman!</cite></figcaption></figure>
 <p>Your team lead rushes into your cubicle to tell you the production system barely works.
 You look at the symptoms and have no clue where to start.
@@ -192,7 +192,7 @@ This method is my go-to approach to building mental models<label class="margin-t
 </span>.
 </li></ul>
 <h3 id="formalize-your-models"><a href="#formalize-your-models">Formalize your models</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>In every department of physical science there is only so much science, properly so-called, as there is mathematics.</p></blockquote><figcaption>Immanuel Kant</figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>In every department of physical science there is only so much science, properly so-called, as there is mathematics.</p></blockquote><figcaption>Immanuel Kant</figcaption></figure>
 <p>You are proud of your multi-threaded lock-free queue implementation.
 Your colleagues reviewed it thoroughly and couldn’t find any flaws, and hours of testing did not reveal any issues.
 You deployed your optimization in production, and the servers stopped handling transactions after two weeks.</p>
@@ -225,7 +225,7 @@ Unlike other formal methods I tried, this tool is relatively easy to pick up.
 As a side effect, it teaches you to reason about your systems in terms of state machines,
 an essential skill for a software engineer.</p>
 <h3 id="question-method"><a href="#question-method">Question your method</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>There’s nothing quite as frightening as someone who knows they are right.</p></blockquote><figcaption>Michael Faraday</figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>There’s nothing quite as frightening as someone who knows they are right.</p></blockquote><figcaption>Michael Faraday</figcaption></figure>
 <p>We are living in the best of times.
 The ideas of rapid iteration, <a href="https://agilemanifesto.org/">agile development</a>, and <a href="https://continuousdelivery.com/">continuous delivery</a> are taking over the world.
 Software shops are churning features at a stunning rate.</p>

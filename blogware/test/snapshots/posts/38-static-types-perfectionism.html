@@ -1,174 +1,143 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="me,programming"><meta name="description" content="Scherzo in e-moll on programming and authenticity."><title>Static types are for perfectionists</title><link rel="stylesheet" href="/css/mmapped.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/38-static-types-perfectionism.html"><script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","headline":"Static types are for perfectionists","url":"https://mmapped.blog/posts/38-static-types-perfectionism.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/38-static-types-perfectionism.html"},"datePublished":"2025-04-01","dateModified":"2025-04-01","wordCount":1671,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"Scherzo in e-moll on programming and authenticity.","keywords":["me","programming"]}
-</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/notes/index.html">Notes</a></li><li><a href="/feed.xml">Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/38-static-types-perfectionism.html">Static types are for perfectionists</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2025-04-01">2025-04-01</time></span><span class="post-keywords"><a class="keyword-link" href="/notes/me.html">me</a><a class="keyword-link" href="/notes/programming.html">programming</a></span><span class="post-icons"><a class="icon-link" href="https://news.ycombinator.com/item?id=44013322" title="Discuss on Hacker News" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/y18.svg" alt="Hacker News"></a><a class="icon-link" href="https://lobste.rs/s/z8jvte/static_types_are_for_perfectionists" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Static types are for perfectionists","url":"https://mmapped.blog/posts/38-static-types-perfectionism.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/38-static-types-perfectionism.html"},"datePublished":"2025-04-01","dateModified":"2026-05-02","wordCount":1049,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"Scherzo in e-moll on programming and authenticity.","keywords":["me","programming"]}
+</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/notes/index.html">Notes</a></li><li><a href="/feed.xml">Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/38-static-types-perfectionism.html">Static types are for perfectionists</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2025-04-01">2025-04-01</time></span><span class="attr-date" title="Last modified"><span class="icon">✂</span><time datetime="2026-05-02">2026-05-02</time></span><span class="post-keywords"><a class="keyword-link" href="/notes/me.html">me</a><a class="keyword-link" href="/notes/programming.html">programming</a></span><span class="post-icons"><a class="icon-link" href="https://news.ycombinator.com/item?id=44013322" title="Discuss on Hacker News" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/y18.svg" alt="Hacker News"></a><a class="icon-link" href="https://lobste.rs/s/z8jvte/static_types_are_for_perfectionists" title="Discuss on Lobste.rs" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon lobsters-icon" src="/images/Lobsters-Icon.svg" alt="Lobsters"></a></span></span>
 <hr>
-<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#technology-mirror">The technology mirror</a></li><li class="toc toc-level-1"><a href="#authenticity-spiral">The authenticity spiral</a></li><li class="toc toc-level-1"><a href="#finding-your-place">Finding your place</a></li><li class="toc toc-level-1"><a href="#final-words">Final words</a></li></ul><hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#technology-mirror">The technology mirror</a></li><li class="toc toc-level-1"><a href="#authenticity-spiral">The authenticity spiral</a></li><li class="toc toc-level-1"><a href="#finding-your-place">Finding your place</a></li><li class="toc toc-level-1"><a href="#final-words">Closing words</a></li></ul><hr>
 
-<section><figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>If you’re making games, you should be getting therapy.</p></blockquote><figcaption>Mike Acton on the <a href="https://youtu.be/rW1KMO2O6ak?si=GYOgrDPfKVGAbUJ_&amp;t=2938)"><cite>Wizardology podcast</cite></a></figcaption></figure>
-<p>In this article, I reflect on my professional preferences and trace them to my early childhood experiences.
-I argue that culture and upbringing shape our core beliefs about technology more than rational arguments.
-I conclude with two implications of this idea:
-the necessity to accept other people’s preferences without judgment and the importance of finding an environment rewarding your style.</p>
+<section><section class="abstract" role="doc-abstract"><p>
+  What influences our choice of technology more: careful analysis or upbringing?
+  I found that the latter matters more than I expected.
+  As a result,
+  I learned to accept other people’s preferences
+  and seek environments that reward my choices.
+</p>
+</section>
 </section>
 <section><h2 id="technology-mirror"><a href="#technology-mirror">The technology mirror</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Perhaps the most decisive element of my game was the way my style on the board was completely in synch with my personality as a child.</p></blockquote><figcaption>Josh Waitzkin, <cite>The Art of Learning</cite></figcaption></figure>
-<p>For most of my programming career, I believed that my technological preferences were rational and reflected the realities of software development.
-I thought people who disagreed with my views hadn’t seen the light and hadn’t felt the pain yet.
-Give them time and relevant experience, and they will arrive at the same conclusions:
-</p>
-<ul class="arrows"><li>
-  Statically typed languages are the only way to do serious software development.
-</li><li>
-  Programmers must grok and have a solid mental model of their systems.
-</li><li>
-  Dependencies are evil.
-  They complicate infrastructure and deployment and slow down development in the long run.
-</li></ul>
-<p>A few years ago, after reading half a library worth of books on personal development and psychology,
-I realized how profoundly my early years affected my relationships, values, and core beliefs.
-In particular, the following two traits of my formative years stood out:</p>
-<ul class="arrows"><li>
-  Mistakes were costly.
-  Breaking something or getting a bad grade at school could result in punishment.
-  As a result, my brain wants to avoid (or at least hide) mistakes.
-  It demands perfection.
-</li><li>
-  Asking for help, even from parents, often resulted in humiliation.
-  As a result, I became <a href="https://en.wikipedia.org/wiki/Counterdependency">counterdependent</a>.
-  Seeking or accepting help feels daunting.
-  I’d rather read a gazillion books on psychology than talk to a therapist.
-</li></ul>
-<p>It didn’t take me long to realize that my technology preferences mirrored my everyday behavior.
-Thus, my early conditioning is a better explanation for my choices than objective evaluation:</p>
-<ul class="arrows"><li>
-  I prefer compiled languages because they help me avoid mistakes.
-  My disdain for mistakes guides my interest in type systems, compilers, and formal methods.
-  These tools make me feel safe<label class="margin-toggle sidenote-number" for="sn-type-system-effectiveness"></label><input type="checkbox" id="sn-type-system-effectiveness" class="margin-toggle"><span class="sidenote">
-    That’s a warm fuzzy feeling.
-    There is <a href="https://danluu.com/empirical-pl/">little empirical evidence</a> that strong type systems lead to better programs.
-  </span>.
-</li><li>
-  Groking my programs reduces my dependence on tools and people.
-  It also helps me fix bugs since I can simulate the system behavior in my head.
-</li><li>
-  Eliminating dependencies gives me a sense of control and improves iteration time.
-  If my code needs adjustments, I can make them without involving others or waiting for upstream fixes.
-  In addition, having all the code in one place makes programming tools more reliable.
-</li></ul>
-<p>Does my conditioning help me write better programs? Maybe.
-I noticed that my obsession with understanding leads to programs with few bugs,
-most of which come not from internal inconsistencies but from incorrect assumptions about the execution environment.
-Dependency aversion speeds up building, packaging, and shipping.</p>
-<p>Do I prefer my approach <em>because</em> it produces better programs? Probably not.
-I can rationalize it all day long,  but in the end, it boils down to feelings.
-Spending an hour fighting the compiler to craft a program that works on the first run feels terrific.
-Spending twenty minutes on drafting a Python script and another twenty on squeezing out runtime bugs… doesn’t.</p>
-<p>I met many people whose programming approach was my polar opposite.
-They threw stuff together, experimented, and pulled in behemoth frameworks.
-They stopped worrying when their programs seemed to work and moved on.
-I don’t have any issues with their way, as long as we don’t work on the same system.
-In the long run, these builders might bring more value to the world than me.
-They fear less and try more.</p>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>Perhaps the most decisive element of my game was the way my style on the board was completely in synch with my personality as a child.</p></blockquote><figcaption>Josh Waitzkin, <cite>The Art of Learning</cite></figcaption></figure>
+<p>For most of my career,
+I thought I understood programming.
+People who disagreed with me hadn’t seen the light yet.
+Give them time and relevant experience,
+and they will agree that statically-typed languages are the only way to build robust software.
+That dependencies are evil and trade freedom for short-term comfort.</p>
+<p>My convictions waned when I became a parent and started reading books on psychology.
+I could see how my formative years affected my relationships, values, core beliefs,
+and even technology preferences.</p>
+<p>When I was a kid, mistakes were costly.
+Breaking a glass or getting a bad grade could get me beaten,
+so my brain learned to avoid mistakes and demand perfection.
+When I asked for help, people humiliated me,
+so my brain became averse to seeking or accepting help.</p>
+<p>Type systems, compilers, and formal methods help me feel safe, even though there’s <a href="https://danluu.com/empirical-pl/">scant empirical evidence</a> to justify my feelings.
+Grokking my programs and eliminating dependencies puts me in control.</p>
+<p>Do my adaptations help me write better programs? Maybe.
+My fixation on structure and understanding prevents bugs.
+When mistakes pop up, they usually come from wrong premises, not bad logic.</p>
+<p>Do I stick to my principles <em>because</em> they produce better programs?
+Probably not.
+But they are comfortable.
+Fighting a compiler to craft a program that works on the first run feels terrific.
+Squeezing out bugs from a Python script doesn’t.</p>
+<p>I met many people whose approach was my opposite.
+They pulled in behemoth frameworks.
+They moved on when their programs seemed to work.
+They feared less and experimented more.
+I no longer take issue with their ways.
+They can build things I never would.</p>
 </section>
 <section><h2 id="authenticity-spiral"><a href="#authenticity-spiral">The authenticity spiral</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>In the beginner’s mind there are many possibilities, but in the expert’s there are few.</p></blockquote><figcaption>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>In the beginner’s mind there are many possibilities, but in the expert’s there are few.</p></blockquote><figcaption>
   Shunryu Suzuki, <cite>Zen Mind, Beginner’s Mind</cite>
 </figcaption></figure>
-<p>Of course, I didn’t enter the profession as a fully-formed lonely grumbler.
-My views evolved significantly throughout my career, and continue to change.</p>
-<p>My first programs were physics simulations and tiny games in <a href="https://en.wikipedia.org/wiki/Turbo_Pascal">Turbo Pascal</a>.
-They were dull and brutally direct.
-I would create animations by individually drawing pixels at specific offsets.
+<p>I didn’t enter the profession a fully-formed lonely grumbler.
+My views evolved throughout my career and continue to change.</p>
+<p>My first programs were physics simulations and tiny games written in <a href="https://en.wikipedia.org/wiki/Turbo_Pascal">Turbo Pascal</a>.
+They were brutally direct.
+I would create animations by drawing hand-coded sprites at specific offsets.
 My only dependency was the standard library.</p>
-<p>When I became a junior engineer in Enterprise Java world, I became obsessed with clean code.
-I read every book on code organization, packed my code with design patterns, and mastered bloated frameworks.</p>
-<p>Exposure to new ideas and programming languages made me realize that most things I considered good design were unnecessary.
-They didn’t contribute to the solution but created accidental complexity and bloat.
-I didn’t need to write extensible code.
-I could start with the most straightforward version and rewrite it when the problem changed.
-As <a href="https://programmingisterrible.com/about">tef</a> puts it, <a href="https://programmingisterrible.com/post/139222674273/write-code-that-is-easy-to-delete-not-easy-to">code should be easy to delete</a>.</p>
-<p>It took me over a decade to distill a programming style that resonated with me.
-I now care little about abstract clean code conventions and use my aesthetics and feelings as guides.
-That tendency sometimes leads to communication problems: I often <em>feel</em> that one design is preferable but can’t explain why exactly.</p>
-<p>As all artists, programmers grow in spirals.
-Beginners try to achieve goals in the most straightforward way they know.
-Every line of code they write serves a purpose. Then they learn paradigms and <q>good practices</q> and imitate them.
-They accept that things must be done in a particular way because that’s the way of the craft.
-This path leads them astray, but it’s necessary for growth.
-They exit this limbo by reconnecting with reality and returning to their <a href="https://en.wikipedia.org/wiki/Shoshin">beginner’s mind</a>.
-Their code becomes simple and purposeful again.
-Conventions fade, and their work becomes more authentic.</p>
+<p>When I entered the world of Enterprise Java, I obsessed over clean code.
+I read every book on code organization, overused design patterns,
+and studied frameworks that promised <q>extensibility.</q></p>
+<p>Exposure to new ideas and languages helped me realize
+that most <q>rules</q> I learned didn’t improve my programs.
+That frameworks brought accidental complexity and bloat.
+That <q>extensible code</q> was a futile attempt to predict the future.
+I could start with <a href="https://programmingisterrible.com/post/139222674273/write-code-that-is-easy-to-delete-not-easy-to">code that was easy to delete</a> and rewrite it when the problem changed.</p>
+<p>The transformation took years
+and overlapped with a deep dive into pure functional programming,
+from which I also eventually recovered.
+Each new obsession made me wiser and helped me discover something about myself.</p>
 <figure class="medium-size grayscale-diagram"><label class="margin-toggle" for="mn-auth-spiral">⊕</label><input type="checkbox" id="mn-auth-spiral" class="margin-toggle"><span class="marginnote">
     Programmers grow in spirals.
-    Beginners think intuitively, but lack the language to express themselves.
-    As they acquire knowledge and imitatate others, they curve away from their core in the authenticity space.
-    Eventually, they learn to see things clearly and become more authentic.
+    Beginners think intuitively but lack the language to express themselves.
+    They curve away from their core when they acquire knowledge and imitate others.
+    Eventually, they learn to see things clearly and return to authenticity.
 </span><p class="svg"><img src="/images/38-auth-spiral.svg"></p>
 </figure>
-<p>The Japanese martial arts concept of <a href="https://en.wikipedia.org/wiki/Shuhari">shuhari</a> describes three stages of mastery;
-it maps well to the authenticity spiral:
-</p>
-<ol class="circled"><li data-num-glyph="①">At the <em>shu</em> stage, the practitioner learns the fundamentals, memorizes the moves, and obeys the rules.
-That’s the upward curve on the spiral.
-</li><li data-num-glyph="②">At the <em>ha</em> stage, the practitioner starts innovating by breaking the rules and connecting with reality.
-That’s the backward trend on the spiral.
-</li><li data-num-glyph="③">At the <em>ri</em> stage, the practitioner transcends the forms and performs the moves naturally.
-By this stage, the spiral approaches the authentic core.
-</li></ol>
-<p>If your views on technology don’t resonate with your core beliefs in other areas of life,
-your spiral might not have completed its cycle yet.</p>
+<p>Like artists, programmers grow in spirals.
+Beginners reach for the most straightforward tools.
+Their code is awkward, but every line serves a purpose.
+Then they learn <q>good practices</q> and abide by them.
+This path leads them astray, but it’s necessary for growth.
+With time, they regain their <a href="https://en.wikipedia.org/wiki/Shoshin">beginner’s mind</a>.
+Conventions fade.
+Their code becomes simple and purposeful again.
+This time, it’s also elegant.</p>
 </section>
 <section><h2 id="finding-your-place"><a href="#finding-your-place">Finding your place</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>You will excel only by maximizing your strengths, never by fixing your weaknesses.</p></blockquote><figcaption>Marcus Buckingham</figcaption></figure>
-<p>Let’s say I convinced you that your technological preferences result mostly from your upbringing and culture.
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>You will excel only by maximizing your strengths, never by fixing your weaknesses.</p></blockquote><figcaption>Marcus Buckingham</figcaption></figure>
+<p>Let’s say I convinced you that your technological preferences come mostly from your upbringing.
 What are the implications? I can think of at least two.</p>
-<p>Firstly, we should stop labeling and accusing people who don’t share our preferences.
-Using a memory-unsafe language isn’t a moral crime, and a preference for dynamic typing doesn’t say anything about the programmer’s intelligence.
-Type theory maximalists should give up their aura of moral and intellectual superiority and accept that they need therapy just as badly as everyone else in the industry (if not more).</p>
+<p>Firstly, we should stop shaming people who don’t share our preferences.
+Using a memory-unsafe language isn’t a moral crime.
+A preference for dynamic typing doesn’t say anything about the programmer’s intelligence.
+Type theory maximalists should drop their pretense of intellectual superiority and accept that they need therapy just as badly as everyone else (if not more).</p>
 <figure class="medium-size"><label class="margin-toggle" for="mn-galois-credit">⊕</label><input type="checkbox" id="mn-galois-credit" class="margin-toggle"><span class="marginnote">
-  The sleep of self-awareness produces elegant mathematical constructs.
-  <br>
+  The sleep of self-awareness produces elegant mathematics.
   Source: <a href="https://x.com/LongFormMath/status/1526564036405391361">Jay Cummings</a>.
 </span><center><img src="/images/38-galois.jpg">
 </center>
 </figure>
-<p>Secondly, we should pay more attention to how the technology feels and incorporate these feelings in our career choices.</p>
-<p>Environment plays a crucial role in productivity and job satisfaction.
-I experienced this firsthand as my productivity fluctuated throughout my career.
-I felt at home and very productive at Yandex.Maps, and my managers were pleased with my work.
-When I joined Google, I felt like a cog in a vast machine.
-My motivation and productivity plummeted; I found it hard to focus and advance my projects.
-Joining <span class="smallcaps">dfinity</span> and building things from the ground up was thrilling and stimulating; my four-and-a-half years there were the most productive in my life.
-I thought this experience changed me for good and gave me wings.
-I thought I could handle anything that landed on my plate.
-Yet, my productivity vanished after I left <span class="smallcaps">dfinity</span> and joined an oversized startup.
-In just a few months, I felt burnt out and useless.
-And then it dawned on me that I didn’t change much between my experiences.
-My environment influenced my motivation and productivity much more than my track record.
-I need the right project and the right team to function well<label class="margin-toggle sidenote-number" for="sn-productivity-books"></label><input type="checkbox" id="sn-productivity-books" class="margin-toggle"><span class="sidenote">
-  Most productivity books, including <a href="https://www.goodreads.com/book/show/1633.Getting_Things_Done">Getting Things Done</a> and <a href="https://www.goodreads.com/book/show/10009377-the-12-week-year">The 12 Week Year</a>,
-  promise you that their system will turn you into a productivity machine no matter what life throws at you. They lie.
-</span>.</p>
-<p>The right environment doesn’t make everything easy.
-You’ll still be frustrated a lot and will face challenges.
-But getting through these challenges will feel like growth, not a drag.
-Hence, understanding what makes you tick and finding a place where you belong (not a place where <em>you think you should belong</em>) will make you happier.</p>
+<p>Secondly, we should pay more attention to how technology makes us feel
+and feed these signals into our career choices.</p>
+<p>My team and culture—not skills—defined my productivity and job satisfaction.
+Yandex felt like sharing a dormitory with best pals.
+Google—like high-school politics.
+<span class="smallcaps">dfinity</span>—like an intellectual utopia:
+so stimulating that, for a brief moment,
+I thought I’d finally mastered productivity.
+My next job burnt me out in three months.</p>
+<p>I didn’t change much between these experiences.
+I just needed the right project and team to function well<label class="margin-toggle sidenote-number" for="sn-productivity-books"></label><input type="checkbox" id="sn-productivity-books" class="margin-toggle"><span class="sidenote">
+  Productivity systems like <a href="https://www.goodreads.com/book/show/1633.Getting_Things_Done">Getting Things Done</a> and <a href="https://www.goodreads.com/book/show/10009377-the-12-week-year">The 12 Week Year</a>
+  promise to turn anyone into an efficiency ninja.
+  They lie.
+</span>.
+A team whose values and beliefs align with mine.</p>
+<p>The right environment won’t make life easy.
+You’ll still get frustrated and face challenges.
+But getting through these challenges will feel like growth, not struggle.</p>
 </section>
-<section><h2 id="final-words"><a href="#final-words">Final words</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Haskell will still be used in 20 years,
+<section><h2 id="final-words"><a href="#final-words">Closing words</a></h2>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>Haskell will still be used in 20 years,
   because there will always be people looking for a productive way to weaponize their autism.</p></blockquote><figcaption><a href="https://x.com/effectfully/status/1901124439258894769">@effectfully</a></figcaption></figure>
-<p>Unfortunately, I couldn’t find any research that could disprove or confirm my anecdotal observations.
+<p>Unfortunately, I couldn’t find any research that addresses my anecdotal evidence.
 If you’re a researcher working in the intersection of psychology and computer science, consider investigating the effects of childhood experience and neurodiversity<label class="margin-toggle sidenote-number" for="sn-haskell-nd"></label><input type="checkbox" id="sn-haskell-nd" class="margin-toggle"><span class="sidenote">
   As a frequent <a href="https://zfoh.ch/zurihac2024/">ZuriHac</a> guest,
   I got an impression that hard-core compiled language communities have an unusually large fraction of neurodiverse people.
 </span> on technology preferences.
 I can’t wait to read your papers!</p>
 <p>If you liked this article,
-consider listening to the <a href="https://corecursive.com/leaving-stripe-with-jon-de-le-motte/">Leaving Stripe</a> episode of the <a href="https://corecursive.com/">CoRecursive</a> podcast.
-In this episode, Jon de la Motte shares his struggles with mental health and connects his career choices to his family dynamics.</p>
-<p>I’m waiting for my first therapy appointment.
-Don’t hesitate to book one, too.</p>
+consider listening to the <a href="https://corecursive.com/leaving-stripe-with-jon-de-le-motte/">Leaving Stripe</a> episode of the <a href="https://corecursive.com/">CoRecursive</a> podcast,
+in which Jon de la Motte shares his struggles with mental health and traces his career choices to his family dynamics.</p>
+<p>Finally, don’t hesitate to book a therapy appointment.
+Even the best of us need it.
+</p>
+<figure class="bq left-gutter-anchor"><blockquote><p>If you’re making games, you should be getting therapy.</p></blockquote><figcaption>
+  Mike Acton on the <a href="https://youtu.be/rW1KMO2O6ak?si=GYOgrDPfKVGAbUJ_&amp;t=2938"><cite>Wizardology podcast</cite></a>
+</figcaption></figure>
 </section>
 
 </article><section><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/28-enlightenmentware.html" title="Software that makes you a better programmer.">Enlightenmentware</a><span class="compact-date"><time datetime="2024-05-20">2024-05-20</time></span></li><li><a class="compact-title" href="/posts/39-3000-days-of-duolingo.html" title="Why eight years with the green owl is enough.">3000 days of Duolingo</a><span class="compact-date"><time datetime="2025-04-14">2025-04-14</time></span></li><li><a class="compact-title" href="/posts/40-three-degress-of-validity.html" title="What does valid configuration share with facts and theorems?">Three degrees of validity</a><span class="compact-date"><time datetime="2025-04-26">2025-04-26</time></span></li><li><a class="compact-title" href="/posts/32-programming-avant-garde.html" title="Programmers and thinkers who inspire me.">Programming avant-garde</a><span class="compact-date"><time datetime="2024-10-31">2024-10-31</time></span></li><li><a class="compact-title" href="/posts/44-tag-based-logging.html" title="How to make logs usable again.">Tag-based logging</a><span class="compact-date"><time datetime="2025-08-19">2025-08-19</time></span></li></ul></section>
