@@ -859,6 +859,7 @@ figure.bq blockquote {
 section.abstract {
     color: var(--ink-subtle);
     font-style: italic;
+    padding-top: 0;
 }
 
 div.container > p,
