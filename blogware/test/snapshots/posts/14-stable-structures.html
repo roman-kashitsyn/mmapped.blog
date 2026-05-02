@@ -5,7 +5,7 @@
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#introduction">Introduction</a></li><li class="toc toc-level-1"><a href="#design-principles">Design principles</a></li><li class="toc toc-level-1"><a href="#abstractions">Abstractions</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#memory">Memory</a></li><li class="toc toc-level-2"><a href="#storable-types">Storable types</a></li></ul></li><li class="toc toc-level-1"><a href="#data-structures">Data structures</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#stable-cell">Stable cell</a></li><li class="toc toc-level-2"><a href="#stable-vec">Stable vector</a></li><li class="toc toc-level-2"><a href="#stable-log">Stable log</a></li><li class="toc toc-level-2"><a href="#stable-btree">Stable B-tree</a></li></ul></li><li class="toc toc-level-1"><a href="#constructing-ss">Constructing stable structures</a></li><li class="toc toc-level-1"><a href="#tying-together">Tying it all together</a></li><li class="toc toc-level-1"><a href="#next">Where to go next</a></li></ul><hr>
 
-<section><figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Only purpose of any code is to transform data.</p></blockquote><figcaption>Mike Acton, <a href="https://youtu.be/rX0ItVEVjHc?t=1360"><cite>Data-Oriented Design and C++</cite></a>, CppCon 2014</figcaption></figure>
+<section><figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>Only purpose of any code is to transform data.</p></blockquote><figcaption>Mike Acton, <a href="https://youtu.be/rX0ItVEVjHc?t=1360"><cite>Data-Oriented Design and C++</cite></a>, CppCon 2014</figcaption></figure>
 </section>
 <section><h2 id="introduction"><a href="#introduction">Introduction</a></h2>
 <p>Canisters hosted on the Internet Computer (IC) are mutable: canister controllers can upgrade the code to add new features or fix bugs without changing the canister’s identity.</p>
@@ -20,7 +20,7 @@ This article explains the philosophy behind the library<label class="margin-togg
 </span> and how to use it effectively.</p>
 </section>
 <section><h2 id="design-principles"><a href="#design-principles">Design principles</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>The point is that you must decide, in advance, what the coding priorities and quality bars will be; otherwise, the team will have to waste time rewriting misconceived or substandard code.</p></blockquote><figcaption>Steve Maguire, <cite>Debugging the Development Process, p. 19</cite></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>The point is that you must decide, in advance, what the coding priorities and quality bars will be; otherwise, the team will have to waste time rewriting misconceived or substandard code.</p></blockquote><figcaption>Steve Maguire, <cite>Debugging the Development Process, p. 19</cite></figcaption></figure>
 <p>Software designs reflect their creators’ values.
 The following principles shaped the <code>stable-structures</code> library design.
 </p>
@@ -52,7 +52,7 @@ Or you might have to decide how many memory pages you want to allocate for canis
 There are other libraries with similar goals whose authors chose a slightly different set of trade-offs, such as <a href="https://crates.io/crates/ic-stable-memory"><code>ic-stable-memory</code></a>.</p>
 </section>
 <section><h2 id="abstractions"><a href="#abstractions">Abstractions</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>In solving a problem with or without a computer it is necessary to choose an abstraction of reality, i.e., to define a set of data that is to represent the real situation.
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>In solving a problem with or without a computer it is necessary to choose an abstraction of reality, i.e., to define a set of data that is to represent the real situation.
   The choice must be guided by the problem to be solved.</p></blockquote><figcaption>Niklaus Wirth, <cite>Algorithms + Data Structures = Programs, p. 1</cite></figcaption></figure>
 <h3 id="memory"><a href="#memory">Memory</a></h3>
 <p>The core abstraction of the library is the <a href="https://docs.rs/ic-stable-structures/latest/ic_stable_structures/trait.Memory.html"><code>Memory</code></a> trait that models a WebAssembly <a href="https://webassembly.github.io/multi-memory/core/exec/runtime.html#memory-instances">memory instance</a><label class="margin-toggle sidenote-number" for="sn-multiple-memories"></label><input type="checkbox" id="sn-multiple-memories" class="margin-toggle"><span class="sidenote">
@@ -148,7 +148,7 @@ It also provides efficient variable-size bounded byte arrays, the <code>Blob&lt;
 For example, you can persist an IC <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec#principal">principal</a> as a <code>Blob&lt;29&gt;</code>.</p>
 </section>
 <section><h2 id="data-structures"><a href="#data-structures">Data structures</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>One has an intuitive feeling that data precede algorithms: you must have some objects before you can perform operations on them.</p></blockquote><figcaption>Niklaus Wirth, <cite>Algorithms + Data Structures = Programs, p. xiii</cite></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>One has an intuitive feeling that data precede algorithms: you must have some objects before you can perform operations on them.</p></blockquote><figcaption>Niklaus Wirth, <cite>Algorithms + Data Structures = Programs, p. xiii</cite></figcaption></figure>
 <p>The heart of the <code>stable-structures</code> library is a collection of data structures, each spanning one or more <a href="#memory">memories</a>.</p>
 <p>Stable structures do not compose<label class="margin-toggle sidenote-number" for="sn-nesting-restriction"></label><input type="checkbox" id="sn-nesting-restriction" class="margin-toggle"><span class="sidenote">
   The reason for this restriction is simplicity: most data structures are significantly easier to implement correctly and efficiently, assuming they can span an entire <a href="#memory">memory</a>.
@@ -239,7 +239,7 @@ This reduction is primarily helpful for vectors of primitives (e.g., <code>Stabl
 </figure>
 <p>The <a href="/posts/11-ii-stable-memory.html#ii-memory-layout">stable structure</a> powering the Internet Identity service is a stable vector in disguise, though a less generic one.</p>
 <h3 id="stable-log"><a href="#stable-log">Stable log</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Sometimes called write-ahead logs or commit logs or transaction logs, logs have been around almost as long as computers and are at the heart of many distributed data systems and real-time application architectures.</p></blockquote><figcaption>Jay Kreps, <a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"><cite>The Log</cite></a></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>Sometimes called write-ahead logs or commit logs or transaction logs, logs have been around almost as long as computers and are at the heart of many distributed data systems and real-time application architectures.</p></blockquote><figcaption>Jay Kreps, <a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"><cite>The Log</cite></a></figcaption></figure>
 <p>A <a href="https://docs.rs/ic-stable-structures/latest/ic_stable_structures/log/struct.Log.html">Log</a> is an append-only list of arbitrary-sized values, similar to <a href="https://redis.io/docs/data-types/streams/">streams</a> in Redis.
 The log requires two memories: the <em>index</em> storing entry offsets and the <em>data</em> storing raw entry bytes.
 The number of instructions needed to access old and append new entries does not depend on the number of items in the log, only on the entry size.</p>
@@ -282,7 +282,7 @@ The number of instructions needed to access old and append new entries does not 
     Replaying events from the log is the minter’s primary upgrade mechanism.
 </li></ul>
 <h3 id="stable-btree"><a href="#stable-btree">Stable B-tree</a></h3>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p><em>Deletion</em> of items from a B-tree is fairly straightforward in principle, but it is complicated in the details.</p></blockquote><figcaption>Niklaus Wirth, <cite>Algorithms + Data Structures = Programs, p. 250</cite></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p><em>Deletion</em> of items from a B-tree is fairly straightforward in principle, but it is complicated in the details.</p></blockquote><figcaption>Niklaus Wirth, <cite>Algorithms + Data Structures = Programs, p. 250</cite></figcaption></figure>
 <p>The <a href="https://docs.rs/ic-stable-structures/0.4.0/ic_stable_structures/btreemap/struct.BTreeMap.html"><code>BTreeMap</code></a> stable structure is an associative container that can hold any <a href="#storable-types">bounded storable type</a>.
   The map must know the sizes of the keys and values because it allocates nodes from a pool of fixed-size tree nodes<label class="margin-toggle sidenote-number" for="sn-"></label><input type="checkbox" id="sn-" class="margin-toggle"><span class="sidenote">
 The <a href="https://github.com/dfinity/stable-structures/blob/ed2fb6de50e56d2f93e67c2bfaa170fa4b1be60a/src/btreemap/allocator.rs#L13">tree allocator</a> is a <a href="https://en.wikipedia.org/wiki/Free_list">free-list</a> allocator, the <a href="#radical-simplicity">simplest allocator</a> capable of freeing memory.
@@ -358,7 +358,7 @@ The <a href="https://github.com/dfinity/stable-structures/blob/ed2fb6de50e56d2f9
 For example, the bitcoin canister uses this data structure to store bitcoin <a href="https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/block_header_store.rs#L13">block headers</a> and <a href="https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/utxo_set/utxos.rs">UTXOs</a>.</p>
 </section>
 <section><h2 id="constructing-ss"><a href="#constructing-ss">Constructing stable structures</a></h2>
-<figure class="epigraph left-gutter-anchor" rel="doc-epigraph"><blockquote><p>Make sure that objects are initialized before they’re used.</p></blockquote><figcaption>Scott Meyers, <cite>Effective C++, third edition, Item 4, p. 26</cite></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>Make sure that objects are initialized before they’re used.</p></blockquote><figcaption>Scott Meyers, <cite>Effective C++, third edition, Item 4, p. 26</cite></figcaption></figure>
 <p>We have to declare stable structures before we can use them.
 Each data structure <code>T</code> in the library declares at least three constructors:
 </p>

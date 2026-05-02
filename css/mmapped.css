@@ -856,6 +856,12 @@ figure.bq blockquote {
     position: relative;
 }
 
+section.abstract {
+    color: var(--ink-subtle);
+    font-style: italic;
+    padding-top: 0;
+}
+
 div.container > p,
 section > p,
 section > div.source-container,

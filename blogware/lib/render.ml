@@ -307,13 +307,16 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
   | Epigraph (body, attribution) ->
       figure_
         [
-          class_ (txt "epigraph left-gutter-anchor"); rel_ (txt "doc-epigraph");
+          class_ (txt "epigraph left-gutter-anchor"); role_ (txt "doc-epigraph");
         ]
         (blockquote_ [] (render_quote_blocks ctx body)
         ++ figcaption_ [] (render_inlines ctx attribution))
       ++ nl
   | Abstract body ->
-      div_ [ class_ (txt "abstract") ] (render_blocks ctx body) ++ nl
+      section_
+        [ class_ (txt "abstract"); role_ (txt "doc-abstract") ]
+        (render_blocks ctx body)
+      ++ nl
   | Advice (anchor, ils) ->
       div_
         [ class_ (txt "advice"); id_ anchor ]
