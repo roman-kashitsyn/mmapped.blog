@@ -63,7 +63,7 @@ it defines a <a href="https://en.wikipedia.org/wiki/Pure_function">pure function
 <span class="line">}</span>
 </code></pre></div>
 </figure>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Lines 1–4 specify <a href="https://onnx.ai/onnx/repo-docs/IR.html#models">model attributes</a>:
     the <span class="smallcaps">onnx</span> format version and the versions of <a href="https://onnx.ai/onnx/repo-docs/IR.html#operator-sets">operator sets</a> (<em>opsets</em>) this model uses.
     Refer to the <a href="#custom-operators">Custom operators</a> section for an explanation of the opset concept.
@@ -213,7 +213,7 @@ It’s insightful to inspect this low-level representation of our example model.
 </figure>
 <p>In this low-level representation, the graph has the following components:
 </p>
-<ul class="arrows"><li>A list of <em>inputs</em> that the caller must provide to compute the outputs.
+<ul class="bullets"><li>A list of <em>inputs</em> that the caller must provide to compute the outputs.
 </li><li>A list of <em>outputs</em> that the graph computes.
 </li><li>A list of <em>initializers</em> specifying the model weights.
 </li><li>A list of <em>nodes</em> sorted <a href="https://en.wikipedia.org/wiki/Topological_sorting">topologically</a>: a node can refer only to the graph inputs, initializers, and values that preceding nodes produce.
@@ -329,7 +329,7 @@ and have an attribute section defining their domain and dependencies.</p>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
 Line 3 imports two operator sets: the standard set and the custom set we define later in the program.
 </li><li>
 Lines 11–17 define a custom operator that doubles its input.
@@ -364,7 +364,7 @@ Custom operators can also define attributes.</p>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
   Line 7 invokes our custom operator and explicitly specifies the <code>nth</code> attribute value.
 </li><li>
   Line 14 defines the <code>Root</code> operator with an attribute section.
@@ -427,7 +427,7 @@ Nested graphs can reference values from the outer scope.</p>
 <span class="line">    }&gt;</span>
 <span class="line">}</span>
 </code></pre></div>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
   The textual representation doesn’t support raw literals as operator arguments,
   so explicitly declare all the constants we’ll use in lines 7–12.
   Constant nodes have no inputs and one output, the value they wrap.
@@ -504,7 +504,7 @@ Nested graphs can reference values from the outer scope.</p>
 </figure>
 </section>
 <section><h2 id="resources"><a href="#resources">Resources</a></h2>
-<ul class="arrows"><li><a href="https://onnx.ai/onnx/intro/index.html">The official <span class="smallcaps">onnx</span> introduction.</a></li><li><a href="https://onnx.ai/onnx/repo-docs/IR.html">The <span class="smallcaps">onnx ir</span> specification.</a></li><li><a href="https://onnx.ai/onnx/repo-docs/Syntax.html"><span class="smallcaps">onnx</span> textual syntax.</a></li><li><a href="https://github.com/onnx/onnx/blob/9fb11e344a7721b2eed1f3e26bf9312f168a79a0/onnx/test/cpp/parser_test.cc">Tests for the textual syntax parser.</a></li><li><a href="https://netron.app/">The Netron <span class="smallcaps">onnx</span> graph visualizer.</a></li></ul>
+<ul class="bullets"><li><a href="https://onnx.ai/onnx/intro/index.html">The official <span class="smallcaps">onnx</span> introduction.</a></li><li><a href="https://onnx.ai/onnx/repo-docs/IR.html">The <span class="smallcaps">onnx ir</span> specification.</a></li><li><a href="https://onnx.ai/onnx/repo-docs/Syntax.html"><span class="smallcaps">onnx</span> textual syntax.</a></li><li><a href="https://github.com/onnx/onnx/blob/9fb11e344a7721b2eed1f3e26bf9312f168a79a0/onnx/test/cpp/parser_test.cc">Tests for the textual syntax parser.</a></li><li><a href="https://netron.app/">The Netron <span class="smallcaps">onnx</span> graph visualizer.</a></li></ul>
 </section>
 
 </article><section><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/33-transposing-tensor-files.html" title="Where does file metadata belong?">Transposing tensor files</a><span class="compact-date"><time datetime="2024-11-22">2024-11-22</time></span></li><li><a class="compact-title" href="/posts/42-parasites-found.html" title="Fighting mediocrity with generative AI.">Parasites found</a><span class="compact-date"><time datetime="2025-07-01">2025-07-01</time></span></li><li><a class="compact-title" href="/posts/49-kirk-scotty-spock.html" title="Vibe-specing from the chair.">Kirk, Scotty, and Spock</a><span class="compact-date"><time datetime="2026-03-22">2026-03-22</time></span></li><li><a class="compact-title" href="/posts/40-three-degress-of-validity.html" title="What does valid configuration share with facts and theorems?">Three degrees of validity</a><span class="compact-date"><time datetime="2025-04-26">2025-04-26</time></span></li><li><a class="compact-title" href="/posts/32-programming-avant-garde.html" title="Programmers and thinkers who inspire me.">Programming avant-garde</a><span class="compact-date"><time datetime="2024-10-31">2024-10-31</time></span></li></ul></section>

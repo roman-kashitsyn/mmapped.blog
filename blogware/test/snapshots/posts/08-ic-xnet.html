@@ -43,7 +43,7 @@ Each message in the stream gets a unique monotonically increasing index.</p>
 </figure>
 <p>The component merging the queues (aptly called <em>stream builder</em>) should satisfy a few constraints:
 </p>
-<ul class="arrows"><li><em>Determinism</em>.
+<ul class="bullets"><li><em>Determinism</em>.
   All nodes in the subnet must agree on the exact contents of the stream.
   To do its job, the stream builder needs the mapping from canister identifiers to subnet identifiers, the <em>routing table</em>.
   The routing table comes from the registry and changes over time.
@@ -81,7 +81,7 @@ We call this mechanism <em>signals</em>.</p>
 <p>Signals are a part of the XNet payload specifying the prefix of the <em>reverse</em> stream that the sending subnet can drop.
 When a node from subnet <span class="math">X</span> fetches XNet payload from a node from subnet <span class="math">Y</span>, in addition to actual messages, the <span class="math">Y</span> node includes the <em>stream header</em>.
 The stream header describes the state of the <span class="math">X ↔ Y</span> communication:</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     The full range of message indices in the forward stream <span class="math">X → Y</span>.
   </li><li>
     The signals for the <em>reverse</em> stream (<span class="math">Y → X</span>): for each message index in the reverse stream, <span class="math">Y</span> tells whether <span class="math">X</span> can garbage collect the message (an <span class="smallcaps">ack</span> signal) or should reroute the message (a <span class="smallcaps">reject</span> signal).
@@ -127,7 +127,7 @@ This optimization allows us to use the subnet’s narrow XNet channel more effic
 <section><h2 id="limitations"><a href="#limitations">Limitations</a></h2>
 <p>The XNet protocol is a marvelous feat of engineering, but it has a few inherent limitations:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     All XNet messages have to go through consensus blocks.
     This constraint bounds the theoretical throughput of the protocol by the block rate and size.
     For example, if a subnet produces one block every second and the block size is 2MiB, the XNet throughput on this subnet can be at most 2MiB/sec.
@@ -141,7 +141,7 @@ This optimization allows us to use the subnet’s narrow XNet channel more effic
 <section><h2 id="references"><a href="#references">Code references</a></h2>
 <p>A few pointers to the code implementing designs from this article:
 </p>
-<ul class="arrows"><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/registry/routing_table/src/lib.rs#L213">routing table</a>.
+<ul class="bullets"><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/registry/routing_table/src/lib.rs#L213">routing table</a>.
   </li><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/messaging/src/routing/stream_builder.rs#L237">stream builder</a>.
   </li><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/payload_builder/src/lib.rs#L665">payload builder</a> and the <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/payload_builder/src/certified_slice_pool.rs#L1042">XNet message buffer</a>.
   </li><li>The <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/endpoint/src/lib.rs#L93">XNet endpoint</a> and the <a href="https://github.com/dfinity/ic/blob/226faa85b945aabf0fc22a18b4c2e1b9f0f4c8ee/rs/xnet/payload_builder/src/proximity.rs#L118">node proximity metric</a> computation.
@@ -153,7 +153,7 @@ This optimization allows us to use the subnet’s narrow XNet channel more effic
 <section><h2 id="credits"><a href="#credits">Credits</a></h2>
 <p>Finally, I shall give due credit to people who played an essential role in the protocol development.
 </p>
-<ul class="arrows"><li><a href="https://www.linkedin.com/in/allen-clement-b73a4652/">Allen Clement</a> is the mastermind behind most of the features of the XNet protocol.
+<ul class="bullets"><li><a href="https://www.linkedin.com/in/allen-clement-b73a4652/">Allen Clement</a> is the mastermind behind most of the features of the XNet protocol.
 </li><li><a href="https://www.linkedin.com/in/david-derler-08630495/">David Derler</a> refined many of Allen’s ideas and wrote a formal mathematical specification for the protocol.
 </li><li><a href="https://www.linkedin.com/in/alin-sinpalean-8451b8139/">Alin Sinpalean</a> implemented the protocol in the <a href="https://github.com/dfinity/ic/tree/3fe4137c86ab0521c39089954c03d7fb29e2c3d2/rs/xnet">IC replica</a> and developed many optimizations.
 </li></ul>

@@ -16,7 +16,7 @@ This article describes how the ckBTC minter, which I will further refer to as <q
 <section><h2 id="motivation"><a href="#motivation">Motivation</a></h2>
 <p>
 The minter is a complicated system that must maintain a lot of state variables:</p>
-<ul class="arrows"><li><a href="https://en.wikipedia.org/wiki/Unspent_transaction_output">Unspent Transaction Outputs</a> (<span class="smallcaps">utxo</span>s) the minter owns on the Bitcoin network, indexed and sliced in various ways (by account, state, etc.).
+<ul class="bullets"><li><a href="https://en.wikipedia.org/wiki/Unspent_transaction_output">Unspent Transaction Outputs</a> (<span class="smallcaps">utxo</span>s) the minter owns on the Bitcoin network, indexed and sliced in various ways (by account, state, etc.).
     </li><li>
     ckBTC to Bitcoin conversion requests, indexed by state and the arrival time.
     </li><li>
@@ -63,7 +63,7 @@ The event carries enough context to allow us to reproduce the state modification
 </figure>
 <p>On upgrade, the minter starts from an empty state and replays events from the log.
 This approach might sound inefficient, but it works great in our case:</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     The number of events is relatively low because most involve a transfer on the Bitcoin network.
     </li><li>
     The cost of replaying an event is low.
@@ -72,7 +72,7 @@ This approach might sound inefficient, but it works great in our case:</p>
     We can pause and resume the replay process to spread the work across multiple executions if the number of events goes out of hand.
 </li></ul>
 <p>Furthermore, the event-sourcing approach offers additional benefits beyond the original motivation:</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     The event log provides an audit trace for all state modifications, making the system more transparent and easier to debug.
     </li><li>
     The event log is easy to replicate to other canisters and off-chain.
@@ -112,7 +112,7 @@ Thus a malicious user cannot fill the minter’s memory with unproductive events
 Creating an event requires sending funds on the Bitcoin network, and that’s a slow and expensive operation.</p>
 <h3 id="testing"><a href="#testing">Testing</a></h3>
 <p>Event sourcing introduces new sources of bugs:</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
    The programmer can implement the state transition logic but forget to emit the corresponding event.
    </li><li>
    The event replay logic can produce different results than the original state update.
@@ -138,7 +138,7 @@ If the log becomes inconsistent with the internal state, the test causing the di
 <p>The minter’s self-checking feature helped us catch a few severe bugs early in development.</p>
 </section>
 <section><h2 id="resources"><a href="#resources">Resources</a></h2>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Minter’s <a href="https://sourcegraph.com/github.com/dfinity/ic@1cbf1f39d31bc426c1e15b073c4ac86d75056bb2/-/blob/rs/bitcoin/ckbtc/minter/src/state/eventlog.rs"><code>eventlog.rs</code></a> module contains even type definitions and the log replay procedure.
     </li><li><a href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/"><q>Designing Data-Intensive Applications</q></a> by Martin Kleppmann has an in-depth explanation of the event sourcing pattern (Chapter 11: Stream Processing, p. 457).
     </li><li>

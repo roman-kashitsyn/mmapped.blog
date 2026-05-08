@@ -24,7 +24,7 @@ This article explains the philosophy behind the library<label class="margin-togg
 <p>Software designs reflect their creators’ values.
 The following principles shaped the <code>stable-structures</code> library design.
 </p>
-<ul class="arrows"><li><span id="radical-simplicity"></span>
+<ul class="bullets"><li><span id="radical-simplicity"></span>
     <em>Radical simplicity.</em>
     Programming stable memory is significantly easier than working with conventional file systems.
     The IC solves many issues with which any good storage must deal: data integrity, partial writes, power outages, and atomicity of multiple writes.
@@ -80,7 +80,7 @@ There are other libraries with similar goals whose authors chose a slightly diff
 </figure>
 <p>Some instances of the <code>Memory</code> trait are:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     The <a href="https://github.com/dfinity/stable-structures/blob/3d22d483b9c55b79f7b869e3cf930883687d9fda/src/ic0_memory.rs"><code>Ic0StableMemory</code></a> type delegates calls to the <a href="https://internetcomputer.org/docs/current/references/ic-interface-spec#system-api-stable-memory">IC System API</a>.
   </li><li><a href="https://github.com/dfinity/stable-structures/blob/3d22d483b9c55b79f7b869e3cf930883687d9fda/src/vec_mem.rs#L11"><code>RefCell&lt;Vec&lt;u8&gt;&gt;</code></a> implements the <code>Memory</code> interface for a byte array.
     This type is helpful for unit tests.
@@ -196,7 +196,7 @@ Cell’s contents in stable memory updates every time you change the underlying 
 </figure>
 <p>The primary use case for cells is storing canister configuration:
 </p>
-<ul class="arrows"><li>The ICRC-1 Ledger Archive canister persists its initialization arguments in a <a href="https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L49">cell</a>.
+<ul class="bullets"><li>The ICRC-1 Ledger Archive canister persists its initialization arguments in a <a href="https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L49">cell</a>.
   </li><li>The Internet Identity Archive canister holds its init arguments in a <a href="https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L85">cell</a>.
 </li></ul>
 <h3 id="stable-vec"><a href="#stable-vec">Stable vector</a></h3>
@@ -273,7 +273,7 @@ The number of instructions needed to access old and append new entries does not 
 </figure>
 <p>The log is a versatile data structure that can be helpful in almost any application:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     The ICRC-1 Ledger Archive canister stores archived transactions in a <a href="https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L58">stable log</a>.
   </li><li>
     The Internet Identity Archive canister holds events in a <a href="https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L90">stable log</a>.
@@ -362,7 +362,7 @@ For example, the bitcoin canister uses this data structure to store bitcoin <a h
 <p>We have to declare stable structures before we can use them.
 Each data structure <code>T</code> in the library declares at least three constructors:
 </p>
-<ul class="arrows"><li><code>T::new</code> allocates a new copy of <code>T</code> in the given <a href="#memory">memory</a>, potentially overwriting previous memory content.
+<ul class="bullets"><li><code>T::new</code> allocates a new copy of <code>T</code> in the given <a href="#memory">memory</a>, potentially overwriting previous memory content.
   </li><li><code>T::load</code> recovers a previously constructed <code>T</code> from the given <a href="#memory">memory</a>.
   </li><li><code>T::init</code> is a <a href="https://en.wikipedia.org/wiki/DWIM"><span class="smallcaps">dwim</span></a> constructor acting as <code>T::new</code> if the given <a href="#memory">memory</a> is empty and as <code>T::load</code> otherwise.
 </li></ul>
@@ -511,7 +511,7 @@ Note the use of <a href="#restricted-memory"><code>RestrictedMemory</code></a> t
 I left implementing the rest of the specification as an exercise for an attentive reader.</p>
 </section>
 <section><h2 id="next"><a href="#next">Where to go next</a></h2>
-<ul class="arrows"><li>Take a look at the library <a href="https://github.com/dfinity/stable-structures/tree/main/examples/src">usage examples</a>.
+<ul class="bullets"><li>Take a look at the library <a href="https://github.com/dfinity/stable-structures/tree/main/examples/src">usage examples</a>.
   </li><li>Check out real-world usage examples in production-quality canisters<label class="margin-toggle sidenote-number" for="sn-outdated"></label><input type="checkbox" id="sn-outdated" class="margin-toggle"><span class="sidenote">
     Note that these examples can use a slightly outdated library version.
   </span>, such as <a href="https://github.com/dfinity/internet-identity/blob/97e8d968aba653c8857537ecd541b35de5085608/src/archive/src/main.rs">II archive</a> and <a href="https://github.com/dfinity/ic/blob/df57b720fd0ceed70f021f4812c797fb40d97503/rs/bitcoin/ckbtc/minter/src/storage.rs">ckBTC minter</a>, and <a href="https://github.com/dfinity/bitcoin-canister/blob/9242d5f9a784ac115c2042fd09705dd9321ff7b7/canister/src/block_header_store.rs#L13">Bitcoin</a>.

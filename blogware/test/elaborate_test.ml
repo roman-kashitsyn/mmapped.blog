@@ -88,9 +88,9 @@ let tests : Test_framework.t list =
         "\\begin{document}pre\\section{id}{T}body\\end{document}" (fun blocks ->
           match blocks with
           | [
-              Section (None, [ Para [ pre ] ]);
-              Section (Some (id, [ t ]), [ Para [ body ] ]);
-            ]
+           Section (None, [ Para [ pre ] ]);
+           Section (Some (id, [ t ]), [ Para [ body ] ]);
+          ]
             when str_eq pre "pre" && Text.equal_string id "id" && str_eq t "T"
                  && str_eq body "body" ->
               Pass
@@ -98,8 +98,8 @@ let tests : Test_framework.t list =
       elab_ok "strong inline" "\\begin{document}\\b{bold}\\end{document}"
         (fun blocks ->
           match blocks with
-          | [ Section (None, [ Para [ Strong [ il ] ] ]) ]
-            when str_eq il "bold" ->
+          | [ Section (None, [ Para [ Strong [ il ] ] ]) ] when str_eq il "bold"
+            ->
               Pass
           | _ -> Fail "expected strong inline in anonymous section");
       elab_ok "hrule block" "\\begin{document}\\hrule\\end{document}"
@@ -111,7 +111,7 @@ let tests : Test_framework.t list =
         "\\begin{document}\\begin{itemize}\\item a\\item \
          b\\end{itemize}\\end{document}" (fun blocks ->
           match blocks with
-          | [ Section (None, [ Bullet_list (Arrows, items) ]) ]
+          | [ Section (None, [ Bullet_list (Bullets, items) ]) ]
             when List.length items = 2 ->
               Pass
           | _ -> Fail "expected bullet list in anonymous section");

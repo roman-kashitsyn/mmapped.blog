@@ -23,7 +23,7 @@ Cargo chose simplicity and ease of use over generality and scalability; it does 
 <p>These trade-offs make cargo easy to pick up but impose severe limitations in a complex project.
 There are workarounds, such as <a href="https://github.com/matklad/cargo-xtask">xtask</a>, but they will only get you so far.
 Let’s consider an example of what many of our tests must do:</p>
-<ul class="arrows"><li>Build a sandbox binary for executing WebAssembly.
+<ul class="bullets"><li>Build a sandbox binary for executing WebAssembly.
   </li><li>Build a WebAssembly program.
   </li><li>Post-process the WebAssembly program (strip some custom sections and compress the result, for example).
   </li><li>Build and execute a test binary that launches the sandbox binary, sends the WebAssembly program to the sandbox and interacts with the program.
@@ -87,7 +87,7 @@ The build files are verbose bordering plain boring, but it’s a good thing.
 They tell the reader precisely what the module’s artifacts and dependencies are.</p>
 <p>Bazel offers many features, but we mostly cared about the following:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Bazel is extensible enough to cover all our use cases.
     Bazel gracefully handled everything we threw at it: Linux and macOS binaries, WebAssembly programs, OS images, <a href="https://github.com/bazelbuild/rules_docker">Docker containers</a>, <a href="https://github.com/dfinity/rules_motoko">Motoko programs</a>, <a href="https://lamport.azurewebsites.net/tla/tla.html">TLA+ specifications</a>, etc.
     The best part is: We can also combine and mix these artifacts in any way we like.
@@ -143,7 +143,7 @@ They <a href="https://en.wikipedia.org/wiki/Active_learning">actively</a> learne
 We started from the core packages at the bottom of the stack that needed special treatment, and then project volunteers bazelified a few packages at a time when they had a free time slot.
 Two little tricks helped us with this tedious task:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Automation.
     The infra team invested a few days in a script that converted a <code>Cargo.toml</code> file to a 90% complete <code>BUILD</code> file matching our guidelines.
     Many packages required manual treatment, and the generated <code>BUILD</code> file was far from optimal, but the script boosted the conversion process significantly.
@@ -159,7 +159,7 @@ Cargo discovers tests automagically, while Bazel <code>BUILD</code> files requir
 The infra team wrote another little utility that analyzed the outputs of cargo and Bazel build pipelines and compared the list of executed tests, ensuring that the volunteers accounted for every test during the migration and that developers didn’t forget to update <code>BUILD</code> files when they added new tests.</p>
 <h3 id="rough-edges"><a href="#rough-edges">Rough edges</a></h3>
 <p>Bazel solves most of our needs regarding building artifacts, but we have yet to replicate a few cargo features related to developer flow.</p>
-<ul class="arrows"><li><a href="https://doc.rust-lang.org/cargo/commands/cargo-check.html">Cargo check</a>.
+<ul class="bullets"><li><a href="https://doc.rust-lang.org/cargo/commands/cargo-check.html">Cargo check</a>.
     Cargo does not produce binaries when run in check mode, making it much faster than cargo build.
     Developers often use this mode to check whether the entire code base compiles after a refactoring.
   </li><li>

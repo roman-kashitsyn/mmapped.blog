@@ -255,7 +255,9 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
       ++ nl
   | Bullet_list (style, items) ->
       let cls =
-        match style with Arrows -> txt "arrows" | Checklist -> txt "checklist"
+        match style with
+        | Bullets -> txt "bullets"
+        | Checklist -> txt "checklist"
       in
       ul_
         [ class_ cls ]

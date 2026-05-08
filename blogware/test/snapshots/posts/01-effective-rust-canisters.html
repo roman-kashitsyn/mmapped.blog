@@ -79,7 +79,7 @@ Let us discuss <em>where</em> to put them.</p>
 <div class="advice" id="clear-state"><p><a class="anchor left-gutter-anchor advice-anchor" href="#clear-state" aria-label="Link to this advice"></a>Put all your globals in one basket.</p></div>
 <p>Consider making all the global variables private and placing them in a single file, the canister main file.
 This approach has a few benefits:</p>
-<ul class="arrows"><li>Testing becomes easier because most of your code does not touch the globals.
+<ul class="bullets"><li>Testing becomes easier because most of your code does not touch the globals.
  </li><li>
    You can see global state usage patterns at a glance.
    For example, you can quickly validate that the canister persists all the stable data across upgrades.
@@ -282,7 +282,7 @@ One approach is to make the variant field optional:</p>
 <p>If some clients of your canister use an outdated version of your interface, the Candid decoder could replace unknown constructors with a <code>null</code>.
 This approach has two main issues:
 </p>
-<ul class="arrows"><li>The Candid decoder does not yet implement this magic (see <a href="https://github.com/dfinity/candid/issues/295">dfinity/candid#295</a>).
+<ul class="bullets"><li>The Candid decoder does not yet implement this magic (see <a href="https://github.com/dfinity/candid/issues/295">dfinity/candid#295</a>).
   </li><li>Diagnosing a problem if all you see is <code>null</code> is daunting.
 </li></ul>
 <p>An alternative is to make your error type immutable and rely on a loosely typed catch-all case (and documentation) for extensibility.</p>
@@ -313,7 +313,7 @@ One IC instruction is the <a href="https://en.wikipedia.org/wiki/Quantum">quantu
 The system assigns an instruction cost equivalent to each <a href="https://sourcegraph.com/github.com/dfinity/ic@cfdbbf5fb5fdbc8f483dfd3a5f7f627b752d3156/-/blob/rs/embedders/src/wasm_utils/instrumentation.rs?L155-177">WebAssembly instruction</a> and <a href="https://sourcegraph.com/github.com/dfinity/ic@cfdbbf5/-/blob/rs/embedders/src/wasmtime_embedder/system_api_complexity.rs?L40-107">system call</a>.
 It also defines all its limits in terms of instructions.
 As of July 2022, these limits are:</p>
-<ul class="arrows"><li>One message execution: <a href="https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L19">5 billion</a> instructions.
+<ul class="bullets"><li>One message execution: <a href="https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L19">5 billion</a> instructions.
 </li><li>One round<label class="margin-toggle sidenote-number" for="sn-round"></label><input type="checkbox" id="sn-round" class="margin-toggle"><span class="sidenote">Each block produced by consensus initiates a round of execution.</span>: <a href="https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L46">7 billion</a> instructions.
 </li><li>Canister upgrade: <a href="https://github.com/dfinity/ic/blob/7d3fb4ef01416241205818450156aabd21c24b34/rs/config/src/subnet_config.rs#L56">200 billion</a> instructions.
 </li></ul>
@@ -630,7 +630,7 @@ You can use stable memory as your <q>disk store</q>, updating it incrementally w
 This way, you might not need the <code>pre_upgrade</code> hook, and your <code>post_upgrade</code> hook will burn few cycles.</p>
 <p>There are a few downsides to this approach, however:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
   Organizing the flat address space of stable storage into a data structure is challenging, especially if your state consists of several interlinked data structures.
   The <a href="https://github.com/dfinity/stable-structures">ic-stable-structures</a> and <a href="https://github.com/seniorjoinu/ic-stable-memory">ic-stable-memory</a> packages attempt to alleviate the pain.
 </li><li>
@@ -691,7 +691,7 @@ Canisters are not unique in this regard.</p>
 </li></ol>
 <p>Some things you might want to keep an eye on:
 </p>
-<ul class="arrows"><li>The size of stable memory.
+<ul class="bullets"><li>The size of stable memory.
 </li><li>The size of the objects allocated on the heap (this size is relatively easy to get if you define a <a href="https://doc.rust-lang.org/1.50.0/std/alloc/struct.System.html">custom allocator</a>).
 </li><li>The lengths of internal data structures (queques, maps, etc.).
 </li><li>The canister’s cycle balance.
@@ -701,7 +701,7 @@ Canisters are not unique in this regard.</p>
 <section><h2 id="references"><a href="#references">References</a></h2>
 <p>The following are some of the heavily used Rust canisters for inspiration:
 </p>
-<ul class="arrows"><li><a href="https://github.com/dfinity/internet-identity/tree/main/src/internet_identity">Internet Identity Backend</a> is an excellent example of a canister that uses <a href="/posts/11-ii-stable-memory.html">stable memory as the primary storage</a>, obtains secure randomness from the system, and exposes Prometheus metrics.
+<ul class="bullets"><li><a href="https://github.com/dfinity/internet-identity/tree/main/src/internet_identity">Internet Identity Backend</a> is an excellent example of a canister that uses <a href="/posts/11-ii-stable-memory.html">stable memory as the primary storage</a>, obtains secure randomness from the system, and exposes Prometheus metrics.
 </li><li><a href="https://github.com/dfinity/sdk/tree/57006b55df0594a0f6925212048c09e6a7bc3397/src/canisters/frontend/ic-certified-assets">Certified Assets Canister</a> is an example of a canister that produces certified HTTP responses.
 </li></ul>
 </section>

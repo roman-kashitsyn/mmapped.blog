@@ -44,14 +44,14 @@ This design was unsatisfactory for two reasons:
 </figure>
 <p>This design decision offers several benefits:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Account identifiers occupy about 50% less memory than <code>(principal, subaccount)</code> tuples, enabling the ICP ledger to fit a larger account book in memory.
   </li><li>
     A uniform 32-byte account structure makes it easy to find a unique and compact textual representation for accounts.
 </li></ul>
 <p>The concept of account identifiers also adds a few problems:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Account identifiers is yet another concept that people need to understand.
     The <span class="smallcaps">ic</span> is already heavy on new ideas and terminology; unnecessary complication does not help adoption.
     For example, a few confused developers tried to pass principal bytes as an account identifier.
@@ -78,7 +78,7 @@ Each ledger operation, such as minting or transferring tokens, becomes a transac
 <p>The ICP ledger uses <a href="https://developers.google.com/protocol-buffers">Protocol Buffers</a> to encode transactions and blocks.
 This encoding offers a few benefits:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Protocol Buffers offer solid tooling (including a <a href="https://docs.buf.build/breaking/overview">breaking change detector</a>) that allowed the team to launch the ledger quicker.
   </li><li>
     The <a href="https://developers.google.com/protocol-buffers/docs/encoding">encoding</a> is simple and easy to implement in a memory-constrained device, such as a <a href="https://www.ledger.com/">Ledger</a> hardware wallet.
@@ -140,7 +140,7 @@ The ledger spawns a new archive node when the previous archive node becomes full
 If the balance map size ever approaches the limit, the ICP ledger will <a href="https://github.com/dfinity/ic/blob/a26b66d0bf5dea702e20da7218ceb6a5ee16fbbb/rs/rosetta-api/ledger_canister_core/src/ledger.rs#L192-L213">burn tokens</a> on accounts with the smallest balances to free up space for new transactions.
 Burning tokens is not as scary as it sounds:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     As of December 2022, the ICP ledger uses only a few percent of the available capacity, so there is plenty of room to grow.
   </li><li>
     Many accounts hold <q>dust</q> the owners cannot spend.
@@ -170,7 +170,7 @@ There are several reasons for this design decision:
 SegWit transactions require signatures for validation, but <a href="https://en.bitcoinwiki.org/wiki/Simplified_Payment_Verification">Simple Payment Verification</a> nodes get blocks without signatures to save storage space and bandwidth.</p>
 </section>
 <section><h2 id="references"><a href="#references">References</a></h2>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     The <a href="https://github.com/dfinity/ic/tree/59ad371332f26ee1af54a15c568dd10a2093224c/rs/rosetta-api/icp_ledger/ledger">ICP ledger implementation</a> in Rust.
     This code moves your ICP tokens on the IC.
   </li><li>

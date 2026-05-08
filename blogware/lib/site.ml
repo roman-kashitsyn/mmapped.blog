@@ -192,16 +192,17 @@ let build_keyword_map (articles : article list) : article list Text.Map.t =
       (fun acc (a : article) ->
         List.fold_left
           (fun acc kw ->
-            let prev = match Text.Map.find_opt kw acc with Some l -> l | None -> [] in
+            let prev =
+              match Text.Map.find_opt kw acc with Some l -> l | None -> []
+            in
             Text.Map.add kw (a :: prev) acc)
           acc a.art_keywords)
       Text.Map.empty articles
   in
   Text.Map.map
     (List.sort (fun (a : article) (b : article) ->
-       Date.compare b.art_created_at a.art_created_at))
+         Date.compare b.art_created_at a.art_created_at))
     unsorted
-
 
 (* Render one article as its own post page. *)
 let render_one_post ~root_url ~all_articles ~all_notes ~idx article =
@@ -253,7 +254,6 @@ let copy_recursively src dst =
     mkdir_p (Filename.dirname dst);
     copy_file src dst
   end
-
 
 let generated_output_paths (input_dir : string) : (string list, string) result =
   match load_articles input_dir with
@@ -369,8 +369,8 @@ let rendered_outputs (config : site_config) :
                       Ok ()
                   | Standalone_page -> (
                       match
-                        render_standalone_from ~input_dir
-                          ~all_articles:articles ~all_notes:notes le_path
+                        render_standalone_from ~input_dir ~all_articles:articles
+                          ~all_notes:notes le_path
                       with
                       | Ok html ->
                           emit le_path html;

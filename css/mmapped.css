@@ -563,7 +563,7 @@ figure.p75 img {
     width: 75%;
 }
 
-ul.arrows > li:before,
+ul.bullets > li:before,
 ul.checklist > li:before,
 ol.circled > li:before {
     position: absolute;
@@ -572,20 +572,20 @@ ol.circled > li:before {
     vertical-align: text-top;
 }
 
-ul.arrows > li:before {
-    content: "→";
+ul.bullets > li:before {
+    content: "◦";
     vertical-align: sup;
 }
 
 ul.checklist > li:before {
-    content: "☐";
+    content: "▢";
 }
 
 ol.circled > li:before {
     content: attr(data-num-glyph);
 }
 
-ul.arrows > li,
+ul.bullets > li,
 ul.checklist > li,
 ol.circled > li {
     list-style: none;

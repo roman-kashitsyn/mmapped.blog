@@ -82,14 +82,14 @@ A malicious node can reap transmission rewards in every round if it ignores the 
 The aggregator contract owner can mitigate this issue by monitoring the transmission order and punishing misbehaving nodes.</p>
 </section>
 <section><h2 id="iterations"><a href="#iterations">Protocol version iterations</a></h2>
-<ul class="arrows"><li><span class="smallcaps">ocr 1.0</span> specifically targeted data feeds for <span class="smallcaps">evm</span> blockchains.
+<ul class="bullets"><li><span class="smallcaps">ocr 1.0</span> specifically targeted data feeds for <span class="smallcaps">evm</span> blockchains.
     </li><li><span class="smallcaps">ocr 2.0</span> is a major iteration that introduced a plugin architecture, significantly extending the protocol’s capabilities.
     This version also features reduced gas costs, a more secure <span class="smallcaps">p2p</span> networking stack based on <span class="smallcaps">tls1.3</span>, and better performance characteristics (lower latency, higher throughput).
     </li><li><span class="smallcaps">ocr 3.0</span> made the plugin interface more flexible, introduced the observation history chain, reduced the latency, and improved throughput using the report batching feature.
 </li></ul>
 </section>
 <section><h2 id="resources"><a href="#resources">Resources</a></h2>
-<ul class="arrows"><li>The <a href="https://research.chain.link/ocr.pdf">Chainlink Off-chain Reporting Protocol</a> whitepaper by Lorenz Breidenbach et al. describes the first protocol version in great detail and contains proofs of its security properties.
+<ul class="bullets"><li>The <a href="https://research.chain.link/ocr.pdf">Chainlink Off-chain Reporting Protocol</a> whitepaper by Lorenz Breidenbach et al. describes the first protocol version in great detail and contains proofs of its security properties.
     </li><li>The <a href="https://github.com/smartcontractkit/libocr/blob/6359502d2ff1165c7e6b77b9eff2c5a46a7a4fbb/offchainreporting2plus/ocr3types/plugin.go#L94"><span class="smallcaps">ocr3</span> plugin interface</a> documents the general flow and extention points.
     </li><li>In the <a href="https://youtu.be/XKiLkmwVaYA">Looking under the hood of <span class="smallcaps">ocr</span> 2.0</a> video, Lorenz Breidenbach explains the protocol evolution and the plugin architecture.
     </li><li>In the <a href="https://youtu.be/VPVH3QCwc0U"><span class="smallcaps">ocr3</span> protocol overview</a> video, Chrysa Stathakopoulou outlines the protocol structure and mentions features added in its third iteration.

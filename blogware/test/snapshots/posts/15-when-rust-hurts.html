@@ -34,7 +34,7 @@ A <em>reference</em> is the address of an object that we can use to access the o
 This distinction allows us to write blazingly fast code, but it comes with a high price: it is a never-ending source of bugs.
 It is almost always a bug to modify the contents of an object if some other part of the program references that object.
 There are multiple ways to address this issue:</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Ignore the problem and trust the programmer.
     Most traditional system programming languages, such as C++, took this path.
   </li><li>
@@ -239,7 +239,7 @@ I call regular output types <em>bundles</em> because they are self-contained.</p
 </code></pre></div>
 <p>The authors duplicated the <code>GlobalSpec</code> data structure to support two use cases:
 </p>
-<ul class="arrows"><li><code>GlobalSpec&lt;'a&gt;</code> is a <em>view</em> object that the code authors parse from a byte buffer.
+<ul class="bullets"><li><code>GlobalSpec&lt;'a&gt;</code> is a <em>view</em> object that the code authors parse from a byte buffer.
     Individual fields of this view point back to the relevant regions of the buffer.
     This representation is helpful for functions that need to inspect values of type <code>GlobalSpec</code> without modifying them.
   </li><li><code>OwnedGlobalSpec</code> is a <em>bundle</em>: it does not contain references to other data structures.
@@ -412,7 +412,7 @@ For this function to work, the programmer has to construct a runtime object in a
 </code></pre></div>
 <p>These implicit arguments turn compile-time errors into runtime errors.
 What should have been a compile error turns into a debugging adventure:</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     If the runtime were an explicit argument, the code would not compile unless the programmer constructed a runtime and passed it as an argument.
     When the runtime is implicit, your code might compile fine but will crash at runtime if you forget to annotate your main function with a <a href="https://docs.rs/tokio/latest/tokio/attr.main.html">magical macro</a>.
   </li><li>
@@ -428,7 +428,7 @@ What should have been a compile error turns into a debugging adventure:</p>
 In return, it brings a fair amount of complexity, <a href="https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/">painting every function</a> in <em>blue</em> (sync) or <em>red</em> (async) color.
 There are new rules to follow:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Sync functions can call other sync functions and get a result.
     Async functions can call and <code>.await</code> other async functions to get a result.
   </li><li>

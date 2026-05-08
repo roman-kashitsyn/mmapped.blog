@@ -38,7 +38,7 @@ type inline =
       * Text.t (* css classes, src path (for inline/table contexts) *)
 
 (* List style for bullet lists *)
-type list_style = Arrows | Checklist
+type list_style = Bullets | Checklist
 
 (* Table cell *)
 type table_cell = {

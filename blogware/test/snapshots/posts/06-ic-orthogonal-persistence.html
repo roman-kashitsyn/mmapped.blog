@@ -119,7 +119,7 @@ The system compiles actor’s WebAssembly modules to native code.
 How do you know which pages arbitrary code touched?
 There are multiple approaches to this problem:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Compare the full memory before and after execution.
     This approach is easy to implement and works on all platforms, but it performs poorly on sizable memories and does not give us accessed pages.
   </li><li>
@@ -216,7 +216,7 @@ As the actor executes the <code>replace</code> function, the following events oc
 </figure>
 <p>The signal handler approach is quite efficient in practice, and we can optimize it further:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Instead of constructing the full actor memory in advance, we can populate it lazily when the actor first touches it.
     This optimization works best for fragmented memories with lots of page deltas.
   </li><li>
@@ -234,7 +234,7 @@ But what if we want to fix a bug in that program or add a new feature?
 Can we do the upgrade without losing the program state?</p>
 <p>At first sight, it might seem safe to swap the WebAssembly module of an actor without changing the contents of its memory.
 Unfortunately, this seldom works in practice.</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     The actor code expects a specific memory layout; changing data type definitions affects the layout.
     The new version of the code will not be able to make sense of the old memory.
   </li><li>
@@ -269,7 +269,7 @@ Lastly, we saw that orthogonal persistence is not the final solution to state pe
 <p>The <a href="https://github.com/dfinity/ic">IC replica code</a> is open source.
 In case you want to read the code that implements ideas from this article, here are a few pointers:
 </p>
-<ul class="arrows"><li>The <a href="https://github.com/dfinity/ic/blob/3633026472367a413912bf797490c9336ba762f5/rs/execution_environment/src/hypervisor.rs#L1136">function executing a single message</a>.
+<ul class="bullets"><li>The <a href="https://github.com/dfinity/ic/blob/3633026472367a413912bf797490c9336ba762f5/rs/execution_environment/src/hypervisor.rs#L1136">function executing a single message</a>.
   </li><li>The <a href="https://github.com/dfinity/ic/blob/3633026472367a413912bf797490c9336ba762f5/rs/replicated_state/src/page_map.rs">page map</a> module.
   </li><li>The <a href="https://github.com/dfinity/ic/blob/3633026472367a413912bf797490c9336ba762f5/rs/memory_tracker/src/lib.rs#L358">naive</a> and the <a href="https://github.com/dfinity/ic/blob/3633026472367a413912bf797490c9336ba762f5/rs/memory_tracker/src/lib.rs#L499">optimized</a> signal handlers.
 </li></ul>

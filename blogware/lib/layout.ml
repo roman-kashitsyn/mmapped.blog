@@ -41,15 +41,15 @@ let extract_toc (blocks : block list) : toc_section list =
       | _ -> None)
     blocks
 
-let add_article_refs (tbl : ref_table) (all_articles : article list) : ref_table =
+let add_article_refs (tbl : ref_table) (all_articles : article list) : ref_table
+    =
   List.fold_left
     (fun acc a ->
       RefTable.add a.art_slug
         {
           ref_title =
             txt
-              (Html.render
-                 (Render.render_inlines Render.empty_ctx a.art_title));
+              (Html.render (Render.render_inlines Render.empty_ctx a.art_title));
           ref_url = a.art_url;
         }
         acc)
@@ -261,8 +261,7 @@ let site_header : Html.t =
                (a_
                   [ href_ (txt "/notes/index.html") ]
                   (escape_html (txt "Notes")))
-          ++ li_ []
-               (a_ [ href_ (txt "/feed.xml") ] (escape_html (txt "Feed")))
+          ++ li_ [] (a_ [ href_ (txt "/feed.xml") ] (escape_html (txt "Feed")))
           )))
   ++ hr_ []
 
@@ -588,11 +587,12 @@ let render_note_list_page (notes : note list) : Html.t =
             ++ section_
                  [ class_ (txt "note-index") ]
                  (h1_ [ class_ (txt "note-title") ] (escape_html (txt "Notes"))
-                 ++ (if sorted = [] then empty
-                     else
-                       ul_
-                         [ class_ (txt "note-list") ]
-                         (concat (List.map render_note_entry sorted))))
+                 ++
+                 if sorted = [] then empty
+                 else
+                   ul_
+                     [ class_ (txt "note-list") ]
+                     (concat (List.map render_note_entry sorted)))
             ++ site_footer)
        ++ nl)
 

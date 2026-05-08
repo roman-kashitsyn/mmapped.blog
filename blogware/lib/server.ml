@@ -136,7 +136,8 @@ let serve_index fd (config : site_config) : unit =
                     in
                     let latest = Site.take 5 articles in
                     let page_html =
-                      Html.render (Layout.render_index_page body featured latest)
+                      Html.render
+                        (Layout.render_index_page body featured latest)
                     in
                     send_response fd 200 "text/html; charset=utf-8" page_html)))
 
@@ -168,7 +169,7 @@ let serve_note fd (config : site_config) (path : string) : unit =
   | Ok articles -> (
       match Site.load_notes config.site_input with
       | Error err -> send_response fd 500 "text/plain" err
-      | Ok notes ->
+      | Ok notes -> (
           let keyword_articles = Site.build_keyword_map articles in
           match find_note notes path with
           | None -> send_response fd 404 "text/plain" ("No note at path " ^ path)
@@ -184,7 +185,7 @@ let serve_note fd (config : site_config) (path : string) : unit =
               let page_html =
                 Html.render (Layout.render_note_page note body referencing)
               in
-              send_response fd 200 "text/html; charset=utf-8" page_html)
+              send_response fd 200 "text/html; charset=utf-8" page_html))
 
 let serve_note_list fd (config : site_config) : unit =
   match Site.load_notes config.site_input with
@@ -243,9 +244,7 @@ let serve_page fd (config : site_config) (name : string) : unit =
                       Layout.build_global_ref_table articles notes
                     in
                     let ctx = { Render.ref_table } in
-                    let body =
-                      Render.render_blocks ctx article.art_body
-                    in
+                    let body = Render.render_blocks ctx article.art_body in
                     let title = Render.render_inlines ctx article.art_title in
                     let page_html =
                       Html.render
