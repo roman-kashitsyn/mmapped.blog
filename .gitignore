@@ -5,3 +5,6 @@ _opam/
 *.install
 .merlin
 .dir-locals.el
+*~lock~
+purgatory/
+.rtk

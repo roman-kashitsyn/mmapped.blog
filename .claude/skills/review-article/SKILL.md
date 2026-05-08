@@ -38,6 +38,7 @@ Read the entire article first, then provide feedback organized into these sectio
 ### 2. Prose quality
 
 - Flag verbose or flabby sentences. Suggest tighter rewrites.
+- Flag paragraphs that are overly abstract. Suggest a rewrite that uses concrete, visual language.
 - Flag clichés, weasel words ("very", "really", "quite", "somewhat", "arguably"), and hedge phrases ("it could be said that", "one might argue").
 - Flag passive voice where active would be stronger.
 - Flag sentences longer than ~30 words that could be split.
@@ -48,6 +49,7 @@ Read the entire article first, then provide feedback organized into these sectio
 
 - Flag jargon used without sufficient context for the target audience.
 - Flag ambiguous pronouns or referents.
+- Flag adverbs that express author's value judgement rather than a fact.
 - Flag claims that need evidence, citation, or qualification.
 - Flag logical gaps or non-sequiturs.
 
