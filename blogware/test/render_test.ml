@@ -32,9 +32,9 @@ let tests : Test_framework.t list =
         "<section><h2 id=\"x\"><a href=\"#x\">T</a></h2>\n</section>\n"
         (Render.render_block Render.empty_ctx
            (Section (Some (txt "x", [ s "T" ]), [])));
-      t "bullet list arrows" "<ul class=\"arrows\"><li>a</li></ul>\n"
+      t "bullet list bullets" "<ul class=\"bullets\"><li>a</li></ul>\n"
         (Render.render_block Render.empty_ctx
-           (Bullet_list (Arrows, [ [ Plain [ s "a" ] ] ])));
+           (Bullet_list (Bullets, [ [ Plain [ s "a" ] ] ])));
       t "ordered list glyph"
         ("<ol class=\"circled\"><li data-num-glyph=\"" ^ "\xE2\x91\xA0"
        (* ① U+2460 *) ^ "\">a</li></ol>\n")

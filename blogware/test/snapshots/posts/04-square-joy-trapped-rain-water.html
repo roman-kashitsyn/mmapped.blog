@@ -302,7 +302,7 @@ Let us search for a more array-friendly solution.</p>
 <p>There is another approach to the shortest path problem, a beautifully simple <a href="https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm">Bellman-Ford algorithm</a> that works by incremental relaxation of the distance matrix.
 It looks especially simple for implicitly defined graphs like our grid.
 Here is how to apply it to our problem:</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Start with a grid of distances with the same shape as the input grid, but all the values are infinite.
   </li><li>
     Compute the next grid of distances by taking the minimum of the four neighboring cells at each point and capping this value below by the bar height at the same position.
@@ -465,7 +465,7 @@ If we raise a verb to infinite power <a href="https://code.jsoftware.com/wiki/Vo
 Yes: for each shortest path algorithm, there is an analogous solution for the two-dimensional case.</p>
 <p>For example, the analog of the Bellmann-Ford algorithm involves the following steps:
 </p>
-<ul class="arrows"><li>Start with an array of the same shape as the input filled with infinities.
+<ul class="bullets"><li>Start with an array of the same shape as the input filled with infinities.
   </li><li>
     For each position, compute the minimum of its left and right neighbors.
     Take the maximum of that value and the height at this position.
@@ -479,7 +479,7 @@ Yes: for each shortest path algorithm, there is an analogous solution for the tw
 But once the three-dimensional case paved the way, this solution looks natural and almost obvious.</p>
 <p>What would be the analog of the Dijkstra algorithm, then?
 Dijkstra gives rise to a very efficient <q>two-pointer</q> solution:</p>
-<ul class="arrows"><li>Start by placing the left and the right pointers on the boundaries of the input array.
+<ul class="bullets"><li>Start by placing the left and the right pointers on the boundaries of the input array.
   </li><li>Keep track of the lowest boundary so far.
   </li><li>
     Always move the pointer that looks at the lowest height.
@@ -511,7 +511,7 @@ This solution does not map naturally to array languages, so I implemented it bel
 <p>
 That was all the <span class="smallcaps">j</span> magic for today!
 If you are confused and intrigued, I can recommend the following resources:</p>
-<ul class="arrows"><li>Solve this problem on <a href="https://leetcode.com/problems/trapping-rain-water/">Leetcode</a>.
+<ul class="bullets"><li>Solve this problem on <a href="https://leetcode.com/problems/trapping-rain-water/">Leetcode</a>.
   </li><li>Watch <a href="https://youtu.be/ftcIcn8AmSY">Four Solutions to a Trivial Problem</a>, a talk by Guy Steele where he explores the problem from different angles.
   </li><li>Read some <a href="https://code.jsoftware.com/wiki/Books">Books on <span class="smallcaps">j</span></a>.
   </li><li>Listen to the <a href="https://arraycast.com/">Arraycast podcast</a>.

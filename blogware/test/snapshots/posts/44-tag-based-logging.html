@@ -166,7 +166,7 @@ Tag query </th><th colspan="1" class="align-l"> RUST_LOG value </th></tr></thead
 <p>Finally, we still need to decide what to do with <code>tracing</code>’s log levels.
 We can’t ignore them since the library forces us to pick a level for each entry.
 I suggest using three log levels:</p>
-<ul class="arrows"><li>Use <code>info</code> for one-time information useful in any context,
+<ul class="bullets"><li>Use <code>info</code> for one-time information useful in any context,
   such as an <span class="smallcaps">http</span> server reporting its listening port.
 </li><li>Use the <code>error</code> level to report unrecoverable errors.
 </li><li>Use the <code>debug</code> level and tags for all other messages.

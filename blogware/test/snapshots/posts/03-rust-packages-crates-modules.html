@@ -39,7 +39,7 @@ to have a few large packages with lots of modules or
 to have lots of small packages.</p>
 <p>Having few packages with lots of modules has some advantages:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Adding or removing a module is less work than adding or removing a package.
   </li><li>
     Modules are more flexible.
@@ -51,7 +51,7 @@ to have lots of small packages.</p>
 <p>In the ideal world where Rust compiles instantly, turning the repository into a massive package with many modules would be the most convenient setup.
 The bitter reality is that Rust takes quite some time to compile, and modules don’t help you shorten the compilation time:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
   The basic unit of compilation is a <em>crate</em>, not a <em>module</em>.
   You must recompile all the modules in a crate even if you change only one.
   The more code you put in a crate, the longer it takes to compile.
@@ -67,7 +67,7 @@ Packages are less convenient but deliver better compilation speed as the code ba
 <div class="advice" id="avoid-dependency-hubs"><p><a class="anchor left-gutter-anchor advice-anchor" href="#avoid-dependency-hubs" aria-label="Link to this advice"></a>Split dependency hubs.</p></div>
 <p>There are two types of dependency hubs:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
   Packages with lots of dependencies.
   Two examples from the IC codebase are the <code>test-utils</code> package containing auxiliary code for integration tests
   (proptest strategies, mock and fake component implementations, helper functions, etc.),
@@ -153,7 +153,7 @@ I would ask the same thing in 2019!</p>
 Oh well, they aren’t, after all.</p>
 <p>The usual problems with implicit state dependencies are especially prominent in Rust.
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
   Most Rust libraries do not rely on true global variables.
   The usual way to pass an implicit state is to use a <a href="https://doc.rust-lang.org/stable/std/macro.thread_local.html">thread-local</a> variable, which can become problematic when you spawn a new thread.
   New threads tend to inherit and retain unexpected values of thread locals.
@@ -390,7 +390,7 @@ My advice is to avoid them when possible.</p>
 <p>In this article, we looked at Rust’s code organization tools.
 The key takeaways:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Understand the difference between modules, crates, and packages.
   </li><li>
     Rust’s module system is convenient, but packing many modules into a single crate degrades the build time.
@@ -401,7 +401,7 @@ The key takeaways:
 </li></ul>
 </section>
 <section><h2 id="links"><a href="#links">Further reading</a></h2>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Discuss this article on <a href="https://www.reddit.com/r/rust/comments/s818q3/blog_post_rust_at_scale_packages_crates_and/">r/rust</a>.
   </li><li><a href="https://github.com/matklad">Alexey Kladov</a> wrote a fantastic blog post series on the same topic, <a href="https://matklad.github.io/2021/09/05/Rust100k.html">One Hundred Thousand Lines of Rust</a>.
 </li></ul>

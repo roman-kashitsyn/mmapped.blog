@@ -26,7 +26,7 @@ This article describes one example that stuck with me from the start of my progr
   The primary motivation for introducing integers was to create a numeric space where equations of the form <span class="math">a + x = c</span>, where <span class="math">a</span> and <span class="math">c</span> are naturals, always have a solution.
   Rationals play the same role for equations of the form <span class="math">a × x = c</span>.
 </span> quite a few types of numbers; usually, each new type is the most natural extension of the previous one:</p>
-<ul class="arrows"><li>Naturals (<span class="math">ℕ</span>) are the numbers we use for counting: <span class="math">0, 1, 2, …</span>.
+<ul class="bullets"><li>Naturals (<span class="math">ℕ</span>) are the numbers we use for counting: <span class="math">0, 1, 2, …</span>.
   </li><li>Integers (<span class="math">ℤ</span>) extend naturals to include negative whole numbers: <span class="math">0, 1, -1, 2, -2, …</span>.
   </li><li>Rational numbers (<span class="math">ℚ</span>) add common fractions where the numerator and denumerator are whole numbers: <span class="math">1</span>, <span class="math">½</span>, <span class="math">-½</span>, <span class="math">⅓</span>, <span class="math">-⅓</span>, ….
 </li></ul>
@@ -111,7 +111,7 @@ That’s why the original incorrect design was so compelling: we moved from simp
 </figure>
 <p>This approach is the most versatile, but it has many drawbacks:
 </p>
-<ul class="arrows"><li>The programmer must write a lot of boilerplate code.
+<ul class="bullets"><li>The programmer must write a lot of boilerplate code.
   </li><li>All types in the hierarchy need to know about one another.
   Adding a new type requires changing all other types.
   </li><li>Adding a new operation on numbers requires modifying all the classes.
@@ -185,7 +185,7 @@ We can add a universal <code>Number</code> type to reclaim this property.</p>
 </code></pre></div>
 </figure>
 <p>This design might seem like a re-iteration of the <code>Number</code> interface story from the OO world, but it’s not:</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     We have many opportunities to reduce the boilerplate code to the bare minimum.
     We will discuss these opportunities shortly.
   </li><li>

@@ -80,7 +80,7 @@ Canister <em>deploy</em> tools, such as <a href="https://internetcomputer.org/do
 As of July 2023, Motoko compiler and Rust CDK don’t follow these conventions, so people often conflate the two concepts.</p>
 <h3 id="types"><a href="#types">Types</a></h3>
 <p>In addition to a rich set of primitive types, such as booleans (<code>bool</code>), floats (<code>float64</code>), strings (<code>text</code>), and whole numbers of various widths (<code>nat8</code>, <code>nat16</code>, <code>nat32</code>, <code>nat64</code>, <code>int8</code>, <code>int16</code>, <code>int32</code>, <code>int64</code>), Candid provides a few more advanced types and type constructors:</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Arbitrary-precision integers (<a href="https://internetcomputer.org/docs/current/references/candid-ref#type-nat"><code>nat</code></a> and <a href="https://internetcomputer.org/docs/current/references/candid-ref#type-int"><code>int</code></a>).
     </li><li>
     Unique identifiers (<a href="https://internetcomputer.org/docs/current/references/candid-ref#type-principal"><code>principal</code></a>).
@@ -137,7 +137,7 @@ A record type indicates that <em>all</em> of its fields must be set, and a varia
 <p>Similarly to Protocol Buffers, Candid uses integers to identify fields and alternatives.
 Unlike Protocol Buffers, Candid doesn’t ask the programmer to map symbolic field names to integers, relying on a <a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md#shorthand-symbolic-field-ids">hash function</a> instead.
 This design choice has two practical implications.</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Renaming a field or an alternative is a backward-incompatible change.
     </li><li>
     Tools cannot display field names without the service definition file.
@@ -213,7 +213,7 @@ Assigning descriptive names can improve the interface readability, however.</p>
 </span>.
 If a type <span class="math">T</span> is a subtype of type <span class="math">V</span> (denoted <span class="math">T &lt;: V</span>), then Candid can decode any value of type <span class="math">T</span> into a value of type <span class="math">V</span>.</p>
 <p>Let’s inspect some of the basic subtyping rules for simple values (not functions):</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Subtyping is <a href="https://en.wikipedia.org/wiki/Reflexive_relation">reflexive</a>: any type is a subtype of itself.
     You can’t break the clients if you don’t change the interface.
     </li><li>
@@ -241,7 +241,7 @@ Informally, <code>g</code> must accept the same or more generic arguments as <co
 <p>The rules mentioned in this section are by no means complete or precise; please refer to the <a href="https://github.com/dfinity/candid/blob/master/spec/Candid.md#rules">typing rules</a> section of the Candid specification for a formal definition.</p>
 <p>Understanding the subtyping rules for functions is helpful for reasoning about safe interface migrations.
 Let’s consider a few examples of common changes that preserve backward compatibility of a function interface (note that compatibility rules for arguments and results are often reversed).</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Remove an unused record field (or, better, change its type to <code>reserved</code>) from the method <em>input</em> argument.
     </li><li>
     Add a new case to a variant in the method <em>input</em> argument.
@@ -304,7 +304,7 @@ Let’s take a closer look at them.</p>
 </code></pre></div>
 </figure>
 <p>Even this trivial message reveals a few interesting details.</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     All Candid messages begin with the <code>DIDL</code> byte string.
     Most likely, <code>DIDL</code> stands for <q><span class="smallcaps">dfinity</span> Interface Definition Language</q>.
     </li><li>
@@ -383,7 +383,7 @@ This <q>canonical</q> form will help us better understand the message type table
 </code></pre></div>
 </figure>
 <p>We can observe a few interesting details about binary encoding.</p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     The binary format uses signed integers to represent types.
     Negative integers correspond to built-in types and type constructors; non-negative integers are type table indices.
     </li><li>
@@ -576,7 +576,7 @@ Encoders have a lot of freedom in optimizing the rearranging the type table.
 Upgrading to a newer version of the Candid library might change the exact message bytes the library produces.</p>
 </section>
 <section><h2 id="resources"><a href="#resources">Resources</a></h2>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Joachim Breitner’s <a href="https://www.joachim-breitner.de/blog/782-A_Candid_explainer__The_rough_idea">Candid explainer</a> blog post series contains a lot of insight and historical background.
     The <a href="https://www.joachim-breitner.de/blog/786-A_Candid_explainer__Quirks">Quirks</a> part is especially relevant for engineers.
     This <a href="https://forum.dfinity.org/t/candid-explainer-first-post-published/6787">DFINITY forum post</a> announcing the series might be a fun read if you are into type theory.

@@ -213,7 +213,7 @@ If you implement <code>std::error::Error</code> for your error types, you will m
 <p>This error type does not tell the caller <em>what</em> problem you are solving but <em>how</em> you solve it.
 Implementation details leak into the caller’s code, causing much pain:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
    Such error types encourage unhealthy coding patterns when low-level errors travel up the call stack with minimal context attached.
    The following error message comes from one program I have to use that often leaves me puzzled and depressed.
    <div class="source-container"><pre class="source bad"><code><span class="line">IO error: Os { code: 2, kind: NotFound, message: &quot;No such file or directory&quot; }</span>
@@ -312,7 +312,7 @@ We start from the path of the least resistance.</p>
 </figure>
 <p>There are a few issues with that <code>verify_sig</code> function design.
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     There is an implicit assumption that if the caller passes the <code>Ecdsa</code> as the <code>algorithm</code>, the error can be only <code>EcdsaError</code>.
     It should be clear from the semantics, but the type system does not enforce this invariant.
   </li><li>
@@ -348,7 +348,7 @@ The result is a clear and self-descriptive error type conveying to your callers 
 </figure>
 <p>There are a few cases when wrapping errors makes sense:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     Wrapping <code>std::io::Error</code> is acceptable if you include enough context, such as the attempted operation and the paths involved.
     <code>std::io::Error</code> does not bring extra dependencies and is familiar to any seasoned Rust programmer, so it adds little cognitive load.
     <code>std::io::Error</code>s also can contain low-level <a href="https://doc.rust-lang.org/std/io/struct.Error.html#method.raw_os_error">OS error codes</a> that can help diagnose tricky cases.
@@ -359,7 +359,7 @@ The result is a clear and self-descriptive error type conveying to your callers 
 <p>You might prefer to wrap a <code>Box&lt;dyn Error&gt;</code> instead of converting the error to string so the caller can <a href="https://doc.rust-lang.org/1.62.0/std/error/trait.Error.html#method.downcast">downcast</a> the error, delay the conversion to string, and traverse the error stack using the <a href="https://doc.rust-lang.org/1.62.0/std/error/trait.Error.html#method.source"><code>source</code></a> method.
 I found that boxing errors does not help me much in practice:
 </p>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
     If the caller needs to access information from the original error programmatically, embed the relevant bits or add more type constructors.
     Downcasting is a short-term solution.
   </li><li>

@@ -157,7 +157,8 @@ let extract_metadata ~expected_class (nodes : node list) : meta result_ =
           Error
             (Error.make_elab
                (Printf.sprintf
-                  "expected \\documentclass{%s} but found \\documentclass{article}"
+                  "expected \\documentclass{%s} but found \
+                   \\documentclass{article}"
                   expected_class))
     | NCmd (_, S_documentclass, _, Arg_symbol (pos, cls) :: _) :: rest ->
         if Text.equal_string cls expected_class then go true m rest
@@ -165,8 +166,7 @@ let extract_metadata ~expected_class (nodes : node list) : meta result_ =
           elab_error pos
             (Printf.sprintf
                "expected \\documentclass{%s} but found \\documentclass{%s}"
-               expected_class
-               (Text.to_string cls))
+               expected_class (Text.to_string cls))
     | NCmd (_, S_title, _, Arg_nodes (_, ns) :: _) :: rest ->
         go seen_documentclass { m with m_title = node_text_of_nodes ns } rest
     | NCmd (_, S_subtitle, _, Arg_nodes (_, ns) :: _) :: rest ->
@@ -175,7 +175,9 @@ let extract_metadata ~expected_class (nodes : node list) : meta result_ =
         go seen_documentclass { m with m_featured = true } rest
     | NCmd (_, S_date, _, Arg_symbol (pos, d) :: _) :: rest ->
         let* day = parse_day pos d in
-        go seen_documentclass { m with m_created_at = day; m_modified_at = day } rest
+        go seen_documentclass
+          { m with m_created_at = day; m_modified_at = day }
+          rest
     | NCmd (_, S_modified, _, Arg_symbol (pos, d) :: _) :: rest ->
         let* day = parse_day pos d in
         go seen_documentclass { m with m_modified_at = day } rest
@@ -442,7 +444,7 @@ and classify_env pos sym opts body =
       Ok (CBlock (Ordered_list items))
   | S_itemize ->
       let* items = split_list_items body in
-      Ok (CBlock (Bullet_list (Arrows, items)))
+      Ok (CBlock (Bullet_list (Bullets, items)))
   | S_checklist ->
       let* items = split_list_items body in
       Ok (CBlock (Bullet_list (Checklist, items)))
@@ -764,7 +766,8 @@ let wrap_sections (fbs : flat_block list) : block list result_ =
 
 (* --- Top-level entry point --- *)
 
-let elaborate_body ~expected_class (nodes : node list) : (meta * block list) result_ =
+let elaborate_body ~expected_class (nodes : node list) :
+    (meta * block list) result_ =
   let* meta = extract_metadata ~expected_class nodes in
   let doc_body = find_doc_body nodes in
   let* flat = build_flat_blocks doc_body in

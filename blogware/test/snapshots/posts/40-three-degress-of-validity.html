@@ -98,7 +98,7 @@ In Rust, the <a href="https://serde.rs">serde</a> library fuses parsing and stat
 <p>The execution phase creates and binds a socket and opens a database connection.
 For these steps to succeed, the following assumptions must hold:
 </p>
-<ul class="arrows"><li>The <span class="smallcaps">url</span> points to a running service that understands the Postgres protocol and accepts the credentials.
+<ul class="bullets"><li>The <span class="smallcaps">url</span> points to a running service that understands the Postgres protocol and accepts the credentials.
 </li><li>No other process on the system uses the port.
 </li></ul>
 <p>The impossibility of checking such assumptions without system calls draws the line between validity and applicability:

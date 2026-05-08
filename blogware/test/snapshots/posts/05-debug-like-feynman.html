@@ -12,7 +12,7 @@ They graduated with a physics degree and taught themselves programming<label cla
   Bartosz Milewski, the author of <a href="https://bartoszmilewski.com/2014/10/28/category-theory-for-programmers-the-preface/">Category Theory for Programmers</a>,
   and <a href="https://en.wikipedia.org/wiki/David_Roundy">David Roundy</a>, the author of the <a href="https://darcs.net">Darcs</a> version control system.
 </span>. These people think differently than most engineers:</p>
-<ul class="arrows"><li>They distill problems to their essence.
+<ul class="bullets"><li>They distill problems to their essence.
 </li><li>They value understanding above all.
   It’s not enough for them to get the code working;
   they need to know why it didn’t work before.
@@ -69,7 +69,7 @@ Found the culprit?
 Document the problem details and the solution for posterity.</p>
 <p>Consistently recording your work might seem like a waste of time, but it’s usually not:
 </p>
-<ul class="arrows"><li>The best way to understand anything is to write it down in your own words.
+<ul class="bullets"><li>The best way to understand anything is to write it down in your own words.
 You might find flaws in your analysis in the process.
 </li><li>You create evidence that you approach your work as a professional.
 </li><li>You allow others to follow your steps and learn from your experience.
@@ -128,7 +128,7 @@ Would you use the same algorithm if all the numbers were zero or one?
 Knowing the shape and distribution of inputs and outputs helps you find more straightforward and efficient designs, discover optimizations, and spot anomalies during debugging sessions.</p>
 <p>Besides the system inputs and outputs, there are two more natural data sources:
 </p>
-<ul class="arrows"><li>The system performance.
+<ul class="bullets"><li>The system performance.
 Do you know your system’s median time to process a single transaction or which database queries are the slowest?
 </li><li>The environment in which your systems run.
 How long does writing a block to disk or spawning a thread take?
@@ -151,7 +151,7 @@ Launching a debugger should be your first reaction if your application crashes w
 However, using a debugger is hard or impossible in some areas of computing.
 For example, distributed systems pose the following challenges:
 </p>
-<ul class="arrows"><li>The code runs on servers you might not have direct access to.
+<ul class="bullets"><li>The code runs on servers you might not have direct access to.
 </li><li>The servers must reply to heartbeats.
 Attaching a debugger would pause the process, and in a few seconds, the network would assume that the node you debug is dead, making further debugging impossible.
 That’s an example of the <a href="https://en.wikipedia.org/wiki/Observer_effect_(physics)">observer effect</a>.
@@ -179,7 +179,7 @@ A good model will help you map an observation to a potential cause and develop a
 <p>How do you build a good mental model?
 I usually rely on one of the following methods:
 </p>
-<ul class="arrows"><li>Find an analogy.
+<ul class="bullets"><li>Find an analogy.
 Some systems and designs have prototypes in the physical world.
 The more concrete the analogy, the merrier.
 For example, I used bank cheques to model approval flows while working on a fungible token standard.

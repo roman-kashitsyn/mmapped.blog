@@ -75,7 +75,7 @@ I can transfer my tokens to this cell, and the shop can move tokens out because 
 </figure>
 <p>The invoice account flow has a few interesting properties:
 </p>
-<ul class="arrows"><li>The ledger must process at least two messages: one transfer from me and another from the shop.
+<ul class="bullets"><li>The ledger must process at least two messages: one transfer from me and another from the shop.
   </li><li>Two transfers mean that the ledger charges <em>two</em> fees for each flow: one from me and another from the shop.
   </li><li>
     The ledger needs to remember one additional <code>(principal, subaccount, amount)</code> tuple for the duration of the flow.
@@ -145,7 +145,7 @@ The flow uses two new ledger primitives, <code>approve</code> and <code>transfer
 </figure>
 <p>Let us see how this flow compares to the <a href="#invoice-account">invoice account</a> flow:
 </p>
-<ul class="arrows"><li>The ledger must process at least two messages: approval from the owner and a transfer from the shop.
+<ul class="bullets"><li>The ledger must process at least two messages: approval from the owner and a transfer from the shop.
   </li><li>The ledger charges <em>two</em> fees for each payment: one for my approval and another for the shop’s transfer.
   </li><li>
     The ledger needs to remember one additional <code>(principal, principal, amount)</code> tuple for the duration of the flow.
@@ -199,7 +199,7 @@ The common way to address this issue is to add the <code>memo</code> argument to
 </figure>
 <p>Let us check how this flow compares to the previous ones:
 </p>
-<ul class="arrows"><li>The ledger must process at least two messages: a transfer from the owner and a notification to the shop.
+<ul class="bullets"><li>The ledger must process at least two messages: a transfer from the owner and a notification to the shop.
   </li><li>
     The ledger charges a combined fee for my transfer and notification.
     Whether the ledger charges two fees or gives a discount depends on the implementation.
@@ -262,7 +262,7 @@ Below is the interface we expect from the ledger.</p>
   A sequence diagram for the transfer-fetch payment flow.
 </span><img src="/images/10-fetch-flow.png">
 </figure>
-<ul class="arrows"><li>The ledger must process at least two messages: a <code>transfer</code> from me and a <code>fetch</code> request from the shop.
+<ul class="bullets"><li>The ledger must process at least two messages: a <code>transfer</code> from me and a <code>fetch</code> request from the shop.
   </li><li>
     The ledger charges one fee for my transfer.
     The transaction details are usually publicly available and require no access fee.

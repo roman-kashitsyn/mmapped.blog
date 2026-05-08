@@ -362,7 +362,7 @@ All the distances are zero because moving the finger doesn’t require any keypr
 I intentionally pursued a minimalistic approach: each solution must be a single file without external dependencies except the standard library so that I could compile it with the <code>ocamlopt dayN.ml -o dayN</code> command.
 My experience might have been different if I used third-party libraries.</p>
 <h3 id="good-parts"><a href="#good-parts">The good parts</a></h3>
-<ul class="arrows"><li>
+<ul class="bullets"><li>
   The language balances strong compile-time guarantees, execution speed, type inference, and convenience for small problems.
   I could use high-level abstractions and resort to low-level loops and mutable state when needed without having to deal with monads.
 </li><li>
@@ -377,7 +377,7 @@ My experience might have been different if I used third-party libraries.</p>
   Type-safe <a href="https://ocaml.org/manual/5.2/api/Scanf.html#VALscanf"><code>scanf</code></a> was handy for parsing inputs, more so than regular expressions.
 </li></ul>
 <h3 id="bad-parts"><a href="#bad-parts">The bad parts</a></h3>
-<ul class="arrows"><li>The backtrace support is broken.
+<ul class="bullets"><li>The backtrace support is broken.
   I used arrays a lot and had many indexing bugs.
   Backtraces are disabled by default, but even after I enabled them with <code>OCAMLRUNPARAM=b</code>, all array indexing exceptions pointed to bogus locations that had nothing to do with the actual cause.
 </li><li>

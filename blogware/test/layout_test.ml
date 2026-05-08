@@ -150,8 +150,9 @@ let tests : Test_framework.t list =
       test "article ref table includes note refs" (fun () ->
           let article = article_with "hello" [ "ocaml" ] in
           let note = note_with "garden" in
-          match RefTable.find_opt (txt "garden")
-                  (Layout.build_ref_table [ article ] [ note ] article)
+          match
+            RefTable.find_opt (txt "garden")
+              (Layout.build_ref_table [ article ] [ note ] article)
           with
           | Some ref_
             when Text.equal_string ref_.ref_title "garden"

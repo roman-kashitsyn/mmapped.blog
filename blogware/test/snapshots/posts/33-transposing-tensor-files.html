@@ -130,7 +130,7 @@ we interleave tensor attributes with the tensor data.</p>
 </figure>
 <p>This approach also addresses the original design issues:
 </p>
-<ul class="arrows"><li>The encoder no longer needs to accumulate metadata;
+<ul class="bullets"><li>The encoder no longer needs to accumulate metadata;
   producing a file requires a single straightforward loop over the tensors.
 </li><li>The metadata section doesn’t need to contain tensor offsets:
   The decoder can compute them by scanning the file.
