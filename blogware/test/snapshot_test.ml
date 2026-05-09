@@ -124,6 +124,128 @@ let rendered_outputs input_root =
           site_root = "https://mmapped.blog";
         })
 
+type diff_op = Same of string | Remove of string | Add of string
+
+let line_diff expected actual =
+  let a = Array.of_list (String.split_on_char '\n' expected) in
+  let b = Array.of_list (String.split_on_char '\n' actual) in
+  let m = Array.length a in
+  let n = Array.length b in
+  let dp = Array.make_matrix (m + 1) (n + 1) 0 in
+  for i = m - 1 downto 0 do
+    for j = n - 1 downto 0 do
+      dp.(i).(j) <-
+        (if String.equal a.(i) b.(j) then 1 + dp.(i + 1).(j + 1)
+         else max dp.(i + 1).(j) dp.(i).(j + 1))
+    done
+  done;
+  let rec build acc i j =
+    if i < m && j < n && String.equal a.(i) b.(j) then
+      build (Same a.(i) :: acc) (i + 1) (j + 1)
+    else if i < m && (j = n || dp.(i + 1).(j) >= dp.(i).(j + 1)) then
+      build (Remove a.(i) :: acc) (i + 1) j
+    else if j < n then build (Add b.(j) :: acc) i (j + 1)
+    else List.rev acc
+  in
+  build [] 0 0
+
+let unified_diff expected actual =
+  let context = 3 in
+  let ops = Array.of_list (line_diff expected actual) in
+  let len = Array.length ops in
+  let change_indices =
+    let rec go acc i =
+      if i = len then List.rev acc
+      else
+        match ops.(i) with
+        | Same _ -> go acc (i + 1)
+        | Remove _ | Add _ -> go (i :: acc) (i + 1)
+    in
+    go [] 0
+  in
+  let old_before = Array.make len 0 in
+  let new_before = Array.make len 0 in
+  let old_line = ref 0 in
+  let new_line = ref 0 in
+  Array.iteri
+    (fun i op ->
+      old_before.(i) <- !old_line;
+      new_before.(i) <- !new_line;
+      match op with
+      | Same _ ->
+          incr old_line;
+          incr new_line
+      | Remove _ -> incr old_line
+      | Add _ -> incr new_line)
+    ops;
+  let hunks =
+    let rec go acc current = function
+      | [] -> (
+          match current with
+          | None -> List.rev acc
+          | Some h -> List.rev (h :: acc))
+      | i :: rest ->
+          let hunk_start = max 0 (i - context) in
+          let hunk_end = min (len - 1) (i + context) in
+          begin match current with
+          | None -> go acc (Some (hunk_start, hunk_end)) rest
+          | Some (start, stop) ->
+              if hunk_start <= stop + 1 then
+                go acc (Some (start, max stop hunk_end)) rest
+              else go ((start, stop) :: acc) (Some (hunk_start, hunk_end)) rest
+          end
+    in
+    go [] None change_indices
+  in
+  let old_count start stop =
+    let n = ref 0 in
+    for i = start to stop do
+      match ops.(i) with Same _ | Remove _ -> incr n | Add _ -> ()
+    done;
+    !n
+  in
+  let new_count start stop =
+    let n = ref 0 in
+    for i = start to stop do
+      match ops.(i) with Same _ | Add _ -> incr n | Remove _ -> ()
+    done;
+    !n
+  in
+  let buf = Buffer.create 1024 in
+  Buffer.add_string buf "Diff (-expected +actual):\n";
+  Buffer.add_string buf "--- expected\n";
+  Buffer.add_string buf "+++ actual\n";
+  List.iter
+    (fun (start, stop) ->
+      let old_count = old_count start stop in
+      let new_count = new_count start stop in
+      let old_start =
+        if old_count = 0 then old_before.(start) else old_before.(start) + 1
+      in
+      let new_start =
+        if new_count = 0 then new_before.(start) else new_before.(start) + 1
+      in
+      Buffer.add_string buf
+        (Printf.sprintf "@@ -%d,%d +%d,%d @@\n" old_start old_count new_start
+           new_count);
+      for i = start to stop do
+        match ops.(i) with
+        | Same line ->
+            Buffer.add_char buf ' ';
+            Buffer.add_string buf line;
+            Buffer.add_char buf '\n'
+        | Remove line ->
+            Buffer.add_char buf '-';
+            Buffer.add_string buf line;
+            Buffer.add_char buf '\n'
+        | Add line ->
+            Buffer.add_char buf '+';
+            Buffer.add_string buf line;
+            Buffer.add_char buf '\n'
+      done)
+    hunks;
+  Buffer.contents buf
+
 let compare_snapshot actual_map rel =
   let snapshot_path = snapshot_root () // rel in
   match List.assoc_opt rel actual_map with
@@ -131,7 +253,10 @@ let compare_snapshot actual_map rel =
   | Some actual ->
       if not (Sys.file_exists snapshot_path) then
         Test_framework.Fail ("missing snapshot: " ^ rel)
-      else Test_framework.assert_equal_string (read_file snapshot_path) actual
+      else
+        let expected = read_file snapshot_path in
+        if String.equal expected actual then Test_framework.Pass
+        else Test_framework.Fail (unified_diff expected actual)
 
 let set_of_list xs =
   List.fold_left (fun acc x -> StringSet.add x acc) StringSet.empty xs

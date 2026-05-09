@@ -74,8 +74,9 @@ annotate them with arbitrary <em>tags</em> like hashtags on social media.</p>
 </code></pre></div>
 <p>To select the events appropriate for our context, we construct a <em>query</em>,
 a logical formula matching the event tags.</p>
-<table class="table-2 "><thead><thead><tr><th colspan="1" class="align-l">
-Events we want to see </th><th colspan="1" class="align-l"> The query </th></tr></thead><tbody><tr><td colspan="1" class="align-l">
+<table class="zebra"><thead><thead><tr><th colspan="1" class="align-l">
+Events we want to see </th><th colspan="1" class="align-l"> The query </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+
 Only events triggered by user actions </td><td colspan="1" class="align-l"> <code>#user</code> </td></tr><tr><td colspan="1" class="align-l">
 All performance-related events </td><td colspan="1" class="align-l"> <code>#perf</code> </td></tr><tr><td colspan="1" class="align-l">
 Database performance events </td><td colspan="1" class="align-l"> <code>#perf and #db</code> </td></tr><tr><td colspan="1" class="align-l">
@@ -127,8 +128,9 @@ we convert logical disjunctions into separate directives (<code>#a or #b</code> 
 and conjunctions into composite filters (<code>#a and #b</code> becomes <code>[{a}{b}]=debug</code>).
 This scheme doesn’t support negation (in other words, we cannot query events lacking a specific field) and thus our query language isn’t <a href="https://en.wikipedia.org/wiki/Functional_completeness">functionally complete</a>,
 but it is good enough for most use cases.</p>
-<table class="table-2 "><thead><thead><tr><th colspan="1" class="align-l">
-Tag query </th><th colspan="1" class="align-l"> RUST_LOG value </th></tr></thead><tbody><tr><td colspan="1" class="align-l">
+<table class="zebra"><thead><thead><tr><th colspan="1" class="align-l">
+Tag query </th><th colspan="1" class="align-l"> RUST_LOG value </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+
 <code>#user</code> </td><td colspan="1" class="align-l"> <code>[{user}]=debug</code> </td></tr><tr><td colspan="1" class="align-l">
 <code>#db and #perf</code> </td><td colspan="1" class="align-l"> <code>[{db}{perf}]=debug</code> </td></tr><tr><td colspan="1" class="align-l">
 <code>#db or #rpc</code> </td><td colspan="1" class="align-l"> <code>[{db}]=debug,[{rpc}]=debug</code> </td></tr><tr><td colspan="1" class="align-l">
@@ -156,8 +158,9 @@ This approach can’t query secondary tags alone—we must query either the prim
 <span class="line">debug!(target: &quot;rpc::perf&quot;, ?duration, endpoint = &quot;sendTransaction&quot;);</span>
 <span class="line">debug!(target: &quot;db::perf&quot;, ?duration, query = &quot;fetch_transaction&quot;);</span>
 </code></pre></div>
-<table class="table-2 "><thead><thead><tr><th colspan="1" class="align-l">
-Tag query </th><th colspan="1" class="align-l"> RUST_LOG value </th></tr></thead><tbody><tr><td colspan="1" class="align-l">
+<table class="zebra"><thead><thead><tr><th colspan="1" class="align-l">
+Tag query </th><th colspan="1" class="align-l"> RUST_LOG value </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+
 <code>#user</code> </td><td colspan="1" class="align-l"> <code>user=debug</code> </td></tr><tr><td colspan="1" class="align-l">
 <code>#db and #perf</code> </td><td colspan="1" class="align-l"> <code>db::perf=debug</code> </td></tr><tr><td colspan="1" class="align-l">
 <code>#db or #rpc</code> </td><td colspan="1" class="align-l"> <code>db=debug,rpc=debug</code> </td></tr><tr><td colspan="1" class="align-l">
