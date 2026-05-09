@@ -982,6 +982,8 @@ table code {
 th,
 td {
     text-align: left;
+    padding-right: var(--sp-inline);
+    padding-left: var(--sp-inline);
 }
 
 table > thead > tr:last-child > td,
@@ -989,6 +991,28 @@ table > thead > tr:last-child > th,
 table > tbody > tr:last-child > th {
     padding-bottom: var(--sp-inline);
     font-variant: all-small-caps;
+}
+
+table > tbody > tr:first-child > td,
+table > tbody > tr:first-child > th {
+    padding-top: var(--sp-inline);
+}
+
+table > tbody > tr > td {
+    padding-top: var(--sp-tight);
+    padding-bottom: var(--sp-tight);
+}
+
+table.zebra > tbody > tr:nth-child(even) {
+    background: var(--page-sunk);
+}
+
+tr.border-top {
+    border-top: 1px solid;
+}
+
+tr.border-bot {
+    border-bottom: 1px solid;
 }
 
 .table-2 td,
@@ -1018,29 +1042,14 @@ table > tbody > tr:last-child > th {
 
 .align-r {
     text-align: right;
-    padding-right: 1em;
 }
 
 .align-l {
     text-align: left;
-    padding-left: 1em;
 }
 
 .align-c {
     text-align: center;
-}
-
-table > tbody > tr:first-child > td,
-table > tbody > tr:first-child > th {
-    padding-top: var(--sp-inline);
-}
-
-tr.border-top {
-    border-top: 1px solid;
-}
-
-tr.border-bot {
-    border-bottom: 1px solid;
 }
 
 .sans {

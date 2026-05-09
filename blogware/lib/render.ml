@@ -7,6 +7,7 @@ open Syntax
 (* --- Helpers --- *)
 
 let txt = Text.of_string
+let ( ^^ ) = Text.append
 let join_classes cs = Text.concat (Text.of_char ' ') cs
 
 let class_attr_if_nonempty cls =
@@ -161,16 +162,15 @@ let render_table_row ctx cell_tag (r : table_row) : Html.t =
     (concat (List.map (render_table_cell ctx cell_tag) r.tr_cells))
 
 let render_table (ctx : ctx) (td : table_def) : Html.t =
-  let num_cols = List.length td.table_spec in
-  let cls =
-    Text.concat Text.empty
-      [
-        txt "table-";
-        txt (string_of_int num_cols);
-        txt " ";
-        join_classes td.table_opts;
-      ]
+  let uniform =
+    List.exists (fun opt -> Text.equal_string opt "uniform") td.table_opts
   in
+  let table_width_class =
+    if uniform then
+      [ txt "table-" ^^ txt (string_of_int (List.length td.table_spec)) ]
+    else []
+  in
+  let cls = join_classes (table_width_class @ td.table_opts) in
   let header_html =
     match td.table_header with
     | Some h -> raw (txt "<thead>") ++ thead_ [] (render_table_row ctx "th" h)

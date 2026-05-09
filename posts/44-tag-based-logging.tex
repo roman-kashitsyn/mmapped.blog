@@ -97,8 +97,9 @@ event!(#rpc, #perf, duration => duration, endpoint => "sendTransaction");
 To select the events appropriate for our context, we construct a \emph{query},
 a logical formula matching the event tags.
 
-\begin{tabular}{ll}
+\begin{tabular}[zebra]{ll}
 Events we want to see & The query \\
+\hrule
 Only events triggered by user actions & \code{#user} \\
 All performance-related events & \code{#perf} \\
 Database performance events & \code{#perf and #db} \\
@@ -164,8 +165,9 @@ and conjunctions into composite filters (\code{#a and #b} becomes \code{[\{a\}\{
 This scheme doesn't support negation (in other words, we cannot query events lacking a specific field) and thus our query language isn't \href{https://en.wikipedia.org/wiki/Functional_completeness}{functionally complete},
 but it is good enough for most use cases.
 
-\begin{tabular}{ll}
+\begin{tabular}[zebra]{ll}
 Tag query & RUST_LOG value \\
+\hrule
 \code{#user} & \code{[\{user\}]=debug} \\
 \code{#db and #perf} & \code{[\{db\}\{perf\}]=debug} \\
 \code{#db or #rpc} & \code{[\{db\}]=debug,[\{rpc\}]=debug} \\
@@ -201,8 +203,9 @@ debug!(target: "rpc::perf", ?duration, endpoint = "sendTransaction");
 debug!(target: "db::perf", ?duration, query = "fetch_transaction");
 \end{code}
 
-\begin{tabular}{ll}
+\begin{tabular}[zebra]{ll}
 Tag query & RUST_LOG value \\
+\hrule
 \code{#user} & \code{user=debug} \\
 \code{#db and #perf} & \code{db::perf=debug} \\
 \code{#db or #rpc} & \code{db=debug,rpc=debug} \\

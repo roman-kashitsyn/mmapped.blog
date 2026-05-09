@@ -48,7 +48,7 @@ Unfortunately, Allen and Meriam do not have \math{\$6.66} to share the burden eq
 So they get a notebook, write ``Ledger'' on the cover, and split the first page into three columns.
 Then Allen and Meriam transfer Geneviève imaginary money on that ledger.
 
-\begin{tabular}{l l r}
+\begin{tabular}[uniform]{l l r}
 From & To & Amount \\
 \hrule
 Allen Brook & Geneviève Bardot & \math{\$6.66} \\
@@ -59,7 +59,7 @@ Now Allen and Meriam have \math{-\$6.66} on their ``accounts'', and Geneviève h
 The next day, they go to a coffee shop and tip \math{\$15}.
 This time Allen pays for everyone, and Geneviève and Meriam add new entries to the ledger.
 
-\begin{tabular}{l l r}
+\begin{tabular}[uniform]{l l r}
 From & To & Amount \\
 \hrule
 Allen Brook & Geneviève Bardot & \math{\$6.66} \\
@@ -101,7 +101,7 @@ The transaction converting a physical bill into a virtual token is a \emph{mint}
 
 One day Geneviève, Allen, and Meriam put \math{\$10} each into the piggy and mint their wrapped money on the ledger.
 
-\begin{tabular}{l l r r}
+\begin{tabular}[uniform]{l l r r}
 From & To & Amount & Piggy bank \\
 \hrule
 --- & Geneviève Bardot & \math{\$10.00} & \math{\$10.00} \\
@@ -112,7 +112,7 @@ From & To & Amount & Piggy bank \\
 Then they all go to a coffee shop where Geneviève tips \math{\$6} for the group.
 Allen and Meriam transfer their shares to Geneviève on the ledger.
 
-\begin{tabular}{l l r r}
+\begin{tabular}[uniform]{l l r r}
 From & To & Amount & Piggy bank \\
 \hrule
 --- & Geneviève Bardot & \math{\$10.00} & \math{\$10.00} \\
@@ -126,7 +126,7 @@ The main difference with the original scheme is that now Geneviève can exit the
 All she needs is to open the piggy under a supervision of a trusted party, get her \math{\$14}, and record a \emph{burn} transaction on the ledger by sending her tokens to the void (sometimes called the \emph{minting account}).
 The sum of all balances on the ledger is always equal to the amount of money in the piggy bank.
 
-\begin{tabular}{l l r r}
+\begin{tabular}[uniform]{l l r r}
 From & To & Amount & Piggy bank \\
 \hrule
 --- & Geneviève Bardot & \math{\$10.00} & \math{\$10.00} \\
@@ -153,7 +153,7 @@ A \href{https://www.investopedia.com/terms/s/sub-account.asp}{subaccount} will b
 Geneviève asks colleagues to transfer funds to her \code{NYYRA OVEGUQNL}\sidenote{nm-subaccount-crypto}{Geneviève applied advanced cryptography to hide the purpose of the subaccount from Allen.} subaccount until the end of the day.
 She burns the tokens on her \code{NYYRA OVEGUQNL} subaccount and withdraws \math{\$42.00} from the piggy bank right before leaving the office.
 
-\begin{tabular}{l l l l r}
+\begin{tabular}[uniform]{l l l l r}
   From & Subaccount & To & Subaccount & Amount \\
 \hrule
   \multicolumn{5}{c}{\cdots} \\
@@ -184,7 +184,7 @@ That solves the problem, but Geneviève cannot use the locked funds herself duri
 Another approach popularized by the Ethereum community is to introduce the notion of \emph{approvals}.
 The ledger could have another table with spending allowances between two people.
 
-\begin{tabular}{l l r}
+\begin{tabular}[uniform]{l l r}
   From & To & Allowance \\
   \hrule
   Geneviève Bardot & Alex Schiller & \math{\$25.00} \\
@@ -198,7 +198,7 @@ This arrangement resulted in two updates to the ledger.
 The first update is the new transaction in the log.
 Note that we need a new column in the table, \textsc{on behalf of}, to indicate that Alex initiated the transaction, but Geneviève is the effective payer.
 
-\begin{tabular}{l l l r}
+\begin{tabular}[uniform]{l l l r}
   From & On behalf of & To & Amount \\
   \hrule
   \multicolumn{4}{c}{\cdots} \\
@@ -207,7 +207,7 @@ Note that we need a new column in the table, \textsc{on behalf of}, to indicate 
 
 The second update lowers the allowance in the approval table by the amount Alex spent.
 
-\begin{tabular}{l l r}
+\begin{tabular}[uniform]{l l r}
   From & To & Allowance \\
   \hrule
   \strikethrough{Geneviève Bardot} & \strikethrough{Alex Schiller} & \strikethrough{\math{\$25.00}} \\
@@ -231,7 +231,7 @@ Her eyes caught a little devilish fire when she saw how her mother used the ledg
 
 Peppy grabbed a pen and started filling the lines with blocky letters.
 
-\begin{tabular}{l l r}
+\begin{tabular}[uniform]{l l r}
 From & To & Amount \\
 \hrule
 \multicolumn{3}{c}{\cdots} \\
@@ -248,7 +248,7 @@ She opened her little backpack with tiger stripes and fetched a nickel she found
 She put the nickel into the piggy bank and recorded a mint.
 She did not stop there, however.
 
-\begin{tabular}{l l r}
+\begin{tabular}[uniform]{l l r}
 From & To & Amount \\
 \hrule
 \multicolumn{3}{c}{\cdots} \\
@@ -263,7 +263,7 @@ Peppy knit her brows, struggling to come up with a counter-action.
 Ten seconds later, she was scribbling again.
 She was so focused that the tip of her tongue stuck from her mouth.
 
-\begin{tabular}{l l r}
+\begin{tabular}[uniform]{l l r}
 From & To & Amount \\
 \hrule
 \multicolumn{3}{c}{\cdots} \\

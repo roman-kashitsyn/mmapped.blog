@@ -17,7 +17,7 @@ I choose an option to pay in <span class="smallcaps">wxdr</span>.</p>
 <p>In the rest of the article, we will fantasize about what the payment page can look like and how it can interact with the shop.</p>
 <h3 id="participants"><a href="#participants">Participants</a></h3>
 <p>Each flow will involve the following participants:</p>
-<table class="table-2 "><tbody><tr><td colspan="1" class="align-l">
+<table><tbody><tr><td colspan="1" class="align-l">
 <img class="grayscale" src="/images/10-me.png"> </td><td colspan="1" class="align-l"> <em>Me</em>: a merry human sitting in front of a computer and ordering a new laptop. </td></tr><tr><td colspan="1" class="align-l">
 <img class="grayscale" src="/images/10-shop.png"> </td><td colspan="1" class="align-l"> <em>Shop</em>: an Internet Computer smart contract accepting orders. </td></tr><tr><td colspan="1" class="align-l">
 <img class="grayscale" src="/images/10-webpage.png"> </td><td colspan="1" class="align-l"> <em>Web page</em>: a spaghetti of markup, styling, and scripts serving the <em>shop</em> UI. </td></tr><tr><td colspan="1" class="align-l">
@@ -280,7 +280,7 @@ Below is the interface we expect from the ledger.</p>
 <p>We analyzed several payment flows for ledgers hosted on the Internet Computer.
 All the flows we discussed had <a href="#payment-phases">three phases</a>: negotiation, payment, and notification.</p>
 <p>Below is a table comparing the payment flows.</p>
-<table class="table-5 "><thead><thead><tr><th colspan="1" class="align-l">
+<table><thead><thead><tr><th colspan="1" class="align-l">
  </th><th colspan="1" class="align-l"> <a href="#invoice-account"><span class="normal">invoice account</span></a> </th><th colspan="1" class="align-l"> <a href="#approve-transfer-from"><span class="normal">approve-transfer-from</span></a> </th><th colspan="1" class="align-l"> <a href="#transfer-notify"><span class="normal">transfer-notify</span></a> </th><th colspan="1" class="align-l"> <a href="#transfer-fetch"><span class="normal">transfer-fetch</span></a> </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
 
 Ledger messages </td><td colspan="1" class="align-l"> 2 </td><td colspan="1" class="align-l"> 2 </td><td colspan="1" class="align-l"> 2 </td><td colspan="1" class="align-l"> 2 </td></tr><tr><td colspan="1" class="align-l">

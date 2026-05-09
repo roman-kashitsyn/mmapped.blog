@@ -122,6 +122,15 @@ let tests : Test_framework.t list =
               ] ->
               assert_equal_int 21 cell_pos
           | Ok _ -> Fail "unexpected AST");
+      test "table accepts options before column spec" (fun () ->
+          let input = "\\begin{tabular}[uniform]{l l}a&b\\end{tabular}" in
+          match parse_ok input with
+          | Error msg -> Fail ("parse error: " ^ msg)
+          | Ok [ NTable (_, _, _, opts, [ Col_left; Col_left ], _) ] -> (
+              match opts with
+              | [ opt ] when Text.equal_string opt "uniform" -> Pass
+              | _ -> Fail "unexpected table options")
+          | Ok _ -> Fail "unexpected AST");
       parse_expect "empty input" "" [];
       parse_expect "plain text" "hello" [ NText (zero, s "hello") ];
       parse_expect "bare command" "\\qed" [ NCmd (zero, S_qed, [], []) ];

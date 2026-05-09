@@ -11,6 +11,26 @@ let s x = Str (txt x)
 let t name expected actual_html : Test_framework.t =
   test name (fun () -> assert_equal_string expected (Html.render actual_html))
 
+let table ?(opts = []) () =
+  Table
+    {
+      table_spec = [ Col_left; Col_left ];
+      table_header = None;
+      table_rows =
+        [
+          {
+            tr_border_top = false;
+            tr_border_bottom = false;
+            tr_cells =
+              [
+                { tc_colspan = 1; tc_align = Col_left; tc_content = [ s "a" ] };
+                { tc_colspan = 1; tc_align = Col_left; tc_content = [ s "b" ] };
+              ];
+          };
+        ];
+      table_opts = List.map txt opts;
+    }
+
 let tests : Test_framework.t list =
   group "render"
     [
@@ -48,6 +68,15 @@ let tests : Test_framework.t list =
       t "svg image wrapped in p.svg"
         "<p class=\"svg\"><img src=\"diagram.svg\"></p>\n"
         (Render.render_block Render.empty_ctx (Image ([], txt "diagram.svg")));
+      t "table without uniform option has no generated width class"
+        "<table><tbody><tr><td colspan=\"1\" class=\"align-l\">a</td><td \
+         colspan=\"1\" class=\"align-l\">b</td></tr></tbody></table>\n"
+        (Render.render_block Render.empty_ctx (table ()));
+      t "table with uniform option has generated width class"
+        "<table class=\"table-2 uniform\"><tbody><tr><td colspan=\"1\" \
+         class=\"align-l\">a</td><td colspan=\"1\" \
+         class=\"align-l\">b</td></tr></tbody></table>\n"
+        (Render.render_block Render.empty_ctx (table ~opts:[ "uniform" ] ()));
       t "blockquote trims boundary whitespace in quote paragraphs"
         {|<figure class="bq left-gutter-anchor"><blockquote><p>hello <b>world</b></p></blockquote><figcaption>by test</figcaption></figure>
 |}
