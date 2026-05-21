@@ -230,6 +230,7 @@ let rec inline_to_text = function
   | Math_span ils
   | Normal ils
   | Code (_, ils)
+  | Highlighted (_, ils)
   | Link (_, ils)
   | Margin_note (_, ils)
   | Side_note (_, ils) ->

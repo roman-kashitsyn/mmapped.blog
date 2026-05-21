@@ -45,6 +45,16 @@ let tests : Test_framework.t list =
       t "anchor" "<span id=\"foo\"></span>"
         (Render.render_inline Render.empty_ctx (Anchor (txt "foo")));
       t "line break" "<br>" (Render.render_inline Render.empty_ctx Line_break);
+      t "circled ref uses generated content"
+        ("<span class=\"circled-ref\" data-num-glyph=\"" ^ "\xE2\x91\xA0"
+       (* ① U+2460 *) ^ "\"></span>")
+        (Render.render_inline Render.empty_ctx (Circled_ref 1));
+      t "highlighted inline role" "<span class=\"hl-kw\">func</span>"
+        (Render.render_inline Render.empty_ctx
+           (Highlighted (Hl_keyword, [ s "func" ])));
+      t "highlighted typedef role" "<span class=\"hl-typedef\">Server</span>"
+        (Render.render_inline Render.empty_ctx
+           (Highlighted (Hl_typedef, [ s "Server" ])));
       t "hrule block" "<hr>\n" (Render.render_block Render.empty_ctx HRule);
       t "section with no header" "<section></section>\n"
         (Render.render_block Render.empty_ctx (Section (None, [])));
@@ -90,4 +100,51 @@ let tests : Test_framework.t list =
          to this advice\"></a>Use it.</p></div>\n"
         (Render.render_block Render.empty_ctx
            (Advice (txt "hint", [ s "Use it." ])));
+      t "go code block emits syntax spans inside lines"
+        "<div class=\"source-container\"><pre class=\"source go\"><code><span \
+         class=\"line\"><span class=\"hl-kw\">package</span> <span \
+         class=\"hl-id\">main</span></span>\n\
+         <span class=\"line\"><span class=\"hl-kw\">func</span> <span \
+         class=\"hl-defun\">main</span>() {}</span>\n\
+         </code></pre></div>\n"
+        (Render.render_block Render.empty_ctx
+           (Code_block ([ txt "go" ], [ s "package main\nfunc main() {}" ])));
+      t "go code block emits typedef spans"
+        "<div class=\"source-container\"><pre class=\"source go\"><code><span \
+         class=\"line\"><span class=\"hl-kw\">type</span> <span \
+         class=\"hl-typedef\">Server</span> <span \
+         class=\"hl-kw\">struct</span>{}</span>\n\
+         </code></pre></div>\n"
+        (Render.render_block Render.empty_ctx
+           (Code_block ([ txt "go" ], [ s "type Server struct{}" ])));
+      t "non-go code block remains unchanged"
+        "<div class=\"source-container\"><pre class=\"source \
+         rust\"><code><span class=\"line\">fn main() {}</span>\n\
+         </code></pre></div>\n"
+        (Render.render_block Render.empty_ctx
+           (Code_block ([ txt "rust" ], [ s "fn main() {}" ])));
+      t "go code block preserves embedded inlines"
+        "<div class=\"source-container\"><pre class=\"source go\"><code><span \
+         class=\"line\"><span class=\"hl-kw\">func</span> <span \
+         id=\"code-label\"></span><span class=\"hl-id\">main</span>() <a \
+         href=\"/x\">body</a></span>\n\
+         </code></pre></div>\n"
+        (Render.render_block Render.empty_ctx
+           (Code_block
+              ( [ txt "go" ],
+                [
+                  s "func ";
+                  Anchor (txt "code-label");
+                  s "main() ";
+                  Link (txt "/x", [ s "body" ]);
+                ] )));
+      t "go line comment spans embedded inlines"
+        "<div class=\"source-container\"><pre class=\"source go\"><code><span \
+         class=\"line\"><span class=\"hl-comment\">// Hello <span \
+         class=\"smallcaps\">cruel</span> world!</span></span>\n\
+         </code></pre></div>\n"
+        (Render.render_block Render.empty_ctx
+           (Code_block
+              ( [ txt "go" ],
+                [ s "// Hello "; Small_caps [ s "cruel" ]; s " world!" ] )));
     ]

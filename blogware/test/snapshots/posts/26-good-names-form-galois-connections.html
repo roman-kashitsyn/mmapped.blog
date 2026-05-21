@@ -90,10 +90,10 @@ The reader’s identity is no less important than the book’s contents.</p>
 </figure>
 <p>The context turns the many-to-many relation between concepts and words into two maps.
 The first map,
-<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">encode</mo><mo stretchy="false">:</mo><mo stretchy="false">Concept</mo><mo>→</mo><mo stretchy="false">Expression</mo></math>,
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>encode</mi><mo stretchy="false">:</mo><mi>Concept</mi><mo>→</mo><mi>Expression</mi></math>,
 defines how the author picks words to communicate the concept.
 The second map,
-<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">decode</mo><mo stretchy="false">:</mo><mo stretchy="false">Expression</mo><mo>→</mo><mo stretchy="false">Concept</mo></math>
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>decode</mi><mo stretchy="false">:</mo><mi>Expression</mi><mo>→</mo><mi>Concept</mi></math>
 defines how readers interpret these words.</p>
 </section>
 <section><h2 id="channel"><a href="#channel">Names as communication channels</a></h2>
@@ -132,7 +132,7 @@ In the following formula,
 <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><msub><mi>C</mi><mi>r</mi></msub></math> is the receiver’s concept,
 <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>E</mi></math> is the set of all possible concept expressions,
 and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>I</mi><mo stretchy="false">(</mo><msub><mi>C</mi><mi>r</mi></msub><mo stretchy="false">;</mo><msub><mi>C</mi><mi>s</mi></msub><mo stretchy="false">)</mo></math> is the mutual information computed for expression <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>e</mi></math>.</p>
-<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><mo stretchy="false">best-name</mo><mo>(</mo><msub><mi>C</mi><mi>s</mi></msub><mo>)</mo><mo stretchy="false">=</mo><msub><mo stretchy="false">argmax</mo><mrow><mi>e</mi><mo>∈</mo><mi>E</mi></mrow></msub><mo>{</mo><mi>I</mi><mo>(</mo><msub><mi>C</mi><mi>r</mi></msub><mo stretchy="false">;</mo><msub><mi>C</mi><mi>s</mi></msub><mo>)</mo><mo>}</mo></math></p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><mi>best-name</mi><mo>(</mo><msub><mi>C</mi><mi>s</mi></msub><mo>)</mo><mo stretchy="false">=</mo><msub><mi>argmax</mi><mrow><mi>e</mi><mo>∈</mo><mi>E</mi></mrow></msub><mo>{</mo><mi>I</mi><mo>(</mo><msub><mi>C</mi><mi>r</mi></msub><mo stretchy="false">;</mo><msub><mi>C</mi><mi>s</mi></msub><mo>)</mo><mo>}</mo></math></p>
 <p>The channel interpretation of names is quantitative but not particularly satisfying because it involves probabilities that are hard to compute.
 Furthermore, the only way to know you’ve found a good expression for your concept is to compare it with all other expressions.
 Could we find a more elegant way to capture the essence of a good name?</p>
@@ -184,24 +184,24 @@ there are at least as many animals as cats.
 The idea of being more or less <q>specific</q> part might sound handwavy to you,
 but we can make it precise using methods of <a href="https://en.wikipedia.org/wiki/Formal_concept_analysis">formal concept analysis</a>.</p>
 <p>The functions forming the Galois connection are the concept decoding function
-<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">decode</mo><mo stretchy="false">:</mo><mi>E</mi><mo>→</mo><mi>C</mi></math>
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>decode</mi><mo stretchy="false">:</mo><mi>E</mi><mo>→</mo><mi>C</mi></math>
 and the concept encoding function
-<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">encode</mo><mo stretchy="false">:</mo><mi>C</mi><mo>→</mo><mi>E</mi></math>.
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>encode</mi><mo stretchy="false">:</mo><mi>C</mi><mo>→</mo><mi>E</mi></math>.
 These functions are monotone because <span class="math">encode</span> maps more specific concepts to more expressive names,
 and <span class="math">decode</span> maps more expressive names to more specific concepts.
 The connection becomes
-<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">decode</mo><mo stretchy="false">(</mo><mi>e</mi><mo stretchy="false">)</mo><mo>≤</mo><mi>c</mi><mo>⇔</mo><mi>e</mi><mo>≤</mo><mo stretchy="false">encode</mo><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></math>.</p>
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>decode</mi><mo stretchy="false">(</mo><mi>e</mi><mo stretchy="false">)</mo><mo>≤</mo><mi>c</mi><mo>⇔</mo><mi>e</mi><mo>≤</mo><mi>encode</mi><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></math>.</p>
 <p>Even the specialized equivalence looks unintuitive,
 so let’s see how it holds with an example.
 Imagine we want to name a variable holding the amount of <span class="smallcaps">usd</span> in a bank account
 (that’s our concept <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>c</mi></math>).
 Would <span class="math">value</span> be an appropriate variable name?</p>
 <p>Let’s see what our connection tells us:
-<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">decode</mo><mo stretchy="false">(</mo><mo stretchy="false">value</mo><mo stretchy="false">)</mo></math>
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>decode</mi><mo stretchy="false">(</mo><mi>value</mi><mo stretchy="false">)</mo></math>
 is a vague concept,
 less specific than the bank account balance.
 Hence,
-<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">decode</mo><mo stretchy="false">(</mo><mo stretchy="false">value</mo><mo stretchy="false">)</mo><mo stretchy="false">&gt;</mo><mi>c</mi></math>
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>decode</mi><mo stretchy="false">(</mo><mi>value</mi><mo stretchy="false">)</mo><mo stretchy="false">&gt;</mo><mi>c</mi></math>
 so <span class="math">value</span> is not a good name.
 I would prefer <span class="math">usd_balance</span>, which decodes to a more specific concept.</p>
 <p>But wait, wouldn’t <span class="math">bank_account_usd_balance</span> be an even better name?

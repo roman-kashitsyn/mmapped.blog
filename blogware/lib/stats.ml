@@ -48,6 +48,7 @@ let count_inlines (ils : inline list) : int =
     | Fun ils
     | Math_span ils
     | Normal ils
+    | Highlighted (_, ils)
     | Link (_, ils)
     | Margin_note (_, ils)
     | Cite ils

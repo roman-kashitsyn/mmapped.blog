@@ -193,17 +193,17 @@ Let us consider the following interface of a function that sends an email.
 }
 \begin{code}[bad]
 pub enum SendMailError {
-  \emph{/// One of the addresses passed to \code{send_mail} is invalid.}
+  \emph{/// One of the addresses passed to send\_mail is invalid.}
   \b{MalformedAddress} { address: String, reason: String },
   \emph{/// Failed to connect to the mail server.}
   FailedToConnect { source: std::io::Error, reason: String },
   /* \ldots  */
 }
-pub fn send_mail(to: &str, cc: &[&str], body: &str) -> SendMailError { /* \ldots  */ }
+pub fn send\_mail(to: &str, cc: &[&str], body: &str) -> SendMailError { /* \ldots  */ }
 \end{code}
 \end{figure}
 
-Note that our \code{send_mail} function does at least two things: validating email addresses and sending emails.
+Note that our \code{send\_mail} function does at least two things: validating email addresses and sending emails.
 Such a state of affairs becomes tiresome if you have many functions that expect valid addresses as inputs.
 One solution is to pepper the code with more types.
 In this case, we can introduce the \code{EmailAddress} type that holds only valid email addresses.
@@ -321,27 +321,27 @@ pub enum FetchTxError {
   ConnectionFailed {
     url: String,
     reason: String,
-    cause: Option<std::io::Error>, // \circled{1}
+    cause: Option<std::io::Error>, \circled{1}
   },
 
   \emph{/// Cannot find transaction with the specified txid.}
-  TxNotFound(Txid), // \circled{2}
+  TxNotFound(Txid), \circled{2}
 
   \emph{/// The object data is not valid CBOR.}
-  InvalidEncoding { // \circled{3}
+  InvalidEncoding { \circled{3}
     data: Bytes,
     error_offset: Option<usize>,
     error_message: String,
   },
 
   \emph{/// The public key is malformed.}
-  MalformedPublicKey { // \circled{4}
+  MalformedPublicKey { \circled{4}
     key_bytes: Vec<u8>,
     reason: String,
   },
 
   \emph{/// The transaction signature does not match the public key.}
-  SignatureVerificationFailed { // \circled{4}
+  SignatureVerificationFailed { \circled{4}
     txid: Txid,
     pk: Pubkey,
     sig: Signature,

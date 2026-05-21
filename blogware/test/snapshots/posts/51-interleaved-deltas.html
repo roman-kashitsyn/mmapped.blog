@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="dsa"><meta name="description" content="The data structure behind the first version control system."><title>Interleaved deltas</title><link rel="stylesheet" href="/css/mmapped.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/51-interleaved-deltas.html"><script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Interleaved deltas","url":"https://mmapped.blog/posts/51-interleaved-deltas.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/51-interleaved-deltas.html"},"datePublished":"2026-05-22","dateModified":"2026-05-22","wordCount":1444,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"The data structure behind the first version control system.","keywords":["dsa"]}
+</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/notes/index.html">Notes</a></li><li><a href="/feed.xml">Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/51-interleaved-deltas.html">Interleaved deltas</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2026-05-22">2026-05-22</time></span><span class="post-keywords"><a class="keyword-link" href="/notes/dsa.html">dsa</a></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#sec-weave-structure">Weave structure</a></li><li class="toc toc-level-1"><a href="#sec-active-revisions">Active revision set</a></li><li class="toc toc-level-1"><a href="#sec-reconstruction">Reconstructing revisions</a></li><li class="toc toc-level-1"><a href="#sec-deltas">Computing deltas</a></li><li class="toc toc-level-1"><a href="#sec-extension">Extending weaves</a></li><li class="toc toc-level-1"><a href="#sec-reconstruct-delta">Reconstructing deltas</a></li><li class="toc toc-level-1"><a href="#sec-conclusion">Conclusion</a></li><li class="toc toc-level-1"><a href="#sec-exercises">Exercises</a></li></ul><hr>
+
+<section><figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>A weave has a reputation of one of the most reinvented data structures in history.</p></blockquote><figcaption>
+  Victor Grishchenko, Mikhail Patrakeev, <cite><a href="https://arxiv.org/pdf/2002.09511v3">Chronofold: a data structure for versioned text</a></cite>
+</figcaption></figure>
+<p>Progress is often viewed as a transition from simple to complex.
+Although individual systems do become more complex over time,
+long-term progress happens when new ideas and advances in hardware
+make simple designs feasible.</p>
+<p>Think of the simplest version control system you can imagine.
+It probably stores project snapshots in a backup directory.
+Maybe it compresses files for efficiency.
+Add hashing for <a href="https://en.wikipedia.org/wiki/Content-addressable_storage">content addressing</a>,
+and the sketch starts to resemble <a href="https://git-scm.com/">Git</a>.
+I don’t mean this as an insult to Git; quite the opposite:</p>
+<figure class="bq left-gutter-anchor"><blockquote><p>the structure of a Git repository is stunningly simple.
+  It’s so simple in fact,
+  that you’ll be surprised at the sophistication of the things you can do with it.
+  But that’s the way the best code will always be:
+  simple, solid premises out of which complex applications arise.</p></blockquote><figcaption>Wincent Colaiuta, <a href="https://web.archive.org/web/20090221182312/http://wincent.com/a/about/wincent/weblog/archives/2007/07/a_look_back_bra.php">A look back: Bram Cohen vs Linus Torvalds</a></figcaption></figure>
+<p>
+The <a href="https://mrochkind.com/aup/talks/SCCS-Slideshow.pdf">Source Code Control System</a>
+(<span class="smallcaps">sccs</span>), developed by Marc J. Rochkind in the early seventies,
+had to be more sophisticated.
+It operated on one file at a time
+and stored all its revisions in a data structure
+called <em>interleaved deltas</em> or <em>weaves</em>.</p>
+<p>If Git felt like something I could have invented myself,
+weaves captivated and intimidated me for years.
+When I finally found time to work out the algorithms,
+the resources were scarce<label class="margin-toggle sidenote-number" for="mn-sources"></label><input type="checkbox" id="mn-sources" class="margin-toggle"><span class="sidenote">
+  <a href="https://www.bitkeeper.org/src-notes/SCCSWEAVE.html">BitKeeper wiki</a> offers a good introduction.
+  Bram Cohen wrote a <a href="https://github.com/bramcohen/Weave">reference implementation</a>, but I found it impenetrable.
+</span>,
+so I published my study for future explorers.
+You can find the full source code at <a href="https://github.com/roman-kashitsyn/weaver"><code>roman-kashitsyn/weaver</code></a>.</p>
+</section>
+<section><h2 id="sec-weave-structure"><a href="#sec-weave-structure">Weave structure</a></h2>
+<p>A weave is a sequence of instructions for reconstructing file revisions.
+An instruction consists of a type and an operand.</p>
+<table><thead><thead><tr><th colspan="1" class="align-l">
+Type </th><th colspan="1" class="align-l"> Operand </th><th colspan="1" class="align-l"> Meaning </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
+
+<code>Line</code> </td><td colspan="1" class="align-l"> Line index </td><td colspan="1" class="align-l"> Output a line. </td></tr><tr><td colspan="1" class="align-l">
+<code>BeginInsert</code> </td><td colspan="1" class="align-l"> Version number </td><td colspan="1" class="align-l"> Start a block of lines added in a version. </td></tr><tr><td colspan="1" class="align-l">
+<code>BeginDelete</code> </td><td colspan="1" class="align-l"> Version number </td><td colspan="1" class="align-l"> Start a block of lines deleted in a version. </td></tr><tr><td colspan="1" class="align-l">
+<code>End</code> </td><td colspan="1" class="align-l"> Version number </td><td colspan="1" class="align-l"> Close a block for a version. </td></tr></tbody></table>
+<figure><label class="margin-toggle" for="instr-type">⊕</label><input type="checkbox" id="instr-type" class="margin-toggle"><span class="marginnote">
+  The weave instruction type.
+</span><div class="source-container"><pre class="source go"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">InstructionType</span> <span class="hl-id">int</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">const</span> (</span>
+<span class="line">	<span class="hl-var">Line</span> <span class="hl-id">InstructionType</span> = <span class="hl-id">iota</span></span>
+<span class="line">	<span class="hl-var">BeginInsert</span></span>
+<span class="line">	<span class="hl-var">BeginDelete</span></span>
+<span class="line">	<span class="hl-var">End</span></span>
+<span class="line">)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment">// Instruction is a weave instruction.</span></span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Instruction</span> <span class="hl-kw">struct</span> {</span>
+<span class="line">	<span class="hl-id">Type</span> <span class="hl-id">InstructionType</span></span>
+<span class="line">	<span class="hl-comment">// Payload contains the instruction payload.</span></span>
+<span class="line">	<span class="hl-comment">// For Line instructions, it's the line number.</span></span>
+<span class="line">	<span class="hl-comment">// For other instructions, it's the version ID.</span></span>
+<span class="line">	<span class="hl-id">Payload</span> <span class="hl-id">int</span></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">func</span> (<span class="hl-var">i</span> <span class="hl-id">Instruction</span>) <span class="hl-defun">Line</span>() <span class="hl-id">int</span> {</span>
+<span class="line">	<span class="hl-kw">return</span> <span class="hl-id">i</span>.<span class="hl-id">Payload</span></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">func</span> (<span class="hl-var">i</span> <span class="hl-id">Instruction</span>) <span class="hl-defun">VersionID</span>() <span class="hl-id">VersionID</span> {</span>
+<span class="line">	<span class="hl-kw">return</span> <span class="hl-id">VersionID</span>(<span class="hl-id">i</span>.<span class="hl-id">Payload</span>)</span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>All line instructions must belong to an <code>Insert</code> or <code>Delete</code> block.
+The integer in the line instruction points into the global line pool.
+Using line indices instead of strings shrinks the weave and makes instructions uniform.</p>
+<p>Unlike in <span class="smallcaps">xml</span> or <span class="smallcaps">json</span>,
+weave blocks can overlap.
+For example, if <code>v1</code> adds lines 1 and 2,
+<code>v2</code> appends lines 3–6,
+and <code>v3</code> removes lines 2–4,
+then <code>v3</code>’s delta overlaps with deltas of the first two versions.</p>
+<div class="source-container"><pre class="source"><code><span class="line">   ⎧ Insert v1</span>
+<span class="line">   ⎪ 1</span>
+<span class="line">Δ1 ⎨ Delete v3  ⎫</span>
+<span class="line">   ⎪ 2          ⎪</span>
+<span class="line">   ⎩ End v1     ⎪</span>
+<span class="line">   ⎧ Insert v2  ⎬ Δ3</span>
+<span class="line">   ⎪ 3          ⎪</span>
+<span class="line">   ⎪ 4          ⎪</span>
+<span class="line">Δ2 ⎨ End v3     ⎭</span>
+<span class="line">   ⎪ 5</span>
+<span class="line">   ⎪ 6</span>
+<span class="line">   ⎩ End v2</span>
+</code></pre></div>
+<p>Versions in a weave depend on one another.
+In the example above,
+<code>v3</code> depends on both <code>v1</code> and <code>v2</code>
+because it deletes lines that they introduced.
+The relationship between <code>v1</code> and <code>v2</code> is ambiguous:
+<code>v1</code> could be <code>v2</code>’s parent,
+or they could be independent branches that <code>v3</code> merged.</p>
+<p>The weave alone is not enough to deduce dependencies between deltas.
+Most weave-based systems express these dependencies using <em>activation sets</em>.</p>
+</section>
+<section><h2 id="sec-active-revisions"><a href="#sec-active-revisions">Active revision set</a></h2>
+<p><span class="smallcaps">sccs</span> has hierarchical revision names (<code>1.4</code> and <code>2.1</code>, for example).
+When you check out a revision,
+the system uses heuristics to compute its <em>activation set</em>—the collection of deltas that contribute to the file content.</p>
+<p>I think of activation sets as switches controlling streetlamps on a dark avenue.
+Flipping them reveals or hides parts of the weave.</p>
+<p>For my experiment,
+I chose flat sequential revision numbering.
+Each revision can have one or more parents<label class="margin-toggle sidenote-number" for="sn-multiple-parents"></label><input type="checkbox" id="sn-multiple-parents" class="margin-toggle"><span class="sidenote">
+  Revisions with multiple parents represent merge commits.
+</span>.
+Parent revisions are numerically smaller than their children,
+so no version can be its own ancestor.
+Activating a revision also activates all of its parents,
+so computing the active set requires a graph traversal.</p>
+<figure><label class="margin-toggle" for="mn-active-sets">⊕</label><input type="checkbox" id="mn-active-sets" class="margin-toggle"><span class="marginnote">
+  An <em>active set</em> is a collection of deltas that together make a file revision.
+  We compute it by traversing the version graph.
+</span><div class="source-container"><pre class="source go"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">VersionID</span> <span class="hl-id">int</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">ActiveSet</span> []<span class="hl-id">bool</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">func</span> (<span class="hl-var">s</span> <span class="hl-id">ActiveSet</span>) <span class="hl-defun">Contains</span>(<span class="hl-var">v</span> <span class="hl-id">VersionID</span>) <span class="hl-id">bool</span> {</span>
+<span class="line">	<span class="hl-kw">return</span> <span class="hl-id">v</span> &gt;= 0 &amp;&amp; <span class="hl-id">int</span>(<span class="hl-id">v</span>) &lt; <span class="hl-id">len</span>(<span class="hl-id">s</span>) &amp;&amp; <span class="hl-id">s</span>[<span class="hl-id">v</span>]</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">func</span> (<span class="hl-var">s</span> <span class="hl-id">ActiveSet</span>) <span class="hl-defun">Deactivate</span>(<span class="hl-var">v</span> <span class="hl-id">VersionID</span>) <span class="hl-id">ActiveSet</span> {</span>
+<span class="line">	<span class="hl-var">out</span> := <span class="hl-id">slices</span>.<span class="hl-id">Clone</span>(<span class="hl-id">s</span>)</span>
+<span class="line">	<span class="hl-id">out</span>[<span class="hl-id">v</span>] = <span class="hl-id">false</span></span>
+<span class="line">	<span class="hl-kw">return</span> <span class="hl-id">out</span></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Version</span> <span class="hl-kw">struct</span> {</span>
+<span class="line">	<span class="hl-id">ID</span>          <span class="hl-id">VersionID</span></span>
+<span class="line">	<span class="hl-id">Parents</span>     []<span class="hl-id">VersionID</span></span>
+<span class="line">	<span class="hl-id">Author</span>      <span class="hl-id">string</span></span>
+<span class="line">	<span class="hl-id">Description</span> <span class="hl-id">string</span></span>
+<span class="line">	<span class="hl-id">Date</span>        <span class="hl-id">time</span>.<span class="hl-id">Time</span></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">func</span> <span class="hl-defun">activeSetForVersion</span>(<span class="hl-var">versions</span> []<span class="hl-id">Version</span>, <span class="hl-var">v</span> <span class="hl-id">VersionID</span>) <span class="hl-id">ActiveSet</span> {</span>
+<span class="line">	<span class="hl-var">activeSet</span> := <span class="hl-id">make</span>(<span class="hl-id">ActiveSet</span>, <span class="hl-id">len</span>(<span class="hl-id">versions</span>)+1)</span>
+<span class="line">	<span class="hl-var">stack</span> := []<span class="hl-id">VersionID</span>{<span class="hl-id">v</span>}</span>
+<span class="line">	<span class="hl-kw">for</span> <span class="hl-id">len</span>(<span class="hl-id">stack</span>) &gt; 0 {</span>
+<span class="line">		<span class="hl-var">w</span> := <span class="hl-id">stack</span>[<span class="hl-id">len</span>(<span class="hl-id">stack</span>)-1]</span>
+<span class="line">		<span class="hl-id">stack</span> = <span class="hl-id">stack</span>[:<span class="hl-id">len</span>(<span class="hl-id">stack</span>)-1]</span>
+<span class="line">		<span class="hl-id">activeSet</span>[<span class="hl-id">w</span>] = <span class="hl-id">true</span></span>
+<span class="line">		<span class="hl-kw">for</span> <span class="hl-var">_</span>, <span class="hl-var">p</span> := <span class="hl-kw">range</span> <span class="hl-id">versions</span>[<span class="hl-id">w</span>-1].<span class="hl-id">Parents</span> {</span>
+<span class="line">			<span class="hl-kw">if</span> !<span class="hl-id">activeSet</span>[<span class="hl-id">p</span>] {</span>
+<span class="line">				<span class="hl-id">stack</span> = <span class="hl-id">append</span>(<span class="hl-id">stack</span>, <span class="hl-id">p</span>)</span>
+<span class="line">			}</span>
+<span class="line">		}</span>
+<span class="line">	}</span>
+<span class="line">	<span class="hl-kw">return</span> <span class="hl-id">activeSet</span></span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>We’re now ready to tackle the version reconstruction algorithm.</p>
+</section>
+<section><h2 id="sec-reconstruction"><a href="#sec-reconstruction">Reconstructing revisions</a></h2>
+<p>To reconstruct a revision,
+we compute its <a href="#sec-active-revisions">active set</a>
+and scan the instruction list,
+keeping track of currently open blocks in a <a href="https://en.wikipedia.org/wiki/Priority_queue">priority queue</a>.
+If the instruction opens an insert block—for any revision—or a delete block for an active revision, we push it onto the queue.
+We copy lines if the block at the top of the priority queue is active
+(that’s why we keep inactive inserts in the queue).</p>
+<p>We need a priority queue because blocks can overlap (see the <a href="#sec-weave-structure">Weave structure</a> section for an example).
+If blocks were properly nested, a stack would suffice.</p>
+<p>My implementation uses a sorted slice as a priority queue for brevity
+(<a href="https://pkg.go.dev/container/heap">heaps</a> require a lot of boilerplate in Go).</p>
+<figure><label class="margin-toggle" for="mn-reconstruct">⊕</label><input type="checkbox" id="mn-reconstruct" class="margin-toggle"><span class="marginnote">
+  The <code>Reconstruct</code> function recovers the lines of any file version stored in a weave.
+</span><div class="source-container"><pre class="source go"><code><span class="line"><span class="hl-kw">var</span> (</span>
+<span class="line">	<span class="hl-var">ErrBadWeave</span> = <span class="hl-id">errors</span>.<span class="hl-id">New</span>(<span class="hl-str">&quot;E001: malformed weave&quot;</span>)</span>
+<span class="line">	<span class="hl-var">ErrBadDelta</span> = <span class="hl-id">errors</span>.<span class="hl-id">New</span>(<span class="hl-str">&quot;E002: bad delta&quot;</span>)</span>
+<span class="line">)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment">// Reconstruct locates the lines enabled in the given version set.</span></span>
+<span class="line"><span class="hl-comment">// It returns the boolean mask of enabled &quot;Line&quot; instructions</span></span>
+<span class="line"><span class="hl-comment">// and the IDs of versions that introduced the enabled lines.</span></span>
+<span class="line"><span class="hl-comment">//</span></span>
+<span class="line"><span class="hl-comment">// Returns [ErrBadWeave] if the instructions aren't a valid weave.</span></span>
+<span class="line"><span class="hl-kw">func</span> <span class="hl-defun">Reconstruct</span>(</span>
+<span class="line">	<span class="hl-var">instructions</span> []<span class="hl-id">Instruction</span>,</span>
+<span class="line">	<span class="hl-var">activeSet</span> <span class="hl-id">ActiveSet</span>,</span>
+<span class="line">) (<span class="hl-var">mask</span> []<span class="hl-id">bool</span>, <span class="hl-var">versions</span> []<span class="hl-id">VersionID</span>, <span class="hl-var">err</span> <span class="hl-id">error</span>) {</span>
+<span class="line">	<span class="hl-id">mask</span> = <span class="hl-id">make</span>([]<span class="hl-id">bool</span>, <span class="hl-id">len</span>(<span class="hl-id">instructions</span>))</span>
+<span class="line">	<span class="hl-var">openBlocksByVersion</span> := <span class="hl-id">make</span>(<span class="hl-kw">map</span>[<span class="hl-id">VersionID</span>]<span class="hl-id">int</span>)</span>
+<span class="line">	<span class="hl-comment">// activeBlocks are sorted by VersionID (ascending).</span></span>
+<span class="line">	<span class="hl-kw">var</span> <span class="hl-var">activeBlocks</span> []<span class="hl-id">Instruction</span></span>
+<span class="line">	<span class="hl-var">activeBlock</span> := <span class="hl-kw">func</span>(<span class="hl-var">v</span> <span class="hl-id">VersionID</span>) (<span class="hl-id">int</span>, <span class="hl-id">bool</span>) {</span>
+<span class="line">		<span class="hl-kw">return</span> <span class="hl-id">slices</span>.<span class="hl-id">BinarySearchFunc</span>(<span class="hl-id">activeBlocks</span>, <span class="hl-id">v</span>,</span>
+<span class="line">			<span class="hl-kw">func</span>(<span class="hl-var">instr</span> <span class="hl-id">Instruction</span>, <span class="hl-var">target</span> <span class="hl-id">VersionID</span>) <span class="hl-id">int</span> {</span>
+<span class="line">				<span class="hl-kw">return</span> <span class="hl-id">cmp</span>.<span class="hl-id">Compare</span>(<span class="hl-id">instr</span>.<span class="hl-id">VersionID</span>(), <span class="hl-id">target</span>)</span>
+<span class="line">			})</span>
+<span class="line">	}</span>
+<span class="line"></span>
+<span class="line">	<span class="hl-kw">for</span> <span class="hl-var">offset</span>, <span class="hl-var">instr</span> := <span class="hl-kw">range</span> <span class="hl-id">instructions</span> {</span>
+<span class="line">		<span class="hl-kw">switch</span> <span class="hl-id">instr</span>.<span class="hl-id">Type</span> {</span>
+<span class="line">		<span class="hl-kw">case</span> <span class="hl-id">Line</span>:</span>
+<span class="line">			<span class="hl-kw">if</span> <span class="hl-id">len</span>(<span class="hl-id">activeBlocks</span>) == 0 {</span>
+<span class="line">				<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">nil</span>, <span class="hl-id">ErrBadWeave</span></span>
+<span class="line">			}</span>
+<span class="line">			<span class="hl-var">top</span> := <span class="hl-id">activeBlocks</span>[<span class="hl-id">len</span>(<span class="hl-id">activeBlocks</span>)-1]</span>
+<span class="line">			<span class="hl-var">v</span> := <span class="hl-id">top</span>.<span class="hl-id">VersionID</span>()</span>
+<span class="line">			<span class="hl-kw">if</span> <span class="hl-id">activeSet</span>.<span class="hl-id">Contains</span>(<span class="hl-id">v</span>) &amp;&amp; <span class="hl-id">top</span>.<span class="hl-id">Type</span> == <span class="hl-id">BeginInsert</span> {</span>
+<span class="line">				<span class="hl-id">mask</span>[<span class="hl-id">offset</span>] = <span class="hl-id">true</span></span>
+<span class="line">				<span class="hl-id">versions</span> = <span class="hl-id">append</span>(<span class="hl-id">versions</span>, <span class="hl-id">v</span>)</span>
+<span class="line">			}</span>
+<span class="line">		<span class="hl-kw">case</span> <span class="hl-id">BeginInsert</span>, <span class="hl-id">BeginDelete</span>:</span>
+<span class="line">			<span class="hl-var">v</span> := <span class="hl-id">instr</span>.<span class="hl-id">VersionID</span>()</span>
+<span class="line">			<span class="hl-kw">if</span> <span class="hl-var">_</span>, <span class="hl-var">ok</span> := <span class="hl-id">openBlocksByVersion</span>[<span class="hl-id">v</span>]; <span class="hl-id">ok</span> {</span>
+<span class="line">				<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">nil</span>, <span class="hl-id">ErrBadWeave</span></span>
+<span class="line">			}</span>
+<span class="line">			<span class="hl-kw">if</span> <span class="hl-id">instr</span>.<span class="hl-id">Type</span> == <span class="hl-id">BeginInsert</span> || <span class="hl-id">activeSet</span>.<span class="hl-id">Contains</span>(<span class="hl-id">v</span>) {</span>
+<span class="line">				<span class="hl-var">at</span>, <span class="hl-var">_</span> := <span class="hl-id">activeBlock</span>(<span class="hl-id">v</span>)</span>
+<span class="line">				<span class="hl-id">activeBlocks</span> = <span class="hl-id">slices</span>.<span class="hl-id">Insert</span>(<span class="hl-id">activeBlocks</span>, <span class="hl-id">at</span>, <span class="hl-id">instr</span>)</span>
+<span class="line">			}</span>
+<span class="line">			<span class="hl-id">openBlocksByVersion</span>[<span class="hl-id">v</span>] = <span class="hl-id">offset</span></span>
+<span class="line">		<span class="hl-kw">case</span> <span class="hl-id">End</span>:</span>
+<span class="line">			<span class="hl-var">v</span> := <span class="hl-id">instr</span>.<span class="hl-id">VersionID</span>()</span>
+<span class="line">			<span class="hl-kw">if</span> <span class="hl-var">_</span>, <span class="hl-var">ok</span> := <span class="hl-id">openBlocksByVersion</span>[<span class="hl-id">v</span>]; !<span class="hl-id">ok</span> {</span>
+<span class="line">				<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">nil</span>, <span class="hl-id">ErrBadWeave</span></span>
+<span class="line">			}</span>
+<span class="line">			<span class="hl-var">at</span>, <span class="hl-var">found</span> := <span class="hl-id">activeBlock</span>(<span class="hl-id">v</span>)</span>
+<span class="line">			<span class="hl-kw">if</span> <span class="hl-id">found</span> {</span>
+<span class="line">				<span class="hl-id">activeBlocks</span> = <span class="hl-id">slices</span>.<span class="hl-id">Delete</span>(<span class="hl-id">activeBlocks</span>, <span class="hl-id">at</span>, <span class="hl-id">at</span>+1)</span>
+<span class="line">			}</span>
+<span class="line">			<span class="hl-id">delete</span>(<span class="hl-id">openBlocksByVersion</span>, <span class="hl-id">v</span>)</span>
+<span class="line">		<span class="hl-kw">default</span>:</span>
+<span class="line">			<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">nil</span>, <span class="hl-id">ErrBadWeave</span></span>
+<span class="line">		}</span>
+<span class="line">	}</span>
+<span class="line">	<span class="hl-kw">if</span> <span class="hl-id">len</span>(<span class="hl-id">openBlocksByVersion</span>) &gt; 0 {</span>
+<span class="line">		<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">nil</span>, <span class="hl-id">ErrBadWeave</span></span>
+<span class="line">	}</span>
+<span class="line">	<span class="hl-kw">return</span> <span class="hl-id">mask</span>, <span class="hl-id">versions</span>, <span class="hl-id">nil</span></span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>Returning the bit mask of enabled line instructions (instead of their contents)
+simplifies many operations,
+including <a href="#sec-extension">weave extension</a> and <a href="#sec-reconstruct-delta">delta reconstruction</a>.</p>
+<p>Before we can start adding changes to weaves,
+we need diffs.</p>
+</section>
+<section><h2 id="sec-deltas"><a href="#sec-deltas">Computing deltas</a></h2>
+<p>Given two sequences of items,
+we want to find a transformation
+that turns the first sequence into the second
+and uses the fewest steps.</p>
+<p>The transformation is a sequence of <em>deltas</em>
+(also known as <em>hunks</em>)
+that specify an <em>action</em> (<code>Insert</code>, <code>Delete</code>, or <code>Keep</code>)
+and the <em>items</em> it acts upon.
+I called such a transformation a <em>diff script</em>.</p>
+<p>The diff algorithm I’m most familiar with is the <span class="smallcaps">lcs</span> algorithm<label class="margin-toggle sidenote-number" for="sn-lcs-diff"></label><input type="checkbox" id="sn-lcs-diff" class="margin-toggle"><span class="sidenote">
+  See, for example, the first section of <a href="https://www.cs.dartmouth.edu/~doug/diff.pdf"><cite>An Algorithm for Differential File Comparison</cite></a> by J. W. Hunt and M. D. McIlroy.
+</span>.
+It computes an optimal diff script in two stages:
+</p>
+<ol class="circled"><li data-num-glyph="①">
+  Use dynamic programming to build the <code>lcs</code> table.
+  The <code>lcs[i][j]</code> entry is the length of a
+  <a href="https://en.wikipedia.org/wiki/Longest_common_subsequence">longest common subsequence</a> of <code>a[i:]</code> and <code>b[j:]</code>.
+  Fill the table back-to-front in both dimensions.
+</li><li data-num-glyph="②">
+  Traverse the <code>lcs</code> table to recover the actions,
+  moving toward <code>lcs</code> increase when <code>a</code> and <code>b</code> don’t align.
+</li></ol>
+<figure><label class="margin-toggle" for="mn-diff-script">⊕</label><input type="checkbox" id="mn-diff-script" class="margin-toggle"><span class="marginnote">
+  The <code>DiffScript</code> function computes an optimal edit script for two sequences of integers.
+</span><div class="source-container"><pre class="source go"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Action</span> <span class="hl-id">int</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">const</span> (</span>
+<span class="line">	<span class="hl-var">Insert</span> <span class="hl-id">Action</span> = <span class="hl-id">iota</span></span>
+<span class="line">	<span class="hl-var">Delete</span></span>
+<span class="line">	<span class="hl-var">Keep</span></span>
+<span class="line">)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Delta</span> <span class="hl-kw">struct</span> {</span>
+<span class="line">	<span class="hl-id">Action</span> <span class="hl-id">Action</span></span>
+<span class="line">	<span class="hl-id">Items</span>  []<span class="hl-id">int</span></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="hl-kw">func</span> <span class="hl-defun">appendDelta</span>(<span class="hl-var">script</span> []<span class="hl-id">Delta</span>, <span class="hl-var">action</span> <span class="hl-id">Action</span>, <span class="hl-var">item</span> <span class="hl-id">int</span>) []<span class="hl-id">Delta</span> {</span>
+<span class="line">	<span class="hl-var">n</span> := <span class="hl-id">len</span>(<span class="hl-id">script</span>)</span>
+<span class="line">	<span class="hl-kw">if</span> <span class="hl-id">n</span> &gt; 0 &amp;&amp; <span class="hl-id">script</span>[<span class="hl-id">n</span>-1].<span class="hl-id">Action</span> == <span class="hl-id">action</span> {</span>
+<span class="line">		<span class="hl-id">script</span>[<span class="hl-id">n</span>-1].<span class="hl-id">Items</span> = <span class="hl-id">append</span>(<span class="hl-id">script</span>[<span class="hl-id">n</span>-1].<span class="hl-id">Items</span>, <span class="hl-id">item</span>)</span>
+<span class="line">		<span class="hl-kw">return</span> <span class="hl-id">script</span></span>
+<span class="line">	}</span>
+<span class="line">	<span class="hl-kw">return</span> <span class="hl-id">append</span>(<span class="hl-id">script</span>, <span class="hl-id">Delta</span>{<span class="hl-id">Action</span>: <span class="hl-id">action</span>, <span class="hl-id">Items</span>: []<span class="hl-id">int</span>{<span class="hl-id">item</span>}})</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment">// DiffScript computes the optimal edit script for turning a into b.</span></span>
+<span class="line"><span class="hl-kw">func</span> <span class="hl-defun">DiffScript</span>(<span class="hl-var">a</span>, <span class="hl-var">b</span> []<span class="hl-id">int</span>) (<span class="hl-var">script</span> []<span class="hl-id">Delta</span>) {</span>
+<span class="line">	<span class="hl-var">n</span>, <span class="hl-var">m</span> := <span class="hl-id">len</span>(<span class="hl-id">a</span>), <span class="hl-id">len</span>(<span class="hl-id">b</span>)</span>
+<span class="line"></span>
+<span class="line">	<span class="hl-comment">// Build a table of lengths of <a href="https://en.wikipedia.org/wiki/Longest_common_subsequence">LCS</a>(a[i:], b[j:]).</span></span>
+<span class="line">	<span class="hl-var">lcs</span> := <span class="hl-id">make</span>([][]<span class="hl-id">int</span>, <span class="hl-id">n</span>+1)</span>
+<span class="line">	<span class="hl-kw">for</span> <span class="hl-var">i</span> := <span class="hl-kw">range</span> <span class="hl-id">lcs</span> {</span>
+<span class="line">		<span class="hl-id">lcs</span>[<span class="hl-id">i</span>] = <span class="hl-id">make</span>([]<span class="hl-id">int</span>, <span class="hl-id">m</span>+1)</span>
+<span class="line">	}</span>
+<span class="line">	<span class="hl-kw">for</span> <span class="hl-var">i</span> := <span class="hl-kw">range</span> <span class="hl-id">slices</span>.<span class="hl-id">Backward</span>(<span class="hl-id">a</span>) {</span>
+<span class="line">		<span class="hl-kw">for</span> <span class="hl-var">j</span> := <span class="hl-kw">range</span> <span class="hl-id">slices</span>.<span class="hl-id">Backward</span>(<span class="hl-id">b</span>) {</span>
+<span class="line">			<span class="hl-kw">if</span> <span class="hl-id">a</span>[<span class="hl-id">i</span>] == <span class="hl-id">b</span>[<span class="hl-id">j</span>] {</span>
+<span class="line">				<span class="hl-id">lcs</span>[<span class="hl-id">i</span>][<span class="hl-id">j</span>] = 1 + <span class="hl-id">lcs</span>[<span class="hl-id">i</span>+1][<span class="hl-id">j</span>+1]</span>
+<span class="line">			} <span class="hl-kw">else</span> {</span>
+<span class="line">				<span class="hl-id">lcs</span>[<span class="hl-id">i</span>][<span class="hl-id">j</span>] = <span class="hl-id">max</span>(<span class="hl-id">lcs</span>[<span class="hl-id">i</span>+1][<span class="hl-id">j</span>], <span class="hl-id">lcs</span>[<span class="hl-id">i</span>][<span class="hl-id">j</span>+1])</span>
+<span class="line">			}</span>
+<span class="line">		}</span>
+<span class="line">	}</span>
+<span class="line"></span>
+<span class="line">	<span class="hl-comment">// Traverse the LCS table and reconstruct the optimal edits.</span></span>
+<span class="line">	<span class="hl-kw">for</span> <span class="hl-var">i</span>, <span class="hl-var">j</span> := 0, 0; <span class="hl-id">i</span> &lt; <span class="hl-id">n</span> || <span class="hl-id">j</span> &lt; <span class="hl-id">m</span>; {</span>
+<span class="line">		<span class="hl-kw">switch</span> {</span>
+<span class="line">		<span class="hl-kw">case</span> <span class="hl-id">i</span> &lt; <span class="hl-id">n</span> &amp;&amp; <span class="hl-id">j</span> &lt; <span class="hl-id">m</span> &amp;&amp; <span class="hl-id">a</span>[<span class="hl-id">i</span>] == <span class="hl-id">b</span>[<span class="hl-id">j</span>]:</span>
+<span class="line">			<span class="hl-id">script</span> = <span class="hl-id">appendDelta</span>(<span class="hl-id">script</span>, <span class="hl-id">Keep</span>, <span class="hl-id">a</span>[<span class="hl-id">i</span>])</span>
+<span class="line">			<span class="hl-id">i</span>++</span>
+<span class="line">			<span class="hl-id">j</span>++</span>
+<span class="line">		<span class="hl-kw">case</span> <span class="hl-id">i</span> &lt; <span class="hl-id">n</span> &amp;&amp; (<span class="hl-id">j</span> == <span class="hl-id">m</span> || <span class="hl-id">lcs</span>[<span class="hl-id">i</span>+1][<span class="hl-id">j</span>] &gt;= <span class="hl-id">lcs</span>[<span class="hl-id">i</span>][<span class="hl-id">j</span>+1]):</span>
+<span class="line">			<span class="hl-id">script</span> = <span class="hl-id">appendDelta</span>(<span class="hl-id">script</span>, <span class="hl-id">Delete</span>, <span class="hl-id">a</span>[<span class="hl-id">i</span>])</span>
+<span class="line">			<span class="hl-id">i</span>++</span>
+<span class="line">		<span class="hl-kw">default</span>:</span>
+<span class="line">			<span class="hl-id">script</span> = <span class="hl-id">appendDelta</span>(<span class="hl-id">script</span>, <span class="hl-id">Insert</span>, <span class="hl-id">b</span>[<span class="hl-id">j</span>])</span>
+<span class="line">			<span class="hl-id">j</span>++</span>
+<span class="line">		}</span>
+<span class="line">	}</span>
+<span class="line"></span>
+<span class="line">	<span class="hl-kw">return</span> <span class="hl-id">script</span></span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>A practical system would use Myers diff or Bram Cohen’s patience diff.
+James Coglan,
+the author of <a href="https://shop.jcoglan.com/building-git/">Building Git</a>,
+wrote a series of blog posts explaining <a href="https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/">Myers diff</a>
+and <a href="https://blog.jcoglan.com/2017/09/19/the-patience-diff-algorithm/">patience diff</a> in great detail.</p>
+<p>Now that we have deltas, let’s add them to a weave.</p>
+</section>
+<section><h2 id="sec-extension"><a href="#sec-extension">Extending weaves</a></h2>
+<p>The <code>Interleave</code> function takes a weave
+and a version within that weave (identified by an active set)
+and incorporates new deltas,
+producing a new weave.</p>
+<p>It calls the <code>Reconstruct</code> function
+to annotate each active line in the weave
+and then traverses the instructions and deltas in parallel,
+adding new instructions that match delta actions.
+The parallel loop body is the following procedure:</p>
+<ol class="circled"><li data-num-glyph="①">
+  Copy unmarked instructions to the output as is.
+</li><li data-num-glyph="②">
+  Upon finding the first marked line,
+  stop and consult the delta action.
+</li><li data-num-glyph="③">
+  If the action is <code>Insert</code>,
+  append its items as lines to the output,
+  surrounding them by a <code>BeginInsert</code>/<code>End</code> block.
+</li><li data-num-glyph="④">
+  If the action is <code>Delete</code>,
+  open a <code>BeginDelete</code> block,
+  copy the input stream as long as its active lines match the delta items,
+  then close the block.
+</li><li data-num-glyph="⑤">
+  If the action is <code>Keep</code>,
+  copy the input until all items have appeared as active lines.
+</li></ol>
+<figure><label class="margin-toggle" for="mn-interleave">⊕</label><input type="checkbox" id="mn-interleave" class="margin-toggle"><span class="marginnote">
+  The <code>Interleave</code> function adds new deltas to a weave.
+</span><div class="source-container"><pre class="source go"><code><span class="line"><span class="hl-comment">// Interleave adds new deltas to a weave.</span></span>
+<span class="line"><span class="hl-comment">//</span></span>
+<span class="line"><span class="hl-comment">// Returns [ErrBadWeave] if the instructions aren't a valid weave.</span></span>
+<span class="line"><span class="hl-comment">// Returns [ErrBadDelta] if the deltas don't apply cleanly.</span></span>
+<span class="line"><span class="hl-kw">func</span> <span class="hl-defun">Interleave</span>(</span>
+<span class="line">	<span class="hl-var">instructions</span> []<span class="hl-id">Instruction</span>,</span>
+<span class="line">	<span class="hl-var">activeSet</span> <span class="hl-id">ActiveSet</span>,</span>
+<span class="line">	<span class="hl-var">deltas</span> []<span class="hl-id">Delta</span>,</span>
+<span class="line">	<span class="hl-var">v</span> <span class="hl-id">VersionID</span>,</span>
+<span class="line">) (<span class="hl-var">out</span> []<span class="hl-id">Instruction</span>, <span class="hl-var">err</span> <span class="hl-id">error</span>) {</span>
+<span class="line">	<span class="hl-var">mask</span>, <span class="hl-var">_</span>, <span class="hl-var">err</span> := <span class="hl-id">Reconstruct</span>(<span class="hl-id">instructions</span>, <span class="hl-id">activeSet</span>)</span>
+<span class="line">	<span class="hl-kw">if</span> <span class="hl-id">err</span> != <span class="hl-id">nil</span> {</span>
+<span class="line">		<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">err</span></span>
+<span class="line">	}</span>
+<span class="line"></span>
+<span class="line">	<span class="hl-var">i</span>, <span class="hl-var">j</span>, <span class="hl-var">n</span>, <span class="hl-var">m</span> := 0, 0, <span class="hl-id">len</span>(<span class="hl-id">instructions</span>), <span class="hl-id">len</span>(<span class="hl-id">deltas</span>)</span>
+<span class="line"></span>
+<span class="line">	<span class="hl-comment">// consumeLines outputs instructions</span></span>
+<span class="line">	<span class="hl-comment">// until it sees all expected lines.</span></span>
+<span class="line">	<span class="hl-var">consumeLines</span> := <span class="hl-kw">func</span>(<span class="hl-var">expected</span> []<span class="hl-id">int</span>) <span class="hl-id">error</span> {</span>
+<span class="line">		<span class="hl-var">skipped</span> := 0</span>
+<span class="line">		<span class="hl-kw">for</span> <span class="hl-id">skipped</span> &lt; <span class="hl-id">len</span>(<span class="hl-id">expected</span>) {</span>
+<span class="line">			<span class="hl-kw">if</span> <span class="hl-id">i</span> &gt;= <span class="hl-id">n</span> {</span>
+<span class="line">				<span class="hl-kw">return</span> <span class="hl-id">ErrBadDelta</span></span>
+<span class="line">			}</span>
+<span class="line">			<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">instructions</span>[<span class="hl-id">i</span>])</span>
+<span class="line">			<span class="hl-kw">if</span> <span class="hl-id">mask</span>[<span class="hl-id">i</span>] {</span>
+<span class="line">				<span class="hl-kw">if</span> <span class="hl-id">expected</span>[<span class="hl-id">skipped</span>] != <span class="hl-id">instructions</span>[<span class="hl-id">i</span>].<span class="hl-id">Line</span>() {</span>
+<span class="line">					<span class="hl-kw">return</span> <span class="hl-id">ErrBadDelta</span></span>
+<span class="line">				}</span>
+<span class="line">				<span class="hl-id">skipped</span>++</span>
+<span class="line">			}</span>
+<span class="line">			<span class="hl-id">i</span>++</span>
+<span class="line">		}</span>
+<span class="line">		<span class="hl-kw">return</span> <span class="hl-id">nil</span></span>
+<span class="line">	}</span>
+<span class="line"></span>
+<span class="line">	<span class="hl-kw">for</span> <span class="hl-id">i</span> &lt; <span class="hl-id">n</span> || <span class="hl-id">j</span> &lt; <span class="hl-id">m</span> {</span>
+<span class="line">		<span class="hl-kw">for</span> <span class="hl-id">i</span> &lt; <span class="hl-id">n</span> &amp;&amp; !<span class="hl-id">mask</span>[<span class="hl-id">i</span>] { <span class="circled-ref" data-num-glyph="①"></span></span>
+<span class="line">			<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">instructions</span>[<span class="hl-id">i</span>])</span>
+<span class="line">			<span class="hl-id">i</span>++</span>
+<span class="line">		}</span>
+<span class="line">		<span class="hl-kw">if</span> <span class="hl-id">j</span> &lt; <span class="hl-id">m</span> {</span>
+<span class="line">			<span class="hl-var">delta</span> := <span class="hl-id">deltas</span>[<span class="hl-id">j</span>]</span>
+<span class="line">			<span class="hl-kw">switch</span> <span class="hl-id">delta</span>.<span class="hl-id">Action</span> { <span class="circled-ref" data-num-glyph="②"></span></span>
+<span class="line">			<span class="hl-kw">case</span> <span class="hl-id">Insert</span>: <span class="circled-ref" data-num-glyph="③"></span></span>
+<span class="line">				<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">Instruction</span>{<span class="hl-id">BeginInsert</span>, <span class="hl-id">int</span>(<span class="hl-id">v</span>)})</span>
+<span class="line">				<span class="hl-kw">for</span> <span class="hl-var">_</span>, <span class="hl-var">item</span> := <span class="hl-kw">range</span> <span class="hl-id">delta</span>.<span class="hl-id">Items</span> {</span>
+<span class="line">					<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">Instruction</span>{<span class="hl-id">Line</span>, <span class="hl-id">item</span>})</span>
+<span class="line">				}</span>
+<span class="line">				<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">Instruction</span>{<span class="hl-id">End</span>, <span class="hl-id">int</span>(<span class="hl-id">v</span>)})</span>
+<span class="line">			<span class="hl-kw">case</span> <span class="hl-id">Delete</span>: <span class="circled-ref" data-num-glyph="④"></span></span>
+<span class="line">				<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">Instruction</span>{<span class="hl-id">BeginDelete</span>, <span class="hl-id">int</span>(<span class="hl-id">v</span>)})</span>
+<span class="line">				<span class="hl-kw">if</span> <span class="hl-var">err</span> := <span class="hl-id">consumeLines</span>(<span class="hl-id">delta</span>.<span class="hl-id">Items</span>); <span class="hl-id">err</span> != <span class="hl-id">nil</span> {</span>
+<span class="line">					<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">err</span></span>
+<span class="line">				}</span>
+<span class="line">				<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">Instruction</span>{<span class="hl-id">End</span>, <span class="hl-id">int</span>(<span class="hl-id">v</span>)})</span>
+<span class="line">			<span class="hl-kw">case</span> <span class="hl-id">Keep</span>: <span class="circled-ref" data-num-glyph="⑤"></span></span>
+<span class="line">				<span class="hl-kw">if</span> <span class="hl-var">err</span> := <span class="hl-id">consumeLines</span>(<span class="hl-id">delta</span>.<span class="hl-id">Items</span>); <span class="hl-id">err</span> != <span class="hl-id">nil</span> {</span>
+<span class="line">					<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">err</span></span>
+<span class="line">				}</span>
+<span class="line">			}</span>
+<span class="line">			<span class="hl-id">j</span>++</span>
+<span class="line">		} <span class="hl-kw">else</span> <span class="hl-kw">if</span> <span class="hl-id">i</span> &lt; <span class="hl-id">n</span> {</span>
+<span class="line">			<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">ErrBadDelta</span></span>
+<span class="line">		}</span>
+<span class="line">	}</span>
+<span class="line">	<span class="hl-kw">return</span> <span class="hl-id">out</span>, <span class="hl-id">nil</span></span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p>Now, we can recover any version stored in a weave
+and detect and apply changes.
+The last missing piece is extracting deltas.</p>
+</section>
+<section><h2 id="sec-reconstruct-delta"><a href="#sec-reconstruct-delta">Reconstructing deltas</a></h2>
+<p>How do we know what changed in version <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>v</mi></math>?
+We could recover <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>v</mi></math> and its predecessor and diff the outputs,
+but it would be wasteful, given that the weave already stores deltas.
+A more direct approach is
+to use the bit masks returned by the <code>Reconstruct</code> function
+to detect lines that become inactive if we deactivate <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>v</mi></math>.</p>
+<figure><label class="margin-toggle" for="mn-reconstruct-delta">⊕</label><input type="checkbox" id="mn-reconstruct-delta" class="margin-toggle"><span class="marginnote">
+  The <code>ReconstructDelta</code> function diffs two active revision sets.
+</span><div class="source-container"><pre class="source go"><code><span class="line"><span class="hl-comment">// ReconstructDelta extracts the changes between two active version sets.</span></span>
+<span class="line"><span class="hl-kw">func</span> <span class="hl-defun">ReconstructDelta</span>(</span>
+<span class="line">	<span class="hl-var">instructions</span> []<span class="hl-id">Instruction</span>,</span>
+<span class="line">	<span class="hl-var">beforeSet</span>, <span class="hl-var">afterSet</span> <span class="hl-id">ActiveSet</span>,</span>
+<span class="line">) (<span class="hl-var">deltas</span> []<span class="hl-id">Delta</span>, <span class="hl-var">err</span> <span class="hl-id">error</span>) {</span>
+<span class="line">	<span class="hl-var">before</span>, <span class="hl-var">_</span>, <span class="hl-var">err</span> := <span class="hl-id">Reconstruct</span>(<span class="hl-id">instructions</span>, <span class="hl-id">beforeSet</span>)</span>
+<span class="line">	<span class="hl-kw">if</span> <span class="hl-id">err</span> != <span class="hl-id">nil</span> {</span>
+<span class="line">		<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">err</span></span>
+<span class="line">	}</span>
+<span class="line">	<span class="hl-var">after</span>, <span class="hl-var">_</span>, <span class="hl-var">err</span> := <span class="hl-id">Reconstruct</span>(<span class="hl-id">instructions</span>, <span class="hl-id">afterSet</span>)</span>
+<span class="line">	<span class="hl-kw">if</span> <span class="hl-id">err</span> != <span class="hl-id">nil</span> {</span>
+<span class="line">		<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">err</span></span>
+<span class="line">	}</span>
+<span class="line"></span>
+<span class="line">	<span class="hl-kw">for</span> <span class="hl-var">i</span>, <span class="hl-var">instr</span> := <span class="hl-kw">range</span> <span class="hl-id">instructions</span> {</span>
+<span class="line">		<span class="hl-kw">if</span> <span class="hl-id">instr</span>.<span class="hl-id">Type</span> != <span class="hl-id">Line</span> {</span>
+<span class="line">			<span class="hl-kw">continue</span></span>
+<span class="line">		}</span>
+<span class="line">		<span class="hl-kw">switch</span> {</span>
+<span class="line">		<span class="hl-kw">case</span> <span class="hl-id">before</span>[<span class="hl-id">i</span>] &amp;&amp; <span class="hl-id">after</span>[<span class="hl-id">i</span>]:</span>
+<span class="line">			<span class="hl-id">deltas</span> = <span class="hl-id">appendDelta</span>(<span class="hl-id">deltas</span>, <span class="hl-id">Keep</span>, <span class="hl-id">instr</span>.<span class="hl-id">Line</span>())</span>
+<span class="line">		<span class="hl-kw">case</span> !<span class="hl-id">before</span>[<span class="hl-id">i</span>] &amp;&amp; <span class="hl-id">after</span>[<span class="hl-id">i</span>]:</span>
+<span class="line">			<span class="hl-id">deltas</span> = <span class="hl-id">appendDelta</span>(<span class="hl-id">deltas</span>, <span class="hl-id">Insert</span>, <span class="hl-id">instr</span>.<span class="hl-id">Line</span>())</span>
+<span class="line">		<span class="hl-kw">case</span> <span class="hl-id">before</span>[<span class="hl-id">i</span>] &amp;&amp; !<span class="hl-id">after</span>[<span class="hl-id">i</span>]:</span>
+<span class="line">			<span class="hl-id">deltas</span> = <span class="hl-id">appendDelta</span>(<span class="hl-id">deltas</span>, <span class="hl-id">Delete</span>, <span class="hl-id">instr</span>.<span class="hl-id">Line</span>())</span>
+<span class="line">		}</span>
+<span class="line">	}</span>
+<span class="line">	<span class="hl-kw">return</span> <span class="hl-id">deltas</span>, <span class="hl-id">nil</span></span>
+<span class="line">}</span>
+</code></pre></div>
+</figure>
+<p><code>ReconstructDelta</code> can compute deltas between any two versions.
+If we need the delta of a particular version <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>v</mi></math>,
+we diff
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>ActiveSet</mi><mo>(</mo><mi>v</mi><mo>)</mo><mo>∖</mo><mo>{</mo><mi>v</mi><mo>}</mo></math> and
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>ActiveSet</mi><mo>(</mo><mi>v</mi><mo>)</mo></math>.</p>
+<figure><div class="source-container"><pre class="source"><code><span class="line">vSet := activeSetForVersion(versions, v)</span>
+<span class="line">vDelta, err := ReconstructDelta(instructions, vSet.Deactivate(v), vSet)</span>
+</code></pre></div>
+</figure>
+<p>Now we have enough machinery to build a simple version control system
+that can support most of <span class="smallcaps">sccs</span>’s features.</p>
+</section>
+<section><h2 id="sec-conclusion"><a href="#sec-conclusion">Conclusion</a></h2>
+<p>Nobody in their right mind would use <span class="smallcaps">sccs</span> today,
+yet it shaped modern software as few systems did.
+Marc J. Rochkind’s paper won the first <a href="https://www.sigsoft.org/awards/icseMIPAward.html"><span class="smallcaps">icse</span> Most Influential Paper Award</a> in 1989,
+but as David Parnas noted<label class="margin-toggle sidenote-number" for="sn-parnas-quote"></label><input type="checkbox" id="sn-parnas-quote" class="margin-toggle"><span class="sidenote">
+  See <a href="https://www.computer.org/csdl/journal/ts/2025/03/10821013/23d1xvEsT6M"><cite>A Retrospective on the Source Code Control System</cite></a> by
+  Marc J. Rochkind.
+</span>, <q>the system was influential, but the paper itself didn’t matter</q>.
+What mattered most was the idea
+that software evolution can and should be tracked.</p>
+<p>Git is ubiquitous today,
+and its connection to <span class="smallcaps">sccs</span> is more than ideological.
+Git borrowed many ideas from <a href="https://www.bitkeeper.org/">BitKeeper</a>,
+a distributed version control system that powered Linux kernel development between 2002 and 2005.
+BitKeeper, in turn, was a direct descendant of <span class="smallcaps">sccs</span> and used weaves to track changes.</p>
+<p><a href="https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type">Conflict-free Replicated Data Types</a>
+and the <a href="https://pijul.org/">Pijul</a> version control system employ data structures
+that are strikingly similar to weaves
+because their history representation makes conflicts easier to resolve<label class="margin-toggle sidenote-number" for="sn-sccs-merges"></label><input type="checkbox" id="sn-sccs-merges" class="margin-toggle"><span class="sidenote">
+  Ironically, <span class="smallcaps">sccs</span> didn’t support merges.
+</span>.</p>
+<p>Weaves always return.</p>
+</section>
+<section><h2 id="sec-exercises"><a href="#sec-exercises">Exercises</a></h2>
+<ol class="circled"><li data-num-glyph="①">Explain why <code>Reconstruct</code> pushes inactive <code>BeginInsert</code> instructions onto the queue but ignores inactive <code>BeginDelete</code> instructions.
+</li><li data-num-glyph="②">Assemble weave algorithms into a simple single-file version control system.
+</li><li data-num-glyph="③">Extend the system to detect history file corruptions.
+</li><li data-num-glyph="④">Implement two-way merge for any two versions.
+</li><li data-num-glyph="⑤">Extend the system to handle repositories, not just single files.
+</li></ol>
+</section>
+
+</article><section><h2>Similar articles</h2><ul class="article-list"><li><a class="compact-title" href="/posts/22-flat-in-order-trees.html" title="An efficient algorithm for incremental merkle trees updates.">Flat in-order binary trees</a><span class="compact-date"><time datetime="2023-08-13">2023-08-13</time></span></li></ul></section>
+
+<hr><footer role="contentinfo"><span>©Roman Kashitsyn</span>&nbsp;<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a> · <a href="https://github.com/roman-kashitsyn/mmapped.blog/issues/new">Report Issue</a></footer></body></html>

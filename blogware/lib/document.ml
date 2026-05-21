@@ -5,6 +5,15 @@ type math_display = Syntax.math_display
 type math_node = Syntax.math_node
 type col_spec = Syntax.col_spec
 
+type highlight_role =
+  | Hl_keyword
+  | Hl_defun
+  | Hl_string
+  | Hl_comment
+  | Hl_variable
+  | Hl_typedef
+  | Hl_identifier
+
 (* Inline elements *)
 type inline =
   | Str of Text.t (* plain text, typography already applied *)
@@ -14,6 +23,7 @@ type inline =
   | Small_caps of inline list
   | Strikethrough of inline list
   | Code of Text.t list * inline list (* css classes, body *)
+  | Highlighted of highlight_role * inline list
   | Link of Text.t * inline list (* url, body *)
   | Math of math_display * math_node list (* preserved for MathML rendering *)
   | Margin_note of Text.t * inline list (* anchor, body *)

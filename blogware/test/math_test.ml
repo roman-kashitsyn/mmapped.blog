@@ -69,4 +69,7 @@ let tests : Test_framework.t list =
       math_expect "superscript" "x^2" "term(text(x),_,num(2))";
       math_expect "frac command" "\\frac{a}{b}"
         "cmd(frac,grp[text(a)],grp[text(b)])";
+      math_expect "mathcal command" "\\mathcal{Abc}" "cmd(mathcal,op(Abc))";
+      math_expect "setminus command" "A\\setminus B"
+        "text(A) cmd(setminus,) text(B)";
     ]
