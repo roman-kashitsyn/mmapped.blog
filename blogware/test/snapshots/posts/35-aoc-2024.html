@@ -217,14 +217,14 @@ The program can’t loop forever (the <code>A</code> decreases on every iteratio
 <span class="line">    while not (first_n_eq (i+1) rev !out) do</span>
 <span class="line">      digits.(i) &lt;- digits.(i) + 1;</span>
 <span class="line">      out := run {cpu with a = mk ()} prog [];</span>
-<span class="line">      if digits.(i) &gt; 1000 (* <span class="circled-ref" data-num-glyph="①"></span> *)</span>
+<span class="line">      if digits.(i) &gt; 1000 (* <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span> *)</span>
 <span class="line">      then raise (Failure (Printf.sprintf &quot;failed at digit %d&quot; i));</span>
 <span class="line">    done;</span>
 <span class="line">  done;</span>
 <span class="line">  mk ()</span>
 </code></pre></div>
 <p>The <code>find_forward</code> function initializes an array of three-bit digits constituting the <code>A</code> register value and tweaks one digit at a time to obtain the desired program prefix.
-The line marked with <span class="circled-ref" data-num-glyph="①"></span> is the most mysterious:
+The line marked with <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span> is the most mysterious:
 <em>Why do we allow a supposedly three-bit digit to exceed seven?</em>
 Sometimes, we must adjust the previous digits of <code>A</code> to produce the next item.
 If we allow larger values for digits, we can tweak more significant digits to accommodate new constraints.

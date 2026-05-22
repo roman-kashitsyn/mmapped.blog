@@ -420,26 +420,26 @@ The parallel loop body is the following procedure:</p>
 <span class="line">	}</span>
 <span class="line"></span>
 <span class="line">	<span class="hl-kw">for</span> <span class="hl-id">i</span> &lt; <span class="hl-id">n</span> || <span class="hl-id">j</span> &lt; <span class="hl-id">m</span> {</span>
-<span class="line">		<span class="hl-kw">for</span> <span class="hl-id">i</span> &lt; <span class="hl-id">n</span> &amp;&amp; !<span class="hl-id">mask</span>[<span class="hl-id">i</span>] { <span class="circled-ref" data-num-glyph="①"></span></span>
+<span class="line">		<span class="hl-kw">for</span> <span class="hl-id">i</span> &lt; <span class="hl-id">n</span> &amp;&amp; !<span class="hl-id">mask</span>[<span class="hl-id">i</span>] { <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span></span>
 <span class="line">			<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">instructions</span>[<span class="hl-id">i</span>])</span>
 <span class="line">			<span class="hl-id">i</span>++</span>
 <span class="line">		}</span>
 <span class="line">		<span class="hl-kw">if</span> <span class="hl-id">j</span> &lt; <span class="hl-id">m</span> {</span>
 <span class="line">			<span class="hl-var">delta</span> := <span class="hl-id">deltas</span>[<span class="hl-id">j</span>]</span>
-<span class="line">			<span class="hl-kw">switch</span> <span class="hl-id">delta</span>.<span class="hl-id">Action</span> { <span class="circled-ref" data-num-glyph="②"></span></span>
-<span class="line">			<span class="hl-kw">case</span> <span class="hl-id">Insert</span>: <span class="circled-ref" data-num-glyph="③"></span></span>
+<span class="line">			<span class="hl-kw">switch</span> <span class="hl-id">delta</span>.<span class="hl-id">Action</span> { <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span></span>
+<span class="line">			<span class="hl-kw">case</span> <span class="hl-id">Insert</span>: <span class="circled-ref" data-num-glyph="③" aria-label="step 3" role="img"></span></span>
 <span class="line">				<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">Instruction</span>{<span class="hl-id">BeginInsert</span>, <span class="hl-id">int</span>(<span class="hl-id">v</span>)})</span>
 <span class="line">				<span class="hl-kw">for</span> <span class="hl-var">_</span>, <span class="hl-var">item</span> := <span class="hl-kw">range</span> <span class="hl-id">delta</span>.<span class="hl-id">Items</span> {</span>
 <span class="line">					<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">Instruction</span>{<span class="hl-id">Line</span>, <span class="hl-id">item</span>})</span>
 <span class="line">				}</span>
 <span class="line">				<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">Instruction</span>{<span class="hl-id">End</span>, <span class="hl-id">int</span>(<span class="hl-id">v</span>)})</span>
-<span class="line">			<span class="hl-kw">case</span> <span class="hl-id">Delete</span>: <span class="circled-ref" data-num-glyph="④"></span></span>
+<span class="line">			<span class="hl-kw">case</span> <span class="hl-id">Delete</span>: <span class="circled-ref" data-num-glyph="④" aria-label="step 4" role="img"></span></span>
 <span class="line">				<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">Instruction</span>{<span class="hl-id">BeginDelete</span>, <span class="hl-id">int</span>(<span class="hl-id">v</span>)})</span>
 <span class="line">				<span class="hl-kw">if</span> <span class="hl-var">err</span> := <span class="hl-id">consumeLines</span>(<span class="hl-id">delta</span>.<span class="hl-id">Items</span>); <span class="hl-id">err</span> != <span class="hl-id">nil</span> {</span>
 <span class="line">					<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">err</span></span>
 <span class="line">				}</span>
 <span class="line">				<span class="hl-id">out</span> = <span class="hl-id">append</span>(<span class="hl-id">out</span>, <span class="hl-id">Instruction</span>{<span class="hl-id">End</span>, <span class="hl-id">int</span>(<span class="hl-id">v</span>)})</span>
-<span class="line">			<span class="hl-kw">case</span> <span class="hl-id">Keep</span>: <span class="circled-ref" data-num-glyph="⑤"></span></span>
+<span class="line">			<span class="hl-kw">case</span> <span class="hl-id">Keep</span>: <span class="circled-ref" data-num-glyph="⑤" aria-label="step 5" role="img"></span></span>
 <span class="line">				<span class="hl-kw">if</span> <span class="hl-var">err</span> := <span class="hl-id">consumeLines</span>(<span class="hl-id">delta</span>.<span class="hl-id">Items</span>); <span class="hl-id">err</span> != <span class="hl-id">nil</span> {</span>
 <span class="line">					<span class="hl-kw">return</span> <span class="hl-id">nil</span>, <span class="hl-id">err</span></span>
 <span class="line">				}</span>

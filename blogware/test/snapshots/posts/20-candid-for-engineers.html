@@ -255,11 +255,11 @@ Let’s consider a few examples of common changes that preserve backward compati
 <p>Before we close the subtyping discussion, let’s consider a sequence of type changes where an optional field gets removed and re-introduced later with a different type.</p>
 <figure><label class="margin-toggle" for="mn-subtype-opt">⊕</label><input type="checkbox" id="mn-subtype-opt" class="margin-toggle"><span class="marginnote">
   An example of the <em>special opt subtyping rule</em>.
-  Step <span class="circled-ref" data-num-glyph="①"></span> removes the optional <code>status</code> field; step <span class="circled-ref" data-num-glyph="②"></span> adds an optional field with the same name but an incompatible type.
+  Step <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span> removes the optional <code>status</code> field; step <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span> adds an optional field with the same name but an incompatible type.
   The horizontal bar applies the transitive property of subtyping, eliminating the intermediate type without the <code>status</code> field.
 </span><div class="source-container"><pre class="source candid"><code><span class="line">   record { name : text; status : opt variant { user;   admin   } }</span>
-<span class="line">&lt;: record { name : text } <span class="circled-ref" data-num-glyph="①"></span></span>
-<span class="line">&lt;: record { name : text; status : opt variant { single; married } } <span class="circled-ref" data-num-glyph="②"></span></span>
+<span class="line">&lt;: record { name : text } <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span></span>
+<span class="line">&lt;: record { name : text; status : opt variant { single; married } } <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span></span>
 <span class="line"><hr>   record { name : text; status : opt variant { user;   admin   } }</span>
 <span class="line">&lt;: record { name : text; status : opt variant { single; married } }</span>
 </code></pre></div>
@@ -332,7 +332,7 @@ This <q>canonical</q> form will help us better understand the message type table
 <p>Let’s encode a fork with two children equivalent to <code>Tree::Forest(vec![Tree::Leaf(1), Tree::Leaf(2)])</code> Rust expression using the <a href="https://github.com/dfinity/candid/tree/f7166f47d895e411a74de1eba4b347ac75f5fd26/tools/didc">didc</a> tool.</p>
 <figure><label class="margin-toggle" for="mn-encode-command">⊕</label><input type="checkbox" id="mn-encode-command" class="margin-toggle"><span class="marginnote">
   The shell commands to encode a tree using the <code>didc</code> tool.
-  The <code>--defs</code> option loads type definitions from a file; the <code>--types</code> option specifies the types of values in the tuple (see point <span class="circled-ref" data-num-glyph="②"></span> in the <a href="#binary-message-anatomy">binary message anatomy</a> section.
+  The <code>--defs</code> option loads type definitions from a file; the <code>--types</code> option specifies the types of values in the tuple (see point <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span> in the <a href="#binary-message-anatomy">binary message anatomy</a> section.
 </span><div class="source-container"><pre class="source shell"><code><span class="line">$ echo 'type Tree = variant { leaf : int32; forest : vec Tree };' &gt; tree.did</span>
 <span class="line">$ didc encode \</span>
 <span class="line">       --defs   tree.did \</span>

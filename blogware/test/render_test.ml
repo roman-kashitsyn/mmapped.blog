@@ -47,7 +47,8 @@ let tests : Test_framework.t list =
       t "line break" "<br>" (Render.render_inline Render.empty_ctx Line_break);
       t "circled ref uses generated content"
         ("<span class=\"circled-ref\" data-num-glyph=\"" ^ "\xE2\x91\xA0"
-       (* ① U+2460 *) ^ "\"></span>")
+       (* ① U+2460 *)
+       ^ "\" aria-label=\"step 1\" role=\"img\"></span>")
         (Render.render_inline Render.empty_ctx (Circled_ref 1));
       t "highlighted inline role" "<span class=\"hl-kw\">func</span>"
         (Render.render_inline Render.empty_ctx

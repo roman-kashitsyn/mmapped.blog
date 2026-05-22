@@ -114,7 +114,8 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Horizontal_rule -> hr_ []
   | Circled_ref n ->
       span_
-        [ class_ (txt "circled-ref"); attr "data-num-glyph" (round_num_glyph n) ]
+        [ class_ (txt "circled-ref"); attr "data-num-glyph" (round_num_glyph n);
+          attr "aria-label" (txt (Printf.sprintf "step %d" n)); attr "role" (txt "img") ]
         empty
   | Line_break -> br_ []
   | Numeric_space -> raw (txt "&numsp;")

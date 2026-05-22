@@ -236,27 +236,27 @@ Implementation details leak into the caller’s code, causing much pain:
 <span class="line">  ConnectionFailed {</span>
 <span class="line">    url: String,</span>
 <span class="line">    reason: String,</span>
-<span class="line">    cause: Option&lt;std::io::Error&gt;, <span class="circled-ref" data-num-glyph="①"></span></span>
+<span class="line">    cause: Option&lt;std::io::Error&gt;, <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span></span>
 <span class="line">  },</span>
 <span class="line"></span>
 <span class="line">  <em>/// Cannot find transaction with the specified txid.</em></span>
-<span class="line">  TxNotFound(Txid), <span class="circled-ref" data-num-glyph="②"></span></span>
+<span class="line">  TxNotFound(Txid), <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span></span>
 <span class="line"></span>
 <span class="line">  <em>/// The object data is not valid CBOR.</em></span>
-<span class="line">  InvalidEncoding { <span class="circled-ref" data-num-glyph="③"></span></span>
+<span class="line">  InvalidEncoding { <span class="circled-ref" data-num-glyph="③" aria-label="step 3" role="img"></span></span>
 <span class="line">    data: Bytes,</span>
 <span class="line">    error_offset: Option&lt;usize&gt;,</span>
 <span class="line">    error_message: String,</span>
 <span class="line">  },</span>
 <span class="line"></span>
 <span class="line">  <em>/// The public key is malformed.</em></span>
-<span class="line">  MalformedPublicKey { <span class="circled-ref" data-num-glyph="④"></span></span>
+<span class="line">  MalformedPublicKey { <span class="circled-ref" data-num-glyph="④" aria-label="step 4" role="img"></span></span>
 <span class="line">    key_bytes: Vec&lt;u8&gt;,</span>
 <span class="line">    reason: String,</span>
 <span class="line">  },</span>
 <span class="line"></span>
 <span class="line">  <em>/// The transaction signature does not match the public key.</em></span>
-<span class="line">  SignatureVerificationFailed { <span class="circled-ref" data-num-glyph="④"></span></span>
+<span class="line">  SignatureVerificationFailed { <span class="circled-ref" data-num-glyph="④" aria-label="step 4" role="img"></span></span>
 <span class="line">    txid: Txid,</span>
 <span class="line">    pk: Pubkey,</span>
 <span class="line">    sig: Signature,</span>

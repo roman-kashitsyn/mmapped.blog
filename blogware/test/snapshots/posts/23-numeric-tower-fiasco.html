@@ -127,15 +127,15 @@ This approach is similar to using composition instead of inheritance in the OOP 
 <figure><label class="margin-toggle" for="mn-functional-nums">⊕</label><input type="checkbox" id="mn-functional-nums" class="margin-toggle"><span class="marginnote">
   Modeling the <code>Natural</code> and <code>Integer</code> numeric types in Haskell.
 </span><div class="source-container"><pre class="source haskell"><code><span class="line">-- Each natural is either zero or a successor of a smaller number.</span>
-<span class="line">data Natural = Zero | Succ Natural -- <span class="circled-ref" data-num-glyph="①"></span></span>
+<span class="line">data Natural = Zero | Succ Natural -- <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span></span>
 <span class="line"></span>
 <span class="line">-- There are two disjoint classes of integers:</span>
 <span class="line">-- <span class="math">n</span> and <span class="math">-1 - n</span> for all natural values of <span class="math">n</span>.</span>
-<span class="line">data Integer = NonNegative Natural | MinusOneMinus Natural -- <span class="circled-ref" data-num-glyph="②"></span></span>
+<span class="line">data Integer = NonNegative Natural | MinusOneMinus Natural -- <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span></span>
 <span class="line"></span>
 <span class="line">-- We model the `is a' relation as a pure total function</span>
 <span class="line">-- mapping naturals to integers.</span>
-<span class="line">int_of_nat :: Natural -&gt; Integer -- <span class="circled-ref" data-num-glyph="③"></span></span>
+<span class="line">int_of_nat :: Natural -&gt; Integer -- <span class="circled-ref" data-num-glyph="③" aria-label="step 3" role="img"></span></span>
 <span class="line">int_of_nat = NonNegative</span>
 <span class="line"></span>
 <span class="line">-- We can model the reverse relation as a partial function</span>

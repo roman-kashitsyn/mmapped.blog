@@ -488,7 +488,15 @@ and highlight_block_comment body acc = function
   | [] -> List.rev (flush_comment body acc)
   | Str text :: rest -> (
       match split_text_once text "*/" with
-      | None -> highlight_block_comment (Str text :: body) acc rest
+      | None -> (
+          match Text.split_once_by Highlight.is_newline text with
+          | _, after when Text.is_empty after ->
+              highlight_block_comment (Str text :: body) acc rest
+          | before, after ->
+              let newline, suffix = Text.split_at after 1 in
+              let acc = comment_inline (Str before :: body) :: acc in
+              let acc = Str newline :: acc in
+              highlight_block_comment [ Str suffix ] acc rest)
       | Some (before_close, suffix) ->
           let comment_text = Text.append before_close (Text.of_string "*/") in
           let acc = comment_inline (Str comment_text :: body) :: acc in
