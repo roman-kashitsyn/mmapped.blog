@@ -17,6 +17,71 @@ let escape_math_text (t : Text.t) (buf : Buffer.t) : unit =
         | c -> Buffer.add_char buf c)
       t
 
+let mathcal_codepoint = function
+  | 'A' -> Some 0x1D49C
+  | 'B' -> Some 0x212C
+  | 'C' -> Some 0x1D49E
+  | 'D' -> Some 0x1D49F
+  | 'E' -> Some 0x2130
+  | 'F' -> Some 0x2131
+  | 'G' -> Some 0x1D4A2
+  | 'H' -> Some 0x210B
+  | 'I' -> Some 0x2110
+  | 'J' -> Some 0x1D4A5
+  | 'K' -> Some 0x1D4A6
+  | 'L' -> Some 0x2112
+  | 'M' -> Some 0x2133
+  | 'N' -> Some 0x1D4A9
+  | 'O' -> Some 0x1D4AA
+  | 'P' -> Some 0x1D4AB
+  | 'Q' -> Some 0x1D4AC
+  | 'R' -> Some 0x211B
+  | 'S' -> Some 0x1D4AE
+  | 'T' -> Some 0x1D4AF
+  | 'U' -> Some 0x1D4B0
+  | 'V' -> Some 0x1D4B1
+  | 'W' -> Some 0x1D4B2
+  | 'X' -> Some 0x1D4B3
+  | 'Y' -> Some 0x1D4B4
+  | 'Z' -> Some 0x1D4B5
+  | 'a' -> Some 0x1D4B6
+  | 'b' -> Some 0x1D4B7
+  | 'c' -> Some 0x1D4B8
+  | 'd' -> Some 0x1D4B9
+  | 'e' -> Some 0x212F
+  | 'f' -> Some 0x1D4BB
+  | 'g' -> Some 0x210A
+  | 'h' -> Some 0x1D4BD
+  | 'i' -> Some 0x1D4BE
+  | 'j' -> Some 0x1D4BF
+  | 'k' -> Some 0x1D4C0
+  | 'l' -> Some 0x1D4C1
+  | 'm' -> Some 0x1D4C2
+  | 'n' -> Some 0x1D4C3
+  | 'o' -> Some 0x2134
+  | 'p' -> Some 0x1D4C5
+  | 'q' -> Some 0x1D4C6
+  | 'r' -> Some 0x1D4C7
+  | 's' -> Some 0x1D4C8
+  | 't' -> Some 0x1D4C9
+  | 'u' -> Some 0x1D4CA
+  | 'v' -> Some 0x1D4CB
+  | 'w' -> Some 0x1D4CC
+  | 'x' -> Some 0x1D4CD
+  | 'y' -> Some 0x1D4CE
+  | 'z' -> Some 0x1D4CF
+  | _ -> None
+
+let render_mathcal_text t =
+  let buf = Buffer.create (Text.length t) in
+  Text.iter
+    (fun c ->
+      match mathcal_codepoint c with
+      | Some cp -> Buffer.add_utf_8_uchar buf (Uchar.of_int cp)
+      | None -> Buffer.add_char buf c)
+    t;
+  mi_ [] (escape_math_text (Text.of_string (Buffer.contents buf)))
+
 (* Map bit-index -> tag helper.
      bit 2 = big-op, bit 1 = has-sub, bit 0 = has-sup *)
 let col_align_attrs (specs : col_spec list) : attribute list =
@@ -82,9 +147,10 @@ and render_math_cmd sym args =
              [ attr "linethickness" (Text.of_string "0") ]
              (mrow_ [] (render_math_node n) ++ mrow_ [] (render_math_node k))
         ++ mo_ [] (raw (Text.of_string ")")))
-  | S_operatorname, [ Math_op (s, stretchy) ] -> render_op s stretchy
+  | S_operatorname, [ Math_op (s, _) ] -> mi_ [] (escape_math_text s)
   | S_mathrm, [ Math_op (s, _) ] ->
       mi_ [ attr "mathvariant" (Text.of_string "normal") ] (escape_math_text s)
+  | S_mathcal, [ Math_op (s, _) ] -> render_mathcal_text s
   | S_left, [ Math_op (op, stretchy) ] -> render_op op stretchy
   | S_right, [ Math_op (op, stretchy) ] -> render_op op stretchy
   | _, [] ->

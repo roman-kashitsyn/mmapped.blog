@@ -80,6 +80,7 @@ type sym =
   | S_binom
   | S_operatorname
   | S_mathrm
+  | S_mathcal
   | S_left
   | S_right
   (* text replacement commands *)
@@ -99,6 +100,7 @@ type sym =
   | S_notin
   | S_inf
   | S_notni
+  | S_setminus
   | S_rightarrow
   | S_rightarrow_upper
   | S_leftarrow
@@ -194,6 +196,7 @@ let sym_table : sym SMap.t =
       ("binom", S_binom);
       ("operatorname", S_operatorname);
       ("mathrm", S_mathrm);
+      ("mathcal", S_mathcal);
       ("left", S_left);
       ("right", S_right);
       (* replacements *)
@@ -213,6 +216,7 @@ let sym_table : sym SMap.t =
       ("notin", S_notin);
       ("inf", S_inf);
       ("notni", S_notni);
+      ("setminus", S_setminus);
       ("rightarrow", S_rightarrow);
       ("Rightarrow", S_rightarrow_upper);
       ("leftarrow", S_leftarrow);
@@ -299,6 +303,7 @@ let sym_to_string = function
   | S_binom -> "binom"
   | S_operatorname -> "operatorname"
   | S_mathrm -> "mathrm"
+  | S_mathcal -> "mathcal"
   | S_left -> "left"
   | S_right -> "right"
   | S_ldots -> "ldots"
@@ -317,6 +322,7 @@ let sym_to_string = function
   | S_notin -> "notin"
   | S_inf -> "inf"
   | S_notni -> "notni"
+  | S_setminus -> "setminus"
   | S_rightarrow -> "rightarrow"
   | S_rightarrow_upper -> "Rightarrow"
   | S_leftarrow -> "leftarrow"
@@ -453,6 +459,7 @@ let math_cmds : math_arg_type list SMap.t =
       ("binom", [ Math_arg_expr; Math_arg_expr ]);
       ("operatorname", [ Math_arg_sym ]);
       ("mathrm", [ Math_arg_sym ]);
+      ("mathcal", [ Math_arg_sym ]);
       ("left", []);
       ("right", []);
     ]
@@ -476,6 +483,7 @@ let replacement_text : sym -> string option = function
   | S_notin -> Some "\xE2\x88\x89" (* ∉ U+2209 *)
   | S_inf -> Some "\xE2\x88\x9E" (* ∞ U+221E *)
   | S_notni -> Some "\xE2\x88\x8C" (* ∌ U+220C *)
+  | S_setminus -> Some "\xE2\x88\x96" (* ∖ U+2216 *)
   | S_rightarrow -> Some "\xE2\x86\x92" (* → U+2192 *)
   | S_rightarrow_upper -> Some "\xE2\x87\x92" (* ⇒ U+21D2 *)
   | S_leftarrow -> Some "\xE2\x86\x90" (* ← U+2190 *)

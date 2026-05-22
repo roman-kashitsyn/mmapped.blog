@@ -25,6 +25,7 @@
     --fs-large: 1.87rem;
     --fs-xlarge: 2.5rem;
 
+    --fs-code-footnotesize: calc(0.78 * var(--fs-footnotesize));
     --fs-code-small: calc(0.78 * var(--fs-small));
     --fs-code-normal: calc(0.78 * var(--fs-normal));
 
@@ -54,6 +55,14 @@
     --code-bad: #A6392B;
     --code-bad-bg: #F4E4DE;
 
+    /* Syntax highlighting */
+    --hl-kw: var(--ink);
+    --hl-defun: var(--accent-1);
+    --hl-str: var(--ink-subtle);
+    --hl-comment: var(--accent-2);
+    --hl-var: var(--ink);
+    --hl-typedef: var(--accent-1);
+    --hl-id: var(--ink);
 
     /* Spacing */
     --sp-tight: 0.25rem;
@@ -65,6 +74,7 @@
 
     /* Line heights */
     --lh-compact: 1.12rem;
+    --lh-code: 1.3rem;
     --lh-medium: 1.5rem;
     --lh-body: var(--sp-line);
 }
@@ -379,6 +389,10 @@ figure.epigraph > blockquote > p {
     width: 100%;
 }
 
+figure.epigraph > blockquote code {
+    font-size: var(--fs-code-small);
+}
+
 figure.epigraph > blockquote > figcaption > cite {
     font-style: italic;
 }
@@ -398,6 +412,11 @@ figure.epigraph figcaption, figure.bq figcaption {
     font-size: var(--fs-footnotesize);
     color: var(--ink-faint);
     max-width: 100%;
+}
+
+figure.epigraph figcaption code,
+figure.bq figcaption code {
+    font-size: var(--fs-code-footnotesize);
 }
 
 figure.epigraph blockquote {
@@ -591,14 +610,15 @@ ol.circled > li {
     list-style: none;
 }
 
-.circled-ref {
+.circled-ref:before {
+    content: attr(data-num-glyph);
     font-family: var(--font-icons);
     font-size: var(--fs-normal);
     vertical-align: text-top;
     color: var(--accent-1);
 }
 
-code .circled-ref {
+code .circled-ref:before {
     font-size: var(--fs-code-normal);
     vertical-align: middle;
 }
@@ -710,6 +730,10 @@ pre.bad > code {
 pre.apl > code {
     font-family: var(--font-mono-apl);
     font-size: var(--fs-large);
+}
+
+pre.go > code {
+    tab-size: 4;
 }
 
 .math {
@@ -1050,6 +1074,8 @@ tr.border-bot {
 
 .align-c {
     text-align: center;
+    padding-left: var(--sp-tight);
+    padding-right: var(--sp-tight);
 }
 
 .sans {
@@ -1066,7 +1092,7 @@ pre > code {
     font-family: var(--font-mono);
     font-feature-settings: var(--font-mono-settings);
     font-size: var(--fs-code-normal);
-    line-height: var(--lh-compact);
+    line-height: var(--lh-code);
     font-variant-numeric: normal;
     -webkit-text-size-adjust: 100%;
 }
@@ -1107,6 +1133,36 @@ pre > code {
     font-size: var(--fs-code-small);
     overflow-x: auto;
     display: block;
+}
+
+pre > code .hl-kw {
+    color: var(--hl-kw);
+    font-weight: 600;
+}
+
+pre > code .hl-defun {
+    color: var(--hl-defun);
+}
+
+pre > code .hl-str {
+    color: var(--hl-str);
+}
+
+pre > code .hl-comment {
+    color: var(--hl-comment);
+    font-style: italic;
+}
+
+pre > code .hl-var {
+    color: var(--hl-var);
+}
+
+pre > code .hl-typedef {
+    color: var(--hl-typedef);
+}
+
+pre > code .hl-id {
+    color: var(--hl-id);
 }
 
 pre.fullwidth > code {

@@ -11,6 +11,8 @@ let all_tests : Test_framework.t list =
       Html_test.tests;
       Parser_test.tests;
       Math_test.tests;
+      Highlight_test.tests;
+      Syntax_go_test.tests;
       Render_test.tests;
       Render_mathml_test.tests;
       Elaborate_test.tests;

@@ -9,6 +9,11 @@ let t name expected actual_html : Test_framework.t =
 
 let s = Text.of_string
 
+let u cp =
+  let buf = Buffer.create 4 in
+  Buffer.add_utf_8_uchar buf (Uchar.of_int cp);
+  Buffer.contents buf
+
 let tests : Test_framework.t list =
   group "render_mathml"
     [
@@ -41,6 +46,22 @@ let tests : Test_framework.t list =
         "<mrow><mfrac><mrow><mi>a</mi></mrow><mrow><mi>b</mi></mrow></mfrac></mrow>"
         (Render_mathml.render_math_node
            (Math_cmd (S_frac, [ Math_text (s "a"); Math_text (s "b") ])));
+      t "operatorname command uses mi" "<mi>max</mi>"
+        (Render_mathml.render_math_node
+           (Math_cmd (S_operatorname, [ Math_op (s "max", false) ])));
+      t "mathcal command maps letters"
+        (String.concat ""
+           [
+             "<mi>";
+             u 0x1D49C;
+             u 0x1D4B7;
+             u 0x1D4CF;
+             "</mi>";
+           ])
+        (Render_mathml.render_math_node
+           (Math_cmd (S_mathcal, [ Math_op (s "Abz", false) ])));
+      t "setminus command" "<mo>∖</mo>"
+        (Render_mathml.render_math_node (Math_cmd (S_setminus, [])));
       t "align table"
         "<mtable columnalign=\"right left \
          \"><mtr><mtd><mrow><mi>a</mi></mrow></mtd><mtd><mrow><mo \

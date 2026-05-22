@@ -47,6 +47,15 @@ let alignment_to_class = function
   | Col_right -> txt "align-r"
   | Col_center -> txt "align-c"
 
+let highlight_role_to_class = function
+  | Hl_keyword -> txt "hl-kw"
+  | Hl_defun -> txt "hl-defun"
+  | Hl_string -> txt "hl-str"
+  | Hl_comment -> txt "hl-comment"
+  | Hl_variable -> txt "hl-var"
+  | Hl_typedef -> txt "hl-typedef"
+  | Hl_identifier -> txt "hl-id"
+
 let border_class top bot =
   match (top, bot) with
   | true, true -> txt "border-top border-bot"
@@ -76,6 +85,8 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
       code_
         (class_attr_if_nonempty (join_classes classes))
         (render_inlines ctx ils)
+  | Highlighted (role, ils) ->
+      span_ [ class_ (highlight_role_to_class role) ] (render_inlines ctx ils)
   | Link (url, ils) -> a_ [ href_ url ] (render_inlines ctx ils)
   | Math (disp, nodes) -> Render_mathml.render_math disp nodes
   | Margin_note (anchor, ils) ->
@@ -102,7 +113,10 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Anchor aid -> span_ [ id_ aid ] empty
   | Horizontal_rule -> hr_ []
   | Circled_ref n ->
-      span_ [ class_ (txt "circled-ref") ] (round_num_glyph n |> text)
+      span_
+        [ class_ (txt "circled-ref"); attr "data-num-glyph" (round_num_glyph n);
+          attr "aria-label" (txt (Printf.sprintf "step %d" n)); attr "role" (txt "img") ]
+        empty
   | Line_break -> br_ []
   | Numeric_space -> raw (txt "&numsp;")
   | Image_inline (classes, path) ->
@@ -144,6 +158,12 @@ let render_code_content (ctx : ctx) (ils : inline list) : Html.t =
        (fun line ->
          span_ [ class_ (txt "line") ] (raw (txt line)) ++ raw (txt "\n"))
        kept)
+
+let has_go_class classes =
+  List.exists (fun c -> Text.equal_string c "go") classes
+
+let highlight_code_content classes content =
+  if has_go_class classes then Syntax_go.highlight content else content
 
 (* --- Table rendering --- *)
 
@@ -234,6 +254,7 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
       in
       parent "h3" attrs link ++ nl ++ render_blocks ctx body
   | Code_block (classes, content) ->
+      let content = highlight_code_content classes content in
       let cls = join_classes classes in
       let pre_cls =
         if Text.is_empty cls then txt "source"

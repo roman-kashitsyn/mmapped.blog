@@ -1,0 +1,621 @@
+\documentclass{article}
+
+\title{Interleaved deltas}
+\subtitle{The data structure behind the first version control system.}
+\date{2026-05-22}
+\modified{2026-05-22}
+
+\keyword{dsa}
+
+\begin{document}
+
+\epigraph{
+  A weave has a reputation of one of the most reinvented data structures in history.
+}{
+  Victor Grishchenko, Mikhail Patrakeev, \cite{\href{https://arxiv.org/pdf/2002.09511v3}{Chronofold: a data structure for versioned text}}
+}
+
+Progress is often viewed as a transition from simple to complex.
+Although individual systems do become more complex over time,
+long-term progress happens when new ideas and advances in hardware
+make simple designs feasible.
+
+Think of the simplest version control system you can imagine.
+It probably stores project snapshots in a backup directory.
+Maybe it compresses files for efficiency.
+Add hashing for \href{https://en.wikipedia.org/wiki/Content-addressable_storage}{content addressing},
+and the sketch starts to resemble \href{https://git-scm.com/}{Git}.
+I don't mean this as an insult to Git; quite the opposite:
+
+\blockquote{
+  the structure of a Git repository is stunningly simple.
+  It's so simple in fact,
+  that you'll be surprised at the sophistication of the things you can do with it.
+  But that's the way the best code will always be:
+  simple, solid premises out of which complex applications arise.
+}{Wincent Colaiuta, \href{https://web.archive.org/web/20090221182312/http://wincent.com/a/about/wincent/weblog/archives/2007/07/a_look_back_bra.php}{A look back: Bram Cohen vs Linus Torvalds}}
+
+
+The \href{https://mrochkind.com/aup/talks/SCCS-Slideshow.pdf}{Source Code Control System}
+(\textsc{sccs}), developed by Marc J. Rochkind in the early seventies,
+had to be more sophisticated.
+It operated on one file at a time
+and stored all its revisions in a data structure
+called \emph{interleaved deltas} or \emph{weaves}.
+
+If Git felt like something I could have invented myself,
+weaves captivated and intimidated me for years.
+When I finally found time to work out the algorithms,
+the resources were scarce\sidenote{mn-sources}{
+  \href{https://www.bitkeeper.org/src-notes/SCCSWEAVE.html}{BitKeeper wiki} offers a good introduction.
+  Bram Cohen wrote a \href{https://github.com/bramcohen/Weave}{reference implementation}, but I found it impenetrable.
+},
+so I published my study for future explorers.
+You can find the full source code at \href{https://github.com/roman-kashitsyn/weaver}{\code{roman-kashitsyn/weaver}}.
+
+\section{sec-weave-structure}{Weave structure}
+
+A weave is a sequence of instructions for reconstructing file revisions.
+An instruction consists of a type and an operand.
+
+\begin{tabular}{l l l}
+Type & Operand & Meaning \\
+\hrule \hrule
+\code{Line} & Line index & Output a line. \\
+\code{BeginInsert} & Version number & Start a block of lines added in a version. \\
+\code{BeginDelete} & Version number & Start a block of lines deleted in a version. \\
+\code{End} & Version number & Close a block for a version. \\
+\end{tabular}
+
+\begin{figure}
+\marginnote{instr-type}{
+  The weave instruction type.
+}
+\begin{code}[go]
+type InstructionType int
+
+const (
+	Line InstructionType = iota
+	BeginInsert
+	BeginDelete
+	End
+)
+
+// Instruction is a weave instruction.
+type Instruction struct {
+	Type InstructionType
+	// Payload contains the instruction payload.
+	// For Line instructions, it's the line number.
+	// For other instructions, it's the version ID.
+	Payload int
+}
+
+func (i Instruction) Line() int {
+	return i.Payload
+}
+
+func (i Instruction) VersionID() VersionID {
+	return VersionID(i.Payload)
+}
+\end{code}
+\end{figure}
+
+All line instructions must belong to an \code{Insert} or \code{Delete} block.
+The integer in the line instruction points into the global line pool.
+Using line indices instead of strings shrinks the weave and makes instructions uniform.
+
+Unlike in \textsc{xml} or \textsc{json},
+weave blocks can overlap.
+For example, if \code{v1} adds lines 1 and 2,
+\code{v2} appends lines 3--6,
+and \code{v3} removes lines 2--4,
+then \code{v3}'s delta overlaps with deltas of the first two versions.
+
+\begin{code}
+   ⎧ Insert v1
+   ⎪ 1
+Δ1 ⎨ Delete v3  ⎫
+   ⎪ 2          ⎪
+   ⎩ End v1     ⎪
+   ⎧ Insert v2  ⎬ Δ3
+   ⎪ 3          ⎪
+   ⎪ 4          ⎪
+Δ2 ⎨ End v3     ⎭
+   ⎪ 5
+   ⎪ 6
+   ⎩ End v2
+\end{code}
+
+Versions in a weave depend on one another.
+In the example above,
+\code{v3} depends on both \code{v1} and \code{v2}
+because it deletes lines that they introduced.
+The relationship between \code{v1} and \code{v2} is ambiguous:
+\code{v1} could be \code{v2}'s parent,
+or they could be independent branches that \code{v3} merged.
+
+The weave alone is not enough to deduce dependencies between deltas.
+Most weave-based systems express these dependencies using \emph{activation sets}.
+
+\section{sec-active-revisions}{Active revision set}
+
+\textsc{sccs} has hierarchical revision names (\code{1.4} and \code{2.1}, for example).
+When you check out a revision,
+the system uses heuristics to compute its \emph{activation set}---%
+the collection of deltas that contribute to the file content.
+
+I think of activation sets as switches controlling streetlamps on a dark avenue.
+Flipping them reveals or hides parts of the weave.
+
+For my experiment,
+I chose flat sequential revision numbering.
+Each revision can have one or more parents\sidenote{sn-multiple-parents}{
+  Revisions with multiple parents represent merge commits.
+}.
+Parent revisions are numerically smaller than their children,
+so no version can be its own ancestor.
+Activating a revision also activates all of its parents,
+so computing the active set requires a graph traversal.
+
+\begin{figure}
+\marginnote{mn-active-sets}{
+  An \emph{active set} is a collection of deltas that together make a file revision.
+  We compute it by traversing the version graph.
+}
+\begin{code}[go]
+type VersionID int
+
+type ActiveSet []bool
+
+func (s ActiveSet) Contains(v VersionID) bool {
+	return v >= 0 && int(v) < len(s) && s[v]
+}
+
+func (s ActiveSet) Deactivate(v VersionID) ActiveSet {
+	out := slices.Clone(s)
+	out[v] = false
+	return out
+}
+
+type Version struct {
+	ID          VersionID
+	Parents     []VersionID
+	Author      string
+	Description string
+	Date        time.Time
+}
+
+func activeSetForVersion(versions []Version, v VersionID) ActiveSet {
+	activeSet := make(ActiveSet, len(versions)+1)
+	stack := []VersionID{v}
+	for len(stack) > 0 {
+		w := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		activeSet[w] = true
+		for _, p := range versions[w-1].Parents {
+			if !activeSet[p] {
+				stack = append(stack, p)
+			}
+		}
+	}
+	return activeSet
+}
+\end{code}
+\end{figure}
+
+We're now ready to tackle the version reconstruction algorithm.
+
+\section{sec-reconstruction}{Reconstructing revisions}
+
+To reconstruct a revision,
+we compute its \ref{sec-active-revisions}{active set}
+and scan the instruction list,
+keeping track of currently open blocks in a \href{https://en.wikipedia.org/wiki/Priority_queue}{priority queue}.
+If the instruction opens an insert block---for any revision---or a delete block for an active revision, we push it onto the queue.
+We copy lines if the block at the top of the priority queue is active
+(that's why we keep inactive inserts in the queue).
+
+We need a priority queue because blocks can overlap (see the \nameref{sec-weave-structure} section for an example).
+If blocks were properly nested, a stack would suffice.
+
+My implementation uses a sorted slice as a priority queue for brevity
+(\href{https://pkg.go.dev/container/heap}{heaps} require a lot of boilerplate in Go).
+
+\begin{figure}
+\marginnote{mn-reconstruct}{
+  The \code{Reconstruct} function recovers the lines of any file version stored in a weave.
+}
+\begin{code}[go]
+var (
+	ErrBadWeave = errors.New("E001: malformed weave")
+	ErrBadDelta = errors.New("E002: bad delta")
+)
+
+// Reconstruct locates the lines enabled in the given version set.
+// It returns the boolean mask of enabled "Line" instructions
+// and the IDs of versions that introduced the enabled lines.
+//
+// Returns [ErrBadWeave] if the instructions aren't a valid weave.
+func Reconstruct(
+	instructions []Instruction,
+	activeSet ActiveSet,
+) (mask []bool, versions []VersionID, err error) {
+	mask = make([]bool, len(instructions))
+	openBlocksByVersion := make(map[VersionID]int)
+	// activeBlocks are sorted by VersionID (ascending).
+	var activeBlocks []Instruction
+	activeBlock := func(v VersionID) (int, bool) {
+		return slices.BinarySearchFunc(activeBlocks, v,
+			func(instr Instruction, target VersionID) int {
+				return cmp.Compare(instr.VersionID(), target)
+			})
+	}
+
+	for offset, instr := range instructions {
+		switch instr.Type {
+		case Line:
+			if len(activeBlocks) == 0 {
+				return nil, nil, ErrBadWeave
+			}
+			top := activeBlocks[len(activeBlocks)-1]
+			v := top.VersionID()
+			if activeSet.Contains(v) && top.Type == BeginInsert {
+				mask[offset] = true
+				versions = append(versions, v)
+			}
+		case BeginInsert, BeginDelete:
+			v := instr.VersionID()
+			if _, ok := openBlocksByVersion[v]; ok {
+				return nil, nil, ErrBadWeave
+			}
+			if instr.Type == BeginInsert || activeSet.Contains(v) {
+				at, _ := activeBlock(v)
+				activeBlocks = slices.Insert(activeBlocks, at, instr)
+			}
+			openBlocksByVersion[v] = offset
+		case End:
+			v := instr.VersionID()
+			if _, ok := openBlocksByVersion[v]; !ok {
+				return nil, nil, ErrBadWeave
+			}
+			at, found := activeBlock(v)
+			if found {
+				activeBlocks = slices.Delete(activeBlocks, at, at+1)
+			}
+			delete(openBlocksByVersion, v)
+		default:
+			return nil, nil, ErrBadWeave
+		}
+	}
+	if len(openBlocksByVersion) > 0 {
+		return nil, nil, ErrBadWeave
+	}
+	return mask, versions, nil
+}
+\end{code}
+\end{figure}
+
+Returning the bit mask of enabled line instructions (instead of their contents)
+simplifies many operations,
+including \ref{sec-extension}{weave extension} and \ref{sec-reconstruct-delta}{delta reconstruction}.
+
+Before we can start adding changes to weaves,
+we need diffs.
+
+\section{sec-deltas}{Computing deltas}
+
+Given two sequences of items,
+we want to find a transformation
+that turns the first sequence into the second
+and uses the fewest steps.
+
+The transformation is a sequence of \emph{deltas}
+(also known as \emph{hunks})
+that specify an \emph{action} (\code{Insert}, \code{Delete}, or \code{Keep})
+and the \emph{items} it acts upon.
+I called such a transformation a \emph{diff script}.
+
+The diff algorithm I'm most familiar with is the \textsc{lcs} algorithm\sidenote{sn-lcs-diff}{
+  See, for example, the first section of \href{https://www.cs.dartmouth.edu/~doug/diff.pdf}{\cite{An Algorithm for Differential File Comparison}} by J. W. Hunt and M. D. McIlroy.
+}.
+It computes an optimal diff script in two stages:
+\begin{enumerate}
+\item
+  Use dynamic programming to build the \code{lcs} table.
+  The \code{lcs[i][j]} entry is the length of a
+  \href{https://en.wikipedia.org/wiki/Longest_common_subsequence}{longest common subsequence} of \code{a[i:]} and \code{b[j:]}.
+  Fill the table back-to-front in both dimensions.
+\item
+  Traverse the \code{lcs} table to recover the actions,
+  moving toward \code{lcs} increase when \code{a} and \code{b} don't align.
+\end{enumerate}
+
+\begin{figure}
+\marginnote{mn-diff-script}{
+  The \code{DiffScript} function computes an optimal edit script for two sequences of integers.
+}
+\begin{code}[go]
+type Action int
+
+const (
+	Insert Action = iota
+	Delete
+	Keep
+)
+
+type Delta struct {
+	Action Action
+	Items  []int
+}
+
+func appendDelta(script []Delta, action Action, item int) []Delta {
+	n := len(script)
+	if n > 0 && script[n-1].Action == action {
+		script[n-1].Items = append(script[n-1].Items, item)
+		return script
+	}
+	return append(script, Delta{Action: action, Items: []int{item}})
+}
+
+// DiffScript computes the optimal edit script for turning a into b.
+func DiffScript(a, b []int) (script []Delta) {
+	n, m := len(a), len(b)
+
+	// Build a table of lengths of \href{https://en.wikipedia.org/wiki/Longest_common_subsequence}{LCS}(a[i:], b[j:]).
+	lcs := make([][]int, n+1)
+	for i := range lcs {
+		lcs[i] = make([]int, m+1)
+	}
+	for i := range slices.Backward(a) {
+		for j := range slices.Backward(b) {
+			if a[i] == b[j] {
+				lcs[i][j] = 1 + lcs[i+1][j+1]
+			} else {
+				lcs[i][j] = max(lcs[i+1][j], lcs[i][j+1])
+			}
+		}
+	}
+
+	// Traverse the LCS table and reconstruct the optimal edits.
+	for i, j := 0, 0; i < n || j < m; {
+		switch {
+		case i < n && j < m && a[i] == b[j]:
+			script = appendDelta(script, Keep, a[i])
+			i++
+			j++
+		case i < n && (j == m || lcs[i+1][j] >= lcs[i][j+1]):
+			script = appendDelta(script, Delete, a[i])
+			i++
+		default:
+			script = appendDelta(script, Insert, b[j])
+			j++
+		}
+	}
+
+	return script
+}
+\end{code}
+\end{figure}
+
+A practical system would use Myers diff or Bram Cohen's patience diff.
+James Coglan,
+the author of \href{https://shop.jcoglan.com/building-git/}{Building Git},
+wrote a series of blog posts explaining \href{https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/}{Myers diff}
+and \href{https://blog.jcoglan.com/2017/09/19/the-patience-diff-algorithm/}{patience diff} in great detail.
+
+Now that we have deltas, let's add them to a weave.
+
+\section{sec-extension}{Extending weaves}
+
+The \code{Interleave} function takes a weave
+and a version within that weave (identified by an active set)
+and incorporates new deltas,
+producing a new weave.
+
+It calls the \code{Reconstruct} function
+to annotate each active line in the weave
+and then traverses the instructions and deltas in parallel,
+adding new instructions that match delta actions.
+The parallel loop body is the following procedure:
+
+\begin{enumerate}
+\item
+  Copy unmarked instructions to the output as is.
+\item
+  Upon finding the first marked line,
+  stop and consult the delta action.
+\item
+  If the action is \code{Insert},
+  append its items as lines to the output,
+  surrounding them by a \code{BeginInsert}/\code{End} block.
+\item
+  If the action is \code{Delete},
+  open a \code{BeginDelete} block,
+  copy the input stream as long as its active lines match the delta items,
+  then close the block.
+\item
+  If the action is \code{Keep},
+  copy the input until all items have appeared as active lines.
+\end{enumerate}
+
+\begin{figure}
+\marginnote{mn-interleave}{
+  The \code{Interleave} function adds new deltas to a weave.
+}
+\begin{code}[go]
+// Interleave adds new deltas to a weave.
+//
+// Returns [ErrBadWeave] if the instructions aren't a valid weave.
+// Returns [ErrBadDelta] if the deltas don't apply cleanly.
+func Interleave(
+	instructions []Instruction,
+	activeSet ActiveSet,
+	deltas []Delta,
+	v VersionID,
+) (out []Instruction, err error) {
+	mask, _, err := Reconstruct(instructions, activeSet)
+	if err != nil {
+		return nil, err
+	}
+
+	i, j, n, m := 0, 0, len(instructions), len(deltas)
+
+	// consumeLines outputs instructions
+	// until it sees all expected lines.
+	consumeLines := func(expected []int) error {
+		skipped := 0
+		for skipped < len(expected) {
+			if i >= n {
+				return ErrBadDelta
+			}
+			out = append(out, instructions[i])
+			if mask[i] {
+				if expected[skipped] != instructions[i].Line() {
+					return ErrBadDelta
+				}
+				skipped++
+			}
+			i++
+		}
+		return nil
+	}
+
+	for i < n || j < m {
+		for i < n && !mask[i] { \circled{1}
+			out = append(out, instructions[i])
+			i++
+		}
+		if j < m {
+			delta := deltas[j]
+			switch delta.Action { \circled{2}
+			case Insert: \circled{3}
+				out = append(out, Instruction{BeginInsert, int(v)})
+				for _, item := range delta.Items {
+					out = append(out, Instruction{Line, item})
+				}
+				out = append(out, Instruction{End, int(v)})
+			case Delete: \circled{4}
+				out = append(out, Instruction{BeginDelete, int(v)})
+				if err := consumeLines(delta.Items); err != nil {
+					return nil, err
+				}
+				out = append(out, Instruction{End, int(v)})
+			case Keep: \circled{5}
+				if err := consumeLines(delta.Items); err != nil {
+					return nil, err
+				}
+			}
+			j++
+		} else if i < n {
+			return nil, ErrBadDelta
+		}
+	}
+	return out, nil
+}
+\end{code}
+\end{figure}
+
+Now, we can recover any version stored in a weave
+and detect and apply changes.
+The last missing piece is extracting deltas.
+
+\section{sec-reconstruct-delta}{Reconstructing deltas}
+
+How do we know what changed in version $v$?
+We could recover $v$ and its predecessor and diff the outputs,
+but it would be wasteful, given that the weave already stores deltas.
+A more direct approach is
+to use the bit masks returned by the \code{Reconstruct} function
+to detect lines that become inactive if we deactivate $v$.
+
+\begin{figure}
+\marginnote{mn-reconstruct-delta}{
+  The \code{ReconstructDelta} function diffs two active revision sets.
+}
+\begin{code}[go]
+// ReconstructDelta extracts the changes between two active version sets.
+func ReconstructDelta(
+	instructions []Instruction,
+	beforeSet, afterSet ActiveSet,
+) (deltas []Delta, err error) {
+	before, _, err := Reconstruct(instructions, beforeSet)
+	if err != nil {
+		return nil, err
+	}
+	after, _, err := Reconstruct(instructions, afterSet)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, instr := range instructions {
+		if instr.Type != Line {
+			continue
+		}
+		switch {
+		case before[i] && after[i]:
+			deltas = appendDelta(deltas, Keep, instr.Line())
+		case !before[i] && after[i]:
+			deltas = appendDelta(deltas, Insert, instr.Line())
+		case before[i] && !after[i]:
+			deltas = appendDelta(deltas, Delete, instr.Line())
+		}
+	}
+	return deltas, nil
+}
+\end{code}
+\end{figure}
+
+\code{ReconstructDelta} can compute deltas between any two versions.
+If we need the delta of a particular version $v$,
+we diff
+$\operatorname{ActiveSet}\left(v\right) \setminus \left\{v\right\}$ and
+$\operatorname{ActiveSet}\left(v\right)$.
+
+\begin{figure}
+\begin{code}
+vSet := activeSetForVersion(versions, v)
+vDelta, err := ReconstructDelta(instructions, vSet.Deactivate(v), vSet)
+\end{code}
+\end{figure}
+
+Now we have enough machinery to build a simple version control system
+that can support most of \textsc{sccs}'s features.
+
+\section{sec-conclusion}{Conclusion}
+
+Nobody in their right mind would use \textsc{sccs} today,
+yet it shaped modern software as few systems did.
+Marc J. Rochkind's paper won the first \href{https://www.sigsoft.org/awards/icseMIPAward.html}{\textsc{icse} Most Influential Paper Award} in 1989,
+but as David Parnas noted\sidenote{sn-parnas-quote}{
+  See \href{https://www.computer.org/csdl/journal/ts/2025/03/10821013/23d1xvEsT6M}{\cite{A Retrospective on the Source Code Control System}} by
+  Marc J. Rochkind.
+}, ``the system was influential, but the paper itself didn’t matter''.
+What mattered most was the idea
+that software evolution can and should be tracked.
+
+Git is ubiquitous today,
+and its connection to \textsc{sccs} is more than ideological.
+Git borrowed many ideas from \href{https://www.bitkeeper.org/}{BitKeeper},
+a distributed version control system that powered Linux kernel development between 2002 and 2005.
+BitKeeper, in turn, was a direct descendant of \textsc{sccs} and used weaves to track changes.
+
+\href{https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type}{Conflict-free Replicated Data Types}
+and the \href{https://pijul.org/}{Pijul} version control system employ data structures
+that are strikingly similar to weaves
+because their history representation makes conflicts easier to resolve\sidenote{sn-sccs-merges}{
+  Ironically, \textsc{sccs} didn't support merges.
+}.
+
+Weaves always return.
+
+\section{sec-exercises}{Exercises}
+
+\begin{enumerate}
+\item Explain why \code{Reconstruct} pushes inactive \code{BeginInsert} instructions onto the queue but ignores inactive \code{BeginDelete} instructions.
+\item Assemble weave algorithms into a simple single-file version control system.
+\item Extend the system to detect history file corruptions.
+\item Implement two-way merge for any two versions.
+\item Extend the system to handle repositories, not just single files.
+\end{enumerate}
+
+\end{document}

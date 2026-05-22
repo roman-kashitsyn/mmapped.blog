@@ -49,13 +49,13 @@ This distinction means your program’s meaning changes depending on the compila
 <p>Let us see how non-exclusive mutable references can lead to hard-to-track bugs.</p>
 <div class="source-container"><pre class="source bad"><code><span class="line">#[update]</span>
 <span class="line">fn register_friend(uid: UserId, friend: User) -&gt; Result&lt;UserId, Error&gt; {</span>
-<span class="line">    let mut_user_ref = storage::get_mut&lt;Users&gt;() <span class="circled-ref">①</span></span>
+<span class="line">    let mut_user_ref = storage::get_mut&lt;Users&gt;() <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span></span>
 <span class="line">                           .find_mut(uid)</span>
 <span class="line">                           .ok_or(Error::NotFound)?;</span>
 <span class="line"></span>
-<span class="line">    let friend_id = storage::get_mut&lt;Users&gt;().add_user(&amp;friend); <span class="circled-ref">②</span></span>
+<span class="line">    let friend_id = storage::get_mut&lt;Users&gt;().add_user(&amp;friend); <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span></span>
 <span class="line"></span>
-<span class="line">    mut_user_ref.friends.insert(friend_id); <span class="circled-ref">③</span></span>
+<span class="line">    mut_user_ref.friends.insert(friend_id); <span class="circled-ref" data-num-glyph="③" aria-label="step 3" role="img"></span></span>
 <span class="line"></span>
 <span class="line">    Ok(friend_id)</span>
 <span class="line">}</span>
@@ -65,7 +65,7 @@ This distinction means your program’s meaning changes depending on the compila
 <ol class="circled"><li data-num-glyph="①">We get a mutable reference pointing into our data structure.
 </li><li data-num-glyph="②">
   We call a function that modifies the data structure.
-  This call might have invalidated the reference we obtained in step <span class="circled-ref">①</span>.
+  This call might have invalidated the reference we obtained in step <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span>.
   The reference could now be pointing to garbage or into the middle of another valid object.
 </li><li data-num-glyph="③">
   We use the original mutable reference to modify the object, potentially corrupting the heap.
@@ -86,8 +86,8 @@ This approach has a few benefits:</p>
 </li></ul>
 <p>Consider also adding comments clarifying which variables are stable, like in the following example:</p>
 <div class="source-container"><pre class="source good"><code><span class="line">thread_local! {</span>
-<span class="line">    /* <b>stable</b>   <span class="circled-ref">①</span> */ static USERS: RefCell&lt;Users&gt; = ... ;</span>
-<span class="line">    /* <b>flexible</b> <span class="circled-ref">②</span> */ static LAST_ACTIVE: Cell&lt;UserId&gt; = ...;</span>
+<span class="line">    /* <b>stable</b>   <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span> */ static USERS: RefCell&lt;Users&gt; = ... ;</span>
+<span class="line">    /* <b>flexible</b> <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span> */ static LAST_ACTIVE: Cell&lt;UserId&gt; = ...;</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>I borrowed <a href="https://sdk.dfinity.org/docs/language-guide/upgrades.html#_declaring_stable_variables">Motoko terminology</a> here:
@@ -122,10 +122,10 @@ If a canister makes a call and then traps in the callback, the canister might ne
 <div class="advice" id="panic-await"><p><a class="anchor left-gutter-anchor advice-anchor" href="#panic-await" aria-label="Link to this advice"></a>Avoid panics after <code>await</code>.</p></div>
 <p>Let us start with an example.</p>
 <div class="source-container"><pre class="source bad"><code><span class="line">#[update]</span>
-<span class="line">async fn update_avatar(user_id: UserId, <b>pic: ByteBuf</b> <span class="circled-ref">①</span> ) {</span>
+<span class="line">async fn update_avatar(user_id: UserId, <b>pic: ByteBuf</b> <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span> ) {</span>
 <span class="line">    let key = store_async(user_id, &amp;pic)</span>
-<span class="line">                  <b>.await</b>      <span class="circled-ref">②</span></span>
-<span class="line">                  <b>.unwrap()</b>;  <span class="circled-ref">③</span></span>
+<span class="line">                  <b>.await</b>      <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span></span>
+<span class="line">                  <b>.unwrap()</b>;  <span class="circled-ref" data-num-glyph="③" aria-label="step 3" role="img"></span></span>
 <span class="line">    USERS.with(|users| set_avatar_key(user_id, key));</span>
 <span class="line">}</span>
 </code></pre></div>
@@ -147,9 +147,9 @@ I still recommend using explicit error handling instead of panics whenever possi
 <div class="advice" id="dont-lock"><p><a class="anchor left-gutter-anchor advice-anchor" href="#dont-lock" aria-label="Link to this advice"></a>Don’t lock shared resources across await boundaries.</p></div>
 <div class="source-container"><pre class="source bad"><code><span class="line">#[update]</span>
 <span class="line">async fn refresh_profile_bad(user_id: UserId) {</span>
-<span class="line">   let users = <b>USERS_LOCK.write().unwrap()</b>; <span class="circled-ref">①</span></span>
+<span class="line">   let users = <b>USERS_LOCK.write().unwrap()</b>; <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span></span>
 <span class="line">   if let Some(user) = users.find_mut(user_id) {</span>
-<span class="line">       if let Ok(profile) = async_get_profile(user_id)<b>.await</b> { <span class="circled-ref">②</span></span>
+<span class="line">       if let Ok(profile) = async_get_profile(user_id)<b>.await</b> { <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span></span>
 <span class="line">           user.profile = profile;</span>
 <span class="line">       }</span>
 <span class="line">   }</span>
@@ -157,13 +157,13 @@ I still recommend using explicit error handling instead of panics whenever possi
 <span class="line"></span>
 <span class="line">#[update]</span>
 <span class="line">fn add_user(user: User) {</span>
-<span class="line">    let users = <b>USERS_LOCK.write().unwrap()</b>; <span class="circled-ref">③</span></span>
+<span class="line">    let users = <b>USERS_LOCK.write().unwrap()</b>; <span class="circled-ref" data-num-glyph="③" aria-label="step 3" role="img"></span></span>
 <span class="line">    // …</span>
 <span class="line">}</span>
 </code></pre></div>
 <ol class="circled"><li data-num-glyph="①">We obtain exclusive access to the <code>users</code> map and make an async call.
 </li><li data-num-glyph="②">The system commits the canister state after the call suspends. The user map stays locked.
-</li><li data-num-glyph="③">Other methods accessing the map will panic until the call started in step <span class="circled-ref">②</span> completes.
+</li><li data-num-glyph="③">Other methods accessing the map will panic until the call started in step <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span> completes.
 </li></ol>
 <p>This issue becomes quite nasty when combined with panics.
 If you lock a resource and panic after the <code>await</code>, the resource might stay locked forever<label class="margin-toggle sidenote-number" for="sn-fixed-0.5.1"></label><input type="checkbox" id="sn-fixed-0.5.1" class="margin-toggle"><span class="sidenote">As noted in the previous section, Rust CDK version 0.5.1 addresses this issue.</span>.</p>
@@ -231,7 +231,7 @@ The interface should be stable, easy to find, and well-documented.</p>
 <span class="line">use ic_cdk_macros::update;</span>
 <span class="line"></span>
 <span class="line">#[update]</span>
-<span class="line">#[candid_method(update)] <span class="circled-ref">①</span></span>
+<span class="line">#[candid_method(update)] <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span></span>
 <span class="line">async fn transfer(arg: TransferArg) -&gt; Result&lt;Nat, TransferError&gt; {</span>
 <span class="line">  // …</span>
 <span class="line">}</span>
@@ -241,10 +241,10 @@ The interface should be stable, easy to find, and well-documented.</p>
 <span class="line">  use candid::utils::{service_compatible, CandidSource};</span>
 <span class="line">  use std::path::Path;</span>
 <span class="line"></span>
-<span class="line">  candid::export_service!(); <span class="circled-ref">②</span></span>
+<span class="line">  candid::export_service!(); <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span></span>
 <span class="line">  let new_interface = __export_service();</span>
 <span class="line"></span>
-<span class="line">  service_compatible( <span class="circled-ref">③</span></span>
+<span class="line">  service_compatible( <span class="circled-ref" data-num-glyph="③" aria-label="step 3" role="img"></span></span>
 <span class="line">    CandidSource::Text(&amp;new_interface),</span>
 <span class="line">    CandidSource::File(Path::new(&quot;interface.did&quot;)),</span>
 <span class="line">  ).unwrap();</span>
@@ -480,7 +480,7 @@ You should prefer the reference-counting approach unless you have to work with d
 <p>I experimented with a one-megabyte asset and measured that the original code relying on a deep copy consumed 16 million instructions.
 At the same time, versions with reference counting and explicit lifetimes needed only 12 million instructions<label class="margin-toggle sidenote-number" for="sn-candid-copy"></label><input type="checkbox" id="sn-candid-copy" class="margin-toggle"><span class="sidenote">
   The 25% improvement shows that our code does little but copy bytes.
-  The code did at least <em>three</em> copies: <span class="circled-ref">①</span> from a <code>thread_local</code> to an <code>HttpResponse</code>, <span class="circled-ref">②</span> from the <code>HttpResponse</code> to candid’s <a href="https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L28">value buffer</a>, and <span class="circled-ref">③</span> from candid’s <a href="https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L61">value buffer</a> to the call’s <a href="https://sourcegraph.com/github.com/dfinity/cdk-rs@39cd49a3b2ca6736d7c3d3bf3605e567302825b7/-/blob/src/ic-cdk/src/api/call.rs?L481-500">argument buffer</a>.
+  The code did at least <em>three</em> copies: <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span> from a <code>thread_local</code> to an <code>HttpResponse</code>, <span class="circled-ref" data-num-glyph="②" aria-label="step 2" role="img"></span> from the <code>HttpResponse</code> to candid’s <a href="https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L28">value buffer</a>, and <span class="circled-ref" data-num-glyph="③" aria-label="step 3" role="img"></span> from candid’s <a href="https://sourcegraph.com/github.com/dfinity/candid@8b742c9701640ca220c356c23c5f834d13150cc4/-/blob/rust/candid/src/ser.rs?L61">value buffer</a> to the call’s <a href="https://sourcegraph.com/github.com/dfinity/cdk-rs@39cd49a3b2ca6736d7c3d3bf3605e567302825b7/-/blob/src/ic-cdk/src/api/call.rs?L481-500">argument buffer</a>.
   We removed ⅓ of copies and got ¼ improvement in instruction consumption.
   So only ¼ of our instructions contributed to work unrelated to copying the asset’s byte array.
 </span>.</p>
