@@ -267,7 +267,7 @@ We apply the \code{PBT_Parent} function until the computed node falls within the
 // Computes the parent of node I in a left-perfect binary tree of the given SIZE.
 uint64_t LPBT_Parent_Iterative(uint64_t i, const uint64_t size) {
     do { i = PBT_Parent(i); } while (i >= size);
-    reutrn i;
+    return i;
 }
 \end{code}
 
@@ -299,7 +299,7 @@ If the outcome falls outside the tree bounds, the recursive definition of left-p
 \begin{code}[c]
 // Computes the right child of node I in a left-perfect binary tree of the given SIZE.
 uint64_t LPBT_RightChild(const uint64_t i, const uint64_t size) {
-    assert(n & 1);
+    assert(i & 1);
     const uint64_t r = PBT_RightChild(i);
     return (r < size) ? r : i + 1 + LPBT_Root(size - i - 1);
 }
@@ -310,9 +310,9 @@ Alternatively, if \code{PBT_RightChild}'s result falls outside of the tree, we c
 \begin{code}[c]
 // Computes the right child of node I in a left-perfect binary tree of the given SIZE.
 uint64_t LPBT_RightChild_Iterative(const uint64_t i, const uint64_t size) {
-    assert(n & 1);
+    assert(i & 1);
     uint64_t r;
-    for (r = PBT_RightChild(n); r < size; r = PBT_LeftChild(r));
+    for (r = PBT_RightChild(i); r < size; r = PBT_LeftChild(r));
     return r;
 }
 \end{code}

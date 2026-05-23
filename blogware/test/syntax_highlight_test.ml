@@ -68,6 +68,12 @@ let go_tests =
          )\n\
          <kw:var> <var:a>, <var:b> <id:int>\n\
          <var:x>, <var:ok> := <id:m>[<id:k>]\n";
+      h "go" "declaration block boundaries ignore comparisons"
+        "const (\nLess = a < b\nGreater = c > d\n)\n"
+        "<kw:const> (\n\
+         <var:Less> = <id:a> < <id:b>\n\
+         <var:Greater> = <id:c> > <id:d>\n\
+         )\n";
       h "go" "type definitions and aliases"
         "type Server struct{}\n\
          type Alias = string\n\
@@ -161,6 +167,15 @@ let rust_tests =
         "pub fn add(x: i32, mut y: i32) -> i32 { return x + y; }"
         "<kw:pub> <kw:fn> <defun:add>(<var:x>: <id:i32>, <kw:mut> <var:y>: \
          <id:i32>) -> <id:i32> { <kw:return> <id:x> + <id:y>; }";
+      h "rust" "function generics"
+        "fn first<T: Ord>(left: T, right: T) -> T { left }"
+        "<kw:fn> <defun:first><<id:T>: <id:Ord>>(<var:left>: <id:T>, \
+         <var:right>: <id:T>) -> <id:T> { <id:left> }";
+      h "rust" "generic parameter types with commas"
+        "fn sum(map: StableBTreeMap<(Principal, Subaccount), Tokens>, owner: \
+         Principal) {}"
+        "<kw:fn> <defun:sum>(<var:map>: <id:StableBTreeMap><(<id:Principal>, \
+         <id:Subaccount>), <id:Tokens>>, <var:owner>: <id:Principal>) {}";
       h "rust" "type declarations and let bindings"
         "struct Server<T> { value: T }\n\
          enum State { Ready }\n\

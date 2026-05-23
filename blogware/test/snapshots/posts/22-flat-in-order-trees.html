@@ -195,7 +195,7 @@ We apply the <code>PBT_Parent</code> function until the computed node falls with
 <div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the parent of node I in a left-perfect binary tree of the given SIZE.</span></span>
 <span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LPBT_Parent_Iterative</span>(<span class="hl-id">uint64_t</span> <span class="hl-var">i</span>, <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">size</span>) {</span>
 <span class="line">    <span class="hl-kw">do</span> { <span class="hl-id">i</span> = <span class="hl-id">PBT_Parent</span>(<span class="hl-id">i</span>); } <span class="hl-kw">while</span> (<span class="hl-id">i</span> &gt;= <span class="hl-id">size</span>);</span>
-<span class="line">    <span class="hl-id">reutrn</span> <span class="hl-id">i</span>;</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">i</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>There is also a non-iterative way to find the parent in a left-perfect tree.
@@ -221,7 +221,7 @@ Notice that the <code>PBT_RightChild</code> function gives correct results if th
 If the outcome falls outside the tree bounds, the recursive definition of left-perfect trees implies that the right child must be the root of the right subtree.</p>
 <div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the right child of node I in a left-perfect binary tree of the given SIZE.</span></span>
 <span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LPBT_RightChild</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">i</span>, <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">size</span>) {</span>
-<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">n</span> &amp; 1);</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">i</span> &amp; 1);</span>
 <span class="line">    <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-id">r</span> = <span class="hl-id">PBT_RightChild</span>(<span class="hl-id">i</span>);</span>
 <span class="line">    <span class="hl-kw">return</span> (<span class="hl-id">r</span> &lt; <span class="hl-id">size</span>) ? <span class="hl-id">r</span> : <span class="hl-id">i</span> + 1 + <span class="hl-id">LPBT_Root</span>(<span class="hl-id">size</span> - <span class="hl-id">i</span> - 1);</span>
 <span class="line">}</span>
@@ -229,9 +229,9 @@ If the outcome falls outside the tree bounds, the recursive definition of left-p
 <p>Alternatively, if <code>PBT_RightChild</code>’s result falls outside of the tree, we can follow the left links in the <q>virtual</q> perfect tree until we hit the tree bounds again.</p>
 <div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the right child of node I in a left-perfect binary tree of the given SIZE.</span></span>
 <span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LPBT_RightChild_Iterative</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">i</span>, <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">size</span>) {</span>
-<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">n</span> &amp; 1);</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">i</span> &amp; 1);</span>
 <span class="line">    <span class="hl-id">uint64_t</span> <span class="hl-id">r</span>;</span>
-<span class="line">    <span class="hl-kw">for</span> (<span class="hl-id">r</span> = <span class="hl-id">PBT_RightChild</span>(<span class="hl-id">n</span>); <span class="hl-id">r</span> &lt; <span class="hl-id">size</span>; <span class="hl-id">r</span> = <span class="hl-id">PBT_LeftChild</span>(<span class="hl-id">r</span>));</span>
+<span class="line">    <span class="hl-kw">for</span> (<span class="hl-id">r</span> = <span class="hl-id">PBT_RightChild</span>(<span class="hl-id">i</span>); <span class="hl-id">r</span> &lt; <span class="hl-id">size</span>; <span class="hl-id">r</span> = <span class="hl-id">PBT_LeftChild</span>(<span class="hl-id">r</span>));</span>
 <span class="line">    <span class="hl-kw">return</span> <span class="hl-id">r</span>;</span>
 <span class="line">}</span>
 </code></pre></div>

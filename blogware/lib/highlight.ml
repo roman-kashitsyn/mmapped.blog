@@ -378,8 +378,8 @@ let mark_next_ident tokens role i =
       Some (id + 1)
   | _ -> None
 
-let is_open = function "(" | "[" | "{" | "<" -> true | _ -> false
-let is_close = function ")" | "]" | "}" | ">" -> true | _ -> false
+let is_open = function "(" | "[" | "{" -> true | _ -> false
+let is_close = function ")" | "]" | "}" -> true | _ -> false
 
 let step_depth depth t =
   if is_open t.lexeme then depth + 1
@@ -466,7 +466,12 @@ let mark_go_field_vars tokens open_idx close_idx role =
   in
   parse_field (open_idx + 1)
 
-let mark_colon_field_vars tokens open_idx close_idx role =
+let mark_rust_field_vars tokens open_idx close_idx role =
+  let step_rust_type_depth depth t =
+    if is_open t.lexeme || text_is t "<" then depth + 1
+    else if is_close t.lexeme || text_is t ">" then max 0 (depth - 1)
+    else depth
+  in
   let mark_segment start stop =
     match next_sig_from tokens start with
     | Some mut when mut < stop && text_is tokens.(mut) "mut" -> (
@@ -485,7 +490,7 @@ let mark_colon_field_vars tokens open_idx close_idx role =
         mark_segment seg_start i;
         loop (i + 1) (i + 1) 0
       end
-      else loop seg_start (i + 1) (step_depth depth t)
+      else loop seg_start (i + 1) (step_rust_type_depth depth t)
   in
   loop (open_idx + 1) (open_idx + 1) 0
 
@@ -1063,7 +1068,7 @@ module Rust = Make (struct
         begin match balanced_from tokens params_start "(" ")" with
         | Some (open_idx, close_idx, _) ->
             mark Hl_defun tokens.(name_idx);
-            mark_colon_field_vars tokens open_idx close_idx Hl_variable
+            mark_rust_field_vars tokens open_idx close_idx Hl_variable
         | None -> ()
         end
     | _ -> ()
