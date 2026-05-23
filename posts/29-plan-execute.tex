@@ -163,14 +163,14 @@ enum Action {
 }
 
 impl ExecutionState {
-    \emph{// Returns the first action to take.}
+    /// Returns the first action to take.
     fn init(&self) -> Action { \ldots  }
 
-    \emph{// Indicates that the task corresponding to the node is in progress.}
-    fn started(&must self, node: NodeId) { \ldots  }
+    /// Indicates that the task corresponding to the node is in progress.
+    fn started(&mut self, node: NodeId) { \ldots  }
 
-    \emph{// Indicates that the task corresponding to the node has been completed.}
-    \emph{// Returns the next action to take.}
+    /// Indicates that the task corresponding to the node has been completed.
+    /// Returns the next action to take.
     fn completed(&mut self, node: NodeId) -> Action { \ldots  }
 }
 \end{code}

@@ -74,68 +74,68 @@ potentially applying <a href="https://propertesting.com/book_state_machine_prope
 <p>The following simplistic build system design demonstrates how all the pattern pieces fit together.
 The inputs for a build are the build graph, the set of outputs the caller requested to materialize, and the build cache state.
 The plan is the list of tasks we need to execute to materialize the desired artifacts, in the topological order.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">struct Node {</span>
-<span class="line">    id: NodeId,</span>
-<span class="line">    inputs: Vec&lt;ArtifactId&gt;,</span>
-<span class="line">    outputs: Vec&lt;ArtifactId&gt;,</span>
-<span class="line">    transform: Command,</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">Node</span> {</span>
+<span class="line">    <span class="hl-id">id</span>: <span class="hl-id">NodeId</span>,</span>
+<span class="line">    <span class="hl-id">inputs</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">ArtifactId</span>&gt;,</span>
+<span class="line">    <span class="hl-id">outputs</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">ArtifactId</span>&gt;,</span>
+<span class="line">    <span class="hl-id">transform</span>: <span class="hl-id">Command</span>,</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">struct BuildGraph(…)</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">BuildGraph</span>(<span class="hl-id">…</span>)</span>
 <span class="line"></span>
-<span class="line">type BuildPlan = Vec&lt;Node&gt;;</span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">BuildPlan</span> = <span class="hl-id">Vec</span>&lt;<span class="hl-id">Node</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">fn plan(</span>
-<span class="line">    g: &amp;BuildGraph,</span>
-<span class="line">    cache: &amp;BuildCache,</span>
-<span class="line">    targets: &amp;[ArtifactId],</span>
-<span class="line">) -&gt; Result&lt;BuildPlan, BuildError&gt; { … }</span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">plan</span>(</span>
+<span class="line">    <span class="hl-var">g</span>: &amp;<span class="hl-id">BuildGraph</span>,</span>
+<span class="line">    <span class="hl-var">cache</span>: &amp;<span class="hl-id">BuildCache</span>,</span>
+<span class="line">    <span class="hl-var">targets</span>: &amp;[<span class="hl-id">ArtifactId</span>],</span>
+<span class="line">) -&gt; <span class="hl-id">Result</span>&lt;<span class="hl-id">BuildPlan</span>, <span class="hl-id">BuildError</span>&gt; { <span class="hl-id">…</span> }</span>
 </code></pre></div>
 <p>The most straightforward execution function would go over the tasks in the plan and execute them sequentially.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">fn run_build_sequentially(</span>
-<span class="line">    plan: &amp;BuildPlan,</span>
-<span class="line">    cache: &amp;BuildCache,</span>
-<span class="line">    sandbox: &amp;Sandbox,</span>
-<span class="line">) -&gt; Result&lt;(), BuildError&gt; {</span>
-<span class="line">    for node in plan {</span>
-<span class="line">        sandbox.execute(node, cache)?;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">run_build_sequentially</span>(</span>
+<span class="line">    <span class="hl-var">plan</span>: &amp;<span class="hl-id">BuildPlan</span>,</span>
+<span class="line">    <span class="hl-var">cache</span>: &amp;<span class="hl-id">BuildCache</span>,</span>
+<span class="line">    <span class="hl-var">sandbox</span>: &amp;<span class="hl-id">Sandbox</span>,</span>
+<span class="line">) -&gt; <span class="hl-id">Result</span>&lt;(), <span class="hl-id">BuildError</span>&gt; {</span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">node</span> <span class="hl-kw">in</span> <span class="hl-id">plan</span> {</span>
+<span class="line">        <span class="hl-id">sandbox</span>.<span class="hl-id">execute</span>(<span class="hl-id">node</span>, <span class="hl-id">cache</span>)?;</span>
 <span class="line">    }</span>
-<span class="line">    Ok(())</span>
+<span class="line">    <span class="hl-id">Ok</span>(())</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>A more efficient approach is to implement pipeline parallelism and execute independent tasks concurrently.
 This execution model adds a lot of complexity, which the build plan alone doesn’t address.
 So we introduce a state machine that keeps track of unfinished work and adjusts the plan as the execution unfolds.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">struct ExecutionState {</span>
-<span class="line">    graph: BuildGraph,</span>
-<span class="line">    todo: Vec&lt;NodeId&gt;,</span>
-<span class="line">    in_progress: Vec&lt;NodeId&gt;,</span>
-<span class="line">    depcount: HashMap&lt;NodeId, usize&gt;,</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">ExecutionState</span> {</span>
+<span class="line">    <span class="hl-id">graph</span>: <span class="hl-id">BuildGraph</span>,</span>
+<span class="line">    <span class="hl-id">todo</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">NodeId</span>&gt;,</span>
+<span class="line">    <span class="hl-id">in_progress</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">NodeId</span>&gt;,</span>
+<span class="line">    <span class="hl-id">depcount</span>: <span class="hl-id">HashMap</span>&lt;<span class="hl-id">NodeId</span>, <span class="hl-id">usize</span>&gt;,</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">enum Action {</span>
-<span class="line">    Schedule(Vec&lt;Node&gt;),</span>
-<span class="line">    Finish,</span>
+<span class="line"><span class="hl-kw">enum</span> <span class="hl-typedef">Action</span> {</span>
+<span class="line">    <span class="hl-id">Schedule</span>(<span class="hl-id">Vec</span>&lt;<span class="hl-id">Node</span>&gt;),</span>
+<span class="line">    <span class="hl-id">Finish</span>,</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">impl ExecutionState {</span>
-<span class="line">    <em>// Returns the first action to take.</em></span>
-<span class="line">    fn init(&amp;self) -&gt; Action { … }</span>
+<span class="line"><span class="hl-kw">impl</span> <span class="hl-id">ExecutionState</span> {</span>
+<span class="line">    <span class="hl-comment">/// Returns the first action to take.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">init</span>(&amp;<span class="hl-kw">self</span>) -&gt; <span class="hl-id">Action</span> { <span class="hl-id">…</span> }</span>
 <span class="line"></span>
-<span class="line">    <em>// Indicates that the task corresponding to the node is in progress.</em></span>
-<span class="line">    fn started(&amp;must self, node: NodeId) { … }</span>
+<span class="line">    <span class="hl-comment">/// Indicates that the task corresponding to the node is in progress.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">started</span>(&amp;<span class="hl-kw">mut</span> <span class="hl-kw">self</span>, <span class="hl-var">node</span>: <span class="hl-id">NodeId</span>) { <span class="hl-id">…</span> }</span>
 <span class="line"></span>
-<span class="line">    <em>// Indicates that the task corresponding to the node has been completed.</em></span>
-<span class="line">    <em>// Returns the next action to take.</em></span>
-<span class="line">    fn completed(&amp;mut self, node: NodeId) -&gt; Action { … }</span>
+<span class="line">    <span class="hl-comment">/// Indicates that the task corresponding to the node has been completed.</span></span>
+<span class="line">    <span class="hl-comment">/// Returns the next action to take.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">completed</span>(&amp;<span class="hl-kw">mut</span> <span class="hl-kw">self</span>, <span class="hl-var">node</span>: <span class="hl-id">NodeId</span>) -&gt; <span class="hl-id">Action</span> { <span class="hl-id">…</span> }</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>The <code>run_build</code> function is the driver loop that spawns processes and feeds their results to the state machine, which either outputs more tasks or reports that the build has finished.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">fn run_build(</span>
-<span class="line">    cache: &amp;BuildCache,</span>
-<span class="line">    sandbox: &amp;Sandbox,</span>
-<span class="line">    state: ExecutionState,</span>
-<span class="line">) -&gt; Result&lt;(), BuildError&gt; { … }</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">run_build</span>(</span>
+<span class="line">    <span class="hl-var">cache</span>: &amp;<span class="hl-id">BuildCache</span>,</span>
+<span class="line">    <span class="hl-var">sandbox</span>: &amp;<span class="hl-id">Sandbox</span>,</span>
+<span class="line">    <span class="hl-var">state</span>: <span class="hl-id">ExecutionState</span>,</span>
+<span class="line">) -&gt; <span class="hl-id">Result</span>&lt;(), <span class="hl-id">BuildError</span>&gt; { <span class="hl-id">…</span> }</span>
 </code></pre></div>
 <p>This design splits a hard problem into smaller pieces that are easy to understand.
 The most algorithm-heavy portions (planning and execution control) do not require any I/O and are easy to test.

@@ -41,12 +41,12 @@ We can do better.</p>
 All the programs running on the IC are actors.</p>
 <figure><label class="margin-toggle" for="mn-actor-pseudocode">⊕</label><input type="checkbox" id="mn-actor-pseudocode" class="margin-toggle"><span class="marginnote">
   Pseudocode of an actor.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">fn main() {</span>
-<span class="line">  let mut state = State::new();                // The initial state.</span>
-<span class="line">  loop {</span>
-<span class="line">    let msg = receive();                       // Input of the state machine.</span>
-<span class="line">    let out_msgs = dispatch(&amp;mut state, &amp;msg); // State transition function.</span>
-<span class="line">    send(out_msgs);                            // Output: more messages.</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">main</span>() {</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">state</span> = <span class="hl-id">State</span>::<span class="hl-id">new</span>();                <span class="hl-comment">// The initial state.</span></span>
+<span class="line">  <span class="hl-kw">loop</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">msg</span> = <span class="hl-id">receive</span>();                       <span class="hl-comment">// Input of the state machine.</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">out_msgs</span> = <span class="hl-id">dispatch</span>(&amp;<span class="hl-kw">mut</span> <span class="hl-id">state</span>, &amp;<span class="hl-id">msg</span>); <span class="hl-comment">// State transition function.</span></span>
+<span class="line">    <span class="hl-id">send</span>(<span class="hl-id">out_msgs</span>);                            <span class="hl-comment">// Output: more messages.</span></span>
 <span class="line">  }</span>
 <span class="line">}</span>
 </code></pre></div>
@@ -56,19 +56,19 @@ Actors have a natural persistence boundary: the system can grab a snapshot of th
 The programmer does not need to call <code>commit</code> explicitly to mark execution points where the system should persist the state.</p>
 <figure><label class="margin-toggle" for="mn-persistent-actor-pseudocode">⊕</label><input type="checkbox" id="mn-persistent-actor-pseudocode" class="margin-toggle"><span class="marginnote">
   Pseudocode of an IC actor with orthogonal persistence.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">fn main() {</span>
-<span class="line">  let mut state = State::new();</span>
-<span class="line">  loop {</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">main</span>() {</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">state</span> = <span class="hl-id">State</span>::<span class="hl-id">new</span>();</span>
+<span class="line">  <span class="hl-kw">loop</span> {</span>
 <span class="line">    <b>let snapshot = state.clone();</b></span>
 <span class="line"></span>
-<span class="line">    let input_message = receive();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">input_message</span> = <span class="hl-id">receive</span>();</span>
 <span class="line"></span>
-<span class="line">    match dispatch(&amp;mut state, &amp;input_message) {</span>
-<span class="line">      Ok(out_msgs) =&gt; send(out_msgs),</span>
-<span class="line">      Trap(_) =&gt; {</span>
-<span class="line">        // If the message execution trapped, roll back to the last snapshot.</span>
+<span class="line">    <span class="hl-kw">match</span> <span class="hl-id">dispatch</span>(&amp;<span class="hl-kw">mut</span> <span class="hl-id">state</span>, &amp;<span class="hl-id">input_message</span>) {</span>
+<span class="line">      <span class="hl-id">Ok</span>(<span class="hl-id">out_msgs</span>) =&gt; <span class="hl-id">send</span>(<span class="hl-id">out_msgs</span>),</span>
+<span class="line">      <span class="hl-id">Trap</span>(<span class="hl-id">_</span>) =&gt; {</span>
+<span class="line">        <span class="hl-comment">// If the message execution trapped, roll back to the last snapshot.</span></span>
 <span class="line">        <b>state = snapshot;</b></span>
-<span class="line">        continue;</span>
+<span class="line">        <span class="hl-kw">continue</span>;</span>
 <span class="line">      }</span>
 <span class="line">    }</span>
 <span class="line">  }</span>
@@ -144,42 +144,42 @@ There are multiple approaches to this problem:
 If the process violates the permissions by reading a read-protected region or writing to a write-protected region, the operating system sends a signal (usually <code>SIGSEGV</code>) to the thread that triggered the violation.
 The <a href="https://man7.org/linux/man-pages/man7/signal.7.html">signal handling <span class="smallcaps">api</span></a> allows us to intercept these signals and inspect the address that caused them.
 We can build a robust and efficient memory access detection mechanism by combining these <span class="smallcaps">api</span>s.</p>
-<figure><label class="margin-toggle" for="mn-mem-access-pseudocode">⊕</label><input type="checkbox" id="mn-mem-access-pseudocode" class="margin-toggle"><span class="marginnote">Pseudocode of the memory access detection state machine.</span><div class="source-container"><pre class="source rust"><code><span class="line">let mut mem = construct_actor_memory();</span>
-<span class="line">let mut dirty_pages = bit_vector();</span>
-<span class="line">let mut touched_pages = bit_vector();</span>
+<figure><label class="margin-toggle" for="mn-mem-access-pseudocode">⊕</label><input type="checkbox" id="mn-mem-access-pseudocode" class="margin-toggle"><span class="marginnote">Pseudocode of the memory access detection state machine.</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">mem</span> = <span class="hl-id">construct_actor_memory</span>();</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">dirty_pages</span> = <span class="hl-id">bit_vector</span>();</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">touched_pages</span> = <span class="hl-id">bit_vector</span>();</span>
 <span class="line"></span>
-<span class="line">// Mark actor's memory as non-readable and non-writeabe.</span>
-<span class="line"><b>mprotect</b>(mem.start(), mem.len(), <b>PROT_NONE</b>);</span>
+<span class="line"><span class="hl-comment">// Mark actor's memory as non-readable and non-writeabe.</span></span>
+<span class="line"><b>mprotect</b>(<span class="hl-id">mem</span>.<span class="hl-id">start</span>(), <span class="hl-id">mem</span>.<span class="hl-id">len</span>(), <b>PROT_NONE</b>);</span>
 <span class="line"></span>
-<span class="line">set_signal_handler(SIGSEGV, |address, is_read| {</span>
-<span class="line">  touched_pages.set(address.page_index());</span>
+<span class="line"><span class="hl-id">set_signal_handler</span>(<span class="hl-id">SIGSEGV</span>, |<span class="hl-id">address</span>, <span class="hl-id">is_read</span>| {</span>
+<span class="line">  <span class="hl-id">touched_pages</span>.<span class="hl-id">set</span>(<span class="hl-id">address</span>.<span class="hl-id">page_index</span>());</span>
 <span class="line"></span>
-<span class="line">  if is_read {</span>
-<span class="line">    // Allow the process to read from the page.</span>
-<span class="line">    // Subsequent read from the page will not trigger the</span>
-<span class="line">    // signal handler, but writes to the page will.</span>
-<span class="line">    mprotect(address.page_start(), PAGE_SIZE, <b>PROT_READ</b>);</span>
-<span class="line">  } else {</span>
-<span class="line">    // Allow the process to read from and write to the page.</span>
-<span class="line">    // Subsequent reads from and writes to the page will not trigger</span>
-<span class="line">    // the signal handler.</span>
-<span class="line">    mprotect(address.page_start(), PAGE_SIZE, <b>PROT_READ</b> | <b>PROT_WRITE</b>);</span>
-<span class="line">    dirty_pages.set(address.page_index());</span>
+<span class="line">  <span class="hl-kw">if</span> <span class="hl-id">is_read</span> {</span>
+<span class="line">    <span class="hl-comment">// Allow the process to read from the page.</span></span>
+<span class="line">    <span class="hl-comment">// Subsequent read from the page will not trigger the</span></span>
+<span class="line">    <span class="hl-comment">// signal handler, but writes to the page will.</span></span>
+<span class="line">    <span class="hl-id">mprotect</span>(<span class="hl-id">address</span>.<span class="hl-id">page_start</span>(), <span class="hl-id">PAGE_SIZE</span>, <b>PROT_READ</b>);</span>
+<span class="line">  } <span class="hl-kw">else</span> {</span>
+<span class="line">    <span class="hl-comment">// Allow the process to read from and write to the page.</span></span>
+<span class="line">    <span class="hl-comment">// Subsequent reads from and writes to the page will not trigger</span></span>
+<span class="line">    <span class="hl-comment">// the signal handler.</span></span>
+<span class="line">    <span class="hl-id">mprotect</span>(<span class="hl-id">address</span>.<span class="hl-id">page_start</span>(), <span class="hl-id">PAGE_SIZE</span>, <b>PROT_READ</b> | <b>PROT_WRITE</b>);</span>
+<span class="line">    <span class="hl-id">dirty_pages</span>.<span class="hl-id">set</span>(<span class="hl-id">address</span>.<span class="hl-id">page_index</span>());</span>
 <span class="line">  }</span>
 <span class="line">});</span>
 <span class="line"></span>
-<span class="line">actor.execute_message(&amp;mut mem, message);</span>
+<span class="line"><span class="hl-id">actor</span>.<span class="hl-id">execute_message</span>(&amp;<span class="hl-kw">mut</span> <span class="hl-id">mem</span>, <span class="hl-id">message</span>);</span>
 <span class="line"></span>
-<span class="line">// observe dirty_pages and touched_pages</span>
+<span class="line"><span class="hl-comment">// observe dirty_pages and touched_pages</span></span>
 </code></pre></div>
 </figure>
 <p>Let us see the state machine in action on a simple example:
 an actor stores an array of integers; it needs to find a specific integer in the array and replace it with another.</p>
-<figure><label class="margin-toggle" for="mn-replace-func">⊕</label><input type="checkbox" id="mn-replace-func" class="margin-toggle"><span class="marginnote">An example of a function triggering the memory access mechanism.</span><div class="source-container"><pre class="source rust"><code><span class="line">fn replace(array: &amp;mut [u32], src: u32, dst: u32) {</span>
-<span class="line">  for i in 0..array.len() {</span>
-<span class="line">    if array[i] == src {</span>
-<span class="line">      array[i] = dst;</span>
-<span class="line">      break;</span>
+<figure><label class="margin-toggle" for="mn-replace-func">⊕</label><input type="checkbox" id="mn-replace-func" class="margin-toggle"><span class="marginnote">An example of a function triggering the memory access mechanism.</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">replace</span>(<span class="hl-var">array</span>: &amp;<span class="hl-kw">mut</span> [<span class="hl-id">u32</span>], <span class="hl-var">src</span>: <span class="hl-id">u32</span>, <span class="hl-var">dst</span>: <span class="hl-id">u32</span>) {</span>
+<span class="line">  <span class="hl-kw">for</span> <span class="hl-id">i</span> <span class="hl-kw">in</span> 0..<span class="hl-id">array</span>.<span class="hl-id">len</span>() {</span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">array</span>[<span class="hl-id">i</span>] == <span class="hl-id">src</span> {</span>
+<span class="line">      <span class="hl-id">array</span>[<span class="hl-id">i</span>] = <span class="hl-id">dst</span>;</span>
+<span class="line">      <span class="hl-kw">break</span>;</span>
 <span class="line">    }</span>
 <span class="line">  }</span>
 <span class="line">}</span>

@@ -372,17 +372,17 @@ Due to Rust <a href="https://rust-lang.github.io/rfcs/1210-impl-specialization.h
 <figure><label class="margin-toggle" for="mn-http-response-canister">⊕</label><input type="checkbox" id="mn-http-response-canister" class="margin-toggle"><span class="marginnote">
   A canister endpoint measuring the number of instructions required to encode an HTTP response.
   We have to use a <a href="https://docs.rs/ic-cdk/latest/ic_cdk/api/call/struct.ManualReply.html"><code>ManualReply</code></a> to measure the encoding time.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">#[query(manual_reply = true)]</span>
-<span class="line">fn http_response() -&gt; ManualReply&lt;HttpResponse&gt; {</span>
-<span class="line">    let start = ic_cdk::api::instruction_counter();</span>
-<span class="line">    let reply = ManualReply::one(HttpResponse {</span>
-<span class="line">        status_code: 200,</span>
-<span class="line">        headers: vec![(&quot;Content-Length&quot;.to_string(), &quot;1000000&quot;.to_string())],</span>
-<span class="line">        body: vec![0; 1_000_000],</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line">#[<span class="hl-id">query</span>(<span class="hl-id">manual_reply</span> = <span class="hl-kw">true</span>)]</span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">http_response</span>() -&gt; <span class="hl-id">ManualReply</span>&lt;<span class="hl-id">HttpResponse</span>&gt; {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">start</span> = <span class="hl-id">ic_cdk</span>::<span class="hl-id">api</span>::<span class="hl-id">instruction_counter</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">reply</span> = <span class="hl-id">ManualReply</span>::<span class="hl-id">one</span>(<span class="hl-id">HttpResponse</span> {</span>
+<span class="line">        <span class="hl-id">status_code</span>: 200,</span>
+<span class="line">        <span class="hl-id">headers</span>: <span class="hl-id">vec</span>![(<span class="hl-str">&quot;Content-Length&quot;</span>.<span class="hl-id">to_string</span>(), <span class="hl-str">&quot;1000000&quot;</span>.<span class="hl-id">to_string</span>())],</span>
+<span class="line">        <span class="hl-id">body</span>: <span class="hl-id">vec</span>![0; 1<span class="hl-id">_000_000</span>],</span>
 <span class="line">    });</span>
-<span class="line">    let end = ic_cdk::api::instruction_counter();</span>
-<span class="line">    ic_cdk::api::print(format!(&quot;Consumed {} instructions&quot;, end - start));</span>
-<span class="line">    reply</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">end</span> = <span class="hl-id">ic_cdk</span>::<span class="hl-id">api</span>::<span class="hl-id">instruction_counter</span>();</span>
+<span class="line">    <span class="hl-id">ic_cdk</span>::<span class="hl-id">api</span>::<span class="hl-id">print</span>(<span class="hl-id">format</span>!(<span class="hl-str">&quot;Consumed {} instructions&quot;</span>, <span class="hl-id">end</span> - <span class="hl-id">start</span>));</span>
+<span class="line">    <span class="hl-id">reply</span></span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -396,27 +396,27 @@ A <a href="https://github.com/dfinity/ic/commit/1b98a5d984176b1c948d0cb92227d88a
   That observation led to the <a href="https://github.com/WebAssembly/bulk-memory-operations/blob/dcaa1b6791401c29b67e8cd7929ec80949f1f849/proposals/bulk-memory-operations/Overview.md">bulk memory operations</a> proposal included in the <a href="https://webassembly.github.io/spec/core/appendix/changes.html?highlight=proposals#bulk-memory-and-table-instructions">WebAssembly 2.0 release</a>.</span>.
 Reducing the number of unnecessary copies often affects cycle consumption.</p>
 <p>Let us imagine that we work on a canister that serves a single dynamic asset.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">thread_local!{</span>
-<span class="line">    static ASSET: RefCell&lt;Vec&lt;u8&gt;&gt; = RefCell::new(init_asset());</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-id">thread_local</span>!{</span>
+<span class="line">    <span class="hl-kw">static</span> <span class="hl-id">ASSET</span>: <span class="hl-id">RefCell</span>&lt;<span class="hl-id">Vec</span>&lt;<span class="hl-id">u8</span>&gt;&gt; = <span class="hl-id">RefCell</span>::<span class="hl-id">new</span>(<span class="hl-id">init_asset</span>());</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">#[derive(CandidType, Deserialize)]</span>
-<span class="line">struct HttpResponse {</span>
-<span class="line">    status_code: u16,</span>
-<span class="line">    headers: Vec&lt;(String, String)&gt;,</span>
-<span class="line">    #[serde(with = &quot;serde_bytes&quot;)]</span>
-<span class="line">    body: Vec&lt;u8&gt;,</span>
+<span class="line">#[<span class="hl-id">derive</span>(<span class="hl-id">CandidType</span>, <span class="hl-id">Deserialize</span>)]</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">HttpResponse</span> {</span>
+<span class="line">    <span class="hl-id">status_code</span>: <span class="hl-id">u16</span>,</span>
+<span class="line">    <span class="hl-id">headers</span>: <span class="hl-id">Vec</span>&lt;(<span class="hl-id">String</span>, <span class="hl-id">String</span>)&gt;,</span>
+<span class="line">    #[<span class="hl-id">serde</span>(<span class="hl-id">with</span> = <span class="hl-str">&quot;serde_bytes&quot;</span>)]</span>
+<span class="line">    <span class="hl-id">body</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">u8</span>&gt;,</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">#[query]</span>
-<span class="line">fn http_request(_request: HttpRequest) -&gt; HttpResponse {</span>
+<span class="line">#[<span class="hl-id">query</span>]</span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">http_request</span>(<span class="hl-var">_request</span>: <span class="hl-id">HttpRequest</span>) -&gt; <span class="hl-id">HttpResponse</span> {</span>
 <span class="line">    <em>// <b>NOTE</b>: we are making a full copy of the asset.</em></span>
-<span class="line">    let body = ASSET.with(|cell| cell.borrow().clone());</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">body</span> = <span class="hl-id">ASSET</span>.<span class="hl-id">with</span>(|<span class="hl-id">cell</span>| <span class="hl-id">cell</span>.<span class="hl-id">borrow</span>().<span class="hl-id">clone</span>());</span>
 <span class="line"></span>
-<span class="line">    HttpResponse {</span>
-<span class="line">        status_code: 200,</span>
-<span class="line">        headers: vec![(&quot;Content-Length&quot;.to_string(), body.len().to_string())],</span>
-<span class="line">        body</span>
+<span class="line">    <span class="hl-id">HttpResponse</span> {</span>
+<span class="line">        <span class="hl-id">status_code</span>: 200,</span>
+<span class="line">        <span class="hl-id">headers</span>: <span class="hl-id">vec</span>![(<span class="hl-str">&quot;Content-Length&quot;</span>.<span class="hl-id">to_string</span>(), <span class="hl-id">body</span>.<span class="hl-id">len</span>().<span class="hl-id">to_string</span>())],</span>
+<span class="line">        <span class="hl-id">body</span></span>
 <span class="line">    }</span>
 <span class="line">}</span>
 </code></pre></div>
@@ -429,50 +429,50 @@ There are a few ways to work around this issue.</p>
 <figure><label class="margin-toggle" for="mn-rc-bytes">⊕</label><input type="checkbox" id="mn-rc-bytes" class="margin-toggle"><span class="marginnote">
   Using a reference-counting pointer for large values.
   Note that the type of the <code>ASSET</code> variable has to change: all copies of the data must be behind the smart pointer.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">thread_local!{</span>
-<span class="line">    static ASSET: RefCell&lt;RcBytes&gt; = RefCell::new(init_asset());</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-id">thread_local</span>!{</span>
+<span class="line">    <span class="hl-kw">static</span> <span class="hl-id">ASSET</span>: <span class="hl-id">RefCell</span>&lt;<span class="hl-id">RcBytes</span>&gt; = <span class="hl-id">RefCell</span>::<span class="hl-id">new</span>(<span class="hl-id">init_asset</span>());</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">struct RcBytes(Arc&lt;serde_bytes::ByteBuf&gt;);</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">RcBytes</span>(<span class="hl-id">Arc</span>&lt;<span class="hl-id">serde_bytes</span>::<span class="hl-id">ByteBuf</span>&gt;);</span>
 <span class="line"></span>
-<span class="line">impl CandidType for RcBytes { /* */ }</span>
-<span class="line">impl Deserialize for RcBytes { /* */ }</span>
+<span class="line"><span class="hl-kw">impl</span> <span class="hl-id">CandidType</span> <span class="hl-kw">for</span> <span class="hl-id">RcBytes</span> { <span class="hl-comment">/* */</span> }</span>
+<span class="line"><span class="hl-kw">impl</span> <span class="hl-id">Deserialize</span> <span class="hl-kw">for</span> <span class="hl-id">RcBytes</span> { <span class="hl-comment">/* */</span> }</span>
 <span class="line"></span>
-<span class="line">#[derive(CandidType, Deserialize)]</span>
-<span class="line">struct HttpResponse {</span>
-<span class="line">    status_code: u16,</span>
-<span class="line">    headers: Vec&lt;(String, String)&gt;,</span>
-<span class="line">    body: RcBytes,</span>
+<span class="line">#[<span class="hl-id">derive</span>(<span class="hl-id">CandidType</span>, <span class="hl-id">Deserialize</span>)]</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">HttpResponse</span> {</span>
+<span class="line">    <span class="hl-id">status_code</span>: <span class="hl-id">u16</span>,</span>
+<span class="line">    <span class="hl-id">headers</span>: <span class="hl-id">Vec</span>&lt;(<span class="hl-id">String</span>, <span class="hl-id">String</span>)&gt;,</span>
+<span class="line">    <span class="hl-id">body</span>: <span class="hl-id">RcBytes</span>,</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
 <p>With this approach, you can save on copies without changing the overall structure of your code.
 A <a href="https://github.com/dfinity/certified-assets/commit/47804eb70f44d2e5c73da26f0009540330293eb2">similar change</a> cut instruction consumption in the certified assets canister by 30%.</p>
 <p>Another solution is to enrich your types with lifetimes and use the <a href="https://docs.rs/ic-cdk/latest/ic_cdk/api/call/struct.ManualReply.html"><code>ManualReply</code></a> API.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">use std::borrow::Cow;</span>
-<span class="line">use serde_bytes::Bytes;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">use</span> <span class="hl-id">std</span>::<span class="hl-id">borrow</span>::<span class="hl-id">Cow</span>;</span>
+<span class="line"><span class="hl-kw">use</span> <span class="hl-id">serde_bytes</span>::<span class="hl-id">Bytes</span>;</span>
 <span class="line"></span>
-<span class="line">#[derive(CandidType, Deserialize)]</span>
-<span class="line">struct HttpResponse&lt;'a&gt; {</span>
-<span class="line">    status_code: u16,</span>
-<span class="line">    headers: Vec&lt;(Cow&lt;'a, str&gt;, Cow&lt;'a, str&gt;)&gt;,</span>
-<span class="line">    body: Cow&lt;'a, serde_bytes::Bytes&gt;,</span>
+<span class="line">#[<span class="hl-id">derive</span>(<span class="hl-id">CandidType</span>, <span class="hl-id">Deserialize</span>)]</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">HttpResponse</span>&lt;'<span class="hl-id">a</span>&gt; {</span>
+<span class="line">    <span class="hl-id">status_code</span>: <span class="hl-id">u16</span>,</span>
+<span class="line">    <span class="hl-id">headers</span>: <span class="hl-id">Vec</span>&lt;(<span class="hl-id">Cow</span>&lt;'<span class="hl-id">a</span>, <span class="hl-id">str</span>&gt;, <span class="hl-id">Cow</span>&lt;'<span class="hl-id">a</span>, <span class="hl-id">str</span>&gt;)&gt;,</span>
+<span class="line">    <span class="hl-id">body</span>: <span class="hl-id">Cow</span>&lt;'<span class="hl-id">a</span>, <span class="hl-id">serde_bytes</span>::<span class="hl-id">Bytes</span>&gt;,</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">#[query(manual_reply = true)]</span>
-<span class="line">fn http_response(_request: HttpRequest) -&gt; ManualReply&lt;HttpResponse&lt;'static&gt;&gt; {</span>
-<span class="line">    ASSET.with(|asset| {</span>
-<span class="line">        let asset = &amp;*asset.borrow();</span>
-<span class="line">        ic_cdk::api::call::reply((&amp;HttpResponse {</span>
-<span class="line">            status_code: 200,</span>
-<span class="line">            headers: vec![(</span>
-<span class="line">                Cow::Borrowed(&quot;Content-Length&quot;),</span>
-<span class="line">                Cow::Owned(asset.len().to_string()),</span>
+<span class="line">#[<span class="hl-id">query</span>(<span class="hl-id">manual_reply</span> = <span class="hl-kw">true</span>)]</span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">http_response</span>(<span class="hl-var">_request</span>: <span class="hl-id">HttpRequest</span>) -&gt; <span class="hl-id">ManualReply</span>&lt;<span class="hl-id">HttpResponse</span>&lt;'<span class="hl-kw">static</span>&gt;&gt; {</span>
+<span class="line">    <span class="hl-id">ASSET</span>.<span class="hl-id">with</span>(|<span class="hl-id">asset</span>| {</span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-var">asset</span> = &amp;*<span class="hl-id">asset</span>.<span class="hl-id">borrow</span>();</span>
+<span class="line">        <span class="hl-id">ic_cdk</span>::<span class="hl-id">api</span>::<span class="hl-id">call</span>::<span class="hl-id">reply</span>((&amp;<span class="hl-id">HttpResponse</span> {</span>
+<span class="line">            <span class="hl-id">status_code</span>: 200,</span>
+<span class="line">            <span class="hl-id">headers</span>: <span class="hl-id">vec</span>![(</span>
+<span class="line">                <span class="hl-id">Cow</span>::<span class="hl-id">Borrowed</span>(<span class="hl-str">&quot;Content-Length&quot;</span>),</span>
+<span class="line">                <span class="hl-id">Cow</span>::<span class="hl-id">Owned</span>(<span class="hl-id">asset</span>.<span class="hl-id">len</span>().<span class="hl-id">to_string</span>()),</span>
 <span class="line">            )],</span>
-<span class="line">            body: Cow::Borrowed(Bytes::new(asset)),</span>
+<span class="line">            <span class="hl-id">body</span>: <span class="hl-id">Cow</span>::<span class="hl-id">Borrowed</span>(<span class="hl-id">Bytes</span>::<span class="hl-id">new</span>(<span class="hl-id">asset</span>)),</span>
 <span class="line">        },));</span>
 <span class="line">    });</span>
-<span class="line">    ManualReply::empty()</span>
+<span class="line">    <span class="hl-id">ManualReply</span>::<span class="hl-id">empty</span>()</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>This approach allows you to get rid of all the unnecessary copies, but it complicates the code significantly.

@@ -63,16 +63,16 @@ These effects are benign and usually confined to the parser, so this feature doe
 <span class="line">http_port = 8080</span>
 </code></pre></div>
 <p>TOML’s top-level data structure is a hash table, so the parsing stage outputs a table with two entries.</p>
-<div class="source-container"><pre class="source"><code><span class="line">Table({</span>
-<span class="line">  &quot;db_url&quot;: String(&quot;postgres://user:password@host:5432/dbname&quot;),</span>
-<span class="line">  &quot;http_port&quot;: Integer(8080),</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-id">Table</span>({</span>
+<span class="line">  <span class="hl-str">&quot;db_url&quot;</span>: <span class="hl-id">String</span>(<span class="hl-str">&quot;postgres://user:password@host:5432/dbname&quot;</span>),</span>
+<span class="line">  <span class="hl-str">&quot;http_port&quot;</span>: <span class="hl-id">Integer</span>(8080),</span>
 <span class="line">})</span>
 </code></pre></div>
 <p>The TOML parser doesn’t understand the field semantics.
 It would just as happily decode a configuration with the field values swapped.</p>
-<div class="source-container"><pre class="source"><code><span class="line">Table({</span>
-<span class="line">  &quot;db_url&quot;: Integer(8080),</span>
-<span class="line">  &quot;http_port&quot;: String(&quot;postgres://user:password@host:5432/dbname&quot;)</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-id">Table</span>({</span>
+<span class="line">  <span class="hl-str">&quot;db_url&quot;</span>: <span class="hl-id">Integer</span>(8080),</span>
+<span class="line">  <span class="hl-str">&quot;http_port&quot;</span>: <span class="hl-id">String</span>(<span class="hl-str">&quot;postgres://user:password@host:5432/dbname&quot;</span>)</span>
 <span class="line">})</span>
 </code></pre></div>
 <p>The static analysis phase ensures the configuration object has the expected shape:
@@ -80,19 +80,19 @@ The <code>db_url</code> value must be a valid URL,
 the <code>http_port</code> value must be an integer between 0 and 65535,
 and the table must contain no other keys.
 In Rust, the <a href="https://serde.rs">serde</a> library fuses parsing and static analysis by leveraging Rust’s type system as its schema language.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">#[derive(serde::Serialize, serde::Deserialize)]</span>
-<span class="line">#[serde(deny_unknown_fields)]</span>
-<span class="line">struct Config {</span>
-<span class="line">    db_url: url::Url,</span>
-<span class="line">    http_port: u16,</span>
+<div class="source-container"><pre class="source rust"><code><span class="line">#[<span class="hl-id">derive</span>(<span class="hl-id">serde</span>::<span class="hl-id">Serialize</span>, <span class="hl-id">serde</span>::<span class="hl-id">Deserialize</span>)]</span>
+<span class="line">#[<span class="hl-id">serde</span>(<span class="hl-id">deny_unknown_fields</span>)]</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">Config</span> {</span>
+<span class="line">    <span class="hl-id">db_url</span>: <span class="hl-id">url</span>::<span class="hl-id">Url</span>,</span>
+<span class="line">    <span class="hl-id">http_port</span>: <span class="hl-id">u16</span>,</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">#[test]</span>
-<span class="line">fn parse() {</span>
-<span class="line">    let _config: Config = toml::from_str(r#&quot;</span>
-<span class="line">db_url = &quot;postgres://user:password@host:5432/dbname&quot;</span>
-<span class="line">http_port = 8080</span>
-<span class="line">&quot;#).unwrap();</span>
+<span class="line">#[<span class="hl-id">test</span>]</span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">parse</span>() {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">_config</span>: <span class="hl-id">Config</span> = <span class="hl-id">toml</span>::<span class="hl-id">from_str</span>(<span class="hl-id">r</span>#<span class="hl-str">&quot;</span></span>
+<span class="line"><span class="hl-id">db_url</span> = <span class="hl-str">&quot;postgres://user:password@host:5432/dbname&quot;</span></span>
+<span class="line"><span class="hl-id">http_port</span> = 8080</span>
+<span class="line"><span class="hl-str">&quot;#).unwrap();</span></span>
 <span class="line">}</span>
 </code></pre></div>
 <p>The execution phase creates and binds a socket and opens a database connection.

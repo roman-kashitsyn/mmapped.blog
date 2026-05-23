@@ -117,88 +117,88 @@ This section is a walk through an implementation of a simplistic price feed cani
 Treat the code as pseudo-code: it has never been tested or compiled.</p>
 <p>First, we import the necessary <span class="smallcaps">api</span> to make <span class="smallcaps">https</span> requests.
 Imports marked in bold do not exist yet.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">use ic0::<b>max_faulty_nodes</b>;</span>
-<span class="line">use ic_cdk::api::management_canister::http_request::{</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">use</span> <span class="hl-id">ic0</span>::<b>max_faulty_nodes</b>;</span>
+<span class="line"><span class="hl-kw">use</span> <span class="hl-id">ic_cdk</span>::<span class="hl-id">api</span>::<span class="hl-id">management_canister</span>::<span class="hl-id">http_request</span>::{</span>
 <span class="line">    <b>mutli_http_request</b>,</span>
-<span class="line">    CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse, TransformArgs,</span>
-<span class="line">    TransformContext,</span>
+<span class="line">    <span class="hl-id">CanisterHttpRequestArgument</span>, <span class="hl-id">HttpHeader</span>, <span class="hl-id">HttpMethod</span>, <span class="hl-id">HttpResponse</span>, <span class="hl-id">TransformArgs</span>,</span>
+<span class="line">    <span class="hl-id">TransformContext</span>,</span>
 <span class="line">};</span>
 </code></pre></div>
 <p>Next, we define the data structures specifying the format of the <span class="smallcaps">api</span> response and the price report the canister produces.
 Since the block space is precious, the <code>ExamplePriceResponse</code> structure restricts the response contents to the fields we need to construct the report.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line"><em>/// The format of response we get from the example price feed JSON API.</em></span>
-<span class="line">#[derive(serde::Serialize, serde::Deserialize, Debug)]</span>
-<span class="line">struct ExamplePriceResponse {</span>
-<span class="line">    price: f64,</span>
-<span class="line">    timestamp_seconds: u64,</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-comment">/// The format of response we get from the example price feed JSON API.</span></span>
+<span class="line">#[<span class="hl-id">derive</span>(<span class="hl-id">serde</span>::<span class="hl-id">Serialize</span>, <span class="hl-id">serde</span>::<span class="hl-id">Deserialize</span>, <span class="hl-id">Debug</span>)]</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">ExamplePriceResponse</span> {</span>
+<span class="line">    <span class="hl-id">price</span>: <span class="hl-id">f64</span>,</span>
+<span class="line">    <span class="hl-id">timestamp_seconds</span>: <span class="hl-id">u64</span>,</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">#[derive(candid::CandidType, candid::Deserialize, Debug)]</span>
-<span class="line">struct PriceReport {</span>
-<span class="line">    price: f64,</span>
-<span class="line">    timestamp_seconds: u64,</span>
+<span class="line">#[<span class="hl-id">derive</span>(<span class="hl-id">candid</span>::<span class="hl-id">CandidType</span>, <span class="hl-id">candid</span>::<span class="hl-id">Deserialize</span>, <span class="hl-id">Debug</span>)]</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">PriceReport</span> {</span>
+<span class="line">    <span class="hl-id">price</span>: <span class="hl-id">f64</span>,</span>
+<span class="line">    <span class="hl-id">timestamp_seconds</span>: <span class="hl-id">u64</span>,</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>We then define the transformation function for the <span class="smallcaps">api</span> response.
 The function removes the response headers and replaces the response body with its restricted canonical version.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">#[ic_cdk::query]</span>
-<span class="line">fn transform(args: TransformArgs) -&gt; HttpResponse {</span>
-<span class="line">    let mut response = args.response;</span>
-<span class="line">    response.headers.clear();</span>
-<span class="line">    let parsed_body: ExamplePriceResponse =</span>
-<span class="line">        serde_json::from_slice(&amp;response.body).expect(&quot;failed to parse response body&quot;);</span>
-<span class="line">    response.body = serde_json::to_vec(&amp;parsed_body).unwrap();</span>
-<span class="line">    response</span>
+<div class="source-container"><pre class="source rust"><code><span class="line">#[<span class="hl-id">ic_cdk</span>::<span class="hl-id">query</span>]</span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">transform</span>(<span class="hl-var">args</span>: <span class="hl-id">TransformArgs</span>) -&gt; <span class="hl-id">HttpResponse</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">response</span> = <span class="hl-id">args</span>.<span class="hl-id">response</span>;</span>
+<span class="line">    <span class="hl-id">response</span>.<span class="hl-id">headers</span>.<span class="hl-id">clear</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">parsed_body</span>: <span class="hl-id">ExamplePriceResponse</span> =</span>
+<span class="line">        <span class="hl-id">serde_json</span>::<span class="hl-id">from_slice</span>(&amp;<span class="hl-id">response</span>.<span class="hl-id">body</span>).<span class="hl-id">expect</span>(<span class="hl-str">&quot;failed to parse response body&quot;</span>);</span>
+<span class="line">    <span class="hl-id">response</span>.<span class="hl-id">body</span> = <span class="hl-id">serde_json</span>::<span class="hl-id">to_vec</span>(&amp;<span class="hl-id">parsed_body</span>).<span class="hl-id">unwrap</span>();</span>
+<span class="line">    <span class="hl-id">response</span></span>
 <span class="line">}</span>
 </code></pre></div>
 <p>
 It’s time to send a multi-<span class="smallcaps">http</span> request to the example price feed <span class="smallcaps">api</span>.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">#[ic_cdk::update]</span>
-<span class="line">async fn observe_icp_price() -&gt; PriceReport {</span>
-<span class="line">    let request = HttpRequest {</span>
-<span class="line">        url: &quot;https://api.example-exchange.com/price-feed?pair=ICP-USD&quot;.to_string(),</span>
-<span class="line">        method: HttpMethod::GET,</span>
-<span class="line">        headers: vec![],</span>
-<span class="line">        transform: Some(TransformContext::from_name(&quot;transform&quot;.to_string(), vec![])),</span>
-<span class="line">        body: None,</span>
+<div class="source-container"><pre class="source rust"><code><span class="line">#[<span class="hl-id">ic_cdk</span>::<span class="hl-id">update</span>]</span>
+<span class="line"><span class="hl-kw">async</span> <span class="hl-kw">fn</span> <span class="hl-defun">observe_icp_price</span>() -&gt; <span class="hl-id">PriceReport</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">request</span> = <span class="hl-id">HttpRequest</span> {</span>
+<span class="line">        <span class="hl-id">url</span>: <span class="hl-str">&quot;https://api.example-exchange.com/price-feed?pair=ICP-USD&quot;</span>.<span class="hl-id">to_string</span>(),</span>
+<span class="line">        <span class="hl-id">method</span>: <span class="hl-id">HttpMethod</span>::<span class="hl-id">GET</span>,</span>
+<span class="line">        <span class="hl-id">headers</span>: <span class="hl-id">vec</span>![],</span>
+<span class="line">        <span class="hl-id">transform</span>: <span class="hl-id">Some</span>(<span class="hl-id">TransformContext</span>::<span class="hl-id">from_name</span>(<span class="hl-str">&quot;transform&quot;</span>.<span class="hl-id">to_string</span>(), <span class="hl-id">vec</span>![])),</span>
+<span class="line">        <span class="hl-id">body</span>: <span class="hl-id">None</span>,</span>
 <span class="line">    };</span>
-<span class="line">    let http_responses = multi_http_request(request).await.expect(&quot;http call failed&quot;);</span>
-<span class="line">    let f = max_faulty_nodes();</span>
-<span class="line">    assert!(http_responses.len() &gt;= 2 * f + 1, &quot;not enough responses for consensus&quot;);</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">http_responses</span> = <span class="hl-id">multi_http_request</span>(<span class="hl-id">request</span>).<span class="hl-kw">await</span>.<span class="hl-id">expect</span>(<span class="hl-str">&quot;http call failed&quot;</span>);</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">f</span> = <span class="hl-id">max_faulty_nodes</span>();</span>
+<span class="line">    <span class="hl-id">assert</span>!(<span class="hl-id">http_responses</span>.<span class="hl-id">len</span>() &gt;= 2 * <span class="hl-id">f</span> + 1, <span class="hl-str">&quot;not enough responses for consensus&quot;</span>);</span>
 </code></pre></div>
 <p>In the next snipped, we parse the <span class="smallcaps">http</span> responses into a vector of <code>ExamplePriceResponse</code> objects.
 Note that we cannot assume that all responses are parseable since malicious nodes can intentionally reply with garbage.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">    let mut price_responses: Vec&lt;ExamplePriceResponse&gt; = vec![];</span>
-<span class="line">    let mut faulty_responses = 0;</span>
-<span class="line">    for http_response in http_responses {</span>
-<span class="line">        match serde_json::from_slice(&amp;http_response.body) {</span>
-<span class="line">            Ok(price_response) =&gt; {</span>
-<span class="line">                price_responses.push(price_response);</span>
+<div class="source-container"><pre class="source rust"><code><span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">price_responses</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">ExamplePriceResponse</span>&gt; = <span class="hl-id">vec</span>![];</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">faulty_responses</span> = 0;</span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">http_response</span> <span class="hl-kw">in</span> <span class="hl-id">http_responses</span> {</span>
+<span class="line">        <span class="hl-kw">match</span> <span class="hl-id">serde_json</span>::<span class="hl-id">from_slice</span>(&amp;<span class="hl-id">http_response</span>.<span class="hl-id">body</span>) {</span>
+<span class="line">            <span class="hl-id">Ok</span>(<span class="hl-id">price_response</span>) =&gt; {</span>
+<span class="line">                <span class="hl-id">price_responses</span>.<span class="hl-id">push</span>(<span class="hl-id">price_response</span>);</span>
 <span class="line">            }</span>
-<span class="line">            Err(e) =&gt; {</span>
-<span class="line">                faulty_responses += 1;</span>
-<span class="line">                ic_cdk::print(format!(&quot;Failed to parse HTTP response body: {:?}&quot;, e));</span>
+<span class="line">            <span class="hl-id">Err</span>(<span class="hl-id">e</span>) =&gt; {</span>
+<span class="line">                <span class="hl-id">faulty_responses</span> += 1;</span>
+<span class="line">                <span class="hl-id">ic_cdk</span>::<span class="hl-id">print</span>(<span class="hl-id">format</span>!(<span class="hl-str">&quot;Failed to parse HTTP response body: {:?}&quot;</span>, <span class="hl-id">e</span>));</span>
 <span class="line">            }</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    if faulty_responses &gt; f {</span>
-<span class="line">        ic_cdk::trap(&quot;too many faulty responses&quot;);</span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">faulty_responses</span> &gt; <span class="hl-id">f</span> {</span>
+<span class="line">        <span class="hl-id">ic_cdk</span>::<span class="hl-id">trap</span>(<span class="hl-str">&quot;too many faulty responses&quot;</span>);</span>
 <span class="line">    }</span>
 </code></pre></div>
 <p>Finally, we select the median price and timestamp independently.
 We cannot assume the entire response is trustworthy only because one of its fields lies in the middle.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">    let median_price = price_responses</span>
-<span class="line">        .select_nth_unstable_by_key(n / 2, |r| r.price)</span>
-<span class="line">        .1.price;</span>
-<span class="line">    let median_ts = price_responses</span>
-<span class="line">        .select_nth_unstable_by_key(n / 2, |r| r.timestamp_seconds)</span>
-<span class="line">        .1.timestamp_seconds;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line">    <span class="hl-kw">let</span> <span class="hl-var">median_price</span> = <span class="hl-id">price_responses</span></span>
+<span class="line">        .<span class="hl-id">select_nth_unstable_by_key</span>(<span class="hl-id">n</span> / 2, |<span class="hl-id">r</span>| <span class="hl-id">r</span>.<span class="hl-id">price</span>)</span>
+<span class="line">        .1.<span class="hl-id">price</span>;</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">median_ts</span> = <span class="hl-id">price_responses</span></span>
+<span class="line">        .<span class="hl-id">select_nth_unstable_by_key</span>(<span class="hl-id">n</span> / 2, |<span class="hl-id">r</span>| <span class="hl-id">r</span>.<span class="hl-id">timestamp_seconds</span>)</span>
+<span class="line">        .1.<span class="hl-id">timestamp_seconds</span>;</span>
 <span class="line"></span>
-<span class="line">    PriceReport {</span>
-<span class="line">        price: median_price,</span>
-<span class="line">        timestamp_seconds: median_ts,</span>
+<span class="line">    <span class="hl-id">PriceReport</span> {</span>
+<span class="line">        <span class="hl-id">price</span>: <span class="hl-id">median_price</span>,</span>
+<span class="line">        <span class="hl-id">timestamp_seconds</span>: <span class="hl-id">median_ts</span>,</span>
 <span class="line">    }</span>
-<span class="line">} <em>// end of observe_icp_price</em></span>
+<span class="line">} <span class="hl-comment">// end of observe_icp_price</span></span>
 </code></pre></div>
 </section>
 <section><h2 id="conclusion"><a href="#conclusion">Conclusion</a></h2>

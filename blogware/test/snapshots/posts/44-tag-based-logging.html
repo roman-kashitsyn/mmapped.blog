@@ -64,13 +64,13 @@ Ideally, the logging system should print only the messages I care about.</p>
 <section><h2 id="tag-based-logging"><a href="#tag-based-logging">Tag-based logging</a></h2>
 <p>The solution is simple: instead of grading events on a linear scale,
 annotate them with arbitrary <em>tags</em> like hashtags on social media.</p>
-<div class="source-container"><pre class="source"><code><span class="line">event!(#db, #perf, duration =&gt; duration, query = &quot;fetch_transaction&quot;);</span>
-<span class="line">⋯</span>
-<span class="line">event!(#user, txid =&gt; txid, ..., &quot;transaction rejected&quot;);</span>
-<span class="line">⋯</span>
-<span class="line">event!(#system, error =&gt; db_error, &quot;database is corrupted&quot;);</span>
-<span class="line">⋯</span>
-<span class="line">event!(#rpc, #perf, duration =&gt; duration, endpoint =&gt; &quot;sendTransaction&quot;);</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-id">event</span>!(#<span class="hl-id">db</span>, #<span class="hl-id">perf</span>, <span class="hl-id">duration</span> =&gt; <span class="hl-id">duration</span>, <span class="hl-id">query</span> = <span class="hl-str">&quot;fetch_transaction&quot;</span>);</span>
+<span class="line"><span class="hl-id">⋯</span></span>
+<span class="line"><span class="hl-id">event</span>!(#<span class="hl-id">user</span>, <span class="hl-id">txid</span> =&gt; <span class="hl-id">txid</span>, ..., <span class="hl-str">&quot;transaction rejected&quot;</span>);</span>
+<span class="line"><span class="hl-id">⋯</span></span>
+<span class="line"><span class="hl-id">event</span>!(#<span class="hl-id">system</span>, <span class="hl-id">error</span> =&gt; <span class="hl-id">db_error</span>, <span class="hl-str">&quot;database is corrupted&quot;</span>);</span>
+<span class="line"><span class="hl-id">⋯</span></span>
+<span class="line"><span class="hl-id">event</span>!(#<span class="hl-id">rpc</span>, #<span class="hl-id">perf</span>, <span class="hl-id">duration</span> =&gt; <span class="hl-id">duration</span>, <span class="hl-id">endpoint</span> =&gt; <span class="hl-str">&quot;sendTransaction&quot;</span>);</span>
 </code></pre></div>
 <p>To select the events appropriate for our context, we construct a <em>query</em>,
 a logical formula matching the event tags.</p>
@@ -110,7 +110,7 @@ but the programmer can override it to be almost any string<label class="margin-t
   I believe that overriding the default target is a must if you’re serious about your logs.
   Logs are a crucial application interface, and tying the target to your code structure can invalidate someone’s log configurations if you decide to move the code around, which happened to me a few times.
 </span>.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">tracing::debug!(target: &quot;db&quot;, query = &quot;fetch_transaction&quot;);</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-id">tracing</span>::<span class="hl-id">debug</span>!(<span class="hl-id">target</span>: <span class="hl-str">&quot;db&quot;</span>, <span class="hl-id">query</span> = <span class="hl-str">&quot;fetch_transaction&quot;</span>);</span>
 </code></pre></div>
 <p>
 The environment variable controlling the logging (<code>RUST_LOG</code> by default) can serve as a primary mechanism for querying events.
@@ -121,7 +121,7 @@ limiting our query language to logical disjunctions with at most one tag per eve
 <p>Luckily, <code>tracing</code>’s <a href="https://docs.rs/tracing-subscriber/0.3.19/tracing_subscriber/filter/struct.EnvFilter.html"><code>EnvFilter</code></a> supports a richer set of directives that can also select field names:
 <code>target[spanfield=value]=level</code>.
 This scheme suggests using event fields as tags:</p>
-<div class="source-container"><pre class="source"><code><span class="line">tracing::debug!(db=1, perf=1, ?duration, query = &quot;fetch_transaction&quot;);</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-id">tracing</span>::<span class="hl-id">debug</span>!(<span class="hl-id">db</span>=1, <span class="hl-id">perf</span>=1, ?<span class="hl-id">duration</span>, <span class="hl-id">query</span> = <span class="hl-str">&quot;fetch_transaction&quot;</span>);</span>
 </code></pre></div>
 <p>To construct a tag filter using this scheme,
 we convert logical disjunctions into separate directives (<code>#a or #b</code> becomes <code>[{a}]=debug,[{b}]=debug</code>)
@@ -154,9 +154,9 @@ Directive <code>db=debug</code> matches any target that starts with <code>db</co
 So using up to two tags per event and ordering them consistently enables logical conjunctions in our query language.
 This approach can’t query secondary tags alone—we must query either the primary tag only or both primary and secondary
 (for example, we can query <code>#db and #perf</code>, but not <code>#perf</code>).</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">debug!(target: &quot;user&quot;, txid, ..., &quot;transaction rejected&quot;);</span>
-<span class="line">debug!(target: &quot;rpc::perf&quot;, ?duration, endpoint = &quot;sendTransaction&quot;);</span>
-<span class="line">debug!(target: &quot;db::perf&quot;, ?duration, query = &quot;fetch_transaction&quot;);</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-id">debug</span>!(<span class="hl-id">target</span>: <span class="hl-str">&quot;user&quot;</span>, <span class="hl-id">txid</span>, ..., <span class="hl-str">&quot;transaction rejected&quot;</span>);</span>
+<span class="line"><span class="hl-id">debug</span>!(<span class="hl-id">target</span>: <span class="hl-str">&quot;rpc::perf&quot;</span>, ?<span class="hl-id">duration</span>, <span class="hl-id">endpoint</span> = <span class="hl-str">&quot;sendTransaction&quot;</span>);</span>
+<span class="line"><span class="hl-id">debug</span>!(<span class="hl-id">target</span>: <span class="hl-str">&quot;db::perf&quot;</span>, ?<span class="hl-id">duration</span>, <span class="hl-id">query</span> = <span class="hl-str">&quot;fetch_transaction&quot;</span>);</span>
 </code></pre></div>
 <table class="zebra"><thead><thead><tr><th colspan="1" class="align-l">
 Tag query </th><th colspan="1" class="align-l"> RUST_LOG value </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">

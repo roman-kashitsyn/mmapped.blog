@@ -268,15 +268,15 @@ We can compute these subtrees recursively and assign <code>5</code> as the root 
 <figure><label class="margin-toggle" for="mn-loop-solution-code">⊕</label><input type="checkbox" id="mn-loop-solution-code" class="margin-toggle"><span class="marginnote">
     A C implementation of the recursive algorithm for computing the parent vector.
     <code>Pre</code> is the pre-order traversal array, <code>P</code> is the output array of parents, <code>N</code> is the number of tree nodes.
-  </span><div class="source-container"><pre class="source c"><code><span class="line">static void restore_range(int Pre[], int P[], int L, int R, int V) {</span>
-<span class="line">    if (L &gt;= R) return;</span>
-<span class="line">    P[Pre[0]] = V;</span>
-<span class="line">    restore_range(Pre + 1, P, L, Pre[0], Pre[0]);</span>
-<span class="line">    restore_range(Pre + Pre[0] - L + 1, P, Pre[0] + 1, R, Pre[0]);</span>
+  </span><div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-kw">static</span> <span class="hl-kw">void</span> <span class="hl-defun">restore_range</span>(<span class="hl-kw">int</span> <span class="hl-var">Pre</span>[], <span class="hl-kw">int</span> <span class="hl-var">P</span>[], <span class="hl-kw">int</span> <span class="hl-var">L</span>, <span class="hl-kw">int</span> <span class="hl-var">R</span>, <span class="hl-kw">int</span> <span class="hl-var">V</span>) {</span>
+<span class="line">    <span class="hl-kw">if</span> (<span class="hl-id">L</span> &gt;= <span class="hl-id">R</span>) <span class="hl-kw">return</span>;</span>
+<span class="line">    <span class="hl-id">P</span>[<span class="hl-id">Pre</span>[0]] = <span class="hl-id">V</span>;</span>
+<span class="line">    <span class="hl-id">restore_range</span>(<span class="hl-id">Pre</span> + 1, <span class="hl-id">P</span>, <span class="hl-id">L</span>, <span class="hl-id">Pre</span>[0], <span class="hl-id">Pre</span>[0]);</span>
+<span class="line">    <span class="hl-id">restore_range</span>(<span class="hl-id">Pre</span> + <span class="hl-id">Pre</span>[0] - <span class="hl-id">L</span> + 1, <span class="hl-id">P</span>, <span class="hl-id">Pre</span>[0] + 1, <span class="hl-id">R</span>, <span class="hl-id">Pre</span>[0]);</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">void restore_tree(int Pre[], int P[], int N) {</span>
-<span class="line">    if (N &gt; 0) restore_range(Pre, P, 0, N, Pre[0]);</span>
+<span class="line"><span class="hl-kw">void</span> <span class="hl-defun">restore_tree</span>(<span class="hl-kw">int</span> <span class="hl-var">Pre</span>[], <span class="hl-kw">int</span> <span class="hl-var">P</span>[], <span class="hl-kw">int</span> <span class="hl-var">N</span>) {</span>
+<span class="line">    <span class="hl-kw">if</span> (<span class="hl-id">N</span> &gt; 0) <span class="hl-id">restore_range</span>(<span class="hl-id">Pre</span>, <span class="hl-id">P</span>, 0, <span class="hl-id">N</span>, <span class="hl-id">Pre</span>[0]);</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>

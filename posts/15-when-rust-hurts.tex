@@ -294,10 +294,10 @@ I call regular output types \emph{bundles} because they are self-contained.
 
 The following snippet comes from the (sunset) \href{https://github.com/bytecodealliance/lucet}{Lucet} WebAssembly runtime.
 \begin{code}[rust]
-\emph{/// A WebAssembly global along with its export specification.}
-\emph{/// The lifetime parameter exists to support zero-copy deserialization}
-\emph{/// for the `\&str` fields at the leaves of the structure.}
-\emph{/// For a variant with owned types at the leaves, see `OwnedGlobalSpec`.}
+/// A WebAssembly global along with its export specification.
+/// The lifetime parameter exists to support zero-copy deserialization
+/// for the `\&str` fields at the leaves of the structure.
+/// For a variant with owned types at the leaves, see `OwnedGlobalSpec`.
 pub struct \href{https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f842db437d94abb6eb439d7c92/lucet-module/src/globals.rs#L8}{\code{GlobalSpec}}<'a> {
     global: Global<'a>,
     export_names: Vec<&'a str>,
@@ -305,8 +305,8 @@ pub struct \href{https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f8
 
 \ldots
 
-\emph{/// A variant of `GlobalSpec` with owned strings throughout.}
-\emph{/// This type is useful when directly building up a value to be serialized.}
+/// A variant of `GlobalSpec` with owned strings throughout.
+/// This type is useful when directly building up a value to be serialized.
 pub struct \href{https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f842db437d94abb6eb439d7c92/lucet-module/src/globals.rs#L112}{\code{OwnedGlobalSpec}} {
     global: OwnedGlobal,
     export_names: Vec<String>,

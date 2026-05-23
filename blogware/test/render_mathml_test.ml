@@ -50,14 +50,7 @@ let tests : Test_framework.t list =
         (Render_mathml.render_math_node
            (Math_cmd (S_operatorname, [ Math_op (s "max", false) ])));
       t "mathcal command maps letters"
-        (String.concat ""
-           [
-             "<mi>";
-             u 0x1D49C;
-             u 0x1D4B7;
-             u 0x1D4CF;
-             "</mi>";
-           ])
+        (String.concat "" [ "<mi>"; u 0x1D49C; u 0x1D4B7; u 0x1D4CF; "</mi>" ])
         (Render_mathml.render_math_node
            (Math_cmd (S_mathcal, [ Math_op (s "Abz", false) ])));
       t "setminus command" "<mo>∖</mo>"

@@ -188,7 +188,7 @@ Next, we define the data structures specifying the format of the \textsc{api} re
 Since the block space is precious, the \code{ExamplePriceResponse} structure restricts the response contents to the fields we need to construct the report.
 
 \begin{code}[rust]
-\emph{/// The format of response we get from the example price feed JSON API.}
+/// The format of response we get from the example price feed JSON API.
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 struct ExamplePriceResponse {
     price: f64,
@@ -272,7 +272,7 @@ We cannot assume the entire response is trustworthy only because one of its fiel
         price: median_price,
         timestamp_seconds: median_ts,
     }
-} \emph{// end of observe_icp_price}
+} // end of observe_icp_price
 \end{code}
 
 \section{conclusion}{Conclusion}

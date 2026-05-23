@@ -180,7 +180,7 @@ Rendering a \href{https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle}{Sierpi
 A program drawing a Sierpinski triangle of order \code{n}.
 }
 \begin{code}[ocaml]
-\b{let rec} sierpinski n =
+let rec sierpinski n =
     if n == 0 then Box.of_char '*'
     else let s = sierpinski (n - 1) in
          Box.above s (Box.hconcat [| s; Box.of_char ' '; s |])
@@ -238,7 +238,7 @@ The following snippet is a modified version of the spiral renderer from section 
   A program drawing a spiral with \code{n} turns.
 }
 \begin{code}[ocaml]
-\b{let rec} spiral n =
+let rec spiral n =
     let open Box in
     if n <= 0
     then of_char '+'
@@ -308,7 +308,7 @@ The \href{#ref-make-table}{\code{make_table}} function transforms records into a
   The \code{make_table} function renders a book metadata array as an \textsc{ascii} table.
 }
 \begin{code}[ocaml,linenumbers]
-\b{let} make_table t =\label{ref-make-table}
+let make_table t =\label{ref-make-table}
     let open Box in
     let make_column f align =
         Array.map (fun b -> f b |> of_string) t |> vconcat ~align in
@@ -381,49 +381,49 @@ let height b = Array.length b\label{ref-height}
 
 let width b = if Array.length b == 0 then 0 else String.length b.(0)\label{ref-width}
 
-\emph{(** Returns the box height and width. *)}
+(** Returns the box height and width. *)
 let dimensions b = height b, width b
 
-\emph{(** Prints box b to the standard output. *)}
+(** Prints box b to the standard output. *)
 let print_box b = Array.iter print_endline b\label{ref-print-box}
 
-\emph{(** Creates a box large enough to hold string s. *)}
+(** Creates a box large enough to hold string s. *)
 let of_string s = [| s |]\label{ref-of-string}
 
-\emph{(** Creates an h\times w box filled with character c. *)}
+(** Creates an h\times w box filled with character c. *)
 let fill c h w = Array.make h (String.make w c)\label{ref-fill}
 
-\emph{(** Creates a 1\times 1 box containing character c. *)}
+(** Creates a 1\times 1 box containing character c. *)
 let of_char c = fill c 1 1\label{ref-of-char}
 
-\emph{(** Creates an h\times w box filled with spaces. *)}
+(** Creates an h\times w box filled with spaces. *)
 let space h w = fill ' ' h w\label{ref-space}
 
-\emph{(** An empty box. *)}
+(** An empty box. *)
 let empty = space 0 0\label{ref-empty}
 
-\emph{(** The vertical alignment type. *)}
+(** The vertical alignment type. *)
 type vertical   = [ `Top  | `Center | `Bottom ]
 
-\emph{(** The horizontal alignment type. *)}
+(** The horizontal alignment type. *)
 type horizontal = [ `Left | `Center | `Right  ]
 
-\emph{(** Stack box l to the left of box r. *)}
-\b{let rec} beside ?(align:vertical = `Center) l r =\label{ref-beside}
+(** Stack box l to the left of box r. *)
+let rec beside ?(align:vertical = `Center) l r =\label{ref-beside}
     if width l == 0 then r else if width r == 0 then l
     else let hl = heighten ~align (height r) l in
          let hr = heighten ~align (height l) r in
          Array.map2 String.cat hl hr
 
-\emph{(** Stack box t above of box b. *)}
-\b{and} above ?(align:horizontal = `Center) t b =\label{ref-above}
+(** Stack box t above of box b. *)
+and above ?(align:horizontal = `Center) t b =\label{ref-above}
     if height t == 0 then b else if height b == 0 then t
     else let wt = widen ~align (width b) t in
          let wb = widen ~align (width t) b in
          Array.append wt wb
 
-\emph{(** Makes box b at least w units wide. *)}
-\b{and} widen ?(align:horizontal = `Center) w b =\label{ref-widen}
+(** Makes box b at least w units wide. *)
+and widen ?(align:horizontal = `Center) w b =\label{ref-widen}
     if width b >= w then b
     else let bh, bw = height b, width b in
          let pw = w - bw in
@@ -433,8 +433,8 @@ type horizontal = [ `Left | `Center | `Right  ]
          | `Center -> hconcat
                       [| space bh (pw/2); b; space bh (pw - pw/2) |]
 
-\emph{(** Makes box b at least h units high. *)}
-\b{and} heighten ?(align:vertical = `Center) b h =\label{ref-heighten}
+(** Makes box b at least h units high. *)
+and heighten ?(align:vertical = `Center) b h =\label{ref-heighten}
     if height b >= h then b
     else let bh, bw = height b, width b in
          let ph = h - bh in
@@ -445,19 +445,19 @@ type horizontal = [ `Left | `Center | `Right  ]
                                ; b
                                ; space (ph - ph/2) bw |]
 
-\emph{(** Stacks an array of boxes horizontally. *)}
-\b{and} hconcat ?(align:vertical = `Center) boxes =\label{ref-hconcat}
+(** Stacks an array of boxes horizontally. *)
+and hconcat ?(align:vertical = `Center) boxes =\label{ref-hconcat}
     Array.fold_left (beside ~align) empty boxes
 
-\emph{(** Stacks an array of boxes vertically. *)}
-\b{and} vconcat ?(align:horizontal = `Center) boxes =\label{ref-vconcat}
+(** Stacks an array of boxes vertically. *)
+and vconcat ?(align:horizontal = `Center) boxes =\label{ref-vconcat}
     Array.fold_left (above ~align) empty boxes
 
-\emph{(** Arranges a 2-D array of boxes. *)}
-\b{let} grid g = Array.map hconcat g |> vconcat\label{ref-grid}
+(** Arranges a 2-D array of boxes. *)
+let grid g = Array.map hconcat g |> vconcat\label{ref-grid}
 
-\emph{(** Draws an ASCII art frame around box b. *)}
-\b{let} framed b =
+(** Draws an ASCII art frame around box b. *)
+let framed b =
     let h, w = dimensions b in
     let vbar = fill '|' h 1 in
     let hbar = fill '-' 1 w in

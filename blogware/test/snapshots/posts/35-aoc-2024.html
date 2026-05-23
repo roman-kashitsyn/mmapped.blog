@@ -26,167 +26,167 @@ In the first part, the monoid is the set of all the nines reachable from a cell 
 In the second, it’s the additive monoid of integers representing the number of distinct paths leading to nines.</p>
 <p>This question is perfect for demonstrating OCaml’s <a href="https://dev.realworldocaml.org/first-class-modules.html">first-class modules</a>.</p>
 <p>The <code>DpMonoid</code> module signature describes the interface for types we’ll use for dynamic programming.</p>
-<div class="source-container"><pre class="source ocaml"><code><span class="line">module type DpMonoid = sig</span>
-<span class="line">  type t</span>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">module</span> <span class="hl-kw">type</span> <span class="hl-typedef">DpMonoid</span> = <span class="hl-kw">sig</span></span>
+<span class="line">  <span class="hl-kw">type</span> <span class="hl-typedef">t</span></span>
 <span class="line">  <em>(** The neutral element of the monoid. *)</em></span>
-<span class="line">  val identity : t</span>
+<span class="line">  <span class="hl-kw">val</span> <span class="hl-id">identity</span> : <span class="hl-id">t</span></span>
 <span class="line">  <em>(** Combine two monoidal values. *)</em></span>
-<span class="line">  val append : t -&gt; t -&gt; t</span>
+<span class="line">  <span class="hl-kw">val</span> <span class="hl-id">append</span> : <span class="hl-id">t</span> -&gt; <span class="hl-id">t</span> -&gt; <span class="hl-id">t</span></span>
 <span class="line">  <em>(** Wrap a &quot;nine&quot; on the grid at the specified location into a monoidal value. *)</em></span>
-<span class="line">  val inject : int -&gt; int -&gt; t</span>
+<span class="line">  <span class="hl-kw">val</span> <span class="hl-id">inject</span> : <span class="hl-id">int</span> -&gt; <span class="hl-id">int</span> -&gt; <span class="hl-id">t</span></span>
 <span class="line">  <em>(** Convert a monoidal value to a path score. *)</em></span>
-<span class="line">  val project : t -&gt; int</span>
-<span class="line">end</span>
+<span class="line">  <span class="hl-kw">val</span> <span class="hl-id">project</span> : <span class="hl-id">t</span> -&gt; <span class="hl-id">int</span></span>
+<span class="line"><span class="hl-kw">end</span></span>
 </code></pre></div>
 <p>
 The <code>count</code> function implements the dynamic programming driver.
 It builds a matrix of monoidal values,
 accumulates these values along valid paths starting from nines,
 and counts path scores at zero heights.</p>
-<div class="source-container"><pre class="source ocaml"><code><span class="line">let count (map : int array array) (module M : DpMonoid) : int =</span>
-<span class="line">  let n, m = Array.length map, Array.length map.(0) in</span>
-<span class="line">  let dp = Array.make_matrix n m M.identity in</span>
-<span class="line">  let each f = for i = 0 to n-1 do for j = 0 to m-1 do f i j done done in</span>
-<span class="line">  each (fun i j -&gt; if map.(i).(j) == 9 then dp.(i).(j) &lt;- M.inject i j);</span>
-<span class="line">  for d = 8 downto 0 do</span>
-<span class="line">    each (fun i j -&gt; if map.(i).(j) == d then</span>
-<span class="line">                       Array.iter (fun (dx, dy) -&gt;</span>
-<span class="line">                           let x, y = i + dx, j + dy in</span>
-<span class="line">                           if x &gt;= 0 &amp;&amp; x &lt; n &amp;&amp; y &gt;= 0 &amp;&amp; y &lt; n</span>
-<span class="line">                              &amp;&amp; map.(x).(y) == d+1 then</span>
-<span class="line">                             dp.(i).(j) &lt;- M.append dp.(i).(j) dp.(x).(y);</span>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-defun">count</span> (<span class="hl-id">map</span> : <span class="hl-id">int</span> <span class="hl-id">array</span> <span class="hl-id">array</span>) (<span class="hl-kw">module</span> <span class="hl-id">M</span> : <span class="hl-id">DpMonoid</span>) : <span class="hl-id">int</span> =</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">n</span>, <span class="hl-var">m</span> = <span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">map</span>, <span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">map</span>.(0) <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">dp</span> = <span class="hl-id">Array</span>.<span class="hl-id">make_matrix</span> <span class="hl-id">n</span> <span class="hl-id">m</span> <span class="hl-id">M</span>.<span class="hl-id">identity</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-defun">each</span> <span class="hl-id">f</span> = <span class="hl-kw">for</span> <span class="hl-id">i</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">n</span>-1 <span class="hl-kw">do</span> <span class="hl-kw">for</span> <span class="hl-id">j</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">m</span>-1 <span class="hl-kw">do</span> <span class="hl-id">f</span> <span class="hl-id">i</span> <span class="hl-id">j</span> <span class="hl-kw">done</span> <span class="hl-kw">done</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-id">each</span> (<span class="hl-kw">fun</span> <span class="hl-id">i</span> <span class="hl-id">j</span> -&gt; <span class="hl-kw">if</span> <span class="hl-id">map</span>.(<span class="hl-id">i</span>).(<span class="hl-id">j</span>) == 9 <span class="hl-kw">then</span> <span class="hl-id">dp</span>.(<span class="hl-id">i</span>).(<span class="hl-id">j</span>) &lt;- <span class="hl-id">M</span>.<span class="hl-id">inject</span> <span class="hl-id">i</span> <span class="hl-id">j</span>);</span>
+<span class="line">  <span class="hl-kw">for</span> <span class="hl-id">d</span> = 8 <span class="hl-kw">downto</span> 0 <span class="hl-kw">do</span></span>
+<span class="line">    <span class="hl-id">each</span> (<span class="hl-kw">fun</span> <span class="hl-id">i</span> <span class="hl-id">j</span> -&gt; <span class="hl-kw">if</span> <span class="hl-id">map</span>.(<span class="hl-id">i</span>).(<span class="hl-id">j</span>) == <span class="hl-id">d</span> <span class="hl-kw">then</span></span>
+<span class="line">                       <span class="hl-id">Array</span>.<span class="hl-id">iter</span> (<span class="hl-kw">fun</span> (<span class="hl-id">dx</span>, <span class="hl-id">dy</span>) -&gt;</span>
+<span class="line">                           <span class="hl-kw">let</span> <span class="hl-var">x</span>, <span class="hl-var">y</span> = <span class="hl-id">i</span> + <span class="hl-id">dx</span>, <span class="hl-id">j</span> + <span class="hl-id">dy</span> <span class="hl-kw">in</span></span>
+<span class="line">                           <span class="hl-kw">if</span> <span class="hl-id">x</span> &gt;= 0 &amp;&amp; <span class="hl-id">x</span> &lt; <span class="hl-id">n</span> &amp;&amp; <span class="hl-id">y</span> &gt;= 0 &amp;&amp; <span class="hl-id">y</span> &lt; <span class="hl-id">n</span></span>
+<span class="line">                              &amp;&amp; <span class="hl-id">map</span>.(<span class="hl-id">x</span>).(<span class="hl-id">y</span>) == <span class="hl-id">d</span>+1 <span class="hl-kw">then</span></span>
+<span class="line">                             <span class="hl-id">dp</span>.(<span class="hl-id">i</span>).(<span class="hl-id">j</span>) &lt;- <span class="hl-id">M</span>.<span class="hl-id">append</span> <span class="hl-id">dp</span>.(<span class="hl-id">i</span>).(<span class="hl-id">j</span>) <span class="hl-id">dp</span>.(<span class="hl-id">x</span>).(<span class="hl-id">y</span>);</span>
 <span class="line">                         ) [|(1, 0); (-1, 0); (0, 1); (0, -1)|]</span>
 <span class="line">      )</span>
-<span class="line">  done;</span>
-<span class="line">  let total = ref 0 in</span>
-<span class="line">  each (fun i j -&gt; if map.(i).(j) == 0 then total := !total + M.project dp.(i).(j));</span>
-<span class="line">  !total</span>
+<span class="line">  <span class="hl-kw">done</span>;</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">total</span> = <span class="hl-id">ref</span> 0 <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-id">each</span> (<span class="hl-kw">fun</span> <span class="hl-id">i</span> <span class="hl-id">j</span> -&gt; <span class="hl-kw">if</span> <span class="hl-id">map</span>.(<span class="hl-id">i</span>).(<span class="hl-id">j</span>) == 0 <span class="hl-kw">then</span> <span class="hl-id">total</span> := !<span class="hl-id">total</span> + <span class="hl-id">M</span>.<span class="hl-id">project</span> <span class="hl-id">dp</span>.(<span class="hl-id">i</span>).(<span class="hl-id">j</span>));</span>
+<span class="line">  !<span class="hl-id">total</span></span>
 </code></pre></div>
 <p>
 The entry point calls the <code>count</code> function twice with different monoids:
 the <code>IntSet</code> monoid to compute trailhead scores and the additive integers to compute the total path count.</p>
-<div class="source-container"><pre class="source ocaml"><code><span class="line">let read_map fname =</span>
-<span class="line">  let tmp = Arg.read_arg fname in</span>
-<span class="line">  Array.map (fun s -&gt;</span>
-<span class="line">      String.to_seq s</span>
-<span class="line">      |&gt; Seq.map (fun c -&gt; Char.code c - Char.code '0')</span>
-<span class="line">      |&gt; Array.of_seq</span>
-<span class="line">    ) tmp</span>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-defun">read_map</span> <span class="hl-id">fname</span> =</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">tmp</span> = <span class="hl-id">Arg</span>.<span class="hl-id">read_arg</span> <span class="hl-id">fname</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-id">Array</span>.<span class="hl-id">map</span> (<span class="hl-kw">fun</span> <span class="hl-id">s</span> -&gt;</span>
+<span class="line">      <span class="hl-id">String</span>.<span class="hl-id">to_seq</span> <span class="hl-id">s</span></span>
+<span class="line">      |&gt; <span class="hl-id">Seq</span>.<span class="hl-id">map</span> (<span class="hl-kw">fun</span> <span class="hl-id">c</span> -&gt; <span class="hl-id">Char</span>.<span class="hl-id">code</span> <span class="hl-id">c</span> - <span class="hl-id">Char</span>.<span class="hl-id">code</span> '0')</span>
+<span class="line">      |&gt; <span class="hl-id">Array</span>.<span class="hl-id">of_seq</span></span>
+<span class="line">    ) <span class="hl-id">tmp</span></span>
 <span class="line"></span>
-<span class="line">let () =</span>
-<span class="line">  let map = read_map &quot;10-input.txt&quot; in</span>
-<span class="line">  count map (module struct</span>
-<span class="line">               module IntSet = Set.Make(Int)</span>
-<span class="line">               type t = IntSet.t</span>
-<span class="line">               let identity = IntSet.empty</span>
-<span class="line">               let append = IntSet.union</span>
-<span class="line">               let inject i j = IntSet.singleton ((Array.length map) * i + j)</span>
-<span class="line">               let project = IntSet.cardinal</span>
-<span class="line">             end)</span>
-<span class="line">  |&gt; Printf.printf &quot;%d\n&quot;;</span>
-<span class="line">  count map (module struct</span>
-<span class="line">               type t = int</span>
-<span class="line">               let identity = 0</span>
-<span class="line">               let append = (+)</span>
-<span class="line">               let inject _ _ = 1</span>
-<span class="line">               let project = Fun.id</span>
-<span class="line">             end)</span>
-<span class="line">  |&gt; Printf.printf &quot;%d\n&quot;</span>
+<span class="line"><span class="hl-kw">let</span> () =</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">map</span> = <span class="hl-id">read_map</span> <span class="hl-str">&quot;10-input.txt&quot;</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-id">count</span> <span class="hl-id">map</span> (<span class="hl-kw">module</span> <span class="hl-kw">struct</span></span>
+<span class="line">               <span class="hl-kw">module</span> <span class="hl-id">IntSet</span> = <span class="hl-id">Set</span>.<span class="hl-id">Make</span>(<span class="hl-id">Int</span>)</span>
+<span class="line">               <span class="hl-kw">type</span> <span class="hl-typedef">t</span> = <span class="hl-id">IntSet</span>.<span class="hl-id">t</span></span>
+<span class="line">               <span class="hl-kw">let</span> <span class="hl-var">identity</span> = <span class="hl-id">IntSet</span>.<span class="hl-id">empty</span></span>
+<span class="line">               <span class="hl-kw">let</span> <span class="hl-var">append</span> = <span class="hl-id">IntSet</span>.<span class="hl-id">union</span></span>
+<span class="line">               <span class="hl-kw">let</span> <span class="hl-defun">inject</span> <span class="hl-id">i</span> <span class="hl-id">j</span> = <span class="hl-id">IntSet</span>.<span class="hl-id">singleton</span> ((<span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">map</span>) * <span class="hl-id">i</span> + <span class="hl-id">j</span>)</span>
+<span class="line">               <span class="hl-kw">let</span> <span class="hl-var">project</span> = <span class="hl-id">IntSet</span>.<span class="hl-id">cardinal</span></span>
+<span class="line">             <span class="hl-kw">end</span>)</span>
+<span class="line">  |&gt; <span class="hl-id">Printf</span>.<span class="hl-id">printf</span> <span class="hl-str">&quot;%d\n&quot;</span>;</span>
+<span class="line">  <span class="hl-id">count</span> <span class="hl-id">map</span> (<span class="hl-kw">module</span> <span class="hl-kw">struct</span></span>
+<span class="line">               <span class="hl-kw">type</span> <span class="hl-typedef">t</span> = <span class="hl-id">int</span></span>
+<span class="line">               <span class="hl-kw">let</span> <span class="hl-var">identity</span> = 0</span>
+<span class="line">               <span class="hl-kw">let</span> <span class="hl-var">append</span> = (+)</span>
+<span class="line">               <span class="hl-kw">let</span> <span class="hl-defun">inject</span> <span class="hl-id">_</span> <span class="hl-id">_</span> = 1</span>
+<span class="line">               <span class="hl-kw">let</span> <span class="hl-var">project</span> = <span class="hl-id">Fun</span>.<span class="hl-id">id</span></span>
+<span class="line">             <span class="hl-kw">end</span>)</span>
+<span class="line">  |&gt; <span class="hl-id">Printf</span>.<span class="hl-id">printf</span> <span class="hl-str">&quot;%d\n&quot;</span></span>
 </code></pre></div>
 <h3 id="chronospacial-computer"><a href="#chronospacial-computer">Day 17: Chronospacial Computer</a></h3>
 <p>The <a href="https://adventofcode.com/2024/day/17">Chronospacial Computer</a> puzzle asks you to implement an interpreter for a simple compute device (part 1)
 and find an initial state of the processor that turns a given program into a <a href="https://en.wikipedia.org/wiki/Quine_(computing)">quine</a>.</p>
 <p>The first part of the problem was straightforward to implement:
 </p>
-<div class="source-container"><pre class="source ocaml"><code><span class="line">type cpu = { a : int; b : int; c : int; p : int; }</span>
-<span class="line">type out = Nothing | Just of int | Halt</span>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">cpu</span> = { <span class="hl-id">a</span> : <span class="hl-id">int</span>; <span class="hl-id">b</span> : <span class="hl-id">int</span>; <span class="hl-id">c</span> : <span class="hl-id">int</span>; <span class="hl-id">p</span> : <span class="hl-id">int</span>; }</span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">out</span> = <span class="hl-id">Nothing</span> | <span class="hl-id">Just</span> <span class="hl-kw">of</span> <span class="hl-id">int</span> | <span class="hl-id">Halt</span></span>
 <span class="line"></span>
-<span class="line">let read_prog fname =</span>
-<span class="line">  let b = Scanf.Scanning.from_file fname in</span>
-<span class="line">  let cpu, prog =</span>
-<span class="line">    Scanf.bscanf b &quot;Register A: %d\nRegister B: %d\nRegister C: %d\n\nProgram: %s&quot;</span>
-<span class="line">      (fun a b c prg -&gt;</span>
-<span class="line">        ({a=a; b=b; c=c; p=0},</span>
-<span class="line">         prg |&gt; String.split_on_char ','</span>
-<span class="line">         |&gt; List.map int_of_string |&gt; Array.of_list)</span>
-<span class="line">      ) in</span>
-<span class="line">  Scanf.Scanning.close_in b;</span>
-<span class="line">  (cpu, prog)</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">read_prog</span> <span class="hl-id">fname</span> =</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">b</span> = <span class="hl-id">Scanf</span>.<span class="hl-id">Scanning</span>.<span class="hl-id">from_file</span> <span class="hl-id">fname</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">cpu</span>, <span class="hl-var">prog</span> =</span>
+<span class="line">    <span class="hl-id">Scanf</span>.<span class="hl-id">bscanf</span> <span class="hl-id">b</span> <span class="hl-str">&quot;Register A: %d\nRegister B: %d\nRegister C: %d\n\nProgram: %s&quot;</span></span>
+<span class="line">      (<span class="hl-kw">fun</span> <span class="hl-id">a</span> <span class="hl-id">b</span> <span class="hl-id">c</span> <span class="hl-id">prg</span> -&gt;</span>
+<span class="line">        ({<span class="hl-id">a</span>=<span class="hl-id">a</span>; <span class="hl-id">b</span>=<span class="hl-id">b</span>; <span class="hl-id">c</span>=<span class="hl-id">c</span>; <span class="hl-id">p</span>=0},</span>
+<span class="line">         <span class="hl-id">prg</span> |&gt; <span class="hl-id">String</span>.<span class="hl-id">split_on_char</span> ','</span>
+<span class="line">         |&gt; <span class="hl-id">List</span>.<span class="hl-id">map</span> <span class="hl-id">int_of_string</span> |&gt; <span class="hl-id">Array</span>.<span class="hl-id">of_list</span>)</span>
+<span class="line">      ) <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-id">Scanf</span>.<span class="hl-id">Scanning</span>.<span class="hl-id">close_in</span> <span class="hl-id">b</span>;</span>
+<span class="line">  (<span class="hl-id">cpu</span>, <span class="hl-id">prog</span>)</span>
 <span class="line"></span>
-<span class="line">let read_combo cpu b = match b with</span>
-<span class="line">  | 0 | 1 | 2 | 3 -&gt; b</span>
-<span class="line">  | 4 -&gt; cpu.a</span>
-<span class="line">  | 5 -&gt; cpu.b</span>
-<span class="line">  | 6 -&gt; cpu.c</span>
-<span class="line">  | _ -&gt; raise (Failure (Printf.sprintf &quot;bad combo value: %d&quot; b))</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">read_combo</span> <span class="hl-id">cpu</span> <span class="hl-id">b</span> = <span class="hl-kw">match</span> <span class="hl-id">b</span> <span class="hl-kw">with</span></span>
+<span class="line">  | 0 | 1 | 2 | 3 -&gt; <span class="hl-id">b</span></span>
+<span class="line">  | 4 -&gt; <span class="hl-id">cpu</span>.<span class="hl-id">a</span></span>
+<span class="line">  | 5 -&gt; <span class="hl-id">cpu</span>.<span class="hl-id">b</span></span>
+<span class="line">  | 6 -&gt; <span class="hl-id">cpu</span>.<span class="hl-id">c</span></span>
+<span class="line">  | <span class="hl-id">_</span> -&gt; <span class="hl-id">raise</span> (<span class="hl-id">Failure</span> (<span class="hl-id">Printf</span>.<span class="hl-id">sprintf</span> <span class="hl-str">&quot;bad combo value: %d&quot;</span> <span class="hl-id">b</span>))</span>
 <span class="line"></span>
-<span class="line">let step cpu prog =</span>
-<span class="line">  if Array.length prog &lt;= cpu.p then (cpu, Halt) else</span>
-<span class="line">    let arg = prog.(cpu.p + 1) in</span>
-<span class="line">    match prog.(cpu.p) with</span>
-<span class="line">    | 0 -&gt; let r = cpu.a / (Int.shift_left 1 (read_combo cpu arg)) in</span>
-<span class="line">           ({ cpu with a = r; p = cpu.p+2}, Nothing)</span>
-<span class="line">    | 1 -&gt; ({ cpu with b = cpu.b lxor arg; p = cpu.p + 2}, Nothing)</span>
-<span class="line">    | 2 -&gt; ({ cpu with b = (read_combo cpu arg) mod 8; p = cpu.p + 2}, Nothing)</span>
-<span class="line">    | 3 -&gt; if cpu.a == 0 then ({cpu with p=cpu.p + 2}, Nothing)</span>
-<span class="line">           else ({cpu with p = arg}, Nothing)</span>
-<span class="line">    | 4 -&gt; ({ cpu with b = cpu.b lxor cpu.c; p = cpu.p + 2 }, Nothing)</span>
-<span class="line">    | 5 -&gt; ({ cpu with p = cpu.p + 2}, Just((read_combo cpu arg) mod 8))</span>
-<span class="line">    | 6 -&gt; let r = cpu.a / (Int.shift_left 1 (read_combo cpu arg)) in</span>
-<span class="line">           ({ cpu with b = r; p = cpu.p+2}, Nothing)</span>
-<span class="line">    | 7 -&gt; let arg = read_combo cpu arg in</span>
-<span class="line">           let r = cpu.a / (Int.shift_left 1 arg) in</span>
-<span class="line">           ({ cpu with c = r; p = cpu.p+2 }, Nothing)</span>
-<span class="line">    | _ -&gt; raise (Failure (Printf.sprintf &quot;unsupported opcode %d&quot; prog.(cpu.p)))</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">step</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> =</span>
+<span class="line">  <span class="hl-kw">if</span> <span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">prog</span> &lt;= <span class="hl-id">cpu</span>.<span class="hl-id">p</span> <span class="hl-kw">then</span> (<span class="hl-id">cpu</span>, <span class="hl-id">Halt</span>) <span class="hl-kw">else</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">arg</span> = <span class="hl-id">prog</span>.(<span class="hl-id">cpu</span>.<span class="hl-id">p</span> + 1) <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-kw">match</span> <span class="hl-id">prog</span>.(<span class="hl-id">cpu</span>.<span class="hl-id">p</span>) <span class="hl-kw">with</span></span>
+<span class="line">    | 0 -&gt; <span class="hl-kw">let</span> <span class="hl-var">r</span> = <span class="hl-id">cpu</span>.<span class="hl-id">a</span> / (<span class="hl-id">Int</span>.<span class="hl-id">shift_left</span> 1 (<span class="hl-id">read_combo</span> <span class="hl-id">cpu</span> <span class="hl-id">arg</span>)) <span class="hl-kw">in</span></span>
+<span class="line">           ({ <span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">a</span> = <span class="hl-id">r</span>; <span class="hl-id">p</span> = <span class="hl-id">cpu</span>.<span class="hl-id">p</span>+2}, <span class="hl-id">Nothing</span>)</span>
+<span class="line">    | 1 -&gt; ({ <span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">b</span> = <span class="hl-id">cpu</span>.<span class="hl-id">b</span> <span class="hl-id">lxor</span> <span class="hl-id">arg</span>; <span class="hl-id">p</span> = <span class="hl-id">cpu</span>.<span class="hl-id">p</span> + 2}, <span class="hl-id">Nothing</span>)</span>
+<span class="line">    | 2 -&gt; ({ <span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">b</span> = (<span class="hl-id">read_combo</span> <span class="hl-id">cpu</span> <span class="hl-id">arg</span>) <span class="hl-id">mod</span> 8; <span class="hl-id">p</span> = <span class="hl-id">cpu</span>.<span class="hl-id">p</span> + 2}, <span class="hl-id">Nothing</span>)</span>
+<span class="line">    | 3 -&gt; <span class="hl-kw">if</span> <span class="hl-id">cpu</span>.<span class="hl-id">a</span> == 0 <span class="hl-kw">then</span> ({<span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">p</span>=<span class="hl-id">cpu</span>.<span class="hl-id">p</span> + 2}, <span class="hl-id">Nothing</span>)</span>
+<span class="line">           <span class="hl-kw">else</span> ({<span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">p</span> = <span class="hl-id">arg</span>}, <span class="hl-id">Nothing</span>)</span>
+<span class="line">    | 4 -&gt; ({ <span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">b</span> = <span class="hl-id">cpu</span>.<span class="hl-id">b</span> <span class="hl-id">lxor</span> <span class="hl-id">cpu</span>.<span class="hl-id">c</span>; <span class="hl-id">p</span> = <span class="hl-id">cpu</span>.<span class="hl-id">p</span> + 2 }, <span class="hl-id">Nothing</span>)</span>
+<span class="line">    | 5 -&gt; ({ <span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">p</span> = <span class="hl-id">cpu</span>.<span class="hl-id">p</span> + 2}, <span class="hl-id">Just</span>((<span class="hl-id">read_combo</span> <span class="hl-id">cpu</span> <span class="hl-id">arg</span>) <span class="hl-id">mod</span> 8))</span>
+<span class="line">    | 6 -&gt; <span class="hl-kw">let</span> <span class="hl-var">r</span> = <span class="hl-id">cpu</span>.<span class="hl-id">a</span> / (<span class="hl-id">Int</span>.<span class="hl-id">shift_left</span> 1 (<span class="hl-id">read_combo</span> <span class="hl-id">cpu</span> <span class="hl-id">arg</span>)) <span class="hl-kw">in</span></span>
+<span class="line">           ({ <span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">b</span> = <span class="hl-id">r</span>; <span class="hl-id">p</span> = <span class="hl-id">cpu</span>.<span class="hl-id">p</span>+2}, <span class="hl-id">Nothing</span>)</span>
+<span class="line">    | 7 -&gt; <span class="hl-kw">let</span> <span class="hl-var">arg</span> = <span class="hl-id">read_combo</span> <span class="hl-id">cpu</span> <span class="hl-id">arg</span> <span class="hl-kw">in</span></span>
+<span class="line">           <span class="hl-kw">let</span> <span class="hl-var">r</span> = <span class="hl-id">cpu</span>.<span class="hl-id">a</span> / (<span class="hl-id">Int</span>.<span class="hl-id">shift_left</span> 1 <span class="hl-id">arg</span>) <span class="hl-kw">in</span></span>
+<span class="line">           ({ <span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">c</span> = <span class="hl-id">r</span>; <span class="hl-id">p</span> = <span class="hl-id">cpu</span>.<span class="hl-id">p</span>+2 }, <span class="hl-id">Nothing</span>)</span>
+<span class="line">    | <span class="hl-id">_</span> -&gt; <span class="hl-id">raise</span> (<span class="hl-id">Failure</span> (<span class="hl-id">Printf</span>.<span class="hl-id">sprintf</span> <span class="hl-str">&quot;unsupported opcode %d&quot;</span> <span class="hl-id">prog</span>.(<span class="hl-id">cpu</span>.<span class="hl-id">p</span>)))</span>
 <span class="line"></span>
-<span class="line">let rec run cpu prog out =</span>
-<span class="line">  match step cpu prog with</span>
-<span class="line">  | (cpu, Nothing) -&gt; run cpu prog out</span>
-<span class="line">  | (cpu, Just v) -&gt; run cpu prog (v :: out)</span>
-<span class="line">  | (_, Halt) -&gt; out</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-kw">rec</span> <span class="hl-defun">run</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> <span class="hl-id">out</span> =</span>
+<span class="line">  <span class="hl-kw">match</span> <span class="hl-id">step</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> <span class="hl-kw">with</span></span>
+<span class="line">  | (<span class="hl-id">cpu</span>, <span class="hl-id">Nothing</span>) -&gt; <span class="hl-id">run</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> <span class="hl-id">out</span></span>
+<span class="line">  | (<span class="hl-id">cpu</span>, <span class="hl-id">Just</span> <span class="hl-id">v</span>) -&gt; <span class="hl-id">run</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> (<span class="hl-id">v</span> :: <span class="hl-id">out</span>)</span>
+<span class="line">  | (<span class="hl-id">_</span>, <span class="hl-id">Halt</span>) -&gt; <span class="hl-id">out</span></span>
 <span class="line"></span>
-<span class="line">let () =</span>
-<span class="line">  let cpu, prog = read_prog &quot;17-input.txt&quot; in</span>
-<span class="line">  run cpu prog [] |&gt; List.rev |&gt; List.map string_of_int</span>
-<span class="line">  |&gt; String.concat &quot;,&quot; |&gt; print_string;</span>
-<span class="line">  print_newline ()</span>
+<span class="line"><span class="hl-kw">let</span> () =</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">cpu</span>, <span class="hl-var">prog</span> = <span class="hl-id">read_prog</span> <span class="hl-str">&quot;17-input.txt&quot;</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-id">run</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> [] |&gt; <span class="hl-id">List</span>.<span class="hl-id">rev</span> |&gt; <span class="hl-id">List</span>.<span class="hl-id">map</span> <span class="hl-id">string_of_int</span></span>
+<span class="line">  |&gt; <span class="hl-id">String</span>.<span class="hl-id">concat</span> <span class="hl-str">&quot;,&quot;</span> |&gt; <span class="hl-id">print_string</span>;</span>
+<span class="line">  <span class="hl-id">print_newline</span> ()</span>
 </code></pre></div>
 <p>
 The second part gave me a hard time.
 A brute-force search attempt didn’t produce results in a reasonable time:</p>
-<div class="source-container"><pre class="source ocaml"><code><span class="line">let rec quine cpu prog i =</span>
-<span class="line">  match step cpu prog with</span>
-<span class="line">  | (cpu, Nothing) -&gt; quine cpu prog i</span>
-<span class="line">  | (cpu, Just v) -&gt; i &lt; Array.length prog &amp;&amp; prog.(i) == v &amp;&amp; quine cpu prog (i+1)</span>
-<span class="line">  | (_, Halt) -&gt; i == Array.length prog</span>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-kw">rec</span> <span class="hl-defun">quine</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> <span class="hl-id">i</span> =</span>
+<span class="line">  <span class="hl-kw">match</span> <span class="hl-id">step</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> <span class="hl-kw">with</span></span>
+<span class="line">  | (<span class="hl-id">cpu</span>, <span class="hl-id">Nothing</span>) -&gt; <span class="hl-id">quine</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> <span class="hl-id">i</span></span>
+<span class="line">  | (<span class="hl-id">cpu</span>, <span class="hl-id">Just</span> <span class="hl-id">v</span>) -&gt; <span class="hl-id">i</span> &lt; <span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">prog</span> &amp;&amp; <span class="hl-id">prog</span>.(<span class="hl-id">i</span>) == <span class="hl-id">v</span> &amp;&amp; <span class="hl-id">quine</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> (<span class="hl-id">i</span>+1)</span>
+<span class="line">  | (<span class="hl-id">_</span>, <span class="hl-id">Halt</span>) -&gt; <span class="hl-id">i</span> == <span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">prog</span></span>
 <span class="line"></span>
-<span class="line">let brute_force () =</span>
-<span class="line">  Seq.ints 0 |&gt; Seq.filter (fun v -&gt; quine {cpu with a = v} prog 0)</span>
-<span class="line">  |&gt; Seq.uncons |&gt; Option.get |&gt; fst |&gt; print_int</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">brute_force</span> () =</span>
+<span class="line">  <span class="hl-id">Seq</span>.<span class="hl-id">ints</span> 0 |&gt; <span class="hl-id">Seq</span>.<span class="hl-id">filter</span> (<span class="hl-kw">fun</span> <span class="hl-id">v</span> -&gt; <span class="hl-id">quine</span> {<span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">a</span> = <span class="hl-id">v</span>} <span class="hl-id">prog</span> 0)</span>
+<span class="line">  |&gt; <span class="hl-id">Seq</span>.<span class="hl-id">uncons</span> |&gt; <span class="hl-id">Option</span>.<span class="hl-id">get</span> |&gt; <span class="hl-id">fst</span> |&gt; <span class="hl-id">print_int</span></span>
 </code></pre></div>
 <p>I had to find a solution that makes more assumptions about the program,
 so I wrote a little disassembler to investigate what the program does.</p>
-<div class="source-container"><pre class="source ocaml"><code><span class="line">let disassemble prog =</span>
-<span class="line">  let print_combo n = match n with | 0 | 1 | 2 | 3 -&gt; print_int n</span>
-<span class="line">                                   | 4 -&gt; print_string &quot;%a&quot;</span>
-<span class="line">                                   | 5 -&gt; print_string &quot;%b&quot;</span>
-<span class="line">                                   | 6 -&gt; print_string &quot;%c&quot;</span>
-<span class="line">                                   | _ -&gt; () in</span>
-<span class="line">  for i = 0 to (Array.length prog) / 2  - 1 do</span>
-<span class="line">    let arg = prog.(2*i+1) in</span>
-<span class="line">    print_newline ();</span>
-<span class="line">    match prog.(2*i) with</span>
-<span class="line">    | 0 -&gt; (print_string &quot;%a &lt;- div %a 2^&quot;; print_combo arg)</span>
-<span class="line">    | 1 -&gt; (print_string &quot;%b &lt;- xor %b &quot;; print_int arg; print_string &quot; mod 8&quot;)</span>
-<span class="line">    | 2 -&gt; (print_string &quot;%b &lt;- &quot;; print_combo arg; print_string &quot; mod 8&quot;)</span>
-<span class="line">    | 3 -&gt; (print_string &quot;jnz &quot;; print_int arg)</span>
-<span class="line">    | 4 -&gt; (print_string &quot;%b &lt;- %b xor %c&quot;)</span>
-<span class="line">    | 5 -&gt; (print_string &quot;out &quot;; print_combo arg; print_string &quot; mod 8&quot;)</span>
-<span class="line">    | 6 -&gt; (print_string &quot;%b &lt;- div %a 2^&quot;; print_combo arg)</span>
-<span class="line">    | 7 -&gt; (print_string &quot;%b &lt;- div %a 2^&quot;; print_combo arg)</span>
-<span class="line">    | _ -&gt; ()</span>
-<span class="line">  done;</span>
-<span class="line">  print_newline ()</span>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-defun">disassemble</span> <span class="hl-id">prog</span> =</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-defun">print_combo</span> <span class="hl-id">n</span> = <span class="hl-kw">match</span> <span class="hl-id">n</span> <span class="hl-kw">with</span> | 0 | 1 | 2 | 3 -&gt; <span class="hl-id">print_int</span> <span class="hl-id">n</span></span>
+<span class="line">                                   | 4 -&gt; <span class="hl-id">print_string</span> <span class="hl-str">&quot;%a&quot;</span></span>
+<span class="line">                                   | 5 -&gt; <span class="hl-id">print_string</span> <span class="hl-str">&quot;%b&quot;</span></span>
+<span class="line">                                   | 6 -&gt; <span class="hl-id">print_string</span> <span class="hl-str">&quot;%c&quot;</span></span>
+<span class="line">                                   | <span class="hl-id">_</span> -&gt; () <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">for</span> <span class="hl-id">i</span> = 0 <span class="hl-kw">to</span> (<span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">prog</span>) / 2  - 1 <span class="hl-kw">do</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">arg</span> = <span class="hl-id">prog</span>.(2*<span class="hl-id">i</span>+1) <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-id">print_newline</span> ();</span>
+<span class="line">    <span class="hl-kw">match</span> <span class="hl-id">prog</span>.(2*<span class="hl-id">i</span>) <span class="hl-kw">with</span></span>
+<span class="line">    | 0 -&gt; (<span class="hl-id">print_string</span> <span class="hl-str">&quot;%a &lt;- div %a 2^&quot;</span>; <span class="hl-id">print_combo</span> <span class="hl-id">arg</span>)</span>
+<span class="line">    | 1 -&gt; (<span class="hl-id">print_string</span> <span class="hl-str">&quot;%b &lt;- xor %b &quot;</span>; <span class="hl-id">print_int</span> <span class="hl-id">arg</span>; <span class="hl-id">print_string</span> <span class="hl-str">&quot; mod 8&quot;</span>)</span>
+<span class="line">    | 2 -&gt; (<span class="hl-id">print_string</span> <span class="hl-str">&quot;%b &lt;- &quot;</span>; <span class="hl-id">print_combo</span> <span class="hl-id">arg</span>; <span class="hl-id">print_string</span> <span class="hl-str">&quot; mod 8&quot;</span>)</span>
+<span class="line">    | 3 -&gt; (<span class="hl-id">print_string</span> <span class="hl-str">&quot;jnz &quot;</span>; <span class="hl-id">print_int</span> <span class="hl-id">arg</span>)</span>
+<span class="line">    | 4 -&gt; (<span class="hl-id">print_string</span> <span class="hl-str">&quot;%b &lt;- %b xor %c&quot;</span>)</span>
+<span class="line">    | 5 -&gt; (<span class="hl-id">print_string</span> <span class="hl-str">&quot;out &quot;</span>; <span class="hl-id">print_combo</span> <span class="hl-id">arg</span>; <span class="hl-id">print_string</span> <span class="hl-str">&quot; mod 8&quot;</span>)</span>
+<span class="line">    | 6 -&gt; (<span class="hl-id">print_string</span> <span class="hl-str">&quot;%b &lt;- div %a 2^&quot;</span>; <span class="hl-id">print_combo</span> <span class="hl-id">arg</span>)</span>
+<span class="line">    | 7 -&gt; (<span class="hl-id">print_string</span> <span class="hl-str">&quot;%b &lt;- div %a 2^&quot;</span>; <span class="hl-id">print_combo</span> <span class="hl-id">arg</span>)</span>
+<span class="line">    | <span class="hl-id">_</span> -&gt; ()</span>
+<span class="line">  <span class="hl-kw">done</span>;</span>
+<span class="line">  <span class="hl-id">print_newline</span> ()</span>
 </code></pre></div>
 <p>That’s what my program was:
 </p>
@@ -202,26 +202,26 @@ jnz 0
 <p>This program shifts the <code>A</code> register right by three bits, outputs three bits, and halts when the register is zero.
 We now have an explanation for the ineffectiveness of the brute force approach: the target <code>A</code> value is around 3×16 = 48 bits long!
 The program can’t loop forever (the <code>A</code> decreases on every iteration) and, more importantly, we can construct the quine iteratively in three-bit groups.</p>
-<div class="source-container"><pre class="source ocaml"><code><span class="line">let rec first_n_eq n lhs rhs = match n, lhs, rhs with</span>
-<span class="line">  | 0, _, _ -&gt; true</span>
-<span class="line">  | i, x :: xs, y :: ys -&gt; x == y &amp;&amp; first_n_eq (i-1) xs ys</span>
-<span class="line">  | _ -&gt; false</span>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-kw">rec</span> <span class="hl-defun">first_n_eq</span> <span class="hl-id">n</span> <span class="hl-id">lhs</span> <span class="hl-id">rhs</span> = <span class="hl-kw">match</span> <span class="hl-id">n</span>, <span class="hl-id">lhs</span>, <span class="hl-id">rhs</span> <span class="hl-kw">with</span></span>
+<span class="line">  | 0, <span class="hl-id">_</span>, <span class="hl-id">_</span> -&gt; <span class="hl-kw">true</span></span>
+<span class="line">  | <span class="hl-id">i</span>, <span class="hl-id">x</span> :: <span class="hl-id">xs</span>, <span class="hl-id">y</span> :: <span class="hl-id">ys</span> -&gt; <span class="hl-id">x</span> == <span class="hl-id">y</span> &amp;&amp; <span class="hl-id">first_n_eq</span> (<span class="hl-id">i</span>-1) <span class="hl-id">xs</span> <span class="hl-id">ys</span></span>
+<span class="line">  | <span class="hl-id">_</span> -&gt; <span class="hl-kw">false</span></span>
 <span class="line"></span>
-<span class="line">let find_forward cpu prog =</span>
-<span class="line">  let n = Array.length prog in</span>
-<span class="line">  let rev = Array.to_list prog |&gt; List.rev in</span>
-<span class="line">  let digits = Array.make n 0 in</span>
-<span class="line">  let mk () = Array.fold_left (fun acc x -&gt; acc * 8 + x) 0 digits in</span>
-<span class="line">  for i = 0 to n-1 do</span>
-<span class="line">    let out = ref (run {cpu with a = mk ()} prog []) in</span>
-<span class="line">    while not (first_n_eq (i+1) rev !out) do</span>
-<span class="line">      digits.(i) &lt;- digits.(i) + 1;</span>
-<span class="line">      out := run {cpu with a = mk ()} prog [];</span>
-<span class="line">      if digits.(i) &gt; 1000 (* <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span> *)</span>
-<span class="line">      then raise (Failure (Printf.sprintf &quot;failed at digit %d&quot; i));</span>
-<span class="line">    done;</span>
-<span class="line">  done;</span>
-<span class="line">  mk ()</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">find_forward</span> <span class="hl-id">cpu</span> <span class="hl-id">prog</span> =</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">n</span> = <span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">prog</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">rev</span> = <span class="hl-id">Array</span>.<span class="hl-id">to_list</span> <span class="hl-id">prog</span> |&gt; <span class="hl-id">List</span>.<span class="hl-id">rev</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">digits</span> = <span class="hl-id">Array</span>.<span class="hl-id">make</span> <span class="hl-id">n</span> 0 <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-defun">mk</span> () = <span class="hl-id">Array</span>.<span class="hl-id">fold_left</span> (<span class="hl-kw">fun</span> <span class="hl-id">acc</span> <span class="hl-id">x</span> -&gt; <span class="hl-id">acc</span> * 8 + <span class="hl-id">x</span>) 0 <span class="hl-id">digits</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">for</span> <span class="hl-id">i</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">n</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">out</span> = <span class="hl-id">ref</span> (<span class="hl-id">run</span> {<span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">a</span> = <span class="hl-id">mk</span> ()} <span class="hl-id">prog</span> []) <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-kw">while</span> <span class="hl-id">not</span> (<span class="hl-id">first_n_eq</span> (<span class="hl-id">i</span>+1) <span class="hl-id">rev</span> !<span class="hl-id">out</span>) <span class="hl-kw">do</span></span>
+<span class="line">      <span class="hl-id">digits</span>.(<span class="hl-id">i</span>) &lt;- <span class="hl-id">digits</span>.(<span class="hl-id">i</span>) + 1;</span>
+<span class="line">      <span class="hl-id">out</span> := <span class="hl-id">run</span> {<span class="hl-id">cpu</span> <span class="hl-kw">with</span> <span class="hl-id">a</span> = <span class="hl-id">mk</span> ()} <span class="hl-id">prog</span> [];</span>
+<span class="line">      <span class="hl-kw">if</span> <span class="hl-id">digits</span>.(<span class="hl-id">i</span>) &gt; 1000 <span class="hl-comment">(* <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span> *)</span></span>
+<span class="line">      <span class="hl-kw">then</span> <span class="hl-id">raise</span> (<span class="hl-id">Failure</span> (<span class="hl-id">Printf</span>.<span class="hl-id">sprintf</span> <span class="hl-str">&quot;failed at digit %d&quot;</span> <span class="hl-id">i</span>));</span>
+<span class="line">    <span class="hl-kw">done</span>;</span>
+<span class="line">  <span class="hl-kw">done</span>;</span>
+<span class="line">  <span class="hl-id">mk</span> ()</span>
 </code></pre></div>
 <p>The <code>find_forward</code> function initializes an array of three-bit digits constituting the <code>A</code> register value and tweaks one digit at a time to obtain the desired program prefix.
 The line marked with <span class="circled-ref" data-num-glyph="①" aria-label="step 1" role="img"></span> is the most mysterious:
@@ -241,42 +241,42 @@ The distance between <code>(&quot;1&quot;, &quot;A&quot;)</code> and <code>(&quo
 so that the previous robot points at the <code>&quot;A&quot;</code> key at the beginning and the end of the transition.</p>
 <p>That probably sounds too abstract, so let’s look at the code.
 The <code>numpad</code> and <code>dirpad</code> values define adjacency lists for the keypad types.</p>
-<div class="source-container"><pre class="source ocaml"><code><span class="line">type graph = { labels : string; adj : (int * int) array array }</span>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">graph</span> = { <span class="hl-id">labels</span> : <span class="hl-id">string</span>; <span class="hl-id">adj</span> : (<span class="hl-id">int</span> * <span class="hl-id">int</span>) <span class="hl-id">array</span> <span class="hl-id">array</span> }</span>
 <span class="line"></span>
-<span class="line">let k_up, k_down, k_left, k_right, k_act, dir_count = 0, 1, 2, 3, 4, 5</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-var">k_up</span>, <span class="hl-var">k_down</span>, <span class="hl-var">k_left</span>, <span class="hl-var">k_right</span>, <span class="hl-var">k_act</span>, <span class="hl-var">dir_count</span> = 0, 1, 2, 3, 4, 5</span>
 <span class="line"></span>
-<span class="line">(* 7 8 9</span>
-<span class="line">   4 5 6</span>
-<span class="line">   1 2 3</span>
-<span class="line">   0 A</span>
-<span class="line"> *)</span>
-<span class="line">let numpad =</span>
-<span class="line">  { labels = &quot;0123456789A&quot;;</span>
-<span class="line">    adj = [|</span>
-<span class="line">            (* 0: *) [| (2, k_up); (10, k_right) |];</span>
-<span class="line">            (* 1: *) [| (4, k_up); ( 2, k_right) |];</span>
-<span class="line">            (* 2: *) [| (5, k_up); ( 3, k_right); ( 0, k_down); (1, k_left) |];</span>
-<span class="line">            (* 3: *) [| (6, k_up);                (10, k_down); (2, k_left) |];</span>
-<span class="line">            (* 4: *) [| (7, k_up); ( 5, k_right); ( 1, k_down); |];</span>
-<span class="line">            (* 5: *) [| (8, k_up); ( 6, k_right); ( 2, k_down); (4, k_left) |];</span>
-<span class="line">            (* 6: *) [| (9, k_up);                ( 3, k_down); (5, k_left) |];</span>
-<span class="line">            (* 7: *) [|            ( 8, k_right); ( 4, k_down) |];</span>
-<span class="line">            (* 8: *) [|            ( 9, k_right); ( 5, k_down); (7, k_left) |];</span>
-<span class="line">            (* 9: *) [|                           ( 6, k_down); (8, k_left) |];</span>
-<span class="line">            (* A: *) [| (3, k_up);                              (0, k_left) |];</span>
+<span class="line"><span class="hl-comment">(* 7 8 9</span></span>
+<span class="line"><span class="hl-comment">   4 5 6</span></span>
+<span class="line"><span class="hl-comment">   1 2 3</span></span>
+<span class="line"><span class="hl-comment">   0 A</span></span>
+<span class="line"><span class="hl-comment"> *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-var">numpad</span> =</span>
+<span class="line">  { <span class="hl-id">labels</span> = <span class="hl-str">&quot;0123456789A&quot;</span>;</span>
+<span class="line">    <span class="hl-id">adj</span> = [|</span>
+<span class="line">            <span class="hl-comment">(* 0: *)</span> [| (2, <span class="hl-id">k_up</span>); (10, <span class="hl-id">k_right</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* 1: *)</span> [| (4, <span class="hl-id">k_up</span>); ( 2, <span class="hl-id">k_right</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* 2: *)</span> [| (5, <span class="hl-id">k_up</span>); ( 3, <span class="hl-id">k_right</span>); ( 0, <span class="hl-id">k_down</span>); (1, <span class="hl-id">k_left</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* 3: *)</span> [| (6, <span class="hl-id">k_up</span>);                (10, <span class="hl-id">k_down</span>); (2, <span class="hl-id">k_left</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* 4: *)</span> [| (7, <span class="hl-id">k_up</span>); ( 5, <span class="hl-id">k_right</span>); ( 1, <span class="hl-id">k_down</span>); |];</span>
+<span class="line">            <span class="hl-comment">(* 5: *)</span> [| (8, <span class="hl-id">k_up</span>); ( 6, <span class="hl-id">k_right</span>); ( 2, <span class="hl-id">k_down</span>); (4, <span class="hl-id">k_left</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* 6: *)</span> [| (9, <span class="hl-id">k_up</span>);                ( 3, <span class="hl-id">k_down</span>); (5, <span class="hl-id">k_left</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* 7: *)</span> [|            ( 8, <span class="hl-id">k_right</span>); ( 4, <span class="hl-id">k_down</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* 8: *)</span> [|            ( 9, <span class="hl-id">k_right</span>); ( 5, <span class="hl-id">k_down</span>); (7, <span class="hl-id">k_left</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* 9: *)</span> [|                           ( 6, <span class="hl-id">k_down</span>); (8, <span class="hl-id">k_left</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* A: *)</span> [| (3, <span class="hl-id">k_up</span>);                              (0, <span class="hl-id">k_left</span>) |];</span>
 <span class="line">          |]</span>
 <span class="line">  }</span>
-<span class="line">(*   ^ A</span>
-<span class="line">     &lt; v &gt;</span>
-<span class="line"> *)</span>
-<span class="line">let dirpad =</span>
-<span class="line">  { labels = &quot;^v&lt;&gt;A&quot;;</span>
-<span class="line">    adj = [|</span>
-<span class="line">            (* ^: *) [| (k_act, k_right); (k_down, k_down) |];</span>
-<span class="line">            (* v: *) [| (k_up, k_up); (k_left, k_left); (k_right, k_right); |];</span>
-<span class="line">            (* &lt;: *) [| (k_down, k_right) |];</span>
-<span class="line">            (* &gt;: *) [| (k_down, k_left); (k_act, k_up) |];</span>
-<span class="line">            (* A: *) [| (k_up, k_left); (k_right, k_down) |];</span>
+<span class="line"><span class="hl-comment">(*   ^ A</span></span>
+<span class="line"><span class="hl-comment">     &lt; v &gt;</span></span>
+<span class="line"><span class="hl-comment"> *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-var">dirpad</span> =</span>
+<span class="line">  { <span class="hl-id">labels</span> = <span class="hl-str">&quot;^v&lt;&gt;A&quot;</span>;</span>
+<span class="line">    <span class="hl-id">adj</span> = [|</span>
+<span class="line">            <span class="hl-comment">(* ^: *)</span> [| (<span class="hl-id">k_act</span>, <span class="hl-id">k_right</span>); (<span class="hl-id">k_down</span>, <span class="hl-id">k_down</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* v: *)</span> [| (<span class="hl-id">k_up</span>, <span class="hl-id">k_up</span>); (<span class="hl-id">k_left</span>, <span class="hl-id">k_left</span>); (<span class="hl-id">k_right</span>, <span class="hl-id">k_right</span>); |];</span>
+<span class="line">            <span class="hl-comment">(* &lt;: *)</span> [| (<span class="hl-id">k_down</span>, <span class="hl-id">k_right</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* &gt;: *)</span> [| (<span class="hl-id">k_down</span>, <span class="hl-id">k_left</span>); (<span class="hl-id">k_act</span>, <span class="hl-id">k_up</span>) |];</span>
+<span class="line">            <span class="hl-comment">(* A: *)</span> [| (<span class="hl-id">k_up</span>, <span class="hl-id">k_left</span>); (<span class="hl-id">k_right</span>, <span class="hl-id">k_down</span>) |];</span>
 <span class="line">          |]</span>
 <span class="line">  }</span>
 </code></pre></div>
@@ -285,76 +285,76 @@ The <code>graph</code> argument describes the next keypad in the chain; the <cod
 <figure><label class="margin-toggle" for="mn-all-paths">⊕</label><input type="checkbox" id="mn-all-paths" class="margin-toggle"><span class="marginnote">
     Computing shortest paths on a keypad using the Floyd-Warshall algorithm.
     Six nested loops look intimidating, but it’s the price we pay for two-dimensional vertices.
-  </span><div class="source-container"><pre class="source ocaml"><code><span class="line">let all_paths graph move_cost =</span>
-<span class="line">  let n = Array.length graph.adj in</span>
-<span class="line">  let d4 = Array.init_matrix n dir_count (fun _ _ -&gt;</span>
-<span class="line">               Array.make_matrix n dir_count max_int</span>
-<span class="line">             ) in</span>
-<span class="line">  for i = 0 to n-1 do</span>
-<span class="line">    for s = 0 to dir_count-1 do</span>
-<span class="line">      for e = 0 to dir_count-1 do</span>
-<span class="line">        d4.(i).(s).(i).(e) &lt;- move_cost.(s).(e)</span>
-<span class="line">      done</span>
-<span class="line">    done</span>
-<span class="line">  done;</span>
-<span class="line">  Array.iteri (fun u adj -&gt;</span>
-<span class="line">      Array.iter (fun (v, move) -&gt;</span>
-<span class="line">          for d = 0 to dir_count-1 do</span>
-<span class="line">            d4.(u).(d).(v).(move) &lt;- min d4.(u).(d).(v).(move)</span>
-<span class="line">                                         (move_cost.(d).(move) + 1);</span>
-<span class="line">          done</span>
-<span class="line">        ) adj</span>
-<span class="line">    ) graph.adj;</span>
+  </span><div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-defun">all_paths</span> <span class="hl-id">graph</span> <span class="hl-id">move_cost</span> =</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">n</span> = <span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">graph</span>.<span class="hl-id">adj</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">d4</span> = <span class="hl-id">Array</span>.<span class="hl-id">init_matrix</span> <span class="hl-id">n</span> <span class="hl-id">dir_count</span> (<span class="hl-kw">fun</span> <span class="hl-id">_</span> <span class="hl-id">_</span> -&gt;</span>
+<span class="line">               <span class="hl-id">Array</span>.<span class="hl-id">make_matrix</span> <span class="hl-id">n</span> <span class="hl-id">dir_count</span> <span class="hl-id">max_int</span></span>
+<span class="line">             ) <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">for</span> <span class="hl-id">i</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">n</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">s</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">dir_count</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">      <span class="hl-kw">for</span> <span class="hl-id">e</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">dir_count</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">        <span class="hl-id">d4</span>.(<span class="hl-id">i</span>).(<span class="hl-id">s</span>).(<span class="hl-id">i</span>).(<span class="hl-id">e</span>) &lt;- <span class="hl-id">move_cost</span>.(<span class="hl-id">s</span>).(<span class="hl-id">e</span>)</span>
+<span class="line">      <span class="hl-kw">done</span></span>
+<span class="line">    <span class="hl-kw">done</span></span>
+<span class="line">  <span class="hl-kw">done</span>;</span>
+<span class="line">  <span class="hl-id">Array</span>.<span class="hl-id">iteri</span> (<span class="hl-kw">fun</span> <span class="hl-id">u</span> <span class="hl-id">adj</span> -&gt;</span>
+<span class="line">      <span class="hl-id">Array</span>.<span class="hl-id">iter</span> (<span class="hl-kw">fun</span> (<span class="hl-id">v</span>, <span class="hl-id">move</span>) -&gt;</span>
+<span class="line">          <span class="hl-kw">for</span> <span class="hl-id">d</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">dir_count</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">            <span class="hl-id">d4</span>.(<span class="hl-id">u</span>).(<span class="hl-id">d</span>).(<span class="hl-id">v</span>).(<span class="hl-id">move</span>) &lt;- <span class="hl-id">min</span> <span class="hl-id">d4</span>.(<span class="hl-id">u</span>).(<span class="hl-id">d</span>).(<span class="hl-id">v</span>).(<span class="hl-id">move</span>)</span>
+<span class="line">                                         (<span class="hl-id">move_cost</span>.(<span class="hl-id">d</span>).(<span class="hl-id">move</span>) + 1);</span>
+<span class="line">          <span class="hl-kw">done</span></span>
+<span class="line">        ) <span class="hl-id">adj</span></span>
+<span class="line">    ) <span class="hl-id">graph</span>.<span class="hl-id">adj</span>;</span>
 <span class="line"></span>
-<span class="line">  for k = 0 to n-1 do</span>
-<span class="line">    for mk = 0 to dir_count-1 do</span>
-<span class="line">      for u = 0 to n-1 do</span>
-<span class="line">        for mu = 0 to dir_count-1 do</span>
-<span class="line">          for v = 0 to n-1 do</span>
-<span class="line">            for mv = 0 to dir_count-1 do</span>
-<span class="line">              if d4.(u).(mu).(k).(mk) != max_int &amp;&amp;</span>
-<span class="line">                 d4.(k).(mk).(v).(mv) != max_int then</span>
-<span class="line">                d4.(u).(mu).(v).(mv) &lt;-</span>
-<span class="line">                  min d4.(u).(mu).(v).(mv)</span>
-<span class="line">                      (d4.(u).(mu).(k).(mk) + d4.(k).(mk).(v).(mv));</span>
-<span class="line">            done</span>
-<span class="line">          done</span>
-<span class="line">        done</span>
-<span class="line">      done</span>
-<span class="line">    done</span>
-<span class="line">  done;</span>
-<span class="line">  Array.init_matrix n n (fun i j -&gt; d4.(i).(k_act).(j).(k_act))</span>
+<span class="line">  <span class="hl-kw">for</span> <span class="hl-id">k</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">n</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">mk</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">dir_count</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">      <span class="hl-kw">for</span> <span class="hl-id">u</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">n</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">        <span class="hl-kw">for</span> <span class="hl-id">mu</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">dir_count</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">          <span class="hl-kw">for</span> <span class="hl-id">v</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">n</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">            <span class="hl-kw">for</span> <span class="hl-id">mv</span> = 0 <span class="hl-kw">to</span> <span class="hl-id">dir_count</span>-1 <span class="hl-kw">do</span></span>
+<span class="line">              <span class="hl-kw">if</span> <span class="hl-id">d4</span>.(<span class="hl-id">u</span>).(<span class="hl-id">mu</span>).(<span class="hl-id">k</span>).(<span class="hl-id">mk</span>) != <span class="hl-id">max_int</span> &amp;&amp;</span>
+<span class="line">                 <span class="hl-id">d4</span>.(<span class="hl-id">k</span>).(<span class="hl-id">mk</span>).(<span class="hl-id">v</span>).(<span class="hl-id">mv</span>) != <span class="hl-id">max_int</span> <span class="hl-kw">then</span></span>
+<span class="line">                <span class="hl-id">d4</span>.(<span class="hl-id">u</span>).(<span class="hl-id">mu</span>).(<span class="hl-id">v</span>).(<span class="hl-id">mv</span>) &lt;-</span>
+<span class="line">                  <span class="hl-id">min</span> <span class="hl-id">d4</span>.(<span class="hl-id">u</span>).(<span class="hl-id">mu</span>).(<span class="hl-id">v</span>).(<span class="hl-id">mv</span>)</span>
+<span class="line">                      (<span class="hl-id">d4</span>.(<span class="hl-id">u</span>).(<span class="hl-id">mu</span>).(<span class="hl-id">k</span>).(<span class="hl-id">mk</span>) + <span class="hl-id">d4</span>.(<span class="hl-id">k</span>).(<span class="hl-id">mk</span>).(<span class="hl-id">v</span>).(<span class="hl-id">mv</span>));</span>
+<span class="line">            <span class="hl-kw">done</span></span>
+<span class="line">          <span class="hl-kw">done</span></span>
+<span class="line">        <span class="hl-kw">done</span></span>
+<span class="line">      <span class="hl-kw">done</span></span>
+<span class="line">    <span class="hl-kw">done</span></span>
+<span class="line">  <span class="hl-kw">done</span>;</span>
+<span class="line">  <span class="hl-id">Array</span>.<span class="hl-id">init_matrix</span> <span class="hl-id">n</span> <span class="hl-id">n</span> (<span class="hl-kw">fun</span> <span class="hl-id">i</span> <span class="hl-id">j</span> -&gt; <span class="hl-id">d4</span>.(<span class="hl-id">i</span>).(<span class="hl-id">k_act</span>).(<span class="hl-id">j</span>).(<span class="hl-id">k_act</span>))</span>
 </code></pre></div>
 </figure>
 <p>Calling <code>all_paths</code> in a loop allows us to compute the cost tables for an arbitrary level of indirection.
 The <code>costs0</code> variable defines metrics for the human-controlled keypad that bootstraps the computation chain:
 All the distances are zero because moving the finger doesn’t require any keypresses.</p>
-<div class="source-container"><pre class="source ocaml"><code><span class="line">let code_cost costs code =</span>
-<span class="line">  String.fold_left (fun (p, acc) c -&gt;</span>
-<span class="line">      let next = String.index numpad.labels c in</span>
-<span class="line">      (next, acc + costs.(p).(next) + 1)</span>
-<span class="line">    ) (10, 0) code |&gt; snd</span>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-defun">code_cost</span> <span class="hl-id">costs</span> <span class="hl-id">code</span> =</span>
+<span class="line">  <span class="hl-id">String</span>.<span class="hl-id">fold_left</span> (<span class="hl-kw">fun</span> (<span class="hl-id">p</span>, <span class="hl-id">acc</span>) <span class="hl-id">c</span> -&gt;</span>
+<span class="line">      <span class="hl-kw">let</span> <span class="hl-var">next</span> = <span class="hl-id">String</span>.<span class="hl-id">index</span> <span class="hl-id">numpad</span>.<span class="hl-id">labels</span> <span class="hl-id">c</span> <span class="hl-kw">in</span></span>
+<span class="line">      (<span class="hl-id">next</span>, <span class="hl-id">acc</span> + <span class="hl-id">costs</span>.(<span class="hl-id">p</span>).(<span class="hl-id">next</span>) + 1)</span>
+<span class="line">    ) (10, 0) <span class="hl-id">code</span> |&gt; <span class="hl-id">snd</span></span>
 <span class="line"></span>
-<span class="line">let complexity costs codes =</span>
-<span class="line">  Array.map (fun code -&gt;</span>
-<span class="line">      code_cost costs code * int_of_string (String.sub code 0 3)</span>
-<span class="line">    ) codes</span>
-<span class="line">  |&gt; Array.fold_left (+) 0</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">complexity</span> <span class="hl-id">costs</span> <span class="hl-id">codes</span> =</span>
+<span class="line">  <span class="hl-id">Array</span>.<span class="hl-id">map</span> (<span class="hl-kw">fun</span> <span class="hl-id">code</span> -&gt;</span>
+<span class="line">      <span class="hl-id">code_cost</span> <span class="hl-id">costs</span> <span class="hl-id">code</span> * <span class="hl-id">int_of_string</span> (<span class="hl-id">String</span>.<span class="hl-id">sub</span> <span class="hl-id">code</span> 0 3)</span>
+<span class="line">    ) <span class="hl-id">codes</span></span>
+<span class="line">  |&gt; <span class="hl-id">Array</span>.<span class="hl-id">fold_left</span> (+) 0</span>
 <span class="line"></span>
-<span class="line">let () =</span>
-<span class="line">  let codes = Arg.read_arg &quot;21-input.txt&quot; in</span>
-<span class="line">  let power f n x = let out = ref x in for i = 1 to n do out := f !out; done; !out in</span>
-<span class="line">  let costs0 = Array.make_matrix dir_count dir_count 0 in</span>
+<span class="line"><span class="hl-kw">let</span> () =</span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">codes</span> = <span class="hl-id">Arg</span>.<span class="hl-id">read_arg</span> <span class="hl-str">&quot;21-input.txt&quot;</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-defun">power</span> <span class="hl-id">f</span> <span class="hl-id">n</span> <span class="hl-id">x</span> = <span class="hl-kw">let</span> <span class="hl-var">out</span> = <span class="hl-id">ref</span> <span class="hl-id">x</span> <span class="hl-kw">in</span> <span class="hl-kw">for</span> <span class="hl-id">i</span> = 1 <span class="hl-kw">to</span> <span class="hl-id">n</span> <span class="hl-kw">do</span> <span class="hl-id">out</span> := <span class="hl-id">f</span> !<span class="hl-id">out</span>; <span class="hl-kw">done</span>; !<span class="hl-id">out</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">costs0</span> = <span class="hl-id">Array</span>.<span class="hl-id">make_matrix</span> <span class="hl-id">dir_count</span> <span class="hl-id">dir_count</span> 0 <span class="hl-kw">in</span></span>
 <span class="line"></span>
-<span class="line">  (* part 1 *)</span>
-<span class="line">  let costs2 = power (all_paths dirpad) 2 costs0 in</span>
-<span class="line">  let costs3 = all_paths numpad costs2 in</span>
-<span class="line">  complexity costs3 codes |&gt; Printf.printf &quot;%d\n&quot;;</span>
+<span class="line">  <span class="hl-comment">(* part 1 *)</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">costs2</span> = <span class="hl-id">power</span> (<span class="hl-id">all_paths</span> <span class="hl-id">dirpad</span>) 2 <span class="hl-id">costs0</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">costs3</span> = <span class="hl-id">all_paths</span> <span class="hl-id">numpad</span> <span class="hl-id">costs2</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-id">complexity</span> <span class="hl-id">costs3</span> <span class="hl-id">codes</span> |&gt; <span class="hl-id">Printf</span>.<span class="hl-id">printf</span> <span class="hl-str">&quot;%d\n&quot;</span>;</span>
 <span class="line"></span>
-<span class="line">  (* part 2 *)</span>
-<span class="line">  let costs25 = power (all_paths dirpad) 25 costs0 in</span>
-<span class="line">  let final_cost = all_paths numpad costs25 in</span>
-<span class="line">  complexity final_cost codes |&gt; Printf.printf &quot;%d\n&quot;;</span>
+<span class="line">  <span class="hl-comment">(* part 2 *)</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">costs25</span> = <span class="hl-id">power</span> (<span class="hl-id">all_paths</span> <span class="hl-id">dirpad</span>) 25 <span class="hl-id">costs0</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">final_cost</span> = <span class="hl-id">all_paths</span> <span class="hl-id">numpad</span> <span class="hl-id">costs25</span> <span class="hl-kw">in</span></span>
+<span class="line">  <span class="hl-id">complexity</span> <span class="hl-id">final_cost</span> <span class="hl-id">codes</span> |&gt; <span class="hl-id">Printf</span>.<span class="hl-id">printf</span> <span class="hl-str">&quot;%d\n&quot;</span>;</span>
 </code></pre></div>
 </section>
 <section><h2 id="ocaml-retro"><a href="#ocaml-retro">OCaml retrospective</a></h2>

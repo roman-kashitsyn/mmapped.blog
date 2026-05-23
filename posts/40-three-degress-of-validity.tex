@@ -80,7 +80,7 @@ http_port = 8080
 
 TOML’s top-level data structure is a hash table, so the parsing stage outputs a table with two entries.
 
-\begin{code}
+\begin{code}[rust]
 Table({
   "db_url": String("postgres://user:password@host:5432/dbname"),
   "http_port": Integer(8080),
@@ -90,7 +90,7 @@ Table({
 The TOML parser doesn't understand the field semantics.
 It would just as happily decode a configuration with the field values swapped.
 
-\begin{code}
+\begin{code}[rust]
 Table({
   "db_url": Integer(8080),
   "http_port": String("postgres://user:password@host:5432/dbname")

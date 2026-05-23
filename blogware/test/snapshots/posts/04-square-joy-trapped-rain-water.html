@@ -488,21 +488,21 @@ Dijkstra gives rise to a very efficient <q>two-pointer</q> solution:</p>
 </li></ul>
 <p>That is precisely how a Dijkstra graph search would propagate, always picking the shortest edge to proceed.
 This solution does not map naturally to array languages, so I implemented it below in C.</p>
-<figure><label class="margin-toggle" for="mn-c-dijkstra">⊕</label><input type="checkbox" id="mn-c-dijkstra" class="margin-toggle"><span class="marginnote">The equivalent of the Dijkstra algorithm in the two-dimensional case.</span><div class="source-container"><pre class="source c"><code><span class="line">static inline int int_min(int l, int r) { return l &lt; r ? l : r; }</span>
+<figure><label class="margin-toggle" for="mn-c-dijkstra">⊕</label><input type="checkbox" id="mn-c-dijkstra" class="margin-toggle"><span class="marginnote">The equivalent of the Dijkstra algorithm in the two-dimensional case.</span><div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-kw">static</span> <span class="hl-kw">inline</span> <span class="hl-kw">int</span> <span class="hl-defun">int_min</span>(<span class="hl-kw">int</span> <span class="hl-var">l</span>, <span class="hl-kw">int</span> <span class="hl-var">r</span>) { <span class="hl-kw">return</span> <span class="hl-id">l</span> &lt; <span class="hl-id">r</span> ? <span class="hl-id">l</span> : <span class="hl-id">r</span>; }</span>
 <span class="line"></span>
-<span class="line">long trapped_water(int H[], int N) {</span>
-<span class="line">  if (N == 0) return 0;</span>
+<span class="line"><span class="hl-kw">long</span> <span class="hl-defun">trapped_water</span>(<span class="hl-kw">int</span> <span class="hl-var">H</span>[], <span class="hl-kw">int</span> <span class="hl-var">N</span>) {</span>
+<span class="line">  <span class="hl-kw">if</span> (<span class="hl-id">N</span> == 0) <span class="hl-kw">return</span> 0;</span>
 <span class="line"></span>
-<span class="line">  long S = 0;</span>
-<span class="line">  for (int L = 0, R = N-1, LowBound = int_min(H[L], H[R]); L &lt; R;) {</span>
-<span class="line">    int M = int_min(H[L], H[R]);</span>
+<span class="line">  <span class="hl-kw">long</span> <span class="hl-id">S</span> = 0;</span>
+<span class="line">  <span class="hl-kw">for</span> (<span class="hl-kw">int</span> <span class="hl-id">L</span> = 0, <span class="hl-id">R</span> = <span class="hl-id">N</span>-1, <span class="hl-id">LowBound</span> = <span class="hl-id">int_min</span>(<span class="hl-id">H</span>[<span class="hl-id">L</span>], <span class="hl-id">H</span>[<span class="hl-id">R</span>]); <span class="hl-id">L</span> &lt; <span class="hl-id">R</span>;) {</span>
+<span class="line">    <span class="hl-kw">int</span> <span class="hl-id">M</span> = <span class="hl-id">int_min</span>(<span class="hl-id">H</span>[<span class="hl-id">L</span>], <span class="hl-id">H</span>[<span class="hl-id">R</span>]);</span>
 <span class="line"></span>
-<span class="line">    if (M &lt; LowBound) S += LowBound - M;</span>
-<span class="line">    else LowBound = M;</span>
+<span class="line">    <span class="hl-kw">if</span> (<span class="hl-id">M</span> &lt; <span class="hl-id">LowBound</span>) <span class="hl-id">S</span> += <span class="hl-id">LowBound</span> - <span class="hl-id">M</span>;</span>
+<span class="line">    <span class="hl-kw">else</span> <span class="hl-id">LowBound</span> = <span class="hl-id">M</span>;</span>
 <span class="line"></span>
-<span class="line">    if (H[L] &lt; H[R]) L++; else R--;</span>
+<span class="line">    <span class="hl-kw">if</span> (<span class="hl-id">H</span>[<span class="hl-id">L</span>] &lt; <span class="hl-id">H</span>[<span class="hl-id">R</span>]) <span class="hl-id">L</span>++; <span class="hl-kw">else</span> <span class="hl-id">R</span>--;</span>
 <span class="line">  }</span>
-<span class="line">  return S;</span>
+<span class="line">  <span class="hl-kw">return</span> <span class="hl-id">S</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
