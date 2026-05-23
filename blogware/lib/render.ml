@@ -114,8 +114,12 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Horizontal_rule -> hr_ []
   | Circled_ref n ->
       span_
-        [ class_ (txt "circled-ref"); attr "data-num-glyph" (round_num_glyph n);
-          attr "aria-label" (txt (Printf.sprintf "step %d" n)); attr "role" (txt "img") ]
+        [
+          class_ (txt "circled-ref");
+          attr "data-num-glyph" (round_num_glyph n);
+          attr "aria-label" (txt (Printf.sprintf "step %d" n));
+          attr "role" (txt "img");
+        ]
         empty
   | Line_break -> br_ []
   | Numeric_space -> raw (txt "&numsp;")
@@ -158,12 +162,6 @@ let render_code_content (ctx : ctx) (ils : inline list) : Html.t =
        (fun line ->
          span_ [ class_ (txt "line") ] (raw (txt line)) ++ raw (txt "\n"))
        kept)
-
-let has_go_class classes =
-  List.exists (fun c -> Text.equal_string c "go") classes
-
-let highlight_code_content classes content =
-  if has_go_class classes then Syntax_go.highlight content else content
 
 (* --- Table rendering --- *)
 
@@ -254,7 +252,7 @@ and render_block ?(wrap_images = true) (ctx : ctx) (b : block) : Html.t =
       in
       parent "h3" attrs link ++ nl ++ render_blocks ctx body
   | Code_block (classes, content) ->
-      let content = highlight_code_content classes content in
+      let content = Highlight.highlight ~classes ~content in
       let cls = join_classes classes in
       let pre_cls =
         if Text.is_empty cls then txt "source"

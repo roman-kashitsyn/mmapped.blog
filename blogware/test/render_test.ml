@@ -118,12 +118,35 @@ let tests : Test_framework.t list =
          </code></pre></div>\n"
         (Render.render_block Render.empty_ctx
            (Code_block ([ txt "go" ], [ s "type Server struct{}" ])));
-      t "non-go code block remains unchanged"
+      t "unregistered code block remains unchanged"
         "<div class=\"source-container\"><pre class=\"source \
-         rust\"><code><span class=\"line\">fn main() {}</span>\n\
+         python\"><code><span class=\"line\">fn main() {}</span>\n\
+         </code></pre></div>\n"
+        (Render.render_block Render.empty_ctx
+           (Code_block ([ txt "python" ], [ s "fn main() {}" ])));
+      t "rust code block emits syntax spans"
+        "<div class=\"source-container\"><pre class=\"source \
+         rust\"><code><span class=\"line\"><span class=\"hl-kw\">fn</span> \
+         <span class=\"hl-defun\">main</span>() {}</span>\n\
          </code></pre></div>\n"
         (Render.render_block Render.empty_ctx
            (Code_block ([ txt "rust" ], [ s "fn main() {}" ])));
+      t "c code block emits syntax spans"
+        "<div class=\"source-container\"><pre class=\"source c\"><code><span \
+         class=\"line\"><span class=\"hl-kw\">int</span> <span \
+         class=\"hl-defun\">main</span>() {}</span>\n\
+         </code></pre></div>\n"
+        (Render.render_block Render.empty_ctx
+           (Code_block ([ txt "c" ], [ s "int main() {}" ])));
+      t "ocaml code block emits syntax spans"
+        "<div class=\"source-container\"><pre class=\"source \
+         ocaml\"><code><span class=\"line\"><span class=\"hl-kw\">let</span> \
+         <span class=\"hl-defun\">add</span> <span class=\"hl-id\">x</span> \
+         <span class=\"hl-id\">y</span> = <span class=\"hl-id\">x</span> + \
+         <span class=\"hl-id\">y</span></span>\n\
+         </code></pre></div>\n"
+        (Render.render_block Render.empty_ctx
+           (Code_block ([ txt "ocaml" ], [ s "let add x y = x + y" ])));
       t "go code block preserves embedded inlines"
         "<div class=\"source-container\"><pre class=\"source go\"><code><span \
          class=\"line\"><span class=\"hl-kw\">func</span> <span \

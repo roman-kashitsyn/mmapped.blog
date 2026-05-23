@@ -85,18 +85,18 @@ The core abstraction of the library is the \href{https://docs.rs/ic-stable-struc
 }.
 
 \begin{code}[rust]
-pub trait \b{Memory} {
-    \emph{/// Equivalent to WebAssembly memory.size.}
-    fn \b{size}(&self) -> u64;
+pub trait Memory {
+    /// Equivalent to WebAssembly memory.size.
+    fn size(&self) -> u64;
 
-    \emph{/// Equivalent to WebAssembly memory.grow.}
-    fn \b{grow}(&self, pages: u64) -> i64;
+    /// Equivalent to WebAssembly memory.grow.
+    fn grow(&self, pages: u64) -> i64;
 
-    \emph{/// Copies bytes from this memory to the heap (in Wasm, memory 0).}
-    fn \b{read}(&self, offset: u64, dst: &mut [u8]);
+    /// Copies bytes from this memory to the heap (in Wasm, memory 0).
+    fn read(&self, offset: u64, dst: &mut [u8]);
 
-    \emph{/// Writes bytes from the heap (in Wasm, memory 0) to this memory.}
-    fn \b{write}(&self, offset: u64, src: &[u8]);
+    /// Writes bytes from the heap (in Wasm, memory 0) to this memory.
+    fn write(&self, offset: u64, src: &[u8]);
 }
 \end{code}
 
@@ -160,14 +160,14 @@ The \code{Storable} trait abstracts data structures over your choice of serializ
   The \code{Storable} trait abstracts data structures over your choice of serialization format.
 }
 \begin{code}[rust]
-pub trait \b{Storable} {\label{storable-trait}
-    \emph{/// Serializes a value of a storable type into bytes.}
-    fn \b{to_bytes}(&self) -> Cow<'_, [u8]>;
+pub trait Storable {\label{storable-trait}
+    /// Serializes a value of a storable type into bytes.
+    fn to_bytes(&self) -> Cow<'_, [u8]>;
 
-    \emph{/// Deserializes a value of a storable type from a byte array.}
-    \emph{///}
-    \emph{/// \b{REQUIREMENT}: Self::from_bytes(self.to_bytes().to_vec()) == self}
-    fn \b{from_bytes}(bytes: Cow<[u8]>) -> Self;
+    /// Deserializes a value of a storable type from a byte array.
+    ///
+    /// \b{REQUIREMENT}: Self::from_bytes(self.to_bytes().to_vec()) == self
+    fn from_bytes(bytes: Cow<[u8]>) -> Self;
 }
 \end{code}
 \end{figure}
@@ -181,17 +181,17 @@ Such types rely on an extension of this trait, providing this necessary metadata
   Some data structures require their values to implement \code{BoundedStorable} trait to know how much space they need to allocate for each item.
 }
 \begin{code}[rust]
-pub trait \label{bounded-storable-trait}\b{BoundedStorable}: \href{#storable-trait}{\code{\b{Storable}}} {
-    \emph{/// The maximum slice length that \b{to_bytes} can return.}
-    \emph{///}
-    \emph{/// \b{REQUIREMENT}: self.to_bytes().len() ≤ Self::MAX_SIZE as usize}
-    const \b{MAX_SIZE}: u32;\label{max-size-attribute}
+pub trait BoundedStorable: \href{#storable-trait}{\code{\b{Storable}}} {\label{bounded-storable-trait}
+    /// The maximum slice length that \b{to_bytes} can return.
+    ///
+    /// \b{REQUIREMENT}: self.to_bytes().len() ≤ Self::MAX_SIZE as usize
+    const MAX_SIZE: u32;\label{max-size-attribute}
 
-    \emph{/// Whether all values of this type have the same length (equal to Self::MAX_SIZE)}
-    \emph{/// when serialized. If you are unsure about this flag, set it to \b{false}.}
-    \emph{///}
-    \emph{/// \b{REQUIREMENT}: Self::IS_FIXED_SIZE ⇒ self.to_bytes().len() == Self::MAX_SIZE as usize}
-    const \b{IS_FIXED_SIZE}: bool;\label{is-fixed-size-attribute}
+    /// Whether all values of this type have the same length (equal to Self::MAX_SIZE)
+    /// when serialized. If you are unsure about this flag, set it to \b{false}.
+    ///
+    /// \b{REQUIREMENT}: Self::IS_FIXED_SIZE ⇒ self.to_bytes().len() == Self::MAX_SIZE as usize
+    const IS_FIXED_SIZE: bool;\label{is-fixed-size-attribute}
 }
 \end{code}
 \end{figure}
@@ -249,14 +249,14 @@ Cell's contents in stable memory updates every time you change the underlying va
   The core interface of the \code{Cell} stable structure.
 }
 \begin{code}[rust]
-impl<T: \href{#storable-trait}{\code{Storable}}, M: \href{#memory}{\code{Memory}}> struct \b{Cell}<T, M> {
-    \emph{/// Returns the current cell value.}
-    \emph{/// Complexity: O(1).}
-    pub fn \b{get}(&self) -> Option<&T>;
+impl<T: \href{#storable-trait}{\code{Storable}}, M: \href{#memory}{\code{Memory}}> struct Cell<T, M> {
+    /// Returns the current cell value.
+    /// Complexity: O(1).
+    pub fn get(&self) -> Option<&T>;
 
-    \emph{/// Updates the cell value.}
-    \emph{/// Complexity: O(value size).}
-    pub fn \b{set}(&mut self, value: T) -> Result<T, ValueError>;
+    /// Updates the cell value.
+    /// Complexity: O(value size).
+    pub fn set(&mut self, value: T) -> Result<T, ValueError>;
 }
 \end{code}
 \end{figure}
@@ -270,7 +270,7 @@ impl<T: \href{#storable-trait}{\code{Storable}}, M: \href{#memory}{\code{Memory}
 
 The primary use case for cells is storing canister configuration:
 \begin{itemize}
-  \item The ICRC-1 Ledger Archive canister persists its initialization arguments in a \href{https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L49}{cell}.
+  \item The \textsc{icrc-1} Ledger Archive canister persists its initialization arguments in a \href{https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L49}{cell}.
   \item The Internet Identity Archive canister holds its init arguments in a \href{https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L85}{cell}.
 \end{itemize}
 
@@ -289,26 +289,26 @@ This reduction is primarily helpful for vectors of primitives (e.g., \code{Stabl
   The core interface of the \code{Vec} stable structure.
 }
 \begin{code}[rust]
-impl<T: \href{#storable-types}{\code{BoundedStorable}}, Data: \href{#memory}{\code{Memory}}> struct \b{Vec}<T, Memory> {
-    \emph{/// Adds a new item at the vector's back.}
-    \emph{/// Complexity: O(T::MAX_SIZE).}
-    pub fn \b{push}(&self, item: &T) -> Result<usize, GrowFailed>;
+impl<T: \href{#storable-types}{\code{BoundedStorable}}, Data: \href{#memory}{\code{Memory}}> struct Vec<T, Memory> {
+    /// Adds a new item at the vector's back.
+    /// Complexity: O(T::MAX_SIZE).
+    pub fn push(&self, item: &T) -> Result<usize, GrowFailed>;
 
-    \emph{/// Removes an item from the vector's back.}
-    \emph{/// Complexity: O(T::MAX_SIZE).}
-    pub fn \b{pop}(&self) -> Option<T>;
+    /// Removes an item from the vector's back.
+    /// Complexity: O(T::MAX_SIZE).
+    pub fn pop(&self) -> Option<T>;
 
-    \emph{/// Returns the item at the specified index.}
-    \emph{/// Complexity: O(T::MAX_SIZE).}
-    pub fn \b{get}(&self, index: usize) -> Option<T>;
+    /// Returns the item at the specified index.
+    /// Complexity: O(T::MAX_SIZE).
+    pub fn get(&self, index: usize) -> Option<T>;
 
-    \emph{/// Updates the item at the specified index.}
-    \emph{/// Complexity: O(T::MAX_SIZE).}
-    pub fn \b{set}(&self, index: usize, item: &T);
+    /// Updates the item at the specified index.
+    /// Complexity: O(T::MAX_SIZE).
+    pub fn set(&self, index: usize, item: &T);
 
-    \emph{/// Returns the number of items in the vector.}
-    \emph{/// Complexity: O(1).}
-    pub fn \b{len}() -> usize;
+    /// Returns the number of items in the vector.
+    /// Complexity: O(1).
+    pub fn len() -> usize;
 }
 \end{code}
 \end{figure}
@@ -337,23 +337,23 @@ The number of instructions needed to access old and append new entries does not 
   The core interface of the \code{Log} stable structure.
 }
 \begin{code}[rust]
-impl<T, Index, Data> struct \b{Log}<T, Index, Data>
+impl<T, Index, Data> struct Log<T, Index, Data>
 where
   T: \href{#storable-trait}{\code{Storable}},
   Index: \href{#memory}{\code{Memory}},
   Data: \href{#memory}{\code{Memory}},
 {
-    \emph{/// Adds a new entry to the log.}
-    \emph{/// Complexity: O(entry size).}
-    pub fn \b{append}(&self, bytes: &T) -> Result<u64, WriteError>;
+    /// Adds a new entry to the log.
+    /// Complexity: O(entry size).
+    pub fn append(&self, bytes: &T) -> Result<u64, WriteError>;
 
-    \emph{/// Returns the entry at the specified index.}
-    \emph{/// Complexity: O(entry size).}
-    pub fn \b{get}(&self, idx: u64) -> Option<T>;
+    /// Returns the entry at the specified index.
+    /// Complexity: O(entry size).
+    pub fn get(&self, idx: u64) -> Option<T>;
 
-    \emph{/// Returns the number of entries in the log.}
-    \emph{/// Complexity: O(1).}
-    pub fn \b{len}() -> u64;
+    /// Returns the number of entries in the log.
+    /// Complexity: O(1).
+    pub fn len() -> u64;
 }
 \end{code}
 \end{figure}
@@ -369,7 +369,7 @@ where
 The log is a versatile data structure that can be helpful in almost any application:
 \begin{itemize}
   \item
-    The ICRC-1 Ledger Archive canister stores archived transactions in a \href{https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L58}{stable log}.
+    The \textsc{icrc-1} Ledger Archive canister stores archived transactions in a \href{https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L58}{stable log}.
   \item
     The Internet Identity Archive canister holds events in a \href{https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L90}{stable log}.
   \item
@@ -394,30 +394,30 @@ The interface of stable \code{BTreeMap} will look familiar to any seasoned Rust 
   The core interface of the \code{BTreeMap} stable structure.
 }
 \begin{code}[rust]
-impl<K, V, M> struct \b{BTreeMap}<K, V, M>
+impl<K, V, M> struct BTreeMap<K, V, M>
 where
   K: \href{#bounded-storable-trait}{\code{BoundedStorable}} + Ord + Clone,
   V: \href{#bounded-storable-trait}{\code{BoundedStorable}},
   M: \href{#memory}{\code{Memory}},
 {
-    \emph{/// Adds a new entry to the map.}
-    \emph{/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).}
-    pub fn \b{insert}(&self, key: K, value: V) -> Option<V>;
+    /// Adds a new entry to the map.
+    /// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).
+    pub fn insert(&self, key: K, value: V) -> Option<V>;
 
-    \emph{/// Returns the value associated with the specified key.}
-    \emph{/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).}
-    pub fn \b{get}(&self, key: &K) -> Option<V>;
+    /// Returns the value associated with the specified key.
+    /// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).
+    pub fn get(&self, key: &K) -> Option<V>;
 
-    \emph{/// Removes an entry from the map.}
-    \emph{/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).}
-    pub fn \b{remove}(&self, key: &K) -> Option<V>;
+    /// Removes an entry from the map.
+    /// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).
+    pub fn remove(&self, key: &K) -> Option<V>;
 
-    \emph{/// Returns an iterator over the entries in the specified key range.}
-    pub fn \b{range}(&self, range: impl RangeBounds<K>) -> impl Iterator<Item = (K, V)>;
+    /// Returns an iterator over the entries in the specified key range.
+    pub fn range(&self, range: impl RangeBounds<K>) -> impl Iterator<Item = (K, V)>;
 
-    \emph{/// Returns the number of entries in the map.}
-    \emph{/// Complexity: O(1).}
-    pub fn \b{len}() -> usize;
+    /// Returns the number of entries in the map.
+    /// Complexity: O(1).
+    pub fn len() -> usize;
 }
 \end{code}
 \end{figure}
@@ -442,8 +442,8 @@ The \code{range} method is handy for selecting relevant data from a large data s
   Two examples of using the \code{StableBTreeMap::range} method.
 }
 \begin{code}[rust]
-\emph{/// Selects all subaccounts of the specified principal.}
-fn \b{principal_subaccounts}(
+/// Selects all subaccounts of the specified principal.
+fn principal_subaccounts(
   balance_map: &StableBTreeMap<(Principal, Subaccount), Tokens>,
   principal: Principal,
 ) -> impl Iterator<Item = (Subaccount, Tokens)> + '_ {
@@ -453,8 +453,8 @@ fn \b{principal_subaccounts}(
     .map(|((_, s), t)| (s, t))
 }
 
-\emph{/// Selects a transaction range for the specified principal.}
-fn \b{principal_tx_range}(
+/// Selects a transaction range for the specified principal.
+fn principal_tx_range(
   tx_index: &StableBTreeMap<(Principal, TxId), Transaction>,
   principal: Principal,
   start: TxId,
@@ -498,7 +498,7 @@ use ic_stable_structures::{StableBTreeMap, DefaultMemoryImpl};
 use std::cell::RefCell;
 
 thread_local! {
-  static \b{USERS}: RefCell<\href{#stable-btree}{\code{StableBTreeMap}}<UserId, User, \href{#default-memory-impl}{\code{DefaultMemoryImpl}}>> =
+  static USERS: RefCell<\href{#stable-btree}{\code{StableBTreeMap}}<UserId, User, \href{#default-memory-impl}{\code{DefaultMemoryImpl}}>> =
     RefCell::new(StableBTreeMap::init(DefaultMemoryImpl::default()));
 }
 \end{code}
@@ -558,10 +558,10 @@ type Account = (Blob<29>, [u8; 32]);
 type Amount = u64;
 
 #[derive(serde::Serialize, serde::Deserialize)]
-struct \b{Metadata} { /* … */ }
+struct Metadata { /* … */ }
 
 #[derive(serde::Serialize, serde::Deserialize)]
-enum \b{Tx} {
+enum Tx {
   Mint { /* … */ },
   Burn { /* … */ },
   Transfer { /* … */ },
@@ -574,13 +574,13 @@ Instead of implementing the \href{#storable-trait}{\code{Storable}} trait for \c
 I also implement \href{https://doc.rust-lang.org/std/ops/trait.Deref.html}{\code{std::ops::Deref}} to improve the ergonomics of the wrapper type.
 
 \begin{code}[rust]
-\emph{/// A helper type implementing Storable for all}
-\emph{/// serde-serializable types using the CBOR encoding.}
+/// A helper type implementing Storable for all
+/// serde-serializable types using the CBOR encoding.
 #[derive(Default)]
-struct \b{Cbor}<T>(pub T)
+struct Cbor<T>(pub T)
 where T: serde::Serialize + serde::de::DeserializeOwned;
 
-\b{impl}<T> std::ops::Deref for \b{Cbor}<T>
+impl<T> std::ops::Deref for Cbor<T>
 where T: serde::Serialize + serde::de::DeserializeOwned
 {
   type Target = T;
@@ -588,7 +588,7 @@ where T: serde::Serialize + serde::de::DeserializeOwned
   fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-\b{impl}<T> \href{#storable-trait}{\code{Storable}} for \b{Cbor}<T>
+impl<T> \href{#storable-trait}{\code{Storable}} for Cbor<T>
 where T: serde::Serialize + serde::de::DeserializeOwned
 {
   fn to_bytes(&self) -> Cow<[u8]> {
@@ -607,37 +607,37 @@ The final and most important part is defining stable structures as \href{/posts/
 Note the use of \href{#restricted-memory}{\code{RestrictedMemory}} to split the canister memory into two non-intersecting regions and \href{#memory-manager}{\code{MemoryManager}} (abbreviated as \code{MM}) to interleave multiple data structures in the second region.
 
 \begin{code}[rust]
-\emph{// NOTE: ensure that all memory ids are unique and}
-\emph{// do not change across upgrades!}
-const \b{BALANCES_MEM_ID}: MemoryId = MemoryId::new(0);
-const \b{LOG_INDX_MEM_ID}: MemoryId = MemoryId::new(1);
-const \b{LOG_DATA_MEM_ID}: MemoryId = MemoryId::new(2);
+// NOTE: ensure that all memory ids are unique and
+// do not change across upgrades!
+const BALANCES_MEM_ID: MemoryId = MemoryId::new(0);
+const LOG_INDX_MEM_ID: MemoryId = MemoryId::new(1);
+const LOG_DATA_MEM_ID: MemoryId = MemoryId::new(2);
 
-\emph{// NOTE: we allocate the first 16 pages (about 2 MiB) of the}
-\emph{// canister memory for the metadata.}
-const \b{METADATA_PAGES}: u64 = 16;
+// NOTE: we allocate the first 16 pages (about 2 MiB) of the
+// canister memory for the metadata.
+const METADATA_PAGES: u64 = 16;
 
 type RM = RestrictedMemory<DefMem>;
 type VM = VirtualMemory<RM>;
 
 thread_local! {
-  static \b{METADATA}: RefCell<\href{#stable-cell}{\code{StableCell}}<Cbor<Option<Metadata>>, RM>> =
+  static METADATA: RefCell<\href{#stable-cell}{\code{StableCell}}<Cbor<Option<Metadata>>, RM>> =
     RefCell::new(StableCell::init(
         RM::new(DefMem::default(), 0..METADATA_PAGES),
         Cbor::default(),
       ).expect("failed to initialize the metadata cell")
     );
 
-  static \b{MEMORY_MANAGER}: RefCell<MM<RM>> = RefCell::new(
+  static MEMORY_MANAGER: RefCell<MM<RM>> = RefCell::new(
     MM::init(RM::new(DefMem::default(), METADATA_PAGES..u64::MAX))
   );
 
-  static \b{BALANCES}: RefCell<\href{#stable-btree}{\code{StableBTreeMap}}<Account, Amount, VM>> =
+  static BALANCES: RefCell<\href{#stable-btree}{\code{StableBTreeMap}}<Account, Amount, VM>> =
     MEMORY_MANAGER.with(|mm| {
       RefCell::new(StableBTreeMap::init(mm.borrow().get(\b{BALANCES_MEM_ID})))
     });
 
-  static \b{TX_LOG}: RefCell<\href{#stable-log}{\code{StableLog}}<Cbor<Tx>, VM, VM>> =
+  static TX_LOG: RefCell<\href{#stable-log}{\code{StableLog}}<Cbor<Tx>, VM, VM>> =
     MEMORY_MANAGER.with(|mm| {
       RefCell::new(StableLog::init(
         mm.borrow().get(\b{LOG_INDX_MEM_ID}),

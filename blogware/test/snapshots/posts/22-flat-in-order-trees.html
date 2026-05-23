@@ -95,39 +95,39 @@ Hence, the addressing scheme preserves as we increase the tree depth from <span 
 <p>We’ll need two primitive bit-twiddling operations for the tree navigation: locating the last zero bit of a number and rounding a number up to a power of two<label class="margin-toggle sidenote-number" for="sn-examples-c"></label><input type="checkbox" id="sn-examples-c" class="margin-toggle"><span class="sidenote">
   All code in this article is in the <a href="https://en.wikipedia.org/wiki/C_(programming_language)">C programming language</a> and complies with the <a href="https://en.wikipedia.org/wiki/C11_(C_standard_revision)">C11 standard</a>.
 </span>.</p>
-<div class="source-container"><pre class="source c"><code><span class="line">#include &lt;assert.h&gt;</span>
-<span class="line">#include &lt;stdint.h&gt;</span>
+<div class="source-container"><pre class="source c"><code><span class="line">#<span class="hl-id">include</span> &lt;<span class="hl-id">assert</span>.<span class="hl-id">h</span>&gt;</span>
+<span class="line">#<span class="hl-id">include</span> &lt;<span class="hl-id">stdint</span>.<span class="hl-id">h</span>&gt;</span>
 <span class="line"></span>
-<span class="line"><em>// Isolates the last set bit of number N.</em></span>
-<span class="line">uint64_t LastSetBit(const uint64_t n) {</span>
-<span class="line">    return n - ((n - 1) &amp; n);</span>
+<span class="line"><span class="hl-comment">// Isolates the last set bit of number N.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LastSetBit</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">n</span>) {</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">n</span> - ((<span class="hl-id">n</span> - 1) &amp; <span class="hl-id">n</span>);</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line"><em>// Isolates the last unset bit of number N.</em></span>
-<span class="line">uint64_t LastZeroBit(const uint64_t n) {</span>
-<span class="line">    return LastSetBit(n + 1);</span>
+<span class="line"><span class="hl-comment">// Isolates the last unset bit of number N.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LastZeroBit</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">n</span>) {</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">LastSetBit</span>(<span class="hl-id">n</span> + 1);</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line"><em>// Rounds the argument up to the next highest power of two.</em></span>
-<span class="line">uint64_t RoundUpPowerOf2(uint64_t n) {</span>
-<span class="line">    // See <a href="https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2">Bit Twiddling Hacks</a>.</span>
-<span class="line">    n--;</span>
-<span class="line">    n |= n &gt;&gt; 1;</span>
-<span class="line">    n |= n &gt;&gt; 2;</span>
-<span class="line">    n |= n &gt;&gt; 4;</span>
-<span class="line">    n |= n &gt;&gt; 8;</span>
-<span class="line">    n |= n &gt;&gt; 16;</span>
-<span class="line">    n |= n &gt;&gt; 32;</span>
-<span class="line">    n++;</span>
-<span class="line">    return n;</span>
+<span class="line"><span class="hl-comment">// Rounds the argument up to the next highest power of two.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">RoundUpPowerOf2</span>(<span class="hl-id">uint64_t</span> <span class="hl-var">n</span>) {</span>
+<span class="line">    <span class="hl-comment">// See <a href="https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2">Bit Twiddling Hacks</a>.</span></span>
+<span class="line">    <span class="hl-id">n</span>--;</span>
+<span class="line">    <span class="hl-id">n</span> |= <span class="hl-id">n</span> &gt;&gt; 1;</span>
+<span class="line">    <span class="hl-id">n</span> |= <span class="hl-id">n</span> &gt;&gt; 2;</span>
+<span class="line">    <span class="hl-id">n</span> |= <span class="hl-id">n</span> &gt;&gt; 4;</span>
+<span class="line">    <span class="hl-id">n</span> |= <span class="hl-id">n</span> &gt;&gt; 8;</span>
+<span class="line">    <span class="hl-id">n</span> |= <span class="hl-id">n</span> &gt;&gt; 16;</span>
+<span class="line">    <span class="hl-id">n</span> |= <span class="hl-id">n</span> &gt;&gt; 32;</span>
+<span class="line">    <span class="hl-id">n</span>++;</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">n</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>We are now ready to define the tree navigation functions.
 The addressing scheme proof suggests the function for locating the tree root: we divide the tree size by two.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the root of the perfect binary tree of the given SIZE.</em></span>
-<span class="line">uint64_t PBT_Root(const uint64_t size) {</span>
-<span class="line">    assert(size == 1 || RoundUpPowerOf2(size) == size + 1);</span>
-<span class="line">    return size &gt;&gt; 1;</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the root of the perfect binary tree of the given SIZE.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">PBT_Root</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">size</span>) {</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">size</span> == 1 || <span class="hl-id">RoundUpPowerOf2</span>(<span class="hl-id">size</span>) == <span class="hl-id">size</span> + 1);</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">size</span> &gt;&gt; 1;</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>Next, let’s consider locating the parent of node <span class="math">i</span>.
@@ -137,27 +137,27 @@ According to the scheme, we must find the last zero in the binary representation
     If bit <span class="math">b<sub>k</sub></span> is zero, then <span class="math">i</span> is the left child. Otherwise, <span class="math">i</span> is the right child.
   </span><p class="svg"><img src="/images/22-fbt-parent.svg"></p>
 </figure>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the parent of node I in a perfect binary tree.</em></span>
-<span class="line">uint64_t PBT_Parent(const uint64_t i) {</span>
-<span class="line">    return (LastZeroBit(i) | i) &amp; ~(LastZeroBit(i) &lt;&lt; 1);</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the parent of node I in a perfect binary tree.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">PBT_Parent</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">i</span>) {</span>
+<span class="line">    <span class="hl-kw">return</span> (<span class="hl-id">LastZeroBit</span>(<span class="hl-id">i</span>) | <span class="hl-id">i</span>) &amp; ~(<span class="hl-id">LastZeroBit</span>(<span class="hl-id">i</span>) &lt;&lt; 1);</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>Finally, the parent computation suggests procedures for locating the children.
 We must find the last zero bit <span class="math">k</span> in the node’s binary representation.
 For the left child, we must set bit <span class="math">k-1</span> to zero.
 For the right child, we also need to set bit <span class="math">k</span> to one.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the left child of node P in a perfect binary tree.</em></span>
-<span class="line"><em>// Requires: P is not a leaf.</em></span>
-<span class="line">uint64_t PBT_LeftChild(const uint64_t p) {</span>
-<span class="line">    assert(p &amp; 1);</span>
-<span class="line">    return p &amp; ~(LastZeroBit(p) &gt;&gt; 1);</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the left child of node P in a perfect binary tree.</span></span>
+<span class="line"><span class="hl-comment">// Requires: P is not a leaf.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">PBT_LeftChild</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">p</span>) {</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">p</span> &amp; 1);</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">p</span> &amp; ~(<span class="hl-id">LastZeroBit</span>(<span class="hl-id">p</span>) &gt;&gt; 1);</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line"><em>// Computes the right child of node P in a perfect binary tree.</em></span>
-<span class="line"><em>// Requires: P is not a leaf.</em></span>
-<span class="line">uint64_t PBT_RightChild(const uint64_t p) {</span>
-<span class="line">    assert(p &amp; 1);</span>
-<span class="line">    return (p | LastZeroBit(p)) &amp; ~(LastZeroBit(p) &gt;&gt; 1);</span>
+<span class="line"><span class="hl-comment">// Computes the right child of node P in a perfect binary tree.</span></span>
+<span class="line"><span class="hl-comment">// Requires: P is not a leaf.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">PBT_RightChild</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">p</span>) {</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">p</span> &amp; 1);</span>
+<span class="line">    <span class="hl-kw">return</span> (<span class="hl-id">p</span> | <span class="hl-id">LastZeroBit</span>(<span class="hl-id">p</span>)) &amp; ~(<span class="hl-id">LastZeroBit</span>(<span class="hl-id">p</span>) &gt;&gt; 1);</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>Next, we’ll generalize these functions to handle left-perfect binary trees.</p>
@@ -165,8 +165,8 @@ For the right child, we also need to set bit <span class="math">k</span> to one.
 <section><h2 id="sec-lpbt"><a href="#sec-lpbt">Traversing left-perfect binary trees</a></h2>
 <p>The left subtree of a left-perfect binary tree is a perfect binary tree by definition.
 Hence the formula for the left child we developed for perfect binary trees works as-is.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the left child in a flat in-order left-perfect binary tree.</em></span>
-<span class="line">uint64_t LPBT_LeftChild(const uint64_t i) { return PBT_LeftChild(i); }</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the left child in a flat in-order left-perfect binary tree.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LPBT_LeftChild</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">i</span>) { <span class="hl-kw">return</span> <span class="hl-id">PBT_LeftChild</span>(<span class="hl-id">i</span>); }</span>
 </code></pre></div>
 <p>We need three more operations to efficiently navigate a left-perfect binary tree: finding the tree root and computing the node’s parent and right child.
 Left-perfect binary tree structure changes with the node count, so the latter two functions will depend on the node index and the tree node count.</p>
@@ -177,9 +177,9 @@ Left-perfect binary tree structure changes with the node count, so the latter tw
 </figure>
 <p>In a left-perfect binary tree, the tree root is the same node that the smallest perfect binary tree with at least the same number of nodes would have.
 Thus, given the number of tree nodes, we compute the root of the smallest perfect tree containing the input tree.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the root of a left-perfect binary tree of the given SIZE.</em></span>
-<span class="line">uint64_t LPBT_Root(const uint64_t size) {</span>
-<span class="line">    return PBT_Root(RoundUpPowerOf2(size + 1) - 1);</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the root of a left-perfect binary tree of the given SIZE.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LPBT_Root</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">size</span>) {</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">PBT_Root</span>(<span class="hl-id">RoundUpPowerOf2</span>(<span class="hl-id">size</span> + 1) - 1);</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>Another way to view left-perfect binary trees is to imagine them as perfect binary trees with some trailing nodes removed.
@@ -192,10 +192,10 @@ We apply the <code>PBT_Parent</code> function until the computed node falls with
     Following node’s <q>virtual</q> parents until we hit a <q>real</q> node gives us the node’s true parent.
   </span><p class="svg"><img src="/images/22-missing-nodes.svg"></p>
 </figure>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the parent of node I in a left-perfect binary tree of the given SIZE.</em></span>
-<span class="line">uint64_t LPBT_Parent_Iterative(uint64_t i, const uint64_t size) {</span>
-<span class="line">    do { i = PBT_Parent(i); } while (i &gt;= size);</span>
-<span class="line">    reutrn i;</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the parent of node I in a left-perfect binary tree of the given SIZE.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LPBT_Parent_Iterative</span>(<span class="hl-id">uint64_t</span> <span class="hl-var">i</span>, <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">size</span>) {</span>
+<span class="line">    <span class="hl-kw">do</span> { <span class="hl-id">i</span> = <span class="hl-id">PBT_Parent</span>(<span class="hl-id">i</span>); } <span class="hl-kw">while</span> (<span class="hl-id">i</span> &gt;= <span class="hl-id">size</span>);</span>
+<span class="line">    <span class="hl-id">reutrn</span> <span class="hl-id">i</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>There is also a non-iterative way to find the parent in a left-perfect tree.
@@ -204,35 +204,35 @@ Proof: if the node is a left child, then it’s a root of a perfect binary tree 
 </span>.
 Furthermore, if node <code>i</code> is a right child, its parent is always the node preceding <code>i</code>-th most-left leaf.
 Thus, we can attempt to compute the parent using <code>PBT_Parent</code> first and adjust the result if it falls out of bounds.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the leftmost leaf of node I in a perfect binary tree.</em></span>
-<span class="line">uint64_t PBT_LeftmostLeaf(const uint64_t i) {</span>
-<span class="line">    return i &amp; (i + 1);</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the leftmost leaf of node I in a perfect binary tree.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">PBT_LeftmostLeaf</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">i</span>) {</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">i</span> &amp; (<span class="hl-id">i</span> + 1);</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line"><em>// Computes the parent of node I in a left-perfect binary tree of the given SIZE.</em></span>
-<span class="line">uint64_t LPBT_Parent(const uint64_t i, const uint64_t size) {</span>
-<span class="line">    assert(i != LPBT_Root(size));</span>
-<span class="line">    const uint64_t p = PBT_Parent(i);</span>
-<span class="line">    return (p &lt; size) ? p : PBT_LeftmostLeaf(i) - 1;</span>
+<span class="line"><span class="hl-comment">// Computes the parent of node I in a left-perfect binary tree of the given SIZE.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LPBT_Parent</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">i</span>, <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">size</span>) {</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">i</span> != <span class="hl-id">LPBT_Root</span>(<span class="hl-id">size</span>));</span>
+<span class="line">    <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-id">p</span> = <span class="hl-id">PBT_Parent</span>(<span class="hl-id">i</span>);</span>
+<span class="line">    <span class="hl-kw">return</span> (<span class="hl-id">p</span> &lt; <span class="hl-id">size</span>) ? <span class="hl-id">p</span> : <span class="hl-id">PBT_LeftmostLeaf</span>(<span class="hl-id">i</span>) - 1;</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>Our observations give us two algorithms for computing the right child.
 Notice that the <code>PBT_RightChild</code> function gives correct results if the output value falls within the tree bounds.
 If the outcome falls outside the tree bounds, the recursive definition of left-perfect trees implies that the right child must be the root of the right subtree.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the right child of node I in a left-perfect binary tree of the given SIZE.</em></span>
-<span class="line">uint64_t LPBT_RightChild(const uint64_t i, const uint64_t size) {</span>
-<span class="line">    assert(n &amp; 1);</span>
-<span class="line">    const uint64_t r = PBT_RightChild(i);</span>
-<span class="line">    return (r &lt; size) ? r : i + 1 + LPBT_Root(size - i - 1);</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the right child of node I in a left-perfect binary tree of the given SIZE.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LPBT_RightChild</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">i</span>, <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">size</span>) {</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">n</span> &amp; 1);</span>
+<span class="line">    <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-id">r</span> = <span class="hl-id">PBT_RightChild</span>(<span class="hl-id">i</span>);</span>
+<span class="line">    <span class="hl-kw">return</span> (<span class="hl-id">r</span> &lt; <span class="hl-id">size</span>) ? <span class="hl-id">r</span> : <span class="hl-id">i</span> + 1 + <span class="hl-id">LPBT_Root</span>(<span class="hl-id">size</span> - <span class="hl-id">i</span> - 1);</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>Alternatively, if <code>PBT_RightChild</code>’s result falls outside of the tree, we can follow the left links in the <q>virtual</q> perfect tree until we hit the tree bounds again.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the right child of node I in a left-perfect binary tree of the given SIZE.</em></span>
-<span class="line">uint64_t LPBT_RightChild_Iterative(const uint64_t i, const uint64_t size) {</span>
-<span class="line">    assert(n &amp; 1);</span>
-<span class="line">    uint64_t r;</span>
-<span class="line">    for (r = PBT_RightChild(n); r &lt; size; r = PBT_LeftChild(r));</span>
-<span class="line">    return r;</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the right child of node I in a left-perfect binary tree of the given SIZE.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LPBT_RightChild_Iterative</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">i</span>, <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">size</span>) {</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">n</span> &amp; 1);</span>
+<span class="line">    <span class="hl-id">uint64_t</span> <span class="hl-id">r</span>;</span>
+<span class="line">    <span class="hl-kw">for</span> (<span class="hl-id">r</span> = <span class="hl-id">PBT_RightChild</span>(<span class="hl-id">n</span>); <span class="hl-id">r</span> &lt; <span class="hl-id">size</span>; <span class="hl-id">r</span> = <span class="hl-id">PBT_LeftChild</span>(<span class="hl-id">r</span>));</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">r</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>We now have enough tools to navigate any left-perfect binary tree efficiently.</p>
@@ -246,85 +246,85 @@ The same approach will work for any problem where node elements and the aggregat
 <p>We’ll need a new operation to support efficient range queries: finding the <a href="https://en.wikipedia.org/wiki/Lowest_common_ancestor">lowest common ancestor</a> (LCA) of two leaves in a left-perfect binary tree.
 The <a href="#sec-addressing">tree addressing scheme</a> suggests a simple way to compute LCA for leaves because their paths from the root node are aligned.
 We must find the most significant bit where the leaves differ, set this bit to zero, and set all lower bits.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Extracts the most significant bit from number N.</em></span>
-<span class="line">uint64_t MostSignificantBit(uint64_t n) {</span>
-<span class="line">    uint64_t x = n;</span>
-<span class="line">    x |= (x &gt;&gt; 1);</span>
-<span class="line">    x |= (x &gt;&gt; 2);</span>
-<span class="line">    x |= (x &gt;&gt; 4);</span>
-<span class="line">    x |= (x &gt;&gt; 8);</span>
-<span class="line">    x |= (x &gt;&gt; 16);</span>
-<span class="line">    x |= (x &gt;&gt; 32);</span>
-<span class="line">    return x - (x &gt;&gt; 1);</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Extracts the most significant bit from number N.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">MostSignificantBit</span>(<span class="hl-id">uint64_t</span> <span class="hl-var">n</span>) {</span>
+<span class="line">    <span class="hl-id">uint64_t</span> <span class="hl-id">x</span> = <span class="hl-id">n</span>;</span>
+<span class="line">    <span class="hl-id">x</span> |= (<span class="hl-id">x</span> &gt;&gt; 1);</span>
+<span class="line">    <span class="hl-id">x</span> |= (<span class="hl-id">x</span> &gt;&gt; 2);</span>
+<span class="line">    <span class="hl-id">x</span> |= (<span class="hl-id">x</span> &gt;&gt; 4);</span>
+<span class="line">    <span class="hl-id">x</span> |= (<span class="hl-id">x</span> &gt;&gt; 8);</span>
+<span class="line">    <span class="hl-id">x</span> |= (<span class="hl-id">x</span> &gt;&gt; 16);</span>
+<span class="line">    <span class="hl-id">x</span> |= (<span class="hl-id">x</span> &gt;&gt; 32);</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">x</span> - (<span class="hl-id">x</span> &gt;&gt; 1);</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line"><em>// Computes the lowest common ancestor of leaves X and Y in a left-perfect</em></span>
-<span class="line"><em>// binary tree.</em></span>
-<span class="line">uint64_t LPBT_LeavesLCA(const uint64_t x, const uint64_t y) {</span>
-<span class="line">    assert(!(x &amp; 1));</span>
-<span class="line">    assert(!(y &amp; 1));</span>
+<span class="line"><span class="hl-comment">// Computes the lowest common ancestor of leaves X and Y in a left-perfect</span></span>
+<span class="line"><span class="hl-comment">// binary tree.</span></span>
+<span class="line"><span class="hl-id">uint64_t</span> <span class="hl-defun">LPBT_LeavesLCA</span>(<span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">x</span>, <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-var">y</span>) {</span>
+<span class="line">    <span class="hl-id">assert</span>(!(<span class="hl-id">x</span> &amp; 1));</span>
+<span class="line">    <span class="hl-id">assert</span>(!(<span class="hl-id">y</span> &amp; 1));</span>
 <span class="line"></span>
-<span class="line">    if (x == y) return x;</span>
-<span class="line">    const uint64_t d = MostSignificantBit(x ^ y);</span>
-<span class="line">    return (x &amp; ~d) | (d - 1);</span>
+<span class="line">    <span class="hl-kw">if</span> (<span class="hl-id">x</span> == <span class="hl-id">y</span>) <span class="hl-kw">return</span> <span class="hl-id">x</span>;</span>
+<span class="line">    <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-id">d</span> = <span class="hl-id">MostSignificantBit</span>(<span class="hl-id">x</span> ^ <span class="hl-id">y</span>);</span>
+<span class="line">    <span class="hl-kw">return</span> (<span class="hl-id">x</span> &amp; ~<span class="hl-id">d</span>) | (<span class="hl-id">d</span> - 1);</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>We can now proceed with the segment tree implementation.
 Let’s define the data structures representing the tree.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// The type of values stored in the tree nodes.</em></span>
-<span class="line">typedef int64_t value_t;</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// The type of values stored in the tree nodes.</span></span>
+<span class="line"><span class="hl-kw">typedef</span> <span class="hl-id">int64_t</span> <span class="hl-typedef">value_t</span>;</span>
 <span class="line"></span>
-<span class="line"><em>// The maximum number of nodes in the tree.</em></span>
-<span class="line">const size_t MAX_NODES = 10001;</span>
+<span class="line"><span class="hl-comment">// The maximum number of nodes in the tree.</span></span>
+<span class="line"><span class="hl-kw">const</span> <span class="hl-id">size_t</span> <span class="hl-id">MAX_NODES</span> = 10001;</span>
 <span class="line"></span>
-<span class="line"><em>// The current number of nodes in the tree.</em></span>
-<span class="line"><em>// Invariant: G_NumNodes &lt;= MAX_NODES</em></span>
-<span class="line"><em>// Invariant: G_NumNodes == 0 || G_NumNodes % 2 == 1</em></span>
-<span class="line">size_t G_NumNodes;</span>
+<span class="line"><span class="hl-comment">// The current number of nodes in the tree.</span></span>
+<span class="line"><span class="hl-comment">// Invariant: G_NumNodes &lt;= MAX_NODES</span></span>
+<span class="line"><span class="hl-comment">// Invariant: G_NumNodes == 0 || G_NumNodes % 2 == 1</span></span>
+<span class="line"><span class="hl-id">size_t</span> <span class="hl-id">G_NumNodes</span>;</span>
 <span class="line"></span>
-<span class="line"><em>// The flat in-order representation of the tree.</em></span>
-<span class="line"><em>// Even elements correspond to the sequence items.</em></span>
-<span class="line">value_t G_Nodes[MAX_NODES];</span>
+<span class="line"><span class="hl-comment">// The flat in-order representation of the tree.</span></span>
+<span class="line"><span class="hl-comment">// Even elements correspond to the sequence items.</span></span>
+<span class="line"><span class="hl-id">value_t</span> <span class="hl-id">G_Nodes</span>[<span class="hl-id">MAX_NODES</span>];</span>
 </code></pre></div>
 <p>We highlight that the trees work with any semigroup by extracting the combining operator into a separate function.</p>
-<div class="source-container"><pre class="source c"><code><span class="line">value_t Combine(const value_t x, const value_t y) {</span>
-<span class="line">    return x + y;</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-id">value_t</span> <span class="hl-defun">Combine</span>(<span class="hl-kw">const</span> <span class="hl-id">value_t</span> <span class="hl-var">x</span>, <span class="hl-kw">const</span> <span class="hl-id">value_t</span> <span class="hl-var">y</span>) {</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">x</span> + <span class="hl-id">y</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>We then define procedure <code>ST_Set</code> updating the sequence.
 It sets the corresponding leaf value and traverses the tree upwards, recomputing the parent node values.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Updates the sequence to contain the given ITEM at the specified POSITION.</em></span>
-<span class="line">void ST_Set(const size_t position, const value_t item) {</span>
-<span class="line">    assert(G_NumNodes &gt; 0);</span>
-<span class="line">    assert(position &lt;= G_NumNodes / 2);</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Updates the sequence to contain the given ITEM at the specified POSITION.</span></span>
+<span class="line"><span class="hl-kw">void</span> <span class="hl-defun">ST_Set</span>(<span class="hl-kw">const</span> <span class="hl-id">size_t</span> <span class="hl-var">position</span>, <span class="hl-kw">const</span> <span class="hl-id">value_t</span> <span class="hl-var">item</span>) {</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">G_NumNodes</span> &gt; 0);</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">position</span> &lt;= <span class="hl-id">G_NumNodes</span> / 2);</span>
 <span class="line"></span>
-<span class="line">    size_t i = position * 2;</span>
-<span class="line">    G_Nodes[i] = item;</span>
+<span class="line">    <span class="hl-id">size_t</span> <span class="hl-id">i</span> = <span class="hl-id">position</span> * 2;</span>
+<span class="line">    <span class="hl-id">G_Nodes</span>[<span class="hl-id">i</span>] = <span class="hl-id">item</span>;</span>
 <span class="line"></span>
-<span class="line">    if (G_NumNodes == 1) return;</span>
+<span class="line">    <span class="hl-kw">if</span> (<span class="hl-id">G_NumNodes</span> == 1) <span class="hl-kw">return</span>;</span>
 <span class="line"></span>
-<span class="line">    size_t root = LPBT_Root(G_NumNodes);</span>
-<span class="line">    do {</span>
-<span class="line">        i = LPBT_Parent(i, G_NumNodes);</span>
-<span class="line">        G_Nodes[i] = Combine(</span>
-<span class="line">            G_Nodes[LPBT_LeftChild(i)],</span>
-<span class="line">            G_Nodes[LPBT_RightChild(i, G_NumNodes)]</span>
+<span class="line">    <span class="hl-id">size_t</span> <span class="hl-id">root</span> = <span class="hl-id">LPBT_Root</span>(<span class="hl-id">G_NumNodes</span>);</span>
+<span class="line">    <span class="hl-kw">do</span> {</span>
+<span class="line">        <span class="hl-id">i</span> = <span class="hl-id">LPBT_Parent</span>(<span class="hl-id">i</span>, <span class="hl-id">G_NumNodes</span>);</span>
+<span class="line">        <span class="hl-id">G_Nodes</span>[<span class="hl-id">i</span>] = <span class="hl-id">Combine</span>(</span>
+<span class="line">            <span class="hl-id">G_Nodes</span>[<span class="hl-id">LPBT_LeftChild</span>(<span class="hl-id">i</span>)],</span>
+<span class="line">            <span class="hl-id">G_Nodes</span>[<span class="hl-id">LPBT_RightChild</span>(<span class="hl-id">i</span>, <span class="hl-id">G_NumNodes</span>)]</span>
 <span class="line">        );</span>
-<span class="line">    } while (i != root);</span>
+<span class="line">    } <span class="hl-kw">while</span> (<span class="hl-id">i</span> != <span class="hl-id">root</span>);</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>The <code>ST_Append</code> procedure adds an item to the sequence and updates the tree accordingly.
 The empty sequence is a special case because there are no interior nodes to update.
 In the case of non-empty sequences, the procedure adds a new interior node and a leaf and delegates the rest to the previously defined <code>ST_Set</code> procedure.</p>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Appends the given ITEM to the sequence.</em></span>
-<span class="line">void ST_Append(const value_t item) {</span>
-<span class="line">    assert(G_NumNodes + 2 &lt;= MAX_NODES);</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Appends the given ITEM to the sequence.</span></span>
+<span class="line"><span class="hl-kw">void</span> <span class="hl-defun">ST_Append</span>(<span class="hl-kw">const</span> <span class="hl-id">value_t</span> <span class="hl-var">item</span>) {</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">G_NumNodes</span> + 2 &lt;= <span class="hl-id">MAX_NODES</span>);</span>
 <span class="line"></span>
-<span class="line">    if (G_NumNodes == 0) {</span>
-<span class="line">        G_Nodes[G_NumNodes++] = item;</span>
-<span class="line">    } else {</span>
-<span class="line">        G_NumNodes += 2;</span>
-<span class="line">        ST_Set(G_NumNodes / 2, item);</span>
+<span class="line">    <span class="hl-kw">if</span> (<span class="hl-id">G_NumNodes</span> == 0) {</span>
+<span class="line">        <span class="hl-id">G_Nodes</span>[<span class="hl-id">G_NumNodes</span>++] = <span class="hl-id">item</span>;</span>
+<span class="line">    } <span class="hl-kw">else</span> {</span>
+<span class="line">        <span class="hl-id">G_NumNodes</span> += 2;</span>
+<span class="line">        <span class="hl-id">ST_Set</span>(<span class="hl-id">G_NumNodes</span> / 2, <span class="hl-id">item</span>);</span>
 <span class="line">    }</span>
 <span class="line">}</span>
 </code></pre></div>
@@ -337,40 +337,40 @@ It does the same for the right bound, summing all unaccounted <em>left</em> subt
     Dotted rectangles mark subtrees to be accumulated.
   </span><p class="svg"><img src="/images/22-lca-sum.svg"></p>
 </figure>
-<div class="source-container"><pre class="source c"><code><span class="line"><em>// Computes the sum of the sequence items in the index interval [l, r].</em></span>
-<span class="line">value_t ST_Sum(const size_t l, const size_t r) {</span>
-<span class="line">    assert(r * 2 &lt; G_NumNodes);</span>
-<span class="line">    assert(l &lt;= r);</span>
+<div class="source-container"><pre class="source c"><code><span class="line"><span class="hl-comment">// Computes the sum of the sequence items in the index interval [l, r].</span></span>
+<span class="line"><span class="hl-id">value_t</span> <span class="hl-defun">ST_Sum</span>(<span class="hl-kw">const</span> <span class="hl-id">size_t</span> <span class="hl-var">l</span>, <span class="hl-kw">const</span> <span class="hl-id">size_t</span> <span class="hl-var">r</span>) {</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">r</span> * 2 &lt; <span class="hl-id">G_NumNodes</span>);</span>
+<span class="line">    <span class="hl-id">assert</span>(<span class="hl-id">l</span> &lt;= <span class="hl-id">r</span>);</span>
 <span class="line"></span>
-<span class="line">    uint64_t i = l * 2;</span>
-<span class="line">    uint64_t j = r * 2;</span>
+<span class="line">    <span class="hl-id">uint64_t</span> <span class="hl-id">i</span> = <span class="hl-id">l</span> * 2;</span>
+<span class="line">    <span class="hl-id">uint64_t</span> <span class="hl-id">j</span> = <span class="hl-id">r</span> * 2;</span>
 <span class="line"></span>
-<span class="line">    if (i == j) return G_Nodes[i];</span>
+<span class="line">    <span class="hl-kw">if</span> (<span class="hl-id">i</span> == <span class="hl-id">j</span>) <span class="hl-kw">return</span> <span class="hl-id">G_Nodes</span>[<span class="hl-id">i</span>];</span>
 <span class="line"></span>
-<span class="line">    const uint64_t lca = LPBT_LeavesLCA(i, j);</span>
-<span class="line">    value_t acc = Combine(G_Nodes[i], G_Nodes[j]);</span>
+<span class="line">    <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-id">lca</span> = <span class="hl-id">LPBT_LeavesLCA</span>(<span class="hl-id">i</span>, <span class="hl-id">j</span>);</span>
+<span class="line">    <span class="hl-id">value_t</span> <span class="hl-id">acc</span> = <span class="hl-id">Combine</span>(<span class="hl-id">G_Nodes</span>[<span class="hl-id">i</span>], <span class="hl-id">G_Nodes</span>[<span class="hl-id">j</span>]);</span>
 <span class="line"></span>
-<span class="line">    <em>// Traverse the tree upwards from the left bound and sum up all</em></span>
-<span class="line">    <em>// the right subtrees on the way.</em></span>
-<span class="line">    while (1) {</span>
-<span class="line">        const uint64_t p = LPBT_Parent(i, G_NumNodes);</span>
-<span class="line">        if (p == lca) break;</span>
+<span class="line">    <span class="hl-comment">// Traverse the tree upwards from the left bound and sum up all</span></span>
+<span class="line">    <span class="hl-comment">// the right subtrees on the way.</span></span>
+<span class="line">    <span class="hl-kw">while</span> (1) {</span>
+<span class="line">        <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-id">p</span> = <span class="hl-id">LPBT_Parent</span>(<span class="hl-id">i</span>, <span class="hl-id">G_NumNodes</span>);</span>
+<span class="line">        <span class="hl-kw">if</span> (<span class="hl-id">p</span> == <span class="hl-id">lca</span>) <span class="hl-kw">break</span>;</span>
 <span class="line"></span>
-<span class="line">        const uint64_t rc = LPBT_RightChild(p, G_NumNodes);</span>
-<span class="line">        if (rc != i) acc = Combine(acc, G_Nodes[rc]);</span>
-<span class="line">        i = p;</span>
+<span class="line">        <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-id">rc</span> = <span class="hl-id">LPBT_RightChild</span>(<span class="hl-id">p</span>, <span class="hl-id">G_NumNodes</span>);</span>
+<span class="line">        <span class="hl-kw">if</span> (<span class="hl-id">rc</span> != <span class="hl-id">i</span>) <span class="hl-id">acc</span> = <span class="hl-id">Combine</span>(<span class="hl-id">acc</span>, <span class="hl-id">G_Nodes</span>[<span class="hl-id">rc</span>]);</span>
+<span class="line">        <span class="hl-id">i</span> = <span class="hl-id">p</span>;</span>
 <span class="line">    }</span>
-<span class="line">    <em>// Traverse the tree upwards from the right bound and sum up all</em></span>
-<span class="line">    <em>// the left subtrees on the way.</em></span>
-<span class="line">    while (1) {</span>
-<span class="line">        const uint64_t p = LPBT_Parent(j, G_NumNodes);</span>
-<span class="line">        if (p == lca) break;</span>
+<span class="line">    <span class="hl-comment">// Traverse the tree upwards from the right bound and sum up all</span></span>
+<span class="line">    <span class="hl-comment">// the left subtrees on the way.</span></span>
+<span class="line">    <span class="hl-kw">while</span> (1) {</span>
+<span class="line">        <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-id">p</span> = <span class="hl-id">LPBT_Parent</span>(<span class="hl-id">j</span>, <span class="hl-id">G_NumNodes</span>);</span>
+<span class="line">        <span class="hl-kw">if</span> (<span class="hl-id">p</span> == <span class="hl-id">lca</span>) <span class="hl-kw">break</span>;</span>
 <span class="line"></span>
-<span class="line">        const uint64_t lc = LPBT_LeftChild(p);</span>
-<span class="line">        if (lc != j) acc = Combine(acc, G_Nodes[lc]);</span>
-<span class="line">        j = p;</span>
+<span class="line">        <span class="hl-kw">const</span> <span class="hl-id">uint64_t</span> <span class="hl-id">lc</span> = <span class="hl-id">LPBT_LeftChild</span>(<span class="hl-id">p</span>);</span>
+<span class="line">        <span class="hl-kw">if</span> (<span class="hl-id">lc</span> != <span class="hl-id">j</span>) <span class="hl-id">acc</span> = <span class="hl-id">Combine</span>(<span class="hl-id">acc</span>, <span class="hl-id">G_Nodes</span>[<span class="hl-id">lc</span>]);</span>
+<span class="line">        <span class="hl-id">j</span> = <span class="hl-id">p</span>;</span>
 <span class="line">    }</span>
-<span class="line">    return acc;</span>
+<span class="line">    <span class="hl-kw">return</span> <span class="hl-id">acc</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>The <code>ST_Append</code>, <code>ST_Set</code>, and <code>ST_Sum</code> procedures provide a working implementation of extensible segment trees.</p>

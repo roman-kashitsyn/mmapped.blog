@@ -140,10 +140,10 @@ and then combines the rows vertically.</p>
 Rendering a <a href="https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle">Sierpinski triangle</a> requires only a few lines of code.</p>
 <figure><label class="margin-toggle" for="mn-sierpinski-code">⊕</label><input type="checkbox" id="mn-sierpinski-code" class="margin-toggle"><span class="marginnote">
 A program drawing a Sierpinski triangle of order <code>n</code>.
-</span><div class="source-container"><pre class="source ocaml"><code><span class="line"><b>let rec</b> sierpinski n =</span>
-<span class="line">    if n == 0 then Box.of_char '*'</span>
-<span class="line">    else let s = sierpinski (n - 1) in</span>
-<span class="line">         Box.above s (Box.hconcat [| s; Box.of_char ' '; s |])</span>
+</span><div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-kw">rec</span> <span class="hl-defun">sierpinski</span> <span class="hl-id">n</span> =</span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">n</span> == 0 <span class="hl-kw">then</span> <span class="hl-id">Box</span>.<span class="hl-id">of_char</span> '*'</span>
+<span class="line">    <span class="hl-kw">else</span> <span class="hl-kw">let</span> <span class="hl-var">s</span> = <span class="hl-id">sierpinski</span> (<span class="hl-id">n</span> - 1) <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-id">Box</span>.<span class="hl-id">above</span> <span class="hl-id">s</span> (<span class="hl-id">Box</span>.<span class="hl-id">hconcat</span> [| <span class="hl-id">s</span>; <span class="hl-id">Box</span>.<span class="hl-id">of_char</span> ' '; <span class="hl-id">s</span> |])</span>
 </code></pre></div>
 </figure>
 <figure><label class="margin-toggle" for="mn-sierpinski-rendered">⊕</label><input type="checkbox" id="mn-sierpinski-rendered" class="margin-toggle"><span class="marginnote">
@@ -188,16 +188,16 @@ A Sierpinski triangle rendered using box combinators.
 <p>The following snippet is a modified version of the spiral renderer from section 10.15 of <q><a href="https://www.goodreads.com/book/show/5680904-programming-in-scala">Programming in Scala</a>.</q></p>
 <figure><label class="margin-toggle" for="mn-spiral-code">⊕</label><input type="checkbox" id="mn-spiral-code" class="margin-toggle"><span class="marginnote">
   A program drawing a spiral with <code>n</code> turns.
-</span><div class="source-container"><pre class="source ocaml"><code><span class="line"><b>let rec</b> spiral n =</span>
-<span class="line">    let open Box in</span>
-<span class="line">    if n &lt;= 0</span>
-<span class="line">    then of_char '+'</span>
-<span class="line">    else let s = spiral (n - 1) in</span>
-<span class="line">         let h, w = dimensions s in</span>
-<span class="line">         let vbar = fill '|' h 1 in</span>
-<span class="line">         grid [| [| of_string &quot;| +&quot;; fill '-' 1 w; of_char '+' |]</span>
-<span class="line">               ; [| vbar; of_char ' '; s; of_char ' '; vbar |]</span>
-<span class="line">               ; [| of_char '+'; fill '-' 1 (w+2); of_char '+' |] |]</span>
+</span><div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-kw">rec</span> <span class="hl-defun">spiral</span> <span class="hl-id">n</span> =</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">open</span> <span class="hl-id">Box</span> <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">n</span> &lt;= 0</span>
+<span class="line">    <span class="hl-kw">then</span> <span class="hl-id">of_char</span> '+'</span>
+<span class="line">    <span class="hl-kw">else</span> <span class="hl-kw">let</span> <span class="hl-var">s</span> = <span class="hl-id">spiral</span> (<span class="hl-id">n</span> - 1) <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-kw">let</span> <span class="hl-var">h</span>, <span class="hl-var">w</span> = <span class="hl-id">dimensions</span> <span class="hl-id">s</span> <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-kw">let</span> <span class="hl-var">vbar</span> = <span class="hl-id">fill</span> '|' <span class="hl-id">h</span> 1 <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-id">grid</span> [| [| <span class="hl-id">of_string</span> <span class="hl-str">&quot;| +&quot;</span>; <span class="hl-id">fill</span> '-' 1 <span class="hl-id">w</span>; <span class="hl-id">of_char</span> '+' |]</span>
+<span class="line">               ; [| <span class="hl-id">vbar</span>; <span class="hl-id">of_char</span> ' '; <span class="hl-id">s</span>; <span class="hl-id">of_char</span> ' '; <span class="hl-id">vbar</span> |]</span>
+<span class="line">               ; [| <span class="hl-id">of_char</span> '+'; <span class="hl-id">fill</span> '-' 1 (<span class="hl-id">w</span>+2); <span class="hl-id">of_char</span> '+' |] |]</span>
 </code></pre></div>
 </figure>
 <div class="source-container"><pre class="source text"><code><span class="line">$ spiral 4 |&gt; Box.print_box</span>
@@ -216,27 +216,27 @@ A Sierpinski triangle rendered using box combinators.
 <p>Playing with fractals is fun, but it won’t pay our bills.
 Business loves tables, and box combinators are a powerful tool for rendering them.
 Let’s display an array of book metadata in a human-friendly way.</p>
-<div class="source-container"><pre class="source ocaml"><code><span class="line"><b>type</b> book = { title : string;</span>
-<span class="line">              author : string;</span>
-<span class="line">              rating : int;</span>
-<span class="line">              price : float }</span>
+<div class="source-container"><pre class="source ocaml"><code><span class="line"><b>type</b> <span class="hl-id">book</span> = { <span class="hl-id">title</span> : <span class="hl-id">string</span>;</span>
+<span class="line">              <span class="hl-id">author</span> : <span class="hl-id">string</span>;</span>
+<span class="line">              <span class="hl-id">rating</span> : <span class="hl-id">int</span>;</span>
+<span class="line">              <span class="hl-id">price</span> : <span class="hl-id">float</span> }</span>
 <span class="line"></span>
-<span class="line"><b>let</b> books = [| { title = &quot;Waiting for Good Dough&quot;;</span>
-<span class="line">                 author = &quot;Samuel Biscuit&quot;;</span>
-<span class="line">                 rating = 4;</span>
-<span class="line">                 price = 23.86 };</span>
-<span class="line">               { title = &quot;The Bun Also Rises&quot;;</span>
-<span class="line">                 author = &quot;Ernest Hemingwaffle&quot;;</span>
-<span class="line">                 rating = 5;</span>
-<span class="line">                 price = 9.86 };</span>
-<span class="line">               { title = &quot;Yeast of Eden&quot;;</span>
-<span class="line">                 author = &quot;John Sconebeck&quot;;</span>
-<span class="line">                 rating = 2;</span>
-<span class="line">                 price = 6.00 };</span>
-<span class="line">               { title = &quot;One Hundred Years of Solid Food&quot;;</span>
-<span class="line">                 author = &quot;G. Gordita Marquez&quot;;</span>
-<span class="line">                 rating = 4;</span>
-<span class="line">                 price = 17.00 }</span>
+<span class="line"><b>let</b> <span class="hl-id">books</span> = [| { <span class="hl-id">title</span> = <span class="hl-str">&quot;Waiting for Good Dough&quot;</span>;</span>
+<span class="line">                 <span class="hl-id">author</span> = <span class="hl-str">&quot;Samuel Biscuit&quot;</span>;</span>
+<span class="line">                 <span class="hl-id">rating</span> = 4;</span>
+<span class="line">                 <span class="hl-id">price</span> = 23.86 };</span>
+<span class="line">               { <span class="hl-id">title</span> = <span class="hl-str">&quot;The Bun Also Rises&quot;</span>;</span>
+<span class="line">                 <span class="hl-id">author</span> = <span class="hl-str">&quot;Ernest Hemingwaffle&quot;</span>;</span>
+<span class="line">                 <span class="hl-id">rating</span> = 5;</span>
+<span class="line">                 <span class="hl-id">price</span> = 9.86 };</span>
+<span class="line">               { <span class="hl-id">title</span> = <span class="hl-str">&quot;Yeast of Eden&quot;</span>;</span>
+<span class="line">                 <span class="hl-id">author</span> = <span class="hl-str">&quot;John Sconebeck&quot;</span>;</span>
+<span class="line">                 <span class="hl-id">rating</span> = 2;</span>
+<span class="line">                 <span class="hl-id">price</span> = 6.00 };</span>
+<span class="line">               { <span class="hl-id">title</span> = <span class="hl-str">&quot;One Hundred Years of Solid Food&quot;</span>;</span>
+<span class="line">                 <span class="hl-id">author</span> = <span class="hl-str">&quot;G. Gordita Marquez&quot;</span>;</span>
+<span class="line">                 <span class="hl-id">rating</span> = 4;</span>
+<span class="line">                 <span class="hl-id">price</span> = 17.00 }</span>
 <span class="line">             |]</span>
 </code></pre></div>
 <p>The <a href="#ref-make-table"><code>make_table</code></a> function transforms records into a table in three steps:
@@ -247,23 +247,23 @@ Let’s display an array of book metadata in a human-friendly way.</p>
 </li></ol>
 <figure><label class="margin-toggle" for="mn-make-table">⊕</label><input type="checkbox" id="mn-make-table" class="margin-toggle"><span class="marginnote">
   The <code>make_table</code> function renders a book metadata array as an <span class="smallcaps">ascii</span> table.
-</span><div class="source-container"><pre class="source ocaml linenumbers"><code><span class="line"><b>let</b> make_table t =<span id="ref-make-table"></span></span>
-<span class="line">    let open Box in</span>
-<span class="line">    let make_column f align =</span>
-<span class="line">        Array.map (fun b -&gt; f b |&gt; of_string) t |&gt; vconcat ~align in</span>
-<span class="line">    let cols = [|</span>
-<span class="line">        (&quot;Title&quot;,  make_column (fun b -&gt; b.title) `Left);</span>
-<span class="line">        (&quot;Author&quot;, make_column (fun b -&gt; b.author) `Left);</span>
-<span class="line">        (&quot;Rating&quot;, make_column (fun b -&gt; String.make (b.rating) '*') `Left);</span>
-<span class="line">        (&quot;Price&quot;,  make_column (fun b -&gt; Printf.sprintf &quot;%.2f&quot; b.price) `Right);</span>
-<span class="line">    |] in</span>
-<span class="line">    let titled = Array.map (fun (h, column) -&gt;</span>
-<span class="line">        let header = of_string h in</span>
-<span class="line">        let hbar = fill '-' 1 (max (width header) (width column) + 2)</span>
-<span class="line">        in vconcat [| header; hbar; column |]</span>
-<span class="line">    ) cols in</span>
-<span class="line">    let vbar = fill '|' (height titled.(0)) 1 in</span>
-<span class="line">    Array.fold_left (fun acc col -&gt; hconcat [| acc; col; vbar |]) vbar titled</span>
+</span><div class="source-container"><pre class="source ocaml linenumbers"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-defun">make_table</span> <span class="hl-id">t</span> =<span id="ref-make-table"></span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">open</span> <span class="hl-id">Box</span> <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-defun">make_column</span> <span class="hl-id">f</span> <span class="hl-id">align</span> =</span>
+<span class="line">        <span class="hl-id">Array</span>.<span class="hl-id">map</span> (<span class="hl-kw">fun</span> <span class="hl-id">b</span> -&gt; <span class="hl-id">f</span> <span class="hl-id">b</span> |&gt; <span class="hl-id">of_string</span>) <span class="hl-id">t</span> |&gt; <span class="hl-id">vconcat</span> ~<span class="hl-id">align</span> <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">cols</span> = [|</span>
+<span class="line">        (<span class="hl-str">&quot;Title&quot;</span>,  <span class="hl-id">make_column</span> (<span class="hl-kw">fun</span> <span class="hl-id">b</span> -&gt; <span class="hl-id">b</span>.<span class="hl-id">title</span>) `<span class="hl-id">Left</span>);</span>
+<span class="line">        (<span class="hl-str">&quot;Author&quot;</span>, <span class="hl-id">make_column</span> (<span class="hl-kw">fun</span> <span class="hl-id">b</span> -&gt; <span class="hl-id">b</span>.<span class="hl-id">author</span>) `<span class="hl-id">Left</span>);</span>
+<span class="line">        (<span class="hl-str">&quot;Rating&quot;</span>, <span class="hl-id">make_column</span> (<span class="hl-kw">fun</span> <span class="hl-id">b</span> -&gt; <span class="hl-id">String</span>.<span class="hl-id">make</span> (<span class="hl-id">b</span>.<span class="hl-id">rating</span>) '*') `<span class="hl-id">Left</span>);</span>
+<span class="line">        (<span class="hl-str">&quot;Price&quot;</span>,  <span class="hl-id">make_column</span> (<span class="hl-kw">fun</span> <span class="hl-id">b</span> -&gt; <span class="hl-id">Printf</span>.<span class="hl-id">sprintf</span> <span class="hl-str">&quot;%.2f&quot;</span> <span class="hl-id">b</span>.<span class="hl-id">price</span>) `<span class="hl-id">Right</span>);</span>
+<span class="line">    |] <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">titled</span> = <span class="hl-id">Array</span>.<span class="hl-id">map</span> (<span class="hl-kw">fun</span> (<span class="hl-id">h</span>, <span class="hl-id">column</span>) -&gt;</span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-var">header</span> = <span class="hl-id">of_string</span> <span class="hl-id">h</span> <span class="hl-kw">in</span></span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-var">hbar</span> = <span class="hl-id">fill</span> '-' 1 (<span class="hl-id">max</span> (<span class="hl-id">width</span> <span class="hl-id">header</span>) (<span class="hl-id">width</span> <span class="hl-id">column</span>) + 2)</span>
+<span class="line">        <span class="hl-kw">in</span> <span class="hl-id">vconcat</span> [| <span class="hl-id">header</span>; <span class="hl-id">hbar</span>; <span class="hl-id">column</span> |]</span>
+<span class="line">    ) <span class="hl-id">cols</span> <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">vbar</span> = <span class="hl-id">fill</span> '|' (<span class="hl-id">height</span> <span class="hl-id">titled</span>.(0)) 1 <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-id">Array</span>.<span class="hl-id">fold_left</span> (<span class="hl-kw">fun</span> <span class="hl-id">acc</span> <span class="hl-id">col</span> -&gt; <span class="hl-id">hconcat</span> [| <span class="hl-id">acc</span>; <span class="hl-id">col</span>; <span class="hl-id">vbar</span> |]) <span class="hl-id">vbar</span> <span class="hl-id">titled</span></span>
 </code></pre></div>
 </figure>
 <p>Rendering the book metadata results in a neat <span class="smallcaps">ascii</span> table.</p>
@@ -302,96 +302,96 @@ However, the simple approach is good enough for data that fits on a screen.</p>
 <figure><label class="margin-toggle" for="mn-box-module">⊕</label><input type="checkbox" id="mn-box-module" class="margin-toggle"><span class="marginnote">
 A simple implementation of the box combinator library.
 This code belongs in the <code>box.ml</code> file.
-</span><div class="source-container"><pre class="source ocaml"><code><span class="line">type t = string array</span>
+</span><div class="source-container"><pre class="source ocaml"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">t</span> = <span class="hl-id">string</span> <span class="hl-id">array</span></span>
 <span class="line"></span>
-<span class="line">let height b = Array.length b<span id="ref-height"></span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">height</span> <span class="hl-id">b</span> = <span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">b</span><span id="ref-height"></span></span>
 <span class="line"></span>
-<span class="line">let width b = if Array.length b == 0 then 0 else String.length b.(0)<span id="ref-width"></span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">width</span> <span class="hl-id">b</span> = <span class="hl-kw">if</span> <span class="hl-id">Array</span>.<span class="hl-id">length</span> <span class="hl-id">b</span> == 0 <span class="hl-kw">then</span> 0 <span class="hl-kw">else</span> <span class="hl-id">String</span>.<span class="hl-id">length</span> <span class="hl-id">b</span>.(0)<span id="ref-width"></span></span>
 <span class="line"></span>
-<span class="line"><em>(** Returns the box height and width. *)</em></span>
-<span class="line">let dimensions b = height b, width b</span>
+<span class="line"><span class="hl-comment">(** Returns the box height and width. *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">dimensions</span> <span class="hl-id">b</span> = <span class="hl-id">height</span> <span class="hl-id">b</span>, <span class="hl-id">width</span> <span class="hl-id">b</span></span>
 <span class="line"></span>
-<span class="line"><em>(** Prints box b to the standard output. *)</em></span>
-<span class="line">let print_box b = Array.iter print_endline b<span id="ref-print-box"></span></span>
+<span class="line"><span class="hl-comment">(** Prints box b to the standard output. *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">print_box</span> <span class="hl-id">b</span> = <span class="hl-id">Array</span>.<span class="hl-id">iter</span> <span class="hl-id">print_endline</span> <span class="hl-id">b</span><span id="ref-print-box"></span></span>
 <span class="line"></span>
-<span class="line"><em>(** Creates a box large enough to hold string s. *)</em></span>
-<span class="line">let of_string s = [| s |]<span id="ref-of-string"></span></span>
+<span class="line"><span class="hl-comment">(** Creates a box large enough to hold string s. *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">of_string</span> <span class="hl-id">s</span> = [| <span class="hl-id">s</span> |]<span id="ref-of-string"></span></span>
 <span class="line"></span>
-<span class="line"><em>(** Creates an h×w box filled with character c. *)</em></span>
-<span class="line">let fill c h w = Array.make h (String.make w c)<span id="ref-fill"></span></span>
+<span class="line"><span class="hl-comment">(** Creates an h×w box filled with character c. *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">fill</span> <span class="hl-id">c</span> <span class="hl-id">h</span> <span class="hl-id">w</span> = <span class="hl-id">Array</span>.<span class="hl-id">make</span> <span class="hl-id">h</span> (<span class="hl-id">String</span>.<span class="hl-id">make</span> <span class="hl-id">w</span> <span class="hl-id">c</span>)<span id="ref-fill"></span></span>
 <span class="line"></span>
-<span class="line"><em>(** Creates a 1×1 box containing character c. *)</em></span>
-<span class="line">let of_char c = fill c 1 1<span id="ref-of-char"></span></span>
+<span class="line"><span class="hl-comment">(** Creates a 1×1 box containing character c. *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">of_char</span> <span class="hl-id">c</span> = <span class="hl-id">fill</span> <span class="hl-id">c</span> 1 1<span id="ref-of-char"></span></span>
 <span class="line"></span>
-<span class="line"><em>(** Creates an h×w box filled with spaces. *)</em></span>
-<span class="line">let space h w = fill ' ' h w<span id="ref-space"></span></span>
+<span class="line"><span class="hl-comment">(** Creates an h×w box filled with spaces. *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">space</span> <span class="hl-id">h</span> <span class="hl-id">w</span> = <span class="hl-id">fill</span> ' ' <span class="hl-id">h</span> <span class="hl-id">w</span><span id="ref-space"></span></span>
 <span class="line"></span>
-<span class="line"><em>(** An empty box. *)</em></span>
-<span class="line">let empty = space 0 0<span id="ref-empty"></span></span>
+<span class="line"><span class="hl-comment">(** An empty box. *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-var">empty</span> = <span class="hl-id">space</span> 0 0<span id="ref-empty"></span></span>
 <span class="line"></span>
-<span class="line"><em>(** The vertical alignment type. *)</em></span>
-<span class="line">type vertical   = [ `Top  | `Center | `Bottom ]</span>
+<span class="line"><span class="hl-comment">(** The vertical alignment type. *)</span></span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">vertical</span>   = [ `<span class="hl-id">Top</span>  | `<span class="hl-id">Center</span> | `<span class="hl-id">Bottom</span> ]</span>
 <span class="line"></span>
-<span class="line"><em>(** The horizontal alignment type. *)</em></span>
-<span class="line">type horizontal = [ `Left | `Center | `Right  ]</span>
+<span class="line"><span class="hl-comment">(** The horizontal alignment type. *)</span></span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">horizontal</span> = [ `<span class="hl-id">Left</span> | `<span class="hl-id">Center</span> | `<span class="hl-id">Right</span>  ]</span>
 <span class="line"></span>
-<span class="line"><em>(** Stack box l to the left of box r. *)</em></span>
-<span class="line"><b>let rec</b> beside ?(align:vertical = `Center) l r =<span id="ref-beside"></span></span>
-<span class="line">    if width l == 0 then r else if width r == 0 then l</span>
-<span class="line">    else let hl = heighten ~align (height r) l in</span>
-<span class="line">         let hr = heighten ~align (height l) r in</span>
-<span class="line">         Array.map2 String.cat hl hr</span>
+<span class="line"><span class="hl-comment">(** Stack box l to the left of box r. *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-kw">rec</span> <span class="hl-defun">beside</span> ?(<span class="hl-id">align</span>:<span class="hl-id">vertical</span> = `<span class="hl-id">Center</span>) <span class="hl-id">l</span> <span class="hl-id">r</span> =<span id="ref-beside"></span></span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">width</span> <span class="hl-id">l</span> == 0 <span class="hl-kw">then</span> <span class="hl-id">r</span> <span class="hl-kw">else</span> <span class="hl-kw">if</span> <span class="hl-id">width</span> <span class="hl-id">r</span> == 0 <span class="hl-kw">then</span> <span class="hl-id">l</span></span>
+<span class="line">    <span class="hl-kw">else</span> <span class="hl-kw">let</span> <span class="hl-var">hl</span> = <span class="hl-id">heighten</span> ~<span class="hl-id">align</span> (<span class="hl-id">height</span> <span class="hl-id">r</span>) <span class="hl-id">l</span> <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-kw">let</span> <span class="hl-var">hr</span> = <span class="hl-id">heighten</span> ~<span class="hl-id">align</span> (<span class="hl-id">height</span> <span class="hl-id">l</span>) <span class="hl-id">r</span> <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-id">Array</span>.<span class="hl-id">map2</span> <span class="hl-id">String</span>.<span class="hl-id">cat</span> <span class="hl-id">hl</span> <span class="hl-id">hr</span></span>
 <span class="line"></span>
-<span class="line"><em>(** Stack box t above of box b. *)</em></span>
-<span class="line"><b>and</b> above ?(align:horizontal = `Center) t b =<span id="ref-above"></span></span>
-<span class="line">    if height t == 0 then b else if height b == 0 then t</span>
-<span class="line">    else let wt = widen ~align (width b) t in</span>
-<span class="line">         let wb = widen ~align (width t) b in</span>
-<span class="line">         Array.append wt wb</span>
+<span class="line"><span class="hl-comment">(** Stack box t above of box b. *)</span></span>
+<span class="line"><span class="hl-kw">and</span> <span class="hl-defun">above</span> ?(<span class="hl-id">align</span>:<span class="hl-id">horizontal</span> = `<span class="hl-id">Center</span>) <span class="hl-id">t</span> <span class="hl-id">b</span> =<span id="ref-above"></span></span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">height</span> <span class="hl-id">t</span> == 0 <span class="hl-kw">then</span> <span class="hl-id">b</span> <span class="hl-kw">else</span> <span class="hl-kw">if</span> <span class="hl-id">height</span> <span class="hl-id">b</span> == 0 <span class="hl-kw">then</span> <span class="hl-id">t</span></span>
+<span class="line">    <span class="hl-kw">else</span> <span class="hl-kw">let</span> <span class="hl-var">wt</span> = <span class="hl-id">widen</span> ~<span class="hl-id">align</span> (<span class="hl-id">width</span> <span class="hl-id">b</span>) <span class="hl-id">t</span> <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-kw">let</span> <span class="hl-var">wb</span> = <span class="hl-id">widen</span> ~<span class="hl-id">align</span> (<span class="hl-id">width</span> <span class="hl-id">t</span>) <span class="hl-id">b</span> <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-id">Array</span>.<span class="hl-id">append</span> <span class="hl-id">wt</span> <span class="hl-id">wb</span></span>
 <span class="line"></span>
-<span class="line"><em>(** Makes box b at least w units wide. *)</em></span>
-<span class="line"><b>and</b> widen ?(align:horizontal = `Center) w b =<span id="ref-widen"></span></span>
-<span class="line">    if width b &gt;= w then b</span>
-<span class="line">    else let bh, bw = height b, width b in</span>
-<span class="line">         let pw = w - bw in</span>
-<span class="line">         match align with</span>
-<span class="line">         | `Left   -&gt; beside b (space bh pw)</span>
-<span class="line">         | `Right  -&gt; beside (space bh pw) b</span>
-<span class="line">         | `Center -&gt; hconcat</span>
-<span class="line">                      [| space bh (pw/2); b; space bh (pw - pw/2) |]</span>
+<span class="line"><span class="hl-comment">(** Makes box b at least w units wide. *)</span></span>
+<span class="line"><span class="hl-kw">and</span> <span class="hl-defun">widen</span> ?(<span class="hl-id">align</span>:<span class="hl-id">horizontal</span> = `<span class="hl-id">Center</span>) <span class="hl-id">w</span> <span class="hl-id">b</span> =<span id="ref-widen"></span></span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">width</span> <span class="hl-id">b</span> &gt;= <span class="hl-id">w</span> <span class="hl-kw">then</span> <span class="hl-id">b</span></span>
+<span class="line">    <span class="hl-kw">else</span> <span class="hl-kw">let</span> <span class="hl-var">bh</span>, <span class="hl-var">bw</span> = <span class="hl-id">height</span> <span class="hl-id">b</span>, <span class="hl-id">width</span> <span class="hl-id">b</span> <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-kw">let</span> <span class="hl-var">pw</span> = <span class="hl-id">w</span> - <span class="hl-id">bw</span> <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-kw">match</span> <span class="hl-id">align</span> <span class="hl-kw">with</span></span>
+<span class="line">         | `<span class="hl-id">Left</span>   -&gt; <span class="hl-id">beside</span> <span class="hl-id">b</span> (<span class="hl-id">space</span> <span class="hl-id">bh</span> <span class="hl-id">pw</span>)</span>
+<span class="line">         | `<span class="hl-id">Right</span>  -&gt; <span class="hl-id">beside</span> (<span class="hl-id">space</span> <span class="hl-id">bh</span> <span class="hl-id">pw</span>) <span class="hl-id">b</span></span>
+<span class="line">         | `<span class="hl-id">Center</span> -&gt; <span class="hl-id">hconcat</span></span>
+<span class="line">                      [| <span class="hl-id">space</span> <span class="hl-id">bh</span> (<span class="hl-id">pw</span>/2); <span class="hl-id">b</span>; <span class="hl-id">space</span> <span class="hl-id">bh</span> (<span class="hl-id">pw</span> - <span class="hl-id">pw</span>/2) |]</span>
 <span class="line"></span>
-<span class="line"><em>(** Makes box b at least h units high. *)</em></span>
-<span class="line"><b>and</b> heighten ?(align:vertical = `Center) b h =<span id="ref-heighten"></span></span>
-<span class="line">    if height b &gt;= h then b</span>
-<span class="line">    else let bh, bw = height b, width b in</span>
-<span class="line">         let ph = h - bh in</span>
-<span class="line">         match align with</span>
-<span class="line">         | `Top    -&gt; above b (space ph bw)</span>
-<span class="line">         | `Bottom -&gt; above (space ph bw) b</span>
-<span class="line">         | `Center -&gt; vconcat [| space (ph/2) bw</span>
-<span class="line">                               ; b</span>
-<span class="line">                               ; space (ph - ph/2) bw |]</span>
+<span class="line"><span class="hl-comment">(** Makes box b at least h units high. *)</span></span>
+<span class="line"><span class="hl-kw">and</span> <span class="hl-defun">heighten</span> ?(<span class="hl-id">align</span>:<span class="hl-id">vertical</span> = `<span class="hl-id">Center</span>) <span class="hl-id">b</span> <span class="hl-id">h</span> =<span id="ref-heighten"></span></span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">height</span> <span class="hl-id">b</span> &gt;= <span class="hl-id">h</span> <span class="hl-kw">then</span> <span class="hl-id">b</span></span>
+<span class="line">    <span class="hl-kw">else</span> <span class="hl-kw">let</span> <span class="hl-var">bh</span>, <span class="hl-var">bw</span> = <span class="hl-id">height</span> <span class="hl-id">b</span>, <span class="hl-id">width</span> <span class="hl-id">b</span> <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-kw">let</span> <span class="hl-var">ph</span> = <span class="hl-id">h</span> - <span class="hl-id">bh</span> <span class="hl-kw">in</span></span>
+<span class="line">         <span class="hl-kw">match</span> <span class="hl-id">align</span> <span class="hl-kw">with</span></span>
+<span class="line">         | `<span class="hl-id">Top</span>    -&gt; <span class="hl-id">above</span> <span class="hl-id">b</span> (<span class="hl-id">space</span> <span class="hl-id">ph</span> <span class="hl-id">bw</span>)</span>
+<span class="line">         | `<span class="hl-id">Bottom</span> -&gt; <span class="hl-id">above</span> (<span class="hl-id">space</span> <span class="hl-id">ph</span> <span class="hl-id">bw</span>) <span class="hl-id">b</span></span>
+<span class="line">         | `<span class="hl-id">Center</span> -&gt; <span class="hl-id">vconcat</span> [| <span class="hl-id">space</span> (<span class="hl-id">ph</span>/2) <span class="hl-id">bw</span></span>
+<span class="line">                               ; <span class="hl-id">b</span></span>
+<span class="line">                               ; <span class="hl-id">space</span> (<span class="hl-id">ph</span> - <span class="hl-id">ph</span>/2) <span class="hl-id">bw</span> |]</span>
 <span class="line"></span>
-<span class="line"><em>(** Stacks an array of boxes horizontally. *)</em></span>
-<span class="line"><b>and</b> hconcat ?(align:vertical = `Center) boxes =<span id="ref-hconcat"></span></span>
-<span class="line">    Array.fold_left (beside ~align) empty boxes</span>
+<span class="line"><span class="hl-comment">(** Stacks an array of boxes horizontally. *)</span></span>
+<span class="line"><span class="hl-kw">and</span> <span class="hl-defun">hconcat</span> ?(<span class="hl-id">align</span>:<span class="hl-id">vertical</span> = `<span class="hl-id">Center</span>) <span class="hl-id">boxes</span> =<span id="ref-hconcat"></span></span>
+<span class="line">    <span class="hl-id">Array</span>.<span class="hl-id">fold_left</span> (<span class="hl-id">beside</span> ~<span class="hl-id">align</span>) <span class="hl-id">empty</span> <span class="hl-id">boxes</span></span>
 <span class="line"></span>
-<span class="line"><em>(** Stacks an array of boxes vertically. *)</em></span>
-<span class="line"><b>and</b> vconcat ?(align:horizontal = `Center) boxes =<span id="ref-vconcat"></span></span>
-<span class="line">    Array.fold_left (above ~align) empty boxes</span>
+<span class="line"><span class="hl-comment">(** Stacks an array of boxes vertically. *)</span></span>
+<span class="line"><span class="hl-kw">and</span> <span class="hl-defun">vconcat</span> ?(<span class="hl-id">align</span>:<span class="hl-id">horizontal</span> = `<span class="hl-id">Center</span>) <span class="hl-id">boxes</span> =<span id="ref-vconcat"></span></span>
+<span class="line">    <span class="hl-id">Array</span>.<span class="hl-id">fold_left</span> (<span class="hl-id">above</span> ~<span class="hl-id">align</span>) <span class="hl-id">empty</span> <span class="hl-id">boxes</span></span>
 <span class="line"></span>
-<span class="line"><em>(** Arranges a 2-D array of boxes. *)</em></span>
-<span class="line"><b>let</b> grid g = Array.map hconcat g |&gt; vconcat<span id="ref-grid"></span></span>
+<span class="line"><span class="hl-comment">(** Arranges a 2-D array of boxes. *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">grid</span> <span class="hl-id">g</span> = <span class="hl-id">Array</span>.<span class="hl-id">map</span> <span class="hl-id">hconcat</span> <span class="hl-id">g</span> |&gt; <span class="hl-id">vconcat</span><span id="ref-grid"></span></span>
 <span class="line"></span>
-<span class="line"><em>(** Draws an ASCII art frame around box b. *)</em></span>
-<span class="line"><b>let</b> framed b =</span>
-<span class="line">    let h, w = dimensions b in</span>
-<span class="line">    let vbar = fill '|' h 1 in</span>
-<span class="line">    let hbar = fill '-' 1 w in</span>
-<span class="line">    let corner = of_char '+' in</span>
-<span class="line">    grid [| [| corner; hbar; corner |]</span>
-<span class="line">          ; [| vbar;   b;    vbar   |]</span>
-<span class="line">          ; [| corner; hbar; corner |] |]</span>
+<span class="line"><span class="hl-comment">(** Draws an ASCII art frame around box b. *)</span></span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-defun">framed</span> <span class="hl-id">b</span> =</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">h</span>, <span class="hl-var">w</span> = <span class="hl-id">dimensions</span> <span class="hl-id">b</span> <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">vbar</span> = <span class="hl-id">fill</span> '|' <span class="hl-id">h</span> 1 <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">hbar</span> = <span class="hl-id">fill</span> '-' 1 <span class="hl-id">w</span> <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">corner</span> = <span class="hl-id">of_char</span> '+' <span class="hl-kw">in</span></span>
+<span class="line">    <span class="hl-id">grid</span> [| [| <span class="hl-id">corner</span>; <span class="hl-id">hbar</span>; <span class="hl-id">corner</span> |]</span>
+<span class="line">          ; [| <span class="hl-id">vbar</span>;   <span class="hl-id">b</span>;    <span class="hl-id">vbar</span>   |]</span>
+<span class="line">          ; [| <span class="hl-id">corner</span>; <span class="hl-id">hbar</span>; <span class="hl-id">corner</span> |] |]</span>
 </code></pre></div>
 </figure>
 </section>

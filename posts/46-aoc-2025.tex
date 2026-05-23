@@ -98,7 +98,7 @@ and a space above a splitter is a parent of the two spaces on the splitter's sid
 The number of paths to a space is the sum of paths to its parents.
 
 \begin{figure}
-\begin{code}
+\begin{code}[rust]
 fn count\_splits\_and\_timelines(g: &[Vec<char>]) -> (usize, usize) {
     let n = g.len();
     let m = g[0].len();
@@ -173,8 +173,8 @@ impl UnionFind {
         }
     }
 
-    \emph{/// Returns the root node of node X.}
-    \emph{/// Nodes that belong to the same partition share the root.}
+    /// Returns the root node of node X.
+    /// Nodes that belong to the same partition share the root.
     fn find(&self, mut x: usize) -> usize {
         while self.parent[x] != x {
             x = self.parent[x];
@@ -182,8 +182,8 @@ impl UnionFind {
         x
     }
 
-    \emph{/// Joins partitions to which nodes X and Y belong.}
-    \emph{/// Returns the root of the resulting partition.}
+    /// Joins partitions to which nodes X and Y belong.
+    /// Returns the root of the resulting partition.
     fn union(&mut self, x: usize, y: usize) -> usize {
         let root\_x = self.find(x);
         let root\_y = self.find(y);
@@ -202,12 +202,12 @@ impl UnionFind {
         }
     }
 
-    \emph{/// Returns the size of the partition to which X belongs. }
+    /// Returns the size of the partition to which X belongs.
     fn size(&self, x: usize) -> usize {
         self.size[self.find(x)]
     }
 
-    \emph{/// Returns the partition count.}
+    /// Returns the partition count.
     fn tree\_count(&self) -> usize {
         self.trees
     }
@@ -217,12 +217,12 @@ impl UnionFind {
 Both parts require computing all edges between points
 and sorting them by distance.
 
-\begin{code}
+\begin{code}[rust]
 type Point = (i64, i64, i64);
 type Dist = i64;
 type Node = usize;
 
-\emph{/// Returns the squared distance between two points.}
+/// Returns the squared distance between two points.
 fn dist2(a: &Point, b: &Point) -> Dist {
     let dx = a.0 - b.0;
     let dy = a.1 - b.1;
@@ -230,7 +230,7 @@ fn dist2(a: &Point, b: &Point) -> Dist {
     dx * dx + dy * dy + dz * dz
 }
 
-\emph{/// Returns the graph edges sorted by distance.}
+/// Returns the graph edges sorted by distance.
 fn sorted\_edges(boxes: &[Point]) -> Vec<(Dist, Node, Node)> {
     let n = boxes.len();
     let mut edges = vec![];
@@ -250,7 +250,7 @@ after adding \code{top\_k} edges.
 We don't have to traverse the graph
 because union-find already tracks all the information we need.
 
-\begin{code}
+\begin{code}[rust]
 fn part1(boxes: &[Point], top\_k: usize) -> usize {
     let edges = sorted\_edges(boxes);
     let n = boxes.len();
@@ -273,7 +273,7 @@ In the second part,
 we must multiply the x-coordinates of the first edge that makes the graph connected.
 Union-find makes this trivial.
 
-\begin{code}
+\begin{code}[rust]
 fn part2(boxes: &[Point]) -> i64 {
     let mut uf = UnionFind::new(boxes.len());
     let edges = sorted\_edges(boxes);
@@ -310,7 +310,7 @@ the predicate always returns \code{true}.
 For the second part,
 the predicate checks whether the polygon contains the rectangle.
 
-\begin{code}
+\begin{code}[rust]
 type Point = (i64, i64);
 
 fn largest\_rectangle(
@@ -344,7 +344,7 @@ We must verify two conditions:
 \item None of the rectangle's edges cross any polygon edge.
 \end{enumerate}
 
-\begin{code}
+\begin{code}[rust]
 fn rect\_in\_polygon(a: usize, b: usize, coords: &[Point]) -> bool {
     let (x1, y1) = coords[a];
     let (x2, y2) = coords[b];
@@ -373,8 +373,8 @@ the point lies within the polygon.
 \includegraphics{/images/46-ray-intersection.svg}
 \end{figure}
 
-\begin{code}
-\emph{/// Checks whether a point lies in a polygon.}
+\begin{code}[rust]
+/// Checks whether a point lies in a polygon.
 fn point\_in\_polygon(p: Point, vertices: &[Point]) -> bool {
     let mut inside = false;
     let n = vertices.len();
@@ -408,14 +408,14 @@ Note that the lines must \emph{cross}, not just \emph{touch}
 \includegraphics{/images/46-lines-cross.svg}
 \end{figure}
 
-\begin{code}
-\emph{/// Checks whether line a-b crosses line c-d.}
-\emph{/// Both lines must be parallel to one of the axis.}
+\begin{code}[rust]
+/// Checks whether line a-b crosses line c-d.
+/// Both lines must be parallel to one of the axis.
 fn lines\_cross(a: Point, b: Point, c: Point, d: Point) -> bool {
     match (a.0 == b.0, c.0 == d.0) {
-        (true, true) => false, \emph{// both vertical}
+        (true, true) => false, // both vertical
         (true, false) => {
-            \emph{// a-b is vertical, c-d is horizontal}
+            // a-b is vertical, c-d is horizontal
             assert\_eq!(c.1, d.1);
             let xmin = c.0.min(d.0);
             let xmax = c.0.max(d.0);
@@ -424,11 +424,11 @@ fn lines\_cross(a: Point, b: Point, c: Point, d: Point) -> bool {
             xmin < a.0 && a.0 < xmax && ymin < c.1 && c.1 < ymax
         }
         (false, true) => lines\_cross(c, d, a, b),
-        (false, false) => false, \emph{// both horizontal}
+        (false, false) => false, // both horizontal
     }
 }
 
-\emph{/// Checks whether line a-b crosses any of the polygon edges.}
+/// Checks whether line a-b crosses any of the polygon edges.
 fn line\_crosses\_polygon(a: Point, b: Point, vertices: &[Point]) -> bool {
     let n = vertices.len();
     for i in 0..n {
@@ -469,7 +469,7 @@ The search starts at the zero vector and must reach $t$.
 Since the number of dimensions is small (up to ten),
 I represent vectors as 64-bit integers.
 
-\begin{code}
+\begin{code}[rust]
 fn lights\_min\_presses(buttons: &[u64], target: u64) -> usize {
     if target == 0 {
         return 0;
@@ -513,8 +513,8 @@ I resorted to the \textsc{smt} solver \href{https://github.com/Z3Prover/z3}{z3}.
 Rust has \href{https://crates.io/crates/z3}{nice bindings},
 and my code worked on the first try.
 
-\begin{code}
-fn joltage\_min\_presses\_z3
+\begin{code}[rust]
+fn joltage\_min\_presses\_z3(
     ndims: usize,
     buttons: &[u64],
     target: &[u16],
@@ -522,7 +522,7 @@ fn joltage\_min\_presses\_z3
     use z3::{ast::Int, Optimize, SatResult};
     let opt = Optimize::new();
 
-    \emph{// Define the k\_i variables.}
+    // Define the k\_i variables.
     let mut vars = vec![];
     for i in 0..buttons.len() {
         let k\_i = Int::fresh\_const(format!("k\_{}", i).as\_str());
@@ -530,7 +530,7 @@ fn joltage\_min\_presses\_z3
         vars.push(k\_i);
     }
 
-    \emph{// Define a constraint for every dimension.}
+    // Define a constraint for every dimension.
     for d in 0..ndims {
         let mut vals = vec![];
         for (i, b) in buttons.iter().enumerate() {
@@ -541,7 +541,7 @@ fn joltage\_min\_presses\_z3
         opt.assert(&Int::add(&vals).eq(target[d]));
     }
 
-    \emph{// Minimize the sum of k\_i.}
+    // Minimize the sum of k\_i.
     opt.minimize(&Int::add(&vars));
 
     let mut result = 0;
@@ -621,15 +621,14 @@ we precompute parity groups and consult them at every recursion level.
 
 Here is my implementation of \code{u/tenthmascot}'s idea:
 
-\begin{code}
-
+\begin{code}[rust]
 type ParityGroups = HashMap<u64, Vec<u64>>;
 
 fn parity\_groups(ndims: usize, buttons: &[u64]) -> ParityGroups {
     let n = buttons.len();
     assert!(n <= 64);
     let mut groups = ParityGroups::new();
-    \emph{// Use a 64-bit integer to represent subsets.}
+    // Use a 64-bit integer to represent subsets.
     for mask in 0..(1 << ndims) {
         let mut parity\_bits = 0;
         for i in 0..n {
@@ -647,7 +646,7 @@ fn parity\_groups(ndims: usize, buttons: &[u64]) -> ParityGroups {
     groups
 }
 
-fn joltage\_min\_presses
+fn joltage\_min\_presses(
     groups: &ParityGroups,
     buttons: &[u64],
     target: &[u16],
@@ -656,7 +655,7 @@ fn joltage\_min\_presses
         return Some(0);
     }
 
-    \emph{// Compute parity vector of the target.}
+    // Compute parity vector of the target.
     let mut parity = 0u64;
     for (d, t\_d) in target.iter().enumerate() {
         if t\_d & 1 > 0 {
@@ -666,9 +665,9 @@ fn joltage\_min\_presses
 
     let mut best: Option<usize> = None;
 
-    \emph{// Loop over subsets that give the desired parity.}
+    // Loop over subsets that give the desired parity.
     'outer: for subset in groups.get(&parity)? {
-        \emph{// Compute the arguments for a smaller problem.}
+        // Compute the arguments for a smaller problem.
         let mut new\_target = target.to\_vec();
         let mut presses = 0;
         for i in 0..buttons.len() {
@@ -690,7 +689,7 @@ fn joltage\_min\_presses
             *v /= 2;
         }
 
-        \emph{// Solve the smaller problem recursively.}
+        // Solve the smaller problem recursively.
         if let Some(x) = joltage\_min\_presses(groups, buttons, &new\_target) {
             let total = presses + 2 * x;
             best = Some(best.map\_or(total, |v| v.min(total)));
@@ -703,7 +702,7 @@ fn joltage\_min\_presses
 Parity groups also yield a simple algorithm for part one:
 pick the smallest subset in the target's parity group.
 
-\begin{code}
+\begin{code}[rust]
 fn lights\_min\_presses\_parity(groups: &ParityGroups, target: u64) -> usize {
     groups
         .get(&target)
@@ -723,10 +722,10 @@ but this time the graph is general, not grid-embedded.
 On day seven, the grid structure provided a natural topological order.
 Here, we must compute it ourselves.
 
-\begin{code}
+\begin{code}[rust]
 type Graph = Vec<Vec<usize>>;
 
-\emph{/// Returns the vertices of a graph in a topological order.}
+/// Returns the vertices of a graph in a topological order.
 fn toposort(g: &Graph, start: usize) -> Vec<usize> {
     fn go(
         g: &Graph,
@@ -751,7 +750,7 @@ fn toposort(g: &Graph, start: usize) -> Vec<usize> {
     out
 }
 
-\emph{/// Computes the number of paths between two vertices.}
+/// Computes the number of paths between two vertices.
 fn count\_paths(g: &Graph, start: usize, end: usize) -> usize {
     let mut d = vec![0; g.len()];
     d[start] = 1;
@@ -770,7 +769,7 @@ that pass through both \code{fft} and \code{dac} (in any order).
 The straightforward solution multiplies path counts for segments
 \code{svr -> fft -> dac -> out} and \code{svr -> dac -> fft -> out}.
 
-\begin{code}
+\begin{code}[rust]
 let fft\_dac =
     count\_paths(&g, svr, fft) *
     count\_paths(&g, fft, dac) *
@@ -809,7 +808,7 @@ Luckily, this guess was correct.
 
 My solution boils down to the following humble heuristic:
 
-\begin{code}
+\begin{code}[rust]
 let tiles\_per\_shape: Vec<usize> =
     shapes.iter().map(|g| grid\_count(g, &'#')).collect();
 

@@ -315,7 +315,7 @@ Let’s take a closer look at them.</p>
 <figure><label class="margin-toggle" for="mn-rose-tree">⊕</label><input type="checkbox" id="mn-rose-tree" class="margin-toggle"><span class="marginnote">
   A definition of a <a href="https://en.wikipedia.org/wiki/Rose_tree">rose tree</a> data type containing 32-bit integers (top) and the Candid representation of the same type (bottom).
 </span><div class="source-container"><pre class="source rust"><code><span class="line"><em>// Rust</em></span>
-<span class="line">pub enum Tree { Leaf(i32), Forest(Vec&lt;Tree&gt;) }</span>
+<span class="line"><span class="hl-kw">pub</span> <span class="hl-kw">enum</span> <span class="hl-typedef">Tree</span> { <span class="hl-id">Leaf</span>(<span class="hl-id">i32</span>), <span class="hl-id">Forest</span>(<span class="hl-id">Vec</span>&lt;<span class="hl-id">Tree</span>&gt;) }</span>
 </code></pre></div>
 <div class="source-container"><pre class="source candid"><code><span class="line"><em>// Candid</em></span>
 <span class="line">type Tree = variant { leaf : int32; forest : vec Tree };</span>

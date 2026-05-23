@@ -57,9 +57,9 @@ However, what we gain in convenience, we lose in efficiency: pure functional pro
 <h3 id="common-expression-elimination"><a href="#common-expression-elimination">Common expression elimination</a></h3>
 <p>Extracting a common expression into a variable can pose unexpected challenges.
 Let us start with the following snippet of code.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">let x = f(&quot;a very long string&quot;.to_string());</span>
-<span class="line">let y = g(&quot;a very long string&quot;.to_string());</span>
-<span class="line">// …</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-var">x</span> = <span class="hl-id">f</span>(<span class="hl-str">&quot;a very long string&quot;</span>.<span class="hl-id">to_string</span>());</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-var">y</span> = <span class="hl-id">g</span>(<span class="hl-str">&quot;a very long string&quot;</span>.<span class="hl-id">to_string</span>());</span>
+<span class="line"><span class="hl-comment">// …</span></span>
 </code></pre></div>
 <p>Look, <code>&quot;a very long string&quot;.to_string()</code> appears twice!
 Our first instinct is to assign a name to the expression and use it twice:</p>
@@ -113,11 +113,11 @@ Unfortunately, <code>rustc</code> does not have the <a href="https://typeclasses
 <h3 id="functional-abstraction"><a href="#functional-abstraction">Functional abstraction</a></h3>
 <p>Factoring code into a function might be harder than you expect because the compiler cannot reason about aliasing across function boundaries.
 Let’s say we have the following code.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">impl State {</span>
-<span class="line">  fn tick(&amp;mut self) {</span>
-<span class="line">    self.state = match self.state {</span>
-<span class="line">      Ping(s) =&gt; { self.x += 1; Pong(s) }</span>
-<span class="line">      Pong(s) =&gt; { self.x += 1; Ping(s) }</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">impl</span> <span class="hl-id">State</span> {</span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">tick</span>(&amp;<span class="hl-kw">mut</span> <span class="hl-kw">self</span>) {</span>
+<span class="line">    <span class="hl-kw">self</span>.<span class="hl-id">state</span> = <span class="hl-kw">match</span> <span class="hl-kw">self</span>.<span class="hl-id">state</span> {</span>
+<span class="line">      <span class="hl-id">Ping</span>(<span class="hl-id">s</span>) =&gt; { <span class="hl-kw">self</span>.<span class="hl-id">x</span> += 1; <span class="hl-id">Pong</span>(<span class="hl-id">s</span>) }</span>
+<span class="line">      <span class="hl-id">Pong</span>(<span class="hl-id">s</span>) =&gt; { <span class="hl-kw">self</span>.<span class="hl-id">x</span> += 1; <span class="hl-id">Ping</span>(<span class="hl-id">s</span>) }</span>
 <span class="line">    }</span>
 <span class="line">  }</span>
 <span class="line">}</span>
@@ -177,28 +177,28 @@ For example, imagine we have a struct that owns a map and a default value for ma
 The idiom’s name comes from Haskell’s <a href="https://wiki.haskell.org/Newtype"><code>newtype</code></a> keyword.</p>
 <p>One of the common uses of this idiom is to work around the <a href="#orphan-rules">orphan rules</a> and define trait implementation for the aliased type.
 For example, the following code defines a new type that displays byte vectors in hex.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">struct Hex(Vec&lt;u8&gt;);</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">Hex</span>(<span class="hl-id">Vec</span>&lt;<span class="hl-id">u8</span>&gt;);</span>
 <span class="line"></span>
-<span class="line">impl std::fmt::Display for Hex {</span>
-<span class="line">  fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter&lt;'_&gt;) -&gt; std::fmt::Result {</span>
-<span class="line">    self.0.iter().try_for_each(|b| write!(f, &quot;{:02x}&quot;, b))</span>
+<span class="line"><span class="hl-kw">impl</span> <span class="hl-id">std</span>::<span class="hl-id">fmt</span>::<span class="hl-id">Display</span> <span class="hl-kw">for</span> <span class="hl-id">Hex</span> {</span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">fmt</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">f</span>: &amp;<span class="hl-kw">mut</span> <span class="hl-id">std</span>::<span class="hl-id">fmt</span>::<span class="hl-id">Formatter</span>&lt;'<span class="hl-id">_</span>&gt;) -&gt; <span class="hl-id">std</span>::<span class="hl-id">fmt</span>::<span class="hl-id">Result</span> {</span>
+<span class="line">    <span class="hl-kw">self</span>.0.<span class="hl-id">iter</span>().<span class="hl-id">try_for_each</span>(|<span class="hl-id">b</span>| <span class="hl-id">write</span>!(<span class="hl-id">f</span>, <span class="hl-str">&quot;{:02x}&quot;</span>, <span class="hl-id">b</span>))</span>
 <span class="line">  }</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">println!(&quot;{}&quot;, Hex((0..32).collect()));</span>
+<span class="line"><span class="hl-id">println</span>!(<span class="hl-str">&quot;{}&quot;</span>, <span class="hl-id">Hex</span>((0..32).<span class="hl-id">collect</span>()));</span>
 <span class="line"><em>// =&gt; 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f</em></span>
 </code></pre></div>
 <p>The new type idiom is efficient: the representation of the <code>Hex</code> type in the machine’s memory is identical to that of <code>Vec&lt;u8&gt;</code>.
 However, despite the identical representation, the compiler does not treat our new type as a strong alias for <code>Vec&lt;u8&gt;</code>.
 For example, we cannot safely transform <code>Vec&lt;Hex&gt;</code> to <code>Vec&lt;Vec&lt;u8&gt;&gt;</code> and back without reallocating the outer vector.
 Also, without copying the bytes, we cannot safely coerce <code>&amp;Vec&lt;u8&gt;</code> to <code>&amp;Hex</code>.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">fn complex_function(bytes: &amp;Vec&lt;u8&gt;) {</span>
-<span class="line">  // … a lot of code …</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">complex_function</span>(<span class="hl-var">bytes</span>: &amp;<span class="hl-id">Vec</span>&lt;<span class="hl-id">u8</span>&gt;) {</span>
+<span class="line">  <span class="hl-comment">// … a lot of code …</span></span>
 <span class="line"></span>
-<span class="line">  println!(&quot;{}&quot;, &amp;Hex(bytes));        // That does not work.</span>
-<span class="line">  println!(&quot;{}&quot;, Hex(bytes.clone())); // That works but is slow.</span>
+<span class="line">  <span class="hl-id">println</span>!(<span class="hl-str">&quot;{}&quot;</span>, &amp;<span class="hl-id">Hex</span>(<span class="hl-id">bytes</span>));        <span class="hl-comment">// That does not work.</span></span>
+<span class="line">  <span class="hl-id">println</span>!(<span class="hl-str">&quot;{}&quot;</span>, <span class="hl-id">Hex</span>(<span class="hl-id">bytes</span>.<span class="hl-id">clone</span>())); <span class="hl-comment">// That works but is slow.</span></span>
 <span class="line"></span>
-<span class="line">  // … a lot of code …</span>
+<span class="line">  <span class="hl-comment">// … a lot of code …</span></span>
 <span class="line">}</span>
 </code></pre></div>
 <p>Overall, the newtype idiom is a leaky abstraction because it is a convention, not a first-class language feature.
@@ -219,22 +219,22 @@ I call input types with lifetime parameters <em>views</em> because they are opti
 I call regular output types <em>bundles</em> because they are self-contained.</p>
 <p>The following snippet comes from the (sunset) <a href="https://github.com/bytecodealliance/lucet">Lucet</a> WebAssembly runtime.
 </p>
-<div class="source-container"><pre class="source rust"><code><span class="line"><em>/// A WebAssembly global along with its export specification.</em></span>
-<span class="line"><em>/// The lifetime parameter exists to support zero-copy deserialization</em></span>
-<span class="line"><em>/// for the `&amp;str` fields at the leaves of the structure.</em></span>
-<span class="line"><em>/// For a variant with owned types at the leaves, see `OwnedGlobalSpec`.</em></span>
-<span class="line">pub struct <a href="https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f842db437d94abb6eb439d7c92/lucet-module/src/globals.rs#L8"><code>GlobalSpec</code></a>&lt;'a&gt; {</span>
-<span class="line">    global: Global&lt;'a&gt;,</span>
-<span class="line">    export_names: Vec&lt;&amp;'a str&gt;,</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-comment">/// A WebAssembly global along with its export specification.</span></span>
+<span class="line"><span class="hl-comment">/// The lifetime parameter exists to support zero-copy deserialization</span></span>
+<span class="line"><span class="hl-comment">/// for the `&amp;str` fields at the leaves of the structure.</span></span>
+<span class="line"><span class="hl-comment">/// For a variant with owned types at the leaves, see `OwnedGlobalSpec`.</span></span>
+<span class="line"><span class="hl-kw">pub</span> <span class="hl-kw">struct</span> <a href="https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f842db437d94abb6eb439d7c92/lucet-module/src/globals.rs#L8"><code>GlobalSpec</code></a>&lt;'<span class="hl-id">a</span>&gt; {</span>
+<span class="line">    <span class="hl-id">global</span>: <span class="hl-id">Global</span>&lt;'<span class="hl-id">a</span>&gt;,</span>
+<span class="line">    <span class="hl-id">export_names</span>: <span class="hl-id">Vec</span>&lt;&amp;'<span class="hl-id">a</span> <span class="hl-id">str</span>&gt;,</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">…</span>
+<span class="line"><span class="hl-id">…</span></span>
 <span class="line"></span>
-<span class="line"><em>/// A variant of `GlobalSpec` with owned strings throughout.</em></span>
-<span class="line"><em>/// This type is useful when directly building up a value to be serialized.</em></span>
-<span class="line">pub struct <a href="https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f842db437d94abb6eb439d7c92/lucet-module/src/globals.rs#L112"><code>OwnedGlobalSpec</code></a> {</span>
-<span class="line">    global: OwnedGlobal,</span>
-<span class="line">    export_names: Vec&lt;String&gt;,</span>
+<span class="line"><span class="hl-comment">/// A variant of `GlobalSpec` with owned strings throughout.</span></span>
+<span class="line"><span class="hl-comment">/// This type is useful when directly building up a value to be serialized.</span></span>
+<span class="line"><span class="hl-kw">pub</span> <span class="hl-kw">struct</span> <a href="https://github.com/bytecodealliance/lucet/blob/51fb1ed414fe44f842db437d94abb6eb439d7c92/lucet-module/src/globals.rs#L112"><code>OwnedGlobalSpec</code></a> {</span>
+<span class="line">    <span class="hl-id">global</span>: <span class="hl-id">OwnedGlobal</span>,</span>
+<span class="line">    <span class="hl-id">export_names</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">String</span>&gt;,</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>The authors duplicated the <code>GlobalSpec</code> data structure to support two use cases:
@@ -254,11 +254,11 @@ I call regular output types <em>bundles</em> because they are self-contained.</p
 Sounds easy? Not in Rust.</p>
 <p>Assume we have an object <code>Db</code> that has a method giving you another object, <code>Snapshot&lt;'a&gt;</code>.
 The lifetime of the snapshot depends on the lifetime of the database.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">struct Db { /* … */ }</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">Db</span> { <span class="hl-comment">/* … */</span> }</span>
 <span class="line"></span>
-<span class="line">struct Snapshot&lt;'a&gt; { /* … */ }</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">Snapshot</span>&lt;'<span class="hl-id">a</span>&gt; { <span class="hl-comment">/* … */</span> }</span>
 <span class="line"></span>
-<span class="line">impl Db { fn snapshot&lt;'a&gt;(&amp;'a self) -&gt; Snapshot&lt;'a&gt;; }</span>
+<span class="line"><span class="hl-kw">impl</span> <span class="hl-id">Db</span> { <span class="hl-kw">fn</span> <span class="hl-defun">snapshot</span>&lt;'<span class="hl-id">a</span>&gt;(&amp;'<span class="hl-id">a</span> <span class="hl-kw">self</span>) -&gt; <span class="hl-id">Snapshot</span>&lt;'<span class="hl-id">a</span>&gt;; }</span>
 </code></pre></div>
 <p>We might want to bundle<label class="margin-toggle sidenote-number" for="sn-db-iterator"></label><input type="checkbox" id="sn-db-iterator" class="margin-toggle"><span class="sidenote">
   If you wonder why we have this strange desire, you can read comments from the <a href="https://sourcegraph.com/github.com/dfinity/ic@d14361f9939baaeb899106b874851ad4a0ce928b/-/blob/rs/artifact_pool/src/rocksdb_iterator.rs?L153-164"><code>rocksdb_iterator.rs</code></a> module.
@@ -398,16 +398,16 @@ The <a href="https://crates.io/crates/tokio">tokio</a> package is the most popul
 <p>One common issue with runtimes is that they rely on passing arguments implicitly.
 For example, the tokio runtime allows you to <a href="https://docs.rs/tokio/latest/tokio/fn.spawn.html"><code>spawn</code></a> a concurrent task at any point in your program.
 For this function to work, the programmer has to construct a runtime object in advance.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">fn innocently_looking_function() {</span>
-<span class="line">  <a href="https://docs.rs/tokio/1.25.0/tokio/fn.spawn.html"><code>tokio::spawn</code></a>(some_async_func());</span>
-<span class="line">  // ^</span>
-<span class="line">  // |</span>
-<span class="line">  // <em>This code will panic if we remove this line. Spukhafte Fernwirkung!</em></span>
-<span class="line">} //                                     |</span>
-<span class="line">  //                                     |</span>
-<span class="line">fn main() { //                           v</span>
-<span class="line">  let _rt = <a href="https://docs.rs/tokio/1.25.0/tokio/runtime/struct.Runtime.html"><code>tokio::runtime::Runtime</code></a>::new().unwrap();</span>
-<span class="line">  innocently_looking_function();</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">innocently_looking_function</span>() {</span>
+<span class="line">  <a href="https://docs.rs/tokio/1.25.0/tokio/fn.spawn.html"><code>tokio::spawn</code></a>(<span class="hl-id">some_async_func</span>());</span>
+<span class="line">  <span class="hl-comment">// ^</span></span>
+<span class="line">  <span class="hl-comment">// |</span></span>
+<span class="line">  <span class="hl-comment">// <em>This code will panic if we remove this line. Spukhafte Fernwirkung!</em></span></span>
+<span class="line">} <span class="hl-comment">//                                     |</span></span>
+<span class="line">  <span class="hl-comment">//                                     |</span></span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">main</span>() { <span class="hl-comment">//                           v</span></span>
+<span class="line">  <span class="hl-kw">let</span> <span class="hl-var">_rt</span> = <a href="https://docs.rs/tokio/1.25.0/tokio/runtime/struct.Runtime.html"><code>tokio::runtime::Runtime</code></a>::<span class="hl-id">new</span>().<span class="hl-id">unwrap</span>();</span>
+<span class="line">  <span class="hl-id">innocently_looking_function</span>();</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>These implicit arguments turn compile-time errors into runtime errors.

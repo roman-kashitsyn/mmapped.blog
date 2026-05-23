@@ -84,7 +84,7 @@ Ideally, the logging system should print only the messages I care about.
 The solution is simple: instead of grading events on a linear scale,
 annotate them with arbitrary \emph{tags} like hashtags on social media.
 
-\begin{code}
+\begin{code}[rust]
 event!(#db, #perf, duration => duration, query = "fetch_transaction");
 \cdots
 event!(#user, txid => txid, ..., "transaction rejected");
@@ -155,7 +155,7 @@ Luckily, \code{tracing}'s \href{https://docs.rs/tracing-subscriber/0.3.19/tracin
 \code{target[span{field=value}]=level}.
 This scheme suggests using event fields as tags:
 
-\begin{code}
+\begin{code}[rust]
 tracing::debug!(db=1, perf=1, ?duration, query = "fetch_transaction");
 \end{code}
 

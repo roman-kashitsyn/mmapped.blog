@@ -32,14 +32,14 @@ Newtypes are flexible but may need boilerplate code to implement all features re
   An example of using the newtype idiom in Rust.
   Inheriting basic operations, such as comparison and hashing, is easy, but arithmetic operations require a lot of boilerplate code.
   Some third-party packages, such as <a href="https://crates.io/crates/derive_more"><code>derive_more</code></a>, make this task easier.
-</span><div class="source-container"><pre class="source"><code><span class="line"><em>/// The number of standard SI apples.</em></span>
-<span class="line">#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]</span>
-<span class="line">struct MetricApples(i64);</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-comment">/// The number of standard SI apples.</span></span>
+<span class="line">#[<span class="hl-id">derive</span>(<span class="hl-id">Clone</span>, <span class="hl-id">Copy</span>, <span class="hl-id">PartialEq</span>, <span class="hl-id">Eq</span>, <span class="hl-id">PartialOrd</span>, <span class="hl-id">Ord</span>, <span class="hl-id">Hash</span>)]</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">MetricApples</span>(<span class="hl-id">i64</span>);</span>
 <span class="line"></span>
-<span class="line">impl std::ops::Add for MetricApples {</span>
-<span class="line">  type Output = Self;</span>
-<span class="line">  fn add(self, other: Self) -&gt; Self {</span>
-<span class="line">    MetricApples(self.0 + other.0)</span>
+<span class="line"><span class="hl-kw">impl</span> <span class="hl-id">std</span>::<span class="hl-id">ops</span>::<span class="hl-id">Add</span> <span class="hl-kw">for</span> <span class="hl-id">MetricApples</span> {</span>
+<span class="line">  <span class="hl-kw">type</span> <span class="hl-typedef">Output</span> = <span class="hl-kw">Self</span>;</span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">add</span>(<span class="hl-kw">self</span>, <span class="hl-var">other</span>: <span class="hl-kw">Self</span>) -&gt; <span class="hl-kw">Self</span> {</span>
+<span class="line">    <span class="hl-id">MetricApples</span>(<span class="hl-kw">self</span>.0 + <span class="hl-id">other</span>.0)</span>
 <span class="line">  }</span>
 <span class="line">}</span>
 </code></pre></div>
@@ -50,16 +50,17 @@ Newtypes are flexible but may need boilerplate code to implement all features re
 <figure><label class="margin-toggle" for="mn-typedefs">⊕</label><input type="checkbox" id="mn-typedefs" class="margin-toggle"><span class="marginnote">
   An example of using typedefs in Go.
   Typedefs inherit all operations from the underlying type, even those meaningless for the new type.
-</span><div class="source-container"><pre class="source"><code><span class="line"><em>/// MetricApples hold the number of standard SI apples.</em></span>
-<span class="line">type MetricApples int64</span>
+</span><div class="source-container"><pre class="source go"><code><span class="line"><span class="hl-comment">// MetricApples hold the number of standard SI apples.</span></span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">MetricApples</span> <span class="hl-id">int64</span></span>
 <span class="line"></span>
-<span class="line">func main() {</span>
-<span class="line">  a, b := MetricApples(2), MetricApples(3)</span>
-<span class="line">  // Go allows us to add, multiply, and divide MetricApples.</span>
-<span class="line">  // Note that all these operations give us MetricApples back, which doesn’t always make sense.</span>
-<span class="line">  // Apples times apples should give apples squared.</span>
-<span class="line">  // Dividing apples should give a dimensionless number.</span>
-<span class="line">  fmt.Printf(&quot;%[1]T %[1]d, %[2]T %[2]d, %[3]T %[3]d\n&quot;, a+b, a*b, b/a)</span>
+<span class="line"><span class="hl-kw">func</span> <span class="hl-defun">main</span>() {</span>
+<span class="line">  <span class="hl-var">a</span>, <span class="hl-var">b</span> := <span class="hl-id">MetricApples</span>(2), <span class="hl-id">MetricApples</span>(3)</span>
+<span class="line">  <span class="hl-comment">// Go allows us to add, multiply, and divide MetricApples.</span></span>
+<span class="line">  <span class="hl-comment">// Note that all these operations give us MetricApples back,</span></span>
+<span class="line">  <span class="hl-comment">// which doesn’t always make sense.</span></span>
+<span class="line">  <span class="hl-comment">// Apples times apples should give apples squared.</span></span>
+<span class="line">  <span class="hl-comment">// Dividing apples should give a dimensionless number.</span></span>
+<span class="line">  <span class="hl-id">fmt</span>.<span class="hl-id">Printf</span>(<span class="hl-str">&quot;%[1]T %[1]d, %[2]T %[2]d, %[3]T %[3]d\n&quot;</span>, <span class="hl-id">a</span>+<span class="hl-id">b</span>, <span class="hl-id">a</span>*<span class="hl-id">b</span>, <span class="hl-id">b</span>/<span class="hl-id">a</span>)</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -78,15 +79,15 @@ This section is an overview of these categories.</p>
 <p>I use pseudo-Rust syntax to illustrate the concepts, but the ideas should easily translate to any statically typed language.</p>
 <figure><label class="margin-toggle" for="mn-fig-domain-type">⊕</label><input type="checkbox" id="mn-fig-domain-type" class="margin-toggle"><span class="marginnote">
   The interface shared by all universal domain types in this article.
-</span><div class="source-container"><pre class="source"><code><span class="line">trait DomainType {</span>
-<span class="line">  <em>/// The primitive type representing the domain value.</em></span>
-<span class="line">  type Representation; <span id="representation-type"></span></span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">trait</span> <span class="hl-typedef">DomainType</span> {</span>
+<span class="line">  <span class="hl-comment">/// The primitive type representing the domain value.</span></span>
+<span class="line">  <span class="hl-kw">type</span> <span class="hl-typedef">Representation</span>; <span id="representation-type"></span></span>
 <span class="line"></span>
-<span class="line">  <em>/// Creates a domain value from its representation value.</em></span>
-<span class="line">  fn from_repr(repr: Representation) -&gt; Self;</span>
+<span class="line">  <span class="hl-comment">/// Creates a domain value from its representation value.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">from_repr</span>(<span class="hl-var">repr</span>: <span class="hl-id">Representation</span>) -&gt; <span class="hl-kw">Self</span>;</span>
 <span class="line"></span>
-<span class="line">  <em>/// Extracts the representation value from the domain value.</em></span>
-<span class="line">  fn to_repr(self) -&gt; Representation;</span>
+<span class="line">  <span class="hl-comment">/// Extracts the representation value from the domain value.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">to_repr</span>(<span class="hl-kw">self</span>) -&gt; <span class="hl-id">Representation</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -101,12 +102,12 @@ The only fundamental requirement is the ability to compare values of those types
 This lack of structure suggests an appropriate mathematical model for such types: a <em>set</em>, a collection of distinct objects.</p>
 <figure><label class="margin-toggle" for="mn-identifiers-interface">⊕</label><input type="checkbox" id="mn-identifiers-interface" class="margin-toggle"><span class="marginnote">
   The minimal interface for identifiers.
-</span><div class="source-container"><pre class="source"><code><span class="line">trait Eq {</span>
-<span class="line">  <em>/// Returns true if two values are equal.</em></span>
-<span class="line">  fn eq(&amp;self, other: &amp;Self) -&gt; bool;</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">trait</span> <span class="hl-typedef">Eq</span> {</span>
+<span class="line">  <span class="hl-comment">/// Returns true if two values are equal.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">eq</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">other</span>: &amp;<span class="hl-kw">Self</span>) -&gt; <span class="hl-id">bool</span>;</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">trait IdentifierLike: DomainType + Eq {}</span>
+<span class="line"><span class="hl-kw">trait</span> <span class="hl-typedef">IdentifierLike</span>: <span class="hl-id">DomainType</span> + <span class="hl-id">Eq</span> {}</span>
 </code></pre></div>
 </figure>
 <p><a href="#newtypes">Newtypes</a> are a perfect fit for identifiers thanks to their ability to hide structure.
@@ -126,32 +127,32 @@ There is nothing wrong with a banking app increasing a dollar amount by ten perc
 Vector space is a set with additional operations defined on the elements of this set: addition, subtraction, and scalar multiplication, such that behaviors of these operations satisfy a few natural <a href="https://en.wikipedia.org/wiki/Vector_space#Definition_and_basic_properties">axioms</a>.</p>
 <figure><label class="margin-toggle" for="mn-amounts-interface">⊕</label><input type="checkbox" id="mn-amounts-interface" class="margin-toggle"><span class="marginnote">
   The minimal interface for amounts.
-</span><div class="source-container"><pre class="source"><code><span class="line">trait Ord: Eq {</span>
-<span class="line">  <em>/// Compares two values.</em></span>
-<span class="line">  fn cmp(&amp;self, other: &amp;Self) -&gt; Ordering;</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">trait</span> <span class="hl-typedef">Ord</span>: <span class="hl-id">Eq</span> {</span>
+<span class="line">  <span class="hl-comment">/// Compares two values.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">cmp</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">other</span>: &amp;<span class="hl-kw">Self</span>) -&gt; <span class="hl-id">Ordering</span>;</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">trait VectorSpace {</span>
-<span class="line">  <em>/// The scalar type is usually the same as the <a href="#representation-type">Representation</a> type.</em></span>
-<span class="line">  type Scalar;</span>
+<span class="line"><span class="hl-kw">trait</span> <span class="hl-typedef">VectorSpace</span> {</span>
+<span class="line">  <span class="hl-comment">/// The scalar type is usually the same as the <a href="#representation-type">Representation</a> type.</span></span>
+<span class="line">  <span class="hl-kw">type</span> <span class="hl-typedef">Scalar</span>;</span>
 <span class="line"></span>
-<span class="line">  <em>/// Returns the additive inverse of the value.</em></span>
-<span class="line">  fn neg(self) -&gt; Self;</span>
+<span class="line">  <span class="hl-comment">/// Returns the additive inverse of the value.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">neg</span>(<span class="hl-kw">self</span>) -&gt; <span class="hl-kw">Self</span>;</span>
 <span class="line"></span>
-<span class="line">  <em>/// Adds two vectors.</em></span>
-<span class="line">  fn add(self, other: Self) -&gt; Self;</span>
+<span class="line">  <span class="hl-comment">/// Adds two vectors.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">add</span>(<span class="hl-kw">self</span>, <span class="hl-var">other</span>: <span class="hl-kw">Self</span>) -&gt; <span class="hl-kw">Self</span>;</span>
 <span class="line"></span>
-<span class="line">  <em>/// Subtracts the other vector from self.</em></span>
-<span class="line">  fn sub(self, other: Self) -&gt; Self;</span>
+<span class="line">  <span class="hl-comment">/// Subtracts the other vector from self.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">sub</span>(<span class="hl-kw">self</span>, <span class="hl-var">other</span>: <span class="hl-kw">Self</span>) -&gt; <span class="hl-kw">Self</span>;</span>
 <span class="line"></span>
-<span class="line">  <em>/// Multiplies the vector by a scalar.</em></span>
-<span class="line">  fn mul(self, factor: Scalar) -&gt; Self;</span>
+<span class="line">  <span class="hl-comment">/// Multiplies the vector by a scalar.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">mul</span>(<span class="hl-kw">self</span>, <span class="hl-var">factor</span>: <span class="hl-id">Scalar</span>) -&gt; <span class="hl-kw">Self</span>;</span>
 <span class="line"></span>
-<span class="line">  <em>/// Divides the vector by a scalar.</em></span>
-<span class="line">  fn div(self, factor: Scalar) -&gt; Self;</span>
+<span class="line">  <span class="hl-comment">/// Divides the vector by a scalar.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">div</span>(<span class="hl-kw">self</span>, <span class="hl-var">factor</span>: <span class="hl-id">Scalar</span>) -&gt; <span class="hl-kw">Self</span>;</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">trait AmountLike: IdentifierLike + VectorSpace + Ord {}</span>
+<span class="line"><span class="hl-kw">trait</span> <span class="hl-typedef">AmountLike</span>: <span class="hl-id">IdentifierLike</span> + <span class="hl-id">VectorSpace</span> + <span class="hl-id">Ord</span> {}</span>
 </code></pre></div>
 </figure>
 <p><a href="#newtypes">Newtypes</a> allow us to implement amounts, but they might need some tedious code to get the multiplication and division right.
@@ -175,18 +176,18 @@ Subtracting two pointers gives an offset, but adding or multiplying pointers is 
 Changing the origin or the distance type calls for a new locus type.</p>
 <figure><label class="margin-toggle" for="mn-loci-interface">⊕</label><input type="checkbox" id="mn-loci-interface" class="margin-toggle"><span class="marginnote">
   The minimal interface for loci.
-</span><div class="source-container"><pre class="source"><code><span class="line">trait LocusLike: IdentifierLike + Ord {</span>
-<span class="line">  <em>/// The type representing the distance between two positions.</em></span>
-<span class="line">  type Distance: AmountLike;</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">trait</span> <span class="hl-typedef">LocusLike</span>: <span class="hl-id">IdentifierLike</span> + <span class="hl-id">Ord</span> {</span>
+<span class="line">  <span class="hl-comment">/// The type representing the distance between two positions.</span></span>
+<span class="line">  <span class="hl-kw">type</span> <span class="hl-typedef">Distance</span>: <span class="hl-id">AmountLike</span>;</span>
 <span class="line"></span>
-<span class="line">  <em>/// The origin for the absolute coordinate system.</em></span>
-<span class="line">  const ORIGIN: Self;</span>
+<span class="line">  <span class="hl-comment">/// The origin for the absolute coordinate system.</span></span>
+<span class="line">  <span class="hl-kw">const</span> <span class="hl-id">ORIGIN</span>: <span class="hl-kw">Self</span>;</span>
 <span class="line"></span>
-<span class="line">  <em>/// Moves the point away from the origin by the specified distance.</em></span>
-<span class="line">  fn add(self, other: Distance) -&gt; Self;</span>
+<span class="line">  <span class="hl-comment">/// Moves the point away from the origin by the specified distance.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">add</span>(<span class="hl-kw">self</span>, <span class="hl-var">other</span>: <span class="hl-id">Distance</span>) -&gt; <span class="hl-kw">Self</span>;</span>
 <span class="line"></span>
-<span class="line">  <em>/// Returns the distance between two points.</em></span>
-<span class="line">  fn sub(self, other: Self) -&gt; Distance;</span>
+<span class="line">  <span class="hl-comment">/// Returns the distance between two points.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">sub</span>(<span class="hl-kw">self</span>, <span class="hl-var">other</span>: <span class="hl-kw">Self</span>) -&gt; <span class="hl-id">Distance</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -215,14 +216,14 @@ For example, car fuel consumption computation could use an expression like <span
 For example, running pace computation could use an expression like <span class="math">10 (min) / 2 (km) = 5 (min × km<sup>-1</sup>)</span>.</p>
 <figure><label class="margin-toggle" for="mn-quantities">⊕</label><input type="checkbox" id="mn-quantities" class="margin-toggle"><span class="marginnote">
   The minimal interface for quantities.
-</span><div class="source-container"><pre class="source"><code><span class="line">trait QuantityLike&lt;DimA&gt;: AmountLike {</span>
-<span class="line">  <em>/// Multiplies two quantities.</em></span>
-<span class="line">  fn mul&lt;O: QuantityLike&lt;DimB&gt;&gt;(self, other: O)</span>
-<span class="line">    -&gt; impl QuantityLike&lt;AddUnitPowers&lt;DimA, DimB&gt;&gt;;</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">trait</span> <span class="hl-typedef">QuantityLike</span>&lt;<span class="hl-id">DimA</span>&gt;: <span class="hl-id">AmountLike</span> {</span>
+<span class="line">  <span class="hl-comment">/// Multiplies two quantities.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-id">mul</span>&lt;<span class="hl-id">O</span>: <span class="hl-id">QuantityLike</span>&lt;<span class="hl-id">DimB</span>&gt;&gt;(<span class="hl-kw">self</span>, <span class="hl-id">other</span>: <span class="hl-id">O</span>)</span>
+<span class="line">    -&gt; <span class="hl-kw">impl</span> <span class="hl-id">QuantityLike</span>&lt;<span class="hl-id">AddUnitPowers</span>&lt;<span class="hl-id">DimA</span>, <span class="hl-id">DimB</span>&gt;&gt;;</span>
 <span class="line"></span>
-<span class="line">  <em>/// Divides self by the specified quantity.</em></span>
-<span class="line">  fn div&lt;O: QuantityLike&lt;DimB&gt;&gt;(self, other: O)</span>
-<span class="line">    -&gt; impl QuantityLike&lt;SubUnitPowers&lt;DimA, DimB&gt;&gt;;</span>
+<span class="line">  <span class="hl-comment">/// Divides self by the specified quantity.</span></span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-id">div</span>&lt;<span class="hl-id">O</span>: <span class="hl-id">QuantityLike</span>&lt;<span class="hl-id">DimB</span>&gt;&gt;(<span class="hl-kw">self</span>, <span class="hl-id">other</span>: <span class="hl-id">O</span>)</span>
+<span class="line">    -&gt; <span class="hl-kw">impl</span> <span class="hl-id">QuantityLike</span>&lt;<span class="hl-id">SubUnitPowers</span>&lt;<span class="hl-id">DimA</span>, <span class="hl-id">DimB</span>&gt;&gt;;</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>

@@ -40,15 +40,15 @@ we can draw from <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><
 we get the following recurrence:</p>
 <p><math xmlns="http://www.w3.org/1998/Math/MathML" class="math" display="block"><mi>M</mi><mo>[</mo><mi>k</mi><mo stretchy="false">,</mo><mi>i</mi><mo>]</mo><mo stretchy="false">=</mo><mi>max</mi><mo>{</mo><mi>M</mi><mo>[</mo><mi>k</mi><mo stretchy="false">,</mo><mi>i</mi><mo stretchy="false">-</mo><mn>1</mn><mo>]</mo><mo stretchy="false">,</mo><mn>10</mn><mo>×</mo><mi>M</mi><mo>[</mo><mi>k</mi><mo stretchy="false">-</mo><mn>1</mn><mo stretchy="false">,</mo><mi>i</mi><mo stretchy="false">-</mo><mn>1</mn><mo>]</mo><mo stretchy="false">+</mo><mi>B</mi><mo>[</mo><mi>i</mi><mo stretchy="false">-</mo><mn>1</mn><mo>]</mo><mo>}</mo></math></p>
 <p>Together with boundary conditions <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>M</mi><mo>[</mo><mi>k</mi><mo stretchy="false">,</mo><mn>0</mn><mo>]</mo><mo stretchy="false">=</mo><mn>0</mn></math> and <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>M</mi><mo>[</mo><mn>0</mn><mo stretchy="false">,</mo><mi>i</mi><mo>]</mo><mo stretchy="false">=</mo><mn>0</mn></math>, this translates to the following <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>O</mi><mo stretchy="false">(</mo><mi>n</mi><mo>×</mo><mi>k</mi><mo stretchy="false">)</mo></math> solution:</p>
-<figure><div class="source-container"><pre class="source rust"><code><span class="line">fn max_numeric_subsequence(b: &amp;[u8], max_k: usize) -&gt; u64 {</span>
-<span class="line">    let n = b.len();</span>
-<span class="line">    let mut m = vec![vec![0; n + 1]; max_k + 1];</span>
-<span class="line">    for k in 1..=max_k {</span>
-<span class="line">        for i in 1..=n {</span>
-<span class="line">            m[k][i] = m[k][i-1].max(10 * m[k-1][i-1] + b[i-1] as u64);</span>
+<figure><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">max_numeric_subsequence</span>(<span class="hl-var">b</span>: &amp;[<span class="hl-id">u8</span>], <span class="hl-var">max_k</span>: <span class="hl-id">usize</span>) -&gt; <span class="hl-id">u64</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">n</span> = <span class="hl-id">b</span>.<span class="hl-id">len</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">m</span> = <span class="hl-id">vec</span>![<span class="hl-id">vec</span>![0; <span class="hl-id">n</span> + 1]; <span class="hl-id">max_k</span> + 1];</span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">k</span> <span class="hl-kw">in</span> 1..=<span class="hl-id">max_k</span> {</span>
+<span class="line">        <span class="hl-kw">for</span> <span class="hl-id">i</span> <span class="hl-kw">in</span> 1..=<span class="hl-id">n</span> {</span>
+<span class="line">            <span class="hl-id">m</span>[<span class="hl-id">k</span>][<span class="hl-id">i</span>] = <span class="hl-id">m</span>[<span class="hl-id">k</span>][<span class="hl-id">i</span>-1].<span class="hl-id">max</span>(10 * <span class="hl-id">m</span>[<span class="hl-id">k</span>-1][<span class="hl-id">i</span>-1] + <span class="hl-id">b</span>[<span class="hl-id">i</span>-1] <span class="hl-kw">as</span> <span class="hl-id">u64</span>);</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    m[k][n]</span>
+<span class="line">    <span class="hl-id">m</span>[<span class="hl-id">k</span>][<span class="hl-id">n</span>]</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -68,35 +68,35 @@ It treats the grid as a <a href="https://en.wikipedia.org/wiki/Directed_acyclic_
 in which each space is a parent of the space below it,
 and a space above a splitter is a parent of the two spaces on the splitter’s sides.
 The number of paths to a space is the sum of paths to its parents.</p>
-<figure><div class="source-container"><pre class="source"><code><span class="line">fn count_splits_and_timelines(g: &amp;[Vec&lt;char&gt;]) -&gt; (usize, usize) {</span>
-<span class="line">    let n = g.len();</span>
-<span class="line">    let m = g[0].len();</span>
-<span class="line">    let mut ts = vec![vec![0; m]; n];</span>
-<span class="line">    let s = g[0]</span>
-<span class="line">        .iter()</span>
-<span class="line">        .position(|c| *c == 'S')</span>
-<span class="line">        .expect(&quot;the first row should have the starting position&quot;);</span>
-<span class="line">    ts[0][s] = 1;</span>
+<figure><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">count_splits_and_timelines</span>(<span class="hl-var">g</span>: &amp;[<span class="hl-id">Vec</span>&lt;<span class="hl-id">char</span>&gt;]) -&gt; (<span class="hl-id">usize</span>, <span class="hl-id">usize</span>) {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">n</span> = <span class="hl-id">g</span>.<span class="hl-id">len</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">m</span> = <span class="hl-id">g</span>[0].<span class="hl-id">len</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">ts</span> = <span class="hl-id">vec</span>![<span class="hl-id">vec</span>![0; <span class="hl-id">m</span>]; <span class="hl-id">n</span>];</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">s</span> = <span class="hl-id">g</span>[0]</span>
+<span class="line">        .<span class="hl-id">iter</span>()</span>
+<span class="line">        .<span class="hl-id">position</span>(|<span class="hl-id">c</span>| *<span class="hl-id">c</span> == '<span class="hl-id">S</span>')</span>
+<span class="line">        .<span class="hl-id">expect</span>(<span class="hl-str">&quot;the first row should have the starting position&quot;</span>);</span>
+<span class="line">    <span class="hl-id">ts</span>[0][<span class="hl-id">s</span>] = 1;</span>
 <span class="line"></span>
-<span class="line">    let mut splits = 0;</span>
-<span class="line">    for i in 1..n {</span>
-<span class="line">        for (j, c) in g[i].iter().enumerate() {</span>
-<span class="line">            let t = ts[i - 1][j];</span>
-<span class="line">            if *c == '^' &amp;&amp; t &gt; 0 {</span>
-<span class="line">                splits += 1;</span>
-<span class="line">                if j &gt; 0 {</span>
-<span class="line">                    ts[i][j - 1] += t;</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">splits</span> = 0;</span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">i</span> <span class="hl-kw">in</span> 1..<span class="hl-id">n</span> {</span>
+<span class="line">        <span class="hl-kw">for</span> (<span class="hl-id">j</span>, <span class="hl-id">c</span>) <span class="hl-kw">in</span> <span class="hl-id">g</span>[<span class="hl-id">i</span>].<span class="hl-id">iter</span>().<span class="hl-id">enumerate</span>() {</span>
+<span class="line">            <span class="hl-kw">let</span> <span class="hl-var">t</span> = <span class="hl-id">ts</span>[<span class="hl-id">i</span> - 1][<span class="hl-id">j</span>];</span>
+<span class="line">            <span class="hl-kw">if</span> *<span class="hl-id">c</span> == '^' &amp;&amp; <span class="hl-id">t</span> &gt; 0 {</span>
+<span class="line">                <span class="hl-id">splits</span> += 1;</span>
+<span class="line">                <span class="hl-kw">if</span> <span class="hl-id">j</span> &gt; 0 {</span>
+<span class="line">                    <span class="hl-id">ts</span>[<span class="hl-id">i</span>][<span class="hl-id">j</span> - 1] += <span class="hl-id">t</span>;</span>
 <span class="line">                }</span>
-<span class="line">                if j &lt; m - 1 {</span>
-<span class="line">                    ts[i][j + 1] += t;</span>
+<span class="line">                <span class="hl-kw">if</span> <span class="hl-id">j</span> &lt; <span class="hl-id">m</span> - 1 {</span>
+<span class="line">                    <span class="hl-id">ts</span>[<span class="hl-id">i</span>][<span class="hl-id">j</span> + 1] += <span class="hl-id">t</span>;</span>
 <span class="line">                }</span>
-<span class="line">            } else {</span>
-<span class="line">                ts[i][j] += t;</span>
+<span class="line">            } <span class="hl-kw">else</span> {</span>
+<span class="line">                <span class="hl-id">ts</span>[<span class="hl-id">i</span>][<span class="hl-id">j</span>] += <span class="hl-id">t</span>;</span>
 <span class="line">            }</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    let timelines = ts[n - 1].iter().sum::&lt;usize&gt;();</span>
-<span class="line">    (splits, timelines)</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">timelines</span> = <span class="hl-id">ts</span>[<span class="hl-id">n</span> - 1].<span class="hl-id">iter</span>().<span class="hl-id">sum</span>::&lt;<span class="hl-id">usize</span>&gt;();</span>
+<span class="line">    (<span class="hl-id">splits</span>, <span class="hl-id">timelines</span>)</span>
 <span class="line">}</span>
 <span class="line"></span>
 </code></pre></div>
@@ -121,86 +121,86 @@ the set is the collection of points,
 the partitions are connected components,
 and merging joins components by adding an edge.</p>
 <p>Here is my simple implementation of union-find:</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">struct UnionFind {</span>
-<span class="line">    parent: Vec&lt;usize&gt;,</span>
-<span class="line">    size: Vec&lt;usize&gt;,</span>
-<span class="line">    trees: usize,</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">UnionFind</span> {</span>
+<span class="line">    <span class="hl-id">parent</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">usize</span>&gt;,</span>
+<span class="line">    <span class="hl-id">size</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">usize</span>&gt;,</span>
+<span class="line">    <span class="hl-id">trees</span>: <span class="hl-id">usize</span>,</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">impl UnionFind {</span>
-<span class="line">    fn new(n: usize) -&gt; Self {</span>
-<span class="line">        Self {</span>
-<span class="line">            parent: (0..n).collect(),</span>
-<span class="line">            size: vec![1; n],</span>
-<span class="line">            trees: n,</span>
+<span class="line"><span class="hl-kw">impl</span> <span class="hl-id">UnionFind</span> {</span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">new</span>(<span class="hl-var">n</span>: <span class="hl-id">usize</span>) -&gt; <span class="hl-kw">Self</span> {</span>
+<span class="line">        <span class="hl-kw">Self</span> {</span>
+<span class="line">            <span class="hl-id">parent</span>: (0..<span class="hl-id">n</span>).<span class="hl-id">collect</span>(),</span>
+<span class="line">            <span class="hl-id">size</span>: <span class="hl-id">vec</span>![1; <span class="hl-id">n</span>],</span>
+<span class="line">            <span class="hl-id">trees</span>: <span class="hl-id">n</span>,</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    <em>/// Returns the root node of node X.</em></span>
-<span class="line">    <em>/// Nodes that belong to the same partition share the root.</em></span>
-<span class="line">    fn find(&amp;self, mut x: usize) -&gt; usize {</span>
-<span class="line">        while self.parent[x] != x {</span>
-<span class="line">            x = self.parent[x];</span>
+<span class="line">    <span class="hl-comment">/// Returns the root node of node X.</span></span>
+<span class="line">    <span class="hl-comment">/// Nodes that belong to the same partition share the root.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">find</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-kw">mut</span> <span class="hl-var">x</span>: <span class="hl-id">usize</span>) -&gt; <span class="hl-id">usize</span> {</span>
+<span class="line">        <span class="hl-kw">while</span> <span class="hl-kw">self</span>.<span class="hl-id">parent</span>[<span class="hl-id">x</span>] != <span class="hl-id">x</span> {</span>
+<span class="line">            <span class="hl-id">x</span> = <span class="hl-kw">self</span>.<span class="hl-id">parent</span>[<span class="hl-id">x</span>];</span>
 <span class="line">        }</span>
-<span class="line">        x</span>
+<span class="line">        <span class="hl-id">x</span></span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    <em>/// Joins partitions to which nodes X and Y belong.</em></span>
-<span class="line">    <em>/// Returns the root of the resulting partition.</em></span>
-<span class="line">    fn union(&amp;mut self, x: usize, y: usize) -&gt; usize {</span>
-<span class="line">        let root_x = self.find(x);</span>
-<span class="line">        let root_y = self.find(y);</span>
-<span class="line">        if root_x != root_y {</span>
-<span class="line">            let (p, c) = if self.size[root_x] &gt;= self.size[root_y] {</span>
-<span class="line">                (root_x, root_y)</span>
-<span class="line">            } else {</span>
-<span class="line">                (root_y, root_x)</span>
+<span class="line">    <span class="hl-comment">/// Joins partitions to which nodes X and Y belong.</span></span>
+<span class="line">    <span class="hl-comment">/// Returns the root of the resulting partition.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">union</span>(&amp;<span class="hl-kw">mut</span> <span class="hl-kw">self</span>, <span class="hl-var">x</span>: <span class="hl-id">usize</span>, <span class="hl-var">y</span>: <span class="hl-id">usize</span>) -&gt; <span class="hl-id">usize</span> {</span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-var">root_x</span> = <span class="hl-kw">self</span>.<span class="hl-id">find</span>(<span class="hl-id">x</span>);</span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-var">root_y</span> = <span class="hl-kw">self</span>.<span class="hl-id">find</span>(<span class="hl-id">y</span>);</span>
+<span class="line">        <span class="hl-kw">if</span> <span class="hl-id">root_x</span> != <span class="hl-id">root_y</span> {</span>
+<span class="line">            <span class="hl-kw">let</span> (<span class="hl-id">p</span>, <span class="hl-id">c</span>) = <span class="hl-kw">if</span> <span class="hl-kw">self</span>.<span class="hl-id">size</span>[<span class="hl-id">root_x</span>] &gt;= <span class="hl-kw">self</span>.<span class="hl-id">size</span>[<span class="hl-id">root_y</span>] {</span>
+<span class="line">                (<span class="hl-id">root_x</span>, <span class="hl-id">root_y</span>)</span>
+<span class="line">            } <span class="hl-kw">else</span> {</span>
+<span class="line">                (<span class="hl-id">root_y</span>, <span class="hl-id">root_x</span>)</span>
 <span class="line">            };</span>
-<span class="line">            self.trees -= 1;</span>
-<span class="line">            self.parent[c] = p;</span>
-<span class="line">            self.size[p] += self.size[c];</span>
-<span class="line">            p</span>
-<span class="line">        } else {</span>
-<span class="line">            root_x</span>
+<span class="line">            <span class="hl-kw">self</span>.<span class="hl-id">trees</span> -= 1;</span>
+<span class="line">            <span class="hl-kw">self</span>.<span class="hl-id">parent</span>[<span class="hl-id">c</span>] = <span class="hl-id">p</span>;</span>
+<span class="line">            <span class="hl-kw">self</span>.<span class="hl-id">size</span>[<span class="hl-id">p</span>] += <span class="hl-kw">self</span>.<span class="hl-id">size</span>[<span class="hl-id">c</span>];</span>
+<span class="line">            <span class="hl-id">p</span></span>
+<span class="line">        } <span class="hl-kw">else</span> {</span>
+<span class="line">            <span class="hl-id">root_x</span></span>
 <span class="line">        }</span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    <em>/// Returns the size of the partition to which X belongs. </em></span>
-<span class="line">    fn size(&amp;self, x: usize) -&gt; usize {</span>
-<span class="line">        self.size[self.find(x)]</span>
+<span class="line">    <span class="hl-comment">/// Returns the size of the partition to which X belongs.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">size</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">x</span>: <span class="hl-id">usize</span>) -&gt; <span class="hl-id">usize</span> {</span>
+<span class="line">        <span class="hl-kw">self</span>.<span class="hl-id">size</span>[<span class="hl-kw">self</span>.<span class="hl-id">find</span>(<span class="hl-id">x</span>)]</span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    <em>/// Returns the partition count.</em></span>
-<span class="line">    fn tree_count(&amp;self) -&gt; usize {</span>
-<span class="line">        self.trees</span>
+<span class="line">    <span class="hl-comment">/// Returns the partition count.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">tree_count</span>(&amp;<span class="hl-kw">self</span>) -&gt; <span class="hl-id">usize</span> {</span>
+<span class="line">        <span class="hl-kw">self</span>.<span class="hl-id">trees</span></span>
 <span class="line">    }</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>Both parts require computing all edges between points
 and sorting them by distance.</p>
-<div class="source-container"><pre class="source"><code><span class="line">type Point = (i64, i64, i64);</span>
-<span class="line">type Dist = i64;</span>
-<span class="line">type Node = usize;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Point</span> = (<span class="hl-id">i64</span>, <span class="hl-id">i64</span>, <span class="hl-id">i64</span>);</span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Dist</span> = <span class="hl-id">i64</span>;</span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Node</span> = <span class="hl-id">usize</span>;</span>
 <span class="line"></span>
-<span class="line"><em>/// Returns the squared distance between two points.</em></span>
-<span class="line">fn dist2(a: &amp;Point, b: &amp;Point) -&gt; Dist {</span>
-<span class="line">    let dx = a.0 - b.0;</span>
-<span class="line">    let dy = a.1 - b.1;</span>
-<span class="line">    let dz = a.2 - b.2;</span>
-<span class="line">    dx * dx + dy * dy + dz * dz</span>
+<span class="line"><span class="hl-comment">/// Returns the squared distance between two points.</span></span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">dist2</span>(<span class="hl-var">a</span>: &amp;<span class="hl-id">Point</span>, <span class="hl-var">b</span>: &amp;<span class="hl-id">Point</span>) -&gt; <span class="hl-id">Dist</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">dx</span> = <span class="hl-id">a</span>.0 - <span class="hl-id">b</span>.0;</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">dy</span> = <span class="hl-id">a</span>.1 - <span class="hl-id">b</span>.1;</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">dz</span> = <span class="hl-id">a</span>.2 - <span class="hl-id">b</span>.2;</span>
+<span class="line">    <span class="hl-id">dx</span> * <span class="hl-id">dx</span> + <span class="hl-id">dy</span> * <span class="hl-id">dy</span> + <span class="hl-id">dz</span> * <span class="hl-id">dz</span></span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line"><em>/// Returns the graph edges sorted by distance.</em></span>
-<span class="line">fn sorted_edges(boxes: &amp;[Point]) -&gt; Vec&lt;(Dist, Node, Node)&gt; {</span>
-<span class="line">    let n = boxes.len();</span>
-<span class="line">    let mut edges = vec![];</span>
-<span class="line">    for i in 0..n {</span>
-<span class="line">        for j in i + 1..n {</span>
-<span class="line">            edges.push((dist2(&amp;boxes[i], &amp;boxes[j]), i, j))</span>
+<span class="line"><span class="hl-comment">/// Returns the graph edges sorted by distance.</span></span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">sorted_edges</span>(<span class="hl-var">boxes</span>: &amp;[<span class="hl-id">Point</span>]) -&gt; <span class="hl-id">Vec</span>&lt;(<span class="hl-id">Dist</span>, <span class="hl-id">Node</span>, <span class="hl-id">Node</span>)&gt; {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">n</span> = <span class="hl-id">boxes</span>.<span class="hl-id">len</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">edges</span> = <span class="hl-id">vec</span>![];</span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">i</span> <span class="hl-kw">in</span> 0..<span class="hl-id">n</span> {</span>
+<span class="line">        <span class="hl-kw">for</span> <span class="hl-id">j</span> <span class="hl-kw">in</span> <span class="hl-id">i</span> + 1..<span class="hl-id">n</span> {</span>
+<span class="line">            <span class="hl-id">edges</span>.<span class="hl-id">push</span>((<span class="hl-id">dist2</span>(&amp;<span class="hl-id">boxes</span>[<span class="hl-id">i</span>], &amp;<span class="hl-id">boxes</span>[<span class="hl-id">j</span>]), <span class="hl-id">i</span>, <span class="hl-id">j</span>))</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    edges.sort_by_key(|e| e.0);</span>
-<span class="line">    edges</span>
+<span class="line">    <span class="hl-id">edges</span>.<span class="hl-id">sort_by_key</span>(|<span class="hl-id">e</span>| <span class="hl-id">e</span>.0);</span>
+<span class="line">    <span class="hl-id">edges</span></span>
 <span class="line">}</span>
 </code></pre></div>
 <p>In the first part,
@@ -208,36 +208,36 @@ we must compute the sizes of the three largest connected components
 after adding <code>top_k</code> edges.
 We don’t have to traverse the graph
 because union-find already tracks all the information we need.</p>
-<div class="source-container"><pre class="source"><code><span class="line">fn part1(boxes: &amp;[Point], top_k: usize) -&gt; usize {</span>
-<span class="line">    let edges = sorted_edges(boxes);</span>
-<span class="line">    let n = boxes.len();</span>
-<span class="line">    let mut uf = UnionFind::new(n);</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">part1</span>(<span class="hl-var">boxes</span>: &amp;[<span class="hl-id">Point</span>], <span class="hl-var">top_k</span>: <span class="hl-id">usize</span>) -&gt; <span class="hl-id">usize</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">edges</span> = <span class="hl-id">sorted_edges</span>(<span class="hl-id">boxes</span>);</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">n</span> = <span class="hl-id">boxes</span>.<span class="hl-id">len</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">uf</span> = <span class="hl-id">UnionFind</span>::<span class="hl-id">new</span>(<span class="hl-id">n</span>);</span>
 <span class="line"></span>
-<span class="line">    for (_, i, j) in &amp;edges[0..top_k] {</span>
-<span class="line">        uf.union(*i, *j);</span>
+<span class="line">    <span class="hl-kw">for</span> (<span class="hl-id">_</span>, <span class="hl-id">i</span>, <span class="hl-id">j</span>) <span class="hl-kw">in</span> &amp;<span class="hl-id">edges</span>[0..<span class="hl-id">top_k</span>] {</span>
+<span class="line">        <span class="hl-id">uf</span>.<span class="hl-id">union</span>(*<span class="hl-id">i</span>, *<span class="hl-id">j</span>);</span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    let mut sizes: Vec&lt;_&gt; = (0..n)</span>
-<span class="line">        .filter_map(|i| (i == uf.find(i)).then_some(uf.size(i)))</span>
-<span class="line">        .collect();</span>
-<span class="line">    sizes.sort_by(|a, b| b.cmp(a));</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">sizes</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">_</span>&gt; = (0..<span class="hl-id">n</span>)</span>
+<span class="line">        .<span class="hl-id">filter_map</span>(|<span class="hl-id">i</span>| (<span class="hl-id">i</span> == <span class="hl-id">uf</span>.<span class="hl-id">find</span>(<span class="hl-id">i</span>)).<span class="hl-id">then_some</span>(<span class="hl-id">uf</span>.<span class="hl-id">size</span>(<span class="hl-id">i</span>)))</span>
+<span class="line">        .<span class="hl-id">collect</span>();</span>
+<span class="line">    <span class="hl-id">sizes</span>.<span class="hl-id">sort_by</span>(|<span class="hl-id">a</span>, <span class="hl-id">b</span>| <span class="hl-id">b</span>.<span class="hl-id">cmp</span>(<span class="hl-id">a</span>));</span>
 <span class="line"></span>
-<span class="line">    sizes[0..3].iter().product::&lt;usize&gt;()</span>
+<span class="line">    <span class="hl-id">sizes</span>[0..3].<span class="hl-id">iter</span>().<span class="hl-id">product</span>::&lt;<span class="hl-id">usize</span>&gt;()</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>In the second part,
 we must multiply the x-coordinates of the first edge that makes the graph connected.
 Union-find makes this trivial.</p>
-<div class="source-container"><pre class="source"><code><span class="line">fn part2(boxes: &amp;[Point]) -&gt; i64 {</span>
-<span class="line">    let mut uf = UnionFind::new(boxes.len());</span>
-<span class="line">    let edges = sorted_edges(boxes);</span>
-<span class="line">    for (_, i, j) in &amp;edges {</span>
-<span class="line">        uf.union(*i, *j);</span>
-<span class="line">        if uf.tree_count() == 1 {</span>
-<span class="line">            return boxes[*i].0 * boxes[*j].0;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">part2</span>(<span class="hl-var">boxes</span>: &amp;[<span class="hl-id">Point</span>]) -&gt; <span class="hl-id">i64</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">uf</span> = <span class="hl-id">UnionFind</span>::<span class="hl-id">new</span>(<span class="hl-id">boxes</span>.<span class="hl-id">len</span>());</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">edges</span> = <span class="hl-id">sorted_edges</span>(<span class="hl-id">boxes</span>);</span>
+<span class="line">    <span class="hl-kw">for</span> (<span class="hl-id">_</span>, <span class="hl-id">i</span>, <span class="hl-id">j</span>) <span class="hl-kw">in</span> &amp;<span class="hl-id">edges</span> {</span>
+<span class="line">        <span class="hl-id">uf</span>.<span class="hl-id">union</span>(*<span class="hl-id">i</span>, *<span class="hl-id">j</span>);</span>
+<span class="line">        <span class="hl-kw">if</span> <span class="hl-id">uf</span>.<span class="hl-id">tree_count</span>() == 1 {</span>
+<span class="line">            <span class="hl-kw">return</span> <span class="hl-id">boxes</span>[*<span class="hl-id">i</span>].0 * <span class="hl-id">boxes</span>[*<span class="hl-id">j</span>].0;</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    unreachable!()</span>
+<span class="line">    <span class="hl-id">unreachable</span>!()</span>
 <span class="line">}</span>
 </code></pre></div>
 </section>
@@ -260,26 +260,26 @@ For the first part,
 the predicate always returns <code>true</code>.
 For the second part,
 the predicate checks whether the polygon contains the rectangle.</p>
-<div class="source-container"><pre class="source"><code><span class="line">type Point = (i64, i64);</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Point</span> = (<span class="hl-id">i64</span>, <span class="hl-id">i64</span>);</span>
 <span class="line"></span>
-<span class="line">fn largest_rectangle(</span>
-<span class="line">    coords: &amp;[Point],</span>
-<span class="line">    p: impl Fn(usize, usize, &amp;[Point]) -&gt; bool,</span>
-<span class="line">) -&gt; i64 {</span>
-<span class="line">    let n = coords.len();</span>
-<span class="line">    let mut max_area = 0;</span>
-<span class="line">    for i in 0..n {</span>
-<span class="line">        for j in (i + 1)..n {</span>
-<span class="line">            if !p(i, j, coords) {</span>
-<span class="line">                continue;</span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">largest_rectangle</span>(</span>
+<span class="line">    <span class="hl-var">coords</span>: &amp;[<span class="hl-id">Point</span>],</span>
+<span class="line">    <span class="hl-var">p</span>: <span class="hl-kw">impl</span> <span class="hl-id">Fn</span>(<span class="hl-id">usize</span>, <span class="hl-id">usize</span>, &amp;[<span class="hl-id">Point</span>]) -&gt; <span class="hl-id">bool</span>,</span>
+<span class="line">) -&gt; <span class="hl-id">i64</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">n</span> = <span class="hl-id">coords</span>.<span class="hl-id">len</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">max_area</span> = 0;</span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">i</span> <span class="hl-kw">in</span> 0..<span class="hl-id">n</span> {</span>
+<span class="line">        <span class="hl-kw">for</span> <span class="hl-id">j</span> <span class="hl-kw">in</span> (<span class="hl-id">i</span> + 1)..<span class="hl-id">n</span> {</span>
+<span class="line">            <span class="hl-kw">if</span> !<span class="hl-id">p</span>(<span class="hl-id">i</span>, <span class="hl-id">j</span>, <span class="hl-id">coords</span>) {</span>
+<span class="line">                <span class="hl-kw">continue</span>;</span>
 <span class="line">            }</span>
-<span class="line">            let (x1, y1) = coords[i];</span>
-<span class="line">            let (x2, y2) = coords[j];</span>
-<span class="line">            let area = ((x2 - x1).abs() + 1) * ((y2 - y1).abs() + 1);</span>
-<span class="line">            max_area = max_area.max(area);</span>
+<span class="line">            <span class="hl-kw">let</span> (<span class="hl-id">x1</span>, <span class="hl-id">y1</span>) = <span class="hl-id">coords</span>[<span class="hl-id">i</span>];</span>
+<span class="line">            <span class="hl-kw">let</span> (<span class="hl-id">x2</span>, <span class="hl-id">y2</span>) = <span class="hl-id">coords</span>[<span class="hl-id">j</span>];</span>
+<span class="line">            <span class="hl-kw">let</span> <span class="hl-var">area</span> = ((<span class="hl-id">x2</span> - <span class="hl-id">x1</span>).<span class="hl-id">abs</span>() + 1) * ((<span class="hl-id">y2</span> - <span class="hl-id">y1</span>).<span class="hl-id">abs</span>() + 1);</span>
+<span class="line">            <span class="hl-id">max_area</span> = <span class="hl-id">max_area</span>.<span class="hl-id">max</span>(<span class="hl-id">area</span>);</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    max_area</span>
+<span class="line">    <span class="hl-id">max_area</span></span>
 <span class="line">}</span>
 </code></pre></div>
 <p>Now the juicy part:
@@ -291,17 +291,17 @@ We must verify two conditions:
   we only need to check the other two.
 </li><li data-num-glyph="②">None of the rectangle’s edges cross any polygon edge.
 </li></ol>
-<div class="source-container"><pre class="source"><code><span class="line">fn rect_in_polygon(a: usize, b: usize, coords: &amp;[Point]) -&gt; bool {</span>
-<span class="line">    let (x1, y1) = coords[a];</span>
-<span class="line">    let (x2, y2) = coords[b];</span>
-<span class="line">    let c = (x1, y2);</span>
-<span class="line">    let d = (x2, y1);</span>
-<span class="line">    point_in_polygon(c, coords)</span>
-<span class="line">        &amp;&amp; point_in_polygon(d, coords)</span>
-<span class="line">        &amp;&amp; !line_crosses_polygon(coords[a], c, coords)</span>
-<span class="line">        &amp;&amp; !line_crosses_polygon(coords[a], d, coords)</span>
-<span class="line">        &amp;&amp; !line_crosses_polygon(coords[b], c, coords)</span>
-<span class="line">        &amp;&amp; !line_crosses_polygon(coords[b], d, coords)</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">rect_in_polygon</span>(<span class="hl-var">a</span>: <span class="hl-id">usize</span>, <span class="hl-var">b</span>: <span class="hl-id">usize</span>, <span class="hl-var">coords</span>: &amp;[<span class="hl-id">Point</span>]) -&gt; <span class="hl-id">bool</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> (<span class="hl-id">x1</span>, <span class="hl-id">y1</span>) = <span class="hl-id">coords</span>[<span class="hl-id">a</span>];</span>
+<span class="line">    <span class="hl-kw">let</span> (<span class="hl-id">x2</span>, <span class="hl-id">y2</span>) = <span class="hl-id">coords</span>[<span class="hl-id">b</span>];</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">c</span> = (<span class="hl-id">x1</span>, <span class="hl-id">y2</span>);</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">d</span> = (<span class="hl-id">x2</span>, <span class="hl-id">y1</span>);</span>
+<span class="line">    <span class="hl-id">point_in_polygon</span>(<span class="hl-id">c</span>, <span class="hl-id">coords</span>)</span>
+<span class="line">        &amp;&amp; <span class="hl-id">point_in_polygon</span>(<span class="hl-id">d</span>, <span class="hl-id">coords</span>)</span>
+<span class="line">        &amp;&amp; !<span class="hl-id">line_crosses_polygon</span>(<span class="hl-id">coords</span>[<span class="hl-id">a</span>], <span class="hl-id">c</span>, <span class="hl-id">coords</span>)</span>
+<span class="line">        &amp;&amp; !<span class="hl-id">line_crosses_polygon</span>(<span class="hl-id">coords</span>[<span class="hl-id">a</span>], <span class="hl-id">d</span>, <span class="hl-id">coords</span>)</span>
+<span class="line">        &amp;&amp; !<span class="hl-id">line_crosses_polygon</span>(<span class="hl-id">coords</span>[<span class="hl-id">b</span>], <span class="hl-id">c</span>, <span class="hl-id">coords</span>)</span>
+<span class="line">        &amp;&amp; !<span class="hl-id">line_crosses_polygon</span>(<span class="hl-id">coords</span>[<span class="hl-id">b</span>], <span class="hl-id">d</span>, <span class="hl-id">coords</span>)</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>To check whether a polygon contains a point,
@@ -314,19 +314,19 @@ the point lies within the polygon.</p>
    A horizontal ray from point <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">,</mo><mi>y</mi><mo stretchy="false">)</mo></math> intersecting a vertical polygon edge.
 </span><p class="svg"><img src="/images/46-ray-intersection.svg"></p>
 </figure>
-<div class="source-container"><pre class="source"><code><span class="line"><em>/// Checks whether a point lies in a polygon.</em></span>
-<span class="line">fn point_in_polygon(p: Point, vertices: &amp;[Point]) -&gt; bool {</span>
-<span class="line">    let mut inside = false;</span>
-<span class="line">    let n = vertices.len();</span>
-<span class="line">    let (x, y) = p;</span>
-<span class="line">    for i in 0..n {</span>
-<span class="line">        let (x1, y1) = vertices[i];</span>
-<span class="line">        let (_,  y2) = vertices[(i + 1) % n];</span>
-<span class="line">        if (y &lt; y1) != (y &lt; y2) &amp;&amp; x1 &gt;= x {</span>
-<span class="line">            inside = !inside;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-comment">/// Checks whether a point lies in a polygon.</span></span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">point_in_polygon</span>(<span class="hl-var">p</span>: <span class="hl-id">Point</span>, <span class="hl-var">vertices</span>: &amp;[<span class="hl-id">Point</span>]) -&gt; <span class="hl-id">bool</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">inside</span> = <span class="hl-kw">false</span>;</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">n</span> = <span class="hl-id">vertices</span>.<span class="hl-id">len</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> (<span class="hl-id">x</span>, <span class="hl-id">y</span>) = <span class="hl-id">p</span>;</span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">i</span> <span class="hl-kw">in</span> 0..<span class="hl-id">n</span> {</span>
+<span class="line">        <span class="hl-kw">let</span> (<span class="hl-id">x1</span>, <span class="hl-id">y1</span>) = <span class="hl-id">vertices</span>[<span class="hl-id">i</span>];</span>
+<span class="line">        <span class="hl-kw">let</span> (<span class="hl-id">_</span>,  <span class="hl-id">y2</span>) = <span class="hl-id">vertices</span>[(<span class="hl-id">i</span> + 1) % <span class="hl-id">n</span>];</span>
+<span class="line">        <span class="hl-kw">if</span> (<span class="hl-id">y</span> &lt; <span class="hl-id">y1</span>) != (<span class="hl-id">y</span> &lt; <span class="hl-id">y2</span>) &amp;&amp; <span class="hl-id">x1</span> &gt;= <span class="hl-id">x</span> {</span>
+<span class="line">            <span class="hl-id">inside</span> = !<span class="hl-id">inside</span>;</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    inside</span>
+<span class="line">    <span class="hl-id">inside</span></span>
 <span class="line">}</span>
 </code></pre></div>
 <p>The <code>(y &lt; y1) != (y &lt; y2)</code> condition is subtle and somewhat cryptic.
@@ -342,36 +342,36 @@ Note that the lines must <em>cross</em>, not just <em>touch</em>
    Horizontal line a-b crossing vertical line c-d.
 </span><p class="svg"><img src="/images/46-lines-cross.svg"></p>
 </figure>
-<div class="source-container"><pre class="source"><code><span class="line"><em>/// Checks whether line a-b crosses line c-d.</em></span>
-<span class="line"><em>/// Both lines must be parallel to one of the axis.</em></span>
-<span class="line">fn lines_cross(a: Point, b: Point, c: Point, d: Point) -&gt; bool {</span>
-<span class="line">    match (a.0 == b.0, c.0 == d.0) {</span>
-<span class="line">        (true, true) =&gt; false, <em>// both vertical</em></span>
-<span class="line">        (true, false) =&gt; {</span>
-<span class="line">            <em>// a-b is vertical, c-d is horizontal</em></span>
-<span class="line">            assert_eq!(c.1, d.1);</span>
-<span class="line">            let xmin = c.0.min(d.0);</span>
-<span class="line">            let xmax = c.0.max(d.0);</span>
-<span class="line">            let ymin = a.1.min(b.1);</span>
-<span class="line">            let ymax = a.1.max(b.1);</span>
-<span class="line">            xmin &lt; a.0 &amp;&amp; a.0 &lt; xmax &amp;&amp; ymin &lt; c.1 &amp;&amp; c.1 &lt; ymax</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-comment">/// Checks whether line a-b crosses line c-d.</span></span>
+<span class="line"><span class="hl-comment">/// Both lines must be parallel to one of the axis.</span></span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">lines_cross</span>(<span class="hl-var">a</span>: <span class="hl-id">Point</span>, <span class="hl-var">b</span>: <span class="hl-id">Point</span>, <span class="hl-var">c</span>: <span class="hl-id">Point</span>, <span class="hl-var">d</span>: <span class="hl-id">Point</span>) -&gt; <span class="hl-id">bool</span> {</span>
+<span class="line">    <span class="hl-kw">match</span> (<span class="hl-id">a</span>.0 == <span class="hl-id">b</span>.0, <span class="hl-id">c</span>.0 == <span class="hl-id">d</span>.0) {</span>
+<span class="line">        (<span class="hl-kw">true</span>, <span class="hl-kw">true</span>) =&gt; <span class="hl-kw">false</span>, <span class="hl-comment">// both vertical</span></span>
+<span class="line">        (<span class="hl-kw">true</span>, <span class="hl-kw">false</span>) =&gt; {</span>
+<span class="line">            <span class="hl-comment">// a-b is vertical, c-d is horizontal</span></span>
+<span class="line">            <span class="hl-id">assert_eq</span>!(<span class="hl-id">c</span>.1, <span class="hl-id">d</span>.1);</span>
+<span class="line">            <span class="hl-kw">let</span> <span class="hl-var">xmin</span> = <span class="hl-id">c</span>.0.<span class="hl-id">min</span>(<span class="hl-id">d</span>.0);</span>
+<span class="line">            <span class="hl-kw">let</span> <span class="hl-var">xmax</span> = <span class="hl-id">c</span>.0.<span class="hl-id">max</span>(<span class="hl-id">d</span>.0);</span>
+<span class="line">            <span class="hl-kw">let</span> <span class="hl-var">ymin</span> = <span class="hl-id">a</span>.1.<span class="hl-id">min</span>(<span class="hl-id">b</span>.1);</span>
+<span class="line">            <span class="hl-kw">let</span> <span class="hl-var">ymax</span> = <span class="hl-id">a</span>.1.<span class="hl-id">max</span>(<span class="hl-id">b</span>.1);</span>
+<span class="line">            <span class="hl-id">xmin</span> &lt; <span class="hl-id">a</span>.0 &amp;&amp; <span class="hl-id">a</span>.0 &lt; <span class="hl-id">xmax</span> &amp;&amp; <span class="hl-id">ymin</span> &lt; <span class="hl-id">c</span>.1 &amp;&amp; <span class="hl-id">c</span>.1 &lt; <span class="hl-id">ymax</span></span>
 <span class="line">        }</span>
-<span class="line">        (false, true) =&gt; lines_cross(c, d, a, b),</span>
-<span class="line">        (false, false) =&gt; false, <em>// both horizontal</em></span>
+<span class="line">        (<span class="hl-kw">false</span>, <span class="hl-kw">true</span>) =&gt; <span class="hl-id">lines_cross</span>(<span class="hl-id">c</span>, <span class="hl-id">d</span>, <span class="hl-id">a</span>, <span class="hl-id">b</span>),</span>
+<span class="line">        (<span class="hl-kw">false</span>, <span class="hl-kw">false</span>) =&gt; <span class="hl-kw">false</span>, <span class="hl-comment">// both horizontal</span></span>
 <span class="line">    }</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line"><em>/// Checks whether line a-b crosses any of the polygon edges.</em></span>
-<span class="line">fn line_crosses_polygon(a: Point, b: Point, vertices: &amp;[Point]) -&gt; bool {</span>
-<span class="line">    let n = vertices.len();</span>
-<span class="line">    for i in 0..n {</span>
-<span class="line">        let c = vertices[i];</span>
-<span class="line">        let d = vertices[(i + 1) % n];</span>
-<span class="line">        if lines_cross(a, b, c, d) {</span>
-<span class="line">            return true;</span>
+<span class="line"><span class="hl-comment">/// Checks whether line a-b crosses any of the polygon edges.</span></span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">line_crosses_polygon</span>(<span class="hl-var">a</span>: <span class="hl-id">Point</span>, <span class="hl-var">b</span>: <span class="hl-id">Point</span>, <span class="hl-var">vertices</span>: &amp;[<span class="hl-id">Point</span>]) -&gt; <span class="hl-id">bool</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">n</span> = <span class="hl-id">vertices</span>.<span class="hl-id">len</span>();</span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">i</span> <span class="hl-kw">in</span> 0..<span class="hl-id">n</span> {</span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-var">c</span> = <span class="hl-id">vertices</span>[<span class="hl-id">i</span>];</span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-var">d</span> = <span class="hl-id">vertices</span>[(<span class="hl-id">i</span> + 1) % <span class="hl-id">n</span>];</span>
+<span class="line">        <span class="hl-kw">if</span> <span class="hl-id">lines_cross</span>(<span class="hl-id">a</span>, <span class="hl-id">b</span>, <span class="hl-id">c</span>, <span class="hl-id">d</span>) {</span>
+<span class="line">            <span class="hl-kw">return</span> <span class="hl-kw">true</span>;</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    false</span>
+<span class="line">    <span class="hl-kw">false</span></span>
 <span class="line">}</span>
 </code></pre></div>
 </section>
@@ -395,29 +395,29 @@ and edges correspond to vector additions (<math xmlns="http://www.w3.org/1998/Ma
 The search starts at the zero vector and must reach <math xmlns="http://www.w3.org/1998/Math/MathML" class="math"><mi>t</mi></math>.
 Since the number of dimensions is small (up to ten),
 I represent vectors as 64-bit integers.</p>
-<div class="source-container"><pre class="source"><code><span class="line">fn lights_min_presses(buttons: &amp;[u64], target: u64) -&gt; usize {</span>
-<span class="line">    if target == 0 {</span>
-<span class="line">        return 0;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">lights_min_presses</span>(<span class="hl-var">buttons</span>: &amp;[<span class="hl-id">u64</span>], <span class="hl-var">target</span>: <span class="hl-id">u64</span>) -&gt; <span class="hl-id">usize</span> {</span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">target</span> == 0 {</span>
+<span class="line">        <span class="hl-kw">return</span> 0;</span>
 <span class="line">    }</span>
-<span class="line">    let mut visited: HashSet&lt;u64&gt; = HashSet::new();</span>
-<span class="line">    let mut q = VecDeque::new();</span>
-<span class="line">    let start = 0;</span>
-<span class="line">    visited.insert(start);</span>
-<span class="line">    q.push_back((start, 0));</span>
-<span class="line">    while let Some((v, dist)) = q.pop_front() {</span>
-<span class="line">        for b in buttons {</span>
-<span class="line">            let s = v ^ *b;</span>
-<span class="line">            if visited.contains(&amp;s) {</span>
-<span class="line">                continue;</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">visited</span>: <span class="hl-id">HashSet</span>&lt;<span class="hl-id">u64</span>&gt; = <span class="hl-id">HashSet</span>::<span class="hl-id">new</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">q</span> = <span class="hl-id">VecDeque</span>::<span class="hl-id">new</span>();</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">start</span> = 0;</span>
+<span class="line">    <span class="hl-id">visited</span>.<span class="hl-id">insert</span>(<span class="hl-id">start</span>);</span>
+<span class="line">    <span class="hl-id">q</span>.<span class="hl-id">push_back</span>((<span class="hl-id">start</span>, 0));</span>
+<span class="line">    <span class="hl-kw">while</span> <span class="hl-kw">let</span> <span class="hl-var">Some</span>((<span class="hl-id">v</span>, <span class="hl-id">dist</span>)) = <span class="hl-id">q</span>.<span class="hl-id">pop_front</span>() {</span>
+<span class="line">        <span class="hl-kw">for</span> <span class="hl-id">b</span> <span class="hl-kw">in</span> <span class="hl-id">buttons</span> {</span>
+<span class="line">            <span class="hl-kw">let</span> <span class="hl-var">s</span> = <span class="hl-id">v</span> ^ *<span class="hl-id">b</span>;</span>
+<span class="line">            <span class="hl-kw">if</span> <span class="hl-id">visited</span>.<span class="hl-id">contains</span>(&amp;<span class="hl-id">s</span>) {</span>
+<span class="line">                <span class="hl-kw">continue</span>;</span>
 <span class="line">            }</span>
-<span class="line">            if s == target {</span>
-<span class="line">                return dist + 1;</span>
+<span class="line">            <span class="hl-kw">if</span> <span class="hl-id">s</span> == <span class="hl-id">target</span> {</span>
+<span class="line">                <span class="hl-kw">return</span> <span class="hl-id">dist</span> + 1;</span>
 <span class="line">            }</span>
-<span class="line">            visited.insert(s);</span>
-<span class="line">            q.push_back((s, dist + 1));</span>
+<span class="line">            <span class="hl-id">visited</span>.<span class="hl-id">insert</span>(<span class="hl-id">s</span>);</span>
+<span class="line">            <span class="hl-id">q</span>.<span class="hl-id">push_back</span>((<span class="hl-id">s</span>, <span class="hl-id">dist</span> + 1));</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    panic!(&quot;Target state is unreachable: {buttons:?} {target}&quot;);</span>
+<span class="line">    <span class="hl-id">panic</span>!(<span class="hl-str">&quot;Target state is unreachable: {buttons:?} {target}&quot;</span>);</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>The second part has the same structure,
@@ -433,54 +433,54 @@ The values in the target vector were too large (over 50 on average in my input) 
 I resorted to the <span class="smallcaps">smt</span> solver <a href="https://github.com/Z3Prover/z3">z3</a>.
 Rust has <a href="https://crates.io/crates/z3">nice bindings</a>,
 and my code worked on the first try.</p>
-<div class="source-container"><pre class="source"><code><span class="line">fn joltage_min_presses_z3</span>
-<span class="line">    ndims: usize,</span>
-<span class="line">    buttons: &amp;[u64],</span>
-<span class="line">    target: &amp;[u16],</span>
-<span class="line">) -&gt; usize {</span>
-<span class="line">    use z3::{ast::Int, Optimize, SatResult};</span>
-<span class="line">    let opt = Optimize::new();</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">joltage_min_presses_z3</span>(</span>
+<span class="line">    <span class="hl-var">ndims</span>: <span class="hl-id">usize</span>,</span>
+<span class="line">    <span class="hl-var">buttons</span>: &amp;[<span class="hl-id">u64</span>],</span>
+<span class="line">    <span class="hl-var">target</span>: &amp;[<span class="hl-id">u16</span>],</span>
+<span class="line">) -&gt; <span class="hl-id">usize</span> {</span>
+<span class="line">    <span class="hl-kw">use</span> <span class="hl-id">z3</span>::{<span class="hl-id">ast</span>::<span class="hl-id">Int</span>, <span class="hl-id">Optimize</span>, <span class="hl-id">SatResult</span>};</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">opt</span> = <span class="hl-id">Optimize</span>::<span class="hl-id">new</span>();</span>
 <span class="line"></span>
-<span class="line">    <em>// Define the k_i variables.</em></span>
-<span class="line">    let mut vars = vec![];</span>
-<span class="line">    for i in 0..buttons.len() {</span>
-<span class="line">        let k_i = Int::fresh_const(format!(&quot;k_{}&quot;, i).as_str());</span>
-<span class="line">        opt.assert(&amp;k_i.ge(0));</span>
-<span class="line">        vars.push(k_i);</span>
+<span class="line">    <span class="hl-comment">// Define the k_i variables.</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">vars</span> = <span class="hl-id">vec</span>![];</span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">i</span> <span class="hl-kw">in</span> 0..<span class="hl-id">buttons</span>.<span class="hl-id">len</span>() {</span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-var">k_i</span> = <span class="hl-id">Int</span>::<span class="hl-id">fresh_const</span>(<span class="hl-id">format</span>!(<span class="hl-str">&quot;k_{}&quot;</span>, <span class="hl-id">i</span>).<span class="hl-id">as_str</span>());</span>
+<span class="line">        <span class="hl-id">opt</span>.<span class="hl-id">assert</span>(&amp;<span class="hl-id">k_i</span>.<span class="hl-id">ge</span>(0));</span>
+<span class="line">        <span class="hl-id">vars</span>.<span class="hl-id">push</span>(<span class="hl-id">k_i</span>);</span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    <em>// Define a constraint for every dimension.</em></span>
-<span class="line">    for d in 0..ndims {</span>
-<span class="line">        let mut vals = vec![];</span>
-<span class="line">        for (i, b) in buttons.iter().enumerate() {</span>
-<span class="line">            if *b &amp; (1 &lt;&lt; d) &gt; 0 {</span>
-<span class="line">                vals.push(vars[i].clone());</span>
+<span class="line">    <span class="hl-comment">// Define a constraint for every dimension.</span></span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">d</span> <span class="hl-kw">in</span> 0..<span class="hl-id">ndims</span> {</span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">vals</span> = <span class="hl-id">vec</span>![];</span>
+<span class="line">        <span class="hl-kw">for</span> (<span class="hl-id">i</span>, <span class="hl-id">b</span>) <span class="hl-kw">in</span> <span class="hl-id">buttons</span>.<span class="hl-id">iter</span>().<span class="hl-id">enumerate</span>() {</span>
+<span class="line">            <span class="hl-kw">if</span> *<span class="hl-id">b</span> &amp; (1 &lt;&lt; <span class="hl-id">d</span>) &gt; 0 {</span>
+<span class="line">                <span class="hl-id">vals</span>.<span class="hl-id">push</span>(<span class="hl-id">vars</span>[<span class="hl-id">i</span>].<span class="hl-id">clone</span>());</span>
 <span class="line">            }</span>
 <span class="line">        }</span>
-<span class="line">        opt.assert(&amp;Int::add(&amp;vals).eq(target[d]));</span>
+<span class="line">        <span class="hl-id">opt</span>.<span class="hl-id">assert</span>(&amp;<span class="hl-id">Int</span>::<span class="hl-id">add</span>(&amp;<span class="hl-id">vals</span>).<span class="hl-id">eq</span>(<span class="hl-id">target</span>[<span class="hl-id">d</span>]));</span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    <em>// Minimize the sum of k_i.</em></span>
-<span class="line">    opt.minimize(&amp;Int::add(&amp;vars));</span>
+<span class="line">    <span class="hl-comment">// Minimize the sum of k_i.</span></span>
+<span class="line">    <span class="hl-id">opt</span>.<span class="hl-id">minimize</span>(&amp;<span class="hl-id">Int</span>::<span class="hl-id">add</span>(&amp;<span class="hl-id">vars</span>));</span>
 <span class="line"></span>
-<span class="line">    let mut result = 0;</span>
-<span class="line">    match opt.check(&amp;[]) {</span>
-<span class="line">        SatResult::Sat =&gt; {</span>
-<span class="line">            let model = opt.get_model().unwrap();</span>
-<span class="line">            for v in vars.iter() {</span>
-<span class="line">                let val = model</span>
-<span class="line">                    .get_const_interp(v)</span>
-<span class="line">                    .unwrap()</span>
-<span class="line">                    .as_i64()</span>
-<span class="line">                    .unwrap();</span>
-<span class="line">                result += val as usize;</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">result</span> = 0;</span>
+<span class="line">    <span class="hl-kw">match</span> <span class="hl-id">opt</span>.<span class="hl-id">check</span>(&amp;[]) {</span>
+<span class="line">        <span class="hl-id">SatResult</span>::<span class="hl-id">Sat</span> =&gt; {</span>
+<span class="line">            <span class="hl-kw">let</span> <span class="hl-var">model</span> = <span class="hl-id">opt</span>.<span class="hl-id">get_model</span>().<span class="hl-id">unwrap</span>();</span>
+<span class="line">            <span class="hl-kw">for</span> <span class="hl-id">v</span> <span class="hl-kw">in</span> <span class="hl-id">vars</span>.<span class="hl-id">iter</span>() {</span>
+<span class="line">                <span class="hl-kw">let</span> <span class="hl-var">val</span> = <span class="hl-id">model</span></span>
+<span class="line">                    .<span class="hl-id">get_const_interp</span>(<span class="hl-id">v</span>)</span>
+<span class="line">                    .<span class="hl-id">unwrap</span>()</span>
+<span class="line">                    .<span class="hl-id">as_i64</span>()</span>
+<span class="line">                    .<span class="hl-id">unwrap</span>();</span>
+<span class="line">                <span class="hl-id">result</span> += <span class="hl-id">val</span> <span class="hl-kw">as</span> <span class="hl-id">usize</span>;</span>
 <span class="line">            }</span>
 <span class="line">        }</span>
-<span class="line">        _ =&gt; {</span>
-<span class="line">            panic!(&quot;No solution found.&quot;);</span>
+<span class="line">        <span class="hl-id">_</span> =&gt; {</span>
+<span class="line">            <span class="hl-id">panic</span>!(<span class="hl-str">&quot;No solution found.&quot;</span>);</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    result</span>
+<span class="line">    <span class="hl-id">result</span></span>
 <span class="line">}</span>
 </code></pre></div>
 <h3 id="tenthmascot-solution"><a href="#tenthmascot-solution">Divide and conquer</a></h3>
@@ -528,93 +528,92 @@ All instances in my input exhibit near-perfect distribution<label class="margin-
 To exploit this reduction,
 we precompute parity groups and consult them at every recursion level.</p>
 <p>Here is my implementation of <code>u/tenthmascot</code>’s idea:</p>
-<div class="source-container"><pre class="source"><code><span class="line"></span>
-<span class="line">type ParityGroups = HashMap&lt;u64, Vec&lt;u64&gt;&gt;;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">ParityGroups</span> = <span class="hl-id">HashMap</span>&lt;<span class="hl-id">u64</span>, <span class="hl-id">Vec</span>&lt;<span class="hl-id">u64</span>&gt;&gt;;</span>
 <span class="line"></span>
-<span class="line">fn parity_groups(ndims: usize, buttons: &amp;[u64]) -&gt; ParityGroups {</span>
-<span class="line">    let n = buttons.len();</span>
-<span class="line">    assert!(n &lt;= 64);</span>
-<span class="line">    let mut groups = ParityGroups::new();</span>
-<span class="line">    <em>// Use a 64-bit integer to represent subsets.</em></span>
-<span class="line">    for mask in 0..(1 &lt;&lt; ndims) {</span>
-<span class="line">        let mut parity_bits = 0;</span>
-<span class="line">        for i in 0..n {</span>
-<span class="line">            if mask &amp; (1 &lt;&lt; i) == 0 {</span>
-<span class="line">                continue;</span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">parity_groups</span>(<span class="hl-var">ndims</span>: <span class="hl-id">usize</span>, <span class="hl-var">buttons</span>: &amp;[<span class="hl-id">u64</span>]) -&gt; <span class="hl-id">ParityGroups</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">n</span> = <span class="hl-id">buttons</span>.<span class="hl-id">len</span>();</span>
+<span class="line">    <span class="hl-id">assert</span>!(<span class="hl-id">n</span> &lt;= 64);</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">groups</span> = <span class="hl-id">ParityGroups</span>::<span class="hl-id">new</span>();</span>
+<span class="line">    <span class="hl-comment">// Use a 64-bit integer to represent subsets.</span></span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">mask</span> <span class="hl-kw">in</span> 0..(1 &lt;&lt; <span class="hl-id">ndims</span>) {</span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">parity_bits</span> = 0;</span>
+<span class="line">        <span class="hl-kw">for</span> <span class="hl-id">i</span> <span class="hl-kw">in</span> 0..<span class="hl-id">n</span> {</span>
+<span class="line">            <span class="hl-kw">if</span> <span class="hl-id">mask</span> &amp; (1 &lt;&lt; <span class="hl-id">i</span>) == 0 {</span>
+<span class="line">                <span class="hl-kw">continue</span>;</span>
 <span class="line">            }</span>
-<span class="line">            for d in 0..ndims {</span>
-<span class="line">                if buttons[i] &amp; (1 &lt;&lt; d) &gt; 0 {</span>
-<span class="line">                    parity_bits ^= 1 &lt;&lt; d;</span>
+<span class="line">            <span class="hl-kw">for</span> <span class="hl-id">d</span> <span class="hl-kw">in</span> 0..<span class="hl-id">ndims</span> {</span>
+<span class="line">                <span class="hl-kw">if</span> <span class="hl-id">buttons</span>[<span class="hl-id">i</span>] &amp; (1 &lt;&lt; <span class="hl-id">d</span>) &gt; 0 {</span>
+<span class="line">                    <span class="hl-id">parity_bits</span> ^= 1 &lt;&lt; <span class="hl-id">d</span>;</span>
 <span class="line">                }</span>
 <span class="line">            }</span>
 <span class="line">        }</span>
-<span class="line">        groups.entry(parity_bits).or_default().push(mask);</span>
+<span class="line">        <span class="hl-id">groups</span>.<span class="hl-id">entry</span>(<span class="hl-id">parity_bits</span>).<span class="hl-id">or_default</span>().<span class="hl-id">push</span>(<span class="hl-id">mask</span>);</span>
 <span class="line">    }</span>
-<span class="line">    groups</span>
+<span class="line">    <span class="hl-id">groups</span></span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line">fn joltage_min_presses</span>
-<span class="line">    groups: &amp;ParityGroups,</span>
-<span class="line">    buttons: &amp;[u64],</span>
-<span class="line">    target: &amp;[u16],</span>
-<span class="line">) -&gt; Option&lt;usize&gt; {</span>
-<span class="line">    if target.iter().sum::&lt;u16&gt;() == 0 {</span>
-<span class="line">        return Some(0);</span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">joltage_min_presses</span>(</span>
+<span class="line">    <span class="hl-var">groups</span>: &amp;<span class="hl-id">ParityGroups</span>,</span>
+<span class="line">    <span class="hl-var">buttons</span>: &amp;[<span class="hl-id">u64</span>],</span>
+<span class="line">    <span class="hl-var">target</span>: &amp;[<span class="hl-id">u16</span>],</span>
+<span class="line">) -&gt; <span class="hl-id">Option</span>&lt;<span class="hl-id">usize</span>&gt; {</span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">target</span>.<span class="hl-id">iter</span>().<span class="hl-id">sum</span>::&lt;<span class="hl-id">u16</span>&gt;() == 0 {</span>
+<span class="line">        <span class="hl-kw">return</span> <span class="hl-id">Some</span>(0);</span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    <em>// Compute parity vector of the target.</em></span>
-<span class="line">    let mut parity = 0u64;</span>
-<span class="line">    for (d, t_d) in target.iter().enumerate() {</span>
-<span class="line">        if t_d &amp; 1 &gt; 0 {</span>
-<span class="line">            parity |= 1u64 &lt;&lt; d;</span>
+<span class="line">    <span class="hl-comment">// Compute parity vector of the target.</span></span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">parity</span> = 0<span class="hl-id">u64</span>;</span>
+<span class="line">    <span class="hl-kw">for</span> (<span class="hl-id">d</span>, <span class="hl-id">t_d</span>) <span class="hl-kw">in</span> <span class="hl-id">target</span>.<span class="hl-id">iter</span>().<span class="hl-id">enumerate</span>() {</span>
+<span class="line">        <span class="hl-kw">if</span> <span class="hl-id">t_d</span> &amp; 1 &gt; 0 {</span>
+<span class="line">            <span class="hl-id">parity</span> |= 1<span class="hl-id">u64</span> &lt;&lt; <span class="hl-id">d</span>;</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    let mut best: Option&lt;usize&gt; = None;</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">best</span>: <span class="hl-id">Option</span>&lt;<span class="hl-id">usize</span>&gt; = <span class="hl-id">None</span>;</span>
 <span class="line"></span>
-<span class="line">    <em>// Loop over subsets that give the desired parity.</em></span>
-<span class="line">    'outer: for subset in groups.get(&amp;parity)? {</span>
-<span class="line">        <em>// Compute the arguments for a smaller problem.</em></span>
-<span class="line">        let mut new_target = target.to_vec();</span>
-<span class="line">        let mut presses = 0;</span>
-<span class="line">        for i in 0..buttons.len() {</span>
-<span class="line">            if subset &amp; (1 &lt;&lt; i) == 0 {</span>
-<span class="line">                continue;</span>
+<span class="line">    <span class="hl-comment">// Loop over subsets that give the desired parity.</span></span>
+<span class="line">    '<span class="hl-id">outer</span>: <span class="hl-kw">for</span> <span class="hl-id">subset</span> <span class="hl-kw">in</span> <span class="hl-id">groups</span>.<span class="hl-id">get</span>(&amp;<span class="hl-id">parity</span>)? {</span>
+<span class="line">        <span class="hl-comment">// Compute the arguments for a smaller problem.</span></span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">new_target</span> = <span class="hl-id">target</span>.<span class="hl-id">to_vec</span>();</span>
+<span class="line">        <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">presses</span> = 0;</span>
+<span class="line">        <span class="hl-kw">for</span> <span class="hl-id">i</span> <span class="hl-kw">in</span> 0..<span class="hl-id">buttons</span>.<span class="hl-id">len</span>() {</span>
+<span class="line">            <span class="hl-kw">if</span> <span class="hl-id">subset</span> &amp; (1 &lt;&lt; <span class="hl-id">i</span>) == 0 {</span>
+<span class="line">                <span class="hl-kw">continue</span>;</span>
 <span class="line">            }</span>
-<span class="line">            presses += 1;</span>
-<span class="line">            for d in 0..target.len() {</span>
-<span class="line">                if buttons[i] &amp; (1 &lt;&lt; d) &gt; 0 {</span>
-<span class="line">                    if new_target[d] == 0 {</span>
-<span class="line">                        continue 'outer;</span>
+<span class="line">            <span class="hl-id">presses</span> += 1;</span>
+<span class="line">            <span class="hl-kw">for</span> <span class="hl-id">d</span> <span class="hl-kw">in</span> 0..<span class="hl-id">target</span>.<span class="hl-id">len</span>() {</span>
+<span class="line">                <span class="hl-kw">if</span> <span class="hl-id">buttons</span>[<span class="hl-id">i</span>] &amp; (1 &lt;&lt; <span class="hl-id">d</span>) &gt; 0 {</span>
+<span class="line">                    <span class="hl-kw">if</span> <span class="hl-id">new_target</span>[<span class="hl-id">d</span>] == 0 {</span>
+<span class="line">                        <span class="hl-kw">continue</span> '<span class="hl-id">outer</span>;</span>
 <span class="line">                    }</span>
-<span class="line">                    new_target[d] -= 1;</span>
+<span class="line">                    <span class="hl-id">new_target</span>[<span class="hl-id">d</span>] -= 1;</span>
 <span class="line">                }</span>
 <span class="line">            }</span>
 <span class="line">        }</span>
-<span class="line">        for v in new_target.iter_mut() {</span>
-<span class="line">            assert_eq!(*v % 2, 0);</span>
-<span class="line">            *v /= 2;</span>
+<span class="line">        <span class="hl-kw">for</span> <span class="hl-id">v</span> <span class="hl-kw">in</span> <span class="hl-id">new_target</span>.<span class="hl-id">iter_mut</span>() {</span>
+<span class="line">            <span class="hl-id">assert_eq</span>!(*<span class="hl-id">v</span> % 2, 0);</span>
+<span class="line">            *<span class="hl-id">v</span> /= 2;</span>
 <span class="line">        }</span>
 <span class="line"></span>
-<span class="line">        <em>// Solve the smaller problem recursively.</em></span>
-<span class="line">        if let Some(x) = joltage_min_presses(groups, buttons, &amp;new_target) {</span>
-<span class="line">            let total = presses + 2 * x;</span>
-<span class="line">            best = Some(best.map_or(total, |v| v.min(total)));</span>
+<span class="line">        <span class="hl-comment">// Solve the smaller problem recursively.</span></span>
+<span class="line">        <span class="hl-kw">if</span> <span class="hl-kw">let</span> <span class="hl-var">Some</span>(<span class="hl-id">x</span>) = <span class="hl-id">joltage_min_presses</span>(<span class="hl-id">groups</span>, <span class="hl-id">buttons</span>, &amp;<span class="hl-id">new_target</span>) {</span>
+<span class="line">            <span class="hl-kw">let</span> <span class="hl-var">total</span> = <span class="hl-id">presses</span> + 2 * <span class="hl-id">x</span>;</span>
+<span class="line">            <span class="hl-id">best</span> = <span class="hl-id">Some</span>(<span class="hl-id">best</span>.<span class="hl-id">map_or</span>(<span class="hl-id">total</span>, |<span class="hl-id">v</span>| <span class="hl-id">v</span>.<span class="hl-id">min</span>(<span class="hl-id">total</span>)));</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    best</span>
+<span class="line">    <span class="hl-id">best</span></span>
 <span class="line">}</span>
 </code></pre></div>
 <p>Parity groups also yield a simple algorithm for part one:
 pick the smallest subset in the target’s parity group.</p>
-<div class="source-container"><pre class="source"><code><span class="line">fn lights_min_presses_parity(groups: &amp;ParityGroups, target: u64) -&gt; usize {</span>
-<span class="line">    groups</span>
-<span class="line">        .get(&amp;target)</span>
-<span class="line">        .expect(&quot;no solution found&quot;)</span>
-<span class="line">        .iter()</span>
-<span class="line">        .map(|mask| mask.count_ones() as usize)</span>
-<span class="line">        .min()</span>
-<span class="line">        .unwrap()</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">lights_min_presses_parity</span>(<span class="hl-var">groups</span>: &amp;<span class="hl-id">ParityGroups</span>, <span class="hl-var">target</span>: <span class="hl-id">u64</span>) -&gt; <span class="hl-id">usize</span> {</span>
+<span class="line">    <span class="hl-id">groups</span></span>
+<span class="line">        .<span class="hl-id">get</span>(&amp;<span class="hl-id">target</span>)</span>
+<span class="line">        .<span class="hl-id">expect</span>(<span class="hl-str">&quot;no solution found&quot;</span>)</span>
+<span class="line">        .<span class="hl-id">iter</span>()</span>
+<span class="line">        .<span class="hl-id">map</span>(|<span class="hl-id">mask</span>| <span class="hl-id">mask</span>.<span class="hl-id">count_ones</span>() <span class="hl-kw">as</span> <span class="hl-id">usize</span>)</span>
+<span class="line">        .<span class="hl-id">min</span>()</span>
+<span class="line">        .<span class="hl-id">unwrap</span>()</span>
 <span class="line">}</span>
 </code></pre></div>
 </section>
@@ -624,43 +623,43 @@ That’s the same problem as <a href="#day-07">day seven</a>, part two,
 but this time the graph is general, not grid-embedded.
 On day seven, the grid structure provided a natural topological order.
 Here, we must compute it ourselves.</p>
-<div class="source-container"><pre class="source"><code><span class="line">type Graph = Vec&lt;Vec&lt;usize&gt;&gt;;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Graph</span> = <span class="hl-id">Vec</span>&lt;<span class="hl-id">Vec</span>&lt;<span class="hl-id">usize</span>&gt;&gt;;</span>
 <span class="line"></span>
-<span class="line"><em>/// Returns the vertices of a graph in a topological order.</em></span>
-<span class="line">fn toposort(g: &amp;Graph, start: usize) -&gt; Vec&lt;usize&gt; {</span>
-<span class="line">    fn go(</span>
-<span class="line">        g: &amp;Graph,</span>
-<span class="line">        v: usize,</span>
-<span class="line">        visited: &amp;mut Vec&lt;bool&gt;,</span>
-<span class="line">        out: &amp;mut Vec&lt;usize&gt;,</span>
+<span class="line"><span class="hl-comment">/// Returns the vertices of a graph in a topological order.</span></span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">toposort</span>(<span class="hl-var">g</span>: &amp;<span class="hl-id">Graph</span>, <span class="hl-var">start</span>: <span class="hl-id">usize</span>) -&gt; <span class="hl-id">Vec</span>&lt;<span class="hl-id">usize</span>&gt; {</span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">go</span>(</span>
+<span class="line">        <span class="hl-var">g</span>: &amp;<span class="hl-id">Graph</span>,</span>
+<span class="line">        <span class="hl-var">v</span>: <span class="hl-id">usize</span>,</span>
+<span class="line">        <span class="hl-var">visited</span>: &amp;<span class="hl-kw">mut</span> <span class="hl-id">Vec</span>&lt;<span class="hl-id">bool</span>&gt;,</span>
+<span class="line">        <span class="hl-var">out</span>: &amp;<span class="hl-kw">mut</span> <span class="hl-id">Vec</span>&lt;<span class="hl-id">usize</span>&gt;,</span>
 <span class="line">    ) {</span>
-<span class="line">        if visited[v] {</span>
-<span class="line">            return;</span>
+<span class="line">        <span class="hl-kw">if</span> <span class="hl-id">visited</span>[<span class="hl-id">v</span>] {</span>
+<span class="line">            <span class="hl-kw">return</span>;</span>
 <span class="line">        }</span>
-<span class="line">        visited[v] = true;</span>
-<span class="line">        for w in &amp;g[v] {</span>
-<span class="line">            go(g, *w, visited, out);</span>
+<span class="line">        <span class="hl-id">visited</span>[<span class="hl-id">v</span>] = <span class="hl-kw">true</span>;</span>
+<span class="line">        <span class="hl-kw">for</span> <span class="hl-id">w</span> <span class="hl-kw">in</span> &amp;<span class="hl-id">g</span>[<span class="hl-id">v</span>] {</span>
+<span class="line">            <span class="hl-id">go</span>(<span class="hl-id">g</span>, *<span class="hl-id">w</span>, <span class="hl-id">visited</span>, <span class="hl-id">out</span>);</span>
 <span class="line">        }</span>
-<span class="line">        out.push(v);</span>
+<span class="line">        <span class="hl-id">out</span>.<span class="hl-id">push</span>(<span class="hl-id">v</span>);</span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    let mut out = vec![];</span>
-<span class="line">    let mut visited = vec![false; g.len()];</span>
-<span class="line">    go(g, start, &amp;mut visited, &amp;mut out);</span>
-<span class="line">    out.reverse();</span>
-<span class="line">    out</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">out</span> = <span class="hl-id">vec</span>![];</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">visited</span> = <span class="hl-id">vec</span>![<span class="hl-kw">false</span>; <span class="hl-id">g</span>.<span class="hl-id">len</span>()];</span>
+<span class="line">    <span class="hl-id">go</span>(<span class="hl-id">g</span>, <span class="hl-id">start</span>, &amp;<span class="hl-kw">mut</span> <span class="hl-id">visited</span>, &amp;<span class="hl-kw">mut</span> <span class="hl-id">out</span>);</span>
+<span class="line">    <span class="hl-id">out</span>.<span class="hl-id">reverse</span>();</span>
+<span class="line">    <span class="hl-id">out</span></span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line"><em>/// Computes the number of paths between two vertices.</em></span>
-<span class="line">fn count_paths(g: &amp;Graph, start: usize, end: usize) -&gt; usize {</span>
-<span class="line">    let mut d = vec![0; g.len()];</span>
-<span class="line">    d[start] = 1;</span>
-<span class="line">    for p in toposort(g, start) {</span>
-<span class="line">        for c in &amp;g[p] {</span>
-<span class="line">            d[*c] += d[p];</span>
+<span class="line"><span class="hl-comment">/// Computes the number of paths between two vertices.</span></span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">count_paths</span>(<span class="hl-var">g</span>: &amp;<span class="hl-id">Graph</span>, <span class="hl-var">start</span>: <span class="hl-id">usize</span>, <span class="hl-var">end</span>: <span class="hl-id">usize</span>) -&gt; <span class="hl-id">usize</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">d</span> = <span class="hl-id">vec</span>![0; <span class="hl-id">g</span>.<span class="hl-id">len</span>()];</span>
+<span class="line">    <span class="hl-id">d</span>[<span class="hl-id">start</span>] = 1;</span>
+<span class="line">    <span class="hl-kw">for</span> <span class="hl-id">p</span> <span class="hl-kw">in</span> <span class="hl-id">toposort</span>(<span class="hl-id">g</span>, <span class="hl-id">start</span>) {</span>
+<span class="line">        <span class="hl-kw">for</span> <span class="hl-id">c</span> <span class="hl-kw">in</span> &amp;<span class="hl-id">g</span>[<span class="hl-id">p</span>] {</span>
+<span class="line">            <span class="hl-id">d</span>[*<span class="hl-id">c</span>] += <span class="hl-id">d</span>[<span class="hl-id">p</span>];</span>
 <span class="line">        }</span>
 <span class="line">    }</span>
-<span class="line">    d[end]</span>
+<span class="line">    <span class="hl-id">d</span>[<span class="hl-id">end</span>]</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>In the second part,
@@ -668,15 +667,15 @@ we must count paths from <code>svr</code> to <code>out</code>
 that pass through both <code>fft</code> and <code>dac</code> (in any order).
 The straightforward solution multiplies path counts for segments
 <code>svr -&gt; fft -&gt; dac -&gt; out</code> and <code>svr -&gt; dac -&gt; fft -&gt; out</code>.</p>
-<div class="source-container"><pre class="source"><code><span class="line">let fft_dac =</span>
-<span class="line">    count_paths(&amp;g, svr, fft) *</span>
-<span class="line">    count_paths(&amp;g, fft, dac) *</span>
-<span class="line">    count_paths(&amp;g, dac, out);</span>
-<span class="line">let dac_fft =</span>
-<span class="line">    count_paths(&amp;g, svr, dac) *</span>
-<span class="line">    count_paths(&amp;g, dac, fft) *</span>
-<span class="line">    count_paths(&amp;g, fft, out);</span>
-<span class="line">println!(&quot;{}&quot;, fft_dac + dac_fft);</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-var">fft_dac</span> =</span>
+<span class="line">    <span class="hl-id">count_paths</span>(&amp;<span class="hl-id">g</span>, <span class="hl-id">svr</span>, <span class="hl-id">fft</span>) *</span>
+<span class="line">    <span class="hl-id">count_paths</span>(&amp;<span class="hl-id">g</span>, <span class="hl-id">fft</span>, <span class="hl-id">dac</span>) *</span>
+<span class="line">    <span class="hl-id">count_paths</span>(&amp;<span class="hl-id">g</span>, <span class="hl-id">dac</span>, <span class="hl-id">out</span>);</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-var">dac_fft</span> =</span>
+<span class="line">    <span class="hl-id">count_paths</span>(&amp;<span class="hl-id">g</span>, <span class="hl-id">svr</span>, <span class="hl-id">dac</span>) *</span>
+<span class="line">    <span class="hl-id">count_paths</span>(&amp;<span class="hl-id">g</span>, <span class="hl-id">dac</span>, <span class="hl-id">fft</span>) *</span>
+<span class="line">    <span class="hl-id">count_paths</span>(&amp;<span class="hl-id">g</span>, <span class="hl-id">fft</span>, <span class="hl-id">out</span>);</span>
+<span class="line"><span class="hl-id">println</span>!(<span class="hl-str">&quot;{}&quot;</span>, <span class="hl-id">fft_dac</span> + <span class="hl-id">dac_fft</span>);</span>
 </code></pre></div>
 <p>Of course, only one of <code>count_paths(&amp;g, dac, fft)</code> and <code>count_paths(&amp;g, fft, dac)</code>
 can be non-zero.</p>
@@ -700,22 +699,22 @@ I assumed that if a rectangle <em>could</em> fit the tiles,
 it did.
 Luckily, this guess was correct.</p>
 <p>My solution boils down to the following humble heuristic:</p>
-<div class="source-container"><pre class="source"><code><span class="line">let tiles_per_shape: Vec&lt;usize&gt; =</span>
-<span class="line">    shapes.iter().map(|g| grid_count(g, &amp;'#')).collect();</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">let</span> <span class="hl-var">tiles_per_shape</span>: <span class="hl-id">Vec</span>&lt;<span class="hl-id">usize</span>&gt; =</span>
+<span class="line">    <span class="hl-id">shapes</span>.<span class="hl-id">iter</span>().<span class="hl-id">map</span>(|<span class="hl-id">g</span>| <span class="hl-id">grid_count</span>(<span class="hl-id">g</span>, &amp;'#')).<span class="hl-id">collect</span>();</span>
 <span class="line"></span>
-<span class="line">let mut total = 0usize;</span>
-<span class="line">for instance in instances {</span>
-<span class="line">    let tile_count = tiles_per_shape</span>
-<span class="line">        .iter()</span>
-<span class="line">        .zip(instance.shape_counts.iter())</span>
-<span class="line">        .map(|(x, y)| x * y)</span>
-<span class="line">        .sum::&lt;usize&gt;();</span>
+<span class="line"><span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">total</span> = 0<span class="hl-id">usize</span>;</span>
+<span class="line"><span class="hl-kw">for</span> <span class="hl-id">instance</span> <span class="hl-kw">in</span> <span class="hl-id">instances</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">tile_count</span> = <span class="hl-id">tiles_per_shape</span></span>
+<span class="line">        .<span class="hl-id">iter</span>()</span>
+<span class="line">        .<span class="hl-id">zip</span>(<span class="hl-id">instance</span>.<span class="hl-id">shape_counts</span>.<span class="hl-id">iter</span>())</span>
+<span class="line">        .<span class="hl-id">map</span>(|(<span class="hl-id">x</span>, <span class="hl-id">y</span>)| <span class="hl-id">x</span> * <span class="hl-id">y</span>)</span>
+<span class="line">        .<span class="hl-id">sum</span>::&lt;<span class="hl-id">usize</span>&gt;();</span>
 <span class="line"></span>
-<span class="line">    if tile_count &lt;= instance.w * instance.h {</span>
-<span class="line">        total += 1;</span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-id">tile_count</span> &lt;= <span class="hl-id">instance</span>.<span class="hl-id">w</span> * <span class="hl-id">instance</span>.<span class="hl-id">h</span> {</span>
+<span class="line">        <span class="hl-id">total</span> += 1;</span>
 <span class="line">    }</span>
 <span class="line">}</span>
-<span class="line">println!(&quot;{total}&quot;);</span>
+<span class="line"><span class="hl-id">println</span>!(<span class="hl-str">&quot;{total}&quot;</span>);</span>
 </code></pre></div>
 <p>If you want to dig deeper and solve the problem exactly,
 Knuth’s <a href="https://en.wikipedia.org/wiki/Dancing_links">dancing links algorithm</a> seems to be a promising direction to explore.</p>

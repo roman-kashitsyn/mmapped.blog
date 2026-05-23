@@ -59,18 +59,18 @@ There are other libraries with similar goals whose authors chose a slightly diff
   That design decision is not a coincidence.
   Eventually, canisters will access multiple stable memories, and each data structure might reside in a dedicated memory instance.
 </span>.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">pub trait <b>Memory</b> {</span>
-<span class="line">    <em>/// Equivalent to WebAssembly memory.size.</em></span>
-<span class="line">    fn <b>size</b>(&amp;self) -&gt; u64;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">pub</span> <span class="hl-kw">trait</span> <span class="hl-typedef">Memory</span> {</span>
+<span class="line">    <span class="hl-comment">/// Equivalent to WebAssembly memory.size.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">size</span>(&amp;<span class="hl-kw">self</span>) -&gt; <span class="hl-id">u64</span>;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Equivalent to WebAssembly memory.grow.</em></span>
-<span class="line">    fn <b>grow</b>(&amp;self, pages: u64) -&gt; i64;</span>
+<span class="line">    <span class="hl-comment">/// Equivalent to WebAssembly memory.grow.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">grow</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">pages</span>: <span class="hl-id">u64</span>) -&gt; <span class="hl-id">i64</span>;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Copies bytes from this memory to the heap (in Wasm, memory 0).</em></span>
-<span class="line">    fn <b>read</b>(&amp;self, offset: u64, dst: &amp;mut [u8]);</span>
+<span class="line">    <span class="hl-comment">/// Copies bytes from this memory to the heap (in Wasm, memory 0).</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">read</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">offset</span>: <span class="hl-id">u64</span>, <span class="hl-var">dst</span>: &amp;<span class="hl-kw">mut</span> [<span class="hl-id">u8</span>]);</span>
 <span class="line"></span>
-<span class="line">    <em>/// Writes bytes from the heap (in Wasm, memory 0) to this memory.</em></span>
-<span class="line">    fn <b>write</b>(&amp;self, offset: u64, src: &amp;[u8]);</span>
+<span class="line">    <span class="hl-comment">/// Writes bytes from the heap (in Wasm, memory 0) to this memory.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">write</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">offset</span>: <span class="hl-id">u64</span>, <span class="hl-var">src</span>: &amp;[<span class="hl-id">u8</span>]);</span>
 <span class="line">}</span>
 </code></pre></div>
 <figure class="grayscale-diagram"><label class="margin-toggle" for="mn-memory-trait">⊕</label><input type="checkbox" id="mn-memory-trait" class="margin-toggle"><span class="marginnote">
@@ -113,14 +113,14 @@ Depending on your needs, you might prefer <a href="https://github.com/dfinity/ca
 The <code>Storable</code> trait abstracts data structures over your choice of serialization format.</p>
 <figure><label class="margin-toggle" for="mn-storable-trait">⊕</label><input type="checkbox" id="mn-storable-trait" class="margin-toggle"><span class="marginnote">
   The <code>Storable</code> trait abstracts data structures over your choice of serialization format.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">pub trait <b>Storable</b> {<span id="storable-trait"></span></span>
-<span class="line">    <em>/// Serializes a value of a storable type into bytes.</em></span>
-<span class="line">    fn <b>to_bytes</b>(&amp;self) -&gt; Cow&lt;'_, [u8]&gt;;</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">pub</span> <span class="hl-kw">trait</span> <span class="hl-typedef">Storable</span> {<span id="storable-trait"></span></span>
+<span class="line">    <span class="hl-comment">/// Serializes a value of a storable type into bytes.</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">to_bytes</span>(&amp;<span class="hl-kw">self</span>) -&gt; <span class="hl-id">Cow</span>&lt;'<span class="hl-id">_</span>, [<span class="hl-id">u8</span>]&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Deserializes a value of a storable type from a byte array.</em></span>
-<span class="line">    <em>///</em></span>
-<span class="line">    <em>/// <b>REQUIREMENT</b>: Self::from_bytes(self.to_bytes().to_vec()) == self</em></span>
-<span class="line">    fn <b>from_bytes</b>(bytes: Cow&lt;[u8]&gt;) -&gt; Self;</span>
+<span class="line">    <span class="hl-comment">/// Deserializes a value of a storable type from a byte array.</span></span>
+<span class="line">    <span class="hl-comment">///</span></span>
+<span class="line">    <span class="hl-comment">/// <b>REQUIREMENT</b>: Self::from_bytes(self.to_bytes().to_vec()) == self</span></span>
+<span class="line">    <span class="hl-kw">fn</span> <span class="hl-defun">from_bytes</span>(<span class="hl-var">bytes</span>: <span class="hl-id">Cow</span>&lt;[<span class="hl-id">u8</span>]&gt;) -&gt; <span class="hl-kw">Self</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -129,17 +129,17 @@ Such types rely on an extension of this trait, providing this necessary metadata
 <code>BoundedStorable</code> types are analogous in their function to <a href="https://doc.rust-lang.org/std/marker/trait.Sized.html"><code>Sized</code></a> types, except that the compiler cannot deduce serialized sizes for you.</p>
 <figure><label class="margin-toggle" for="mn-storable-trait">⊕</label><input type="checkbox" id="mn-storable-trait" class="margin-toggle"><span class="marginnote">
   Some data structures require their values to implement <code>BoundedStorable</code> trait to know how much space they need to allocate for each item.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">pub trait <span id="bounded-storable-trait"></span><b>BoundedStorable</b>: <a href="#storable-trait"><code><b>Storable</b></code></a> {</span>
-<span class="line">    <em>/// The maximum slice length that <b>to_bytes</b> can return.</em></span>
-<span class="line">    <em>///</em></span>
-<span class="line">    <em>/// <b>REQUIREMENT</b>: self.to_bytes().len() ≤ Self::MAX_SIZE as usize</em></span>
-<span class="line">    const <b>MAX_SIZE</b>: u32;<span id="max-size-attribute"></span></span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">pub</span> <span class="hl-kw">trait</span> <span class="hl-typedef">BoundedStorable</span>: <a href="#storable-trait"><code><b>Storable</b></code></a> {<span id="bounded-storable-trait"></span></span>
+<span class="line">    <span class="hl-comment">/// The maximum slice length that <b>to_bytes</b> can return.</span></span>
+<span class="line">    <span class="hl-comment">///</span></span>
+<span class="line">    <span class="hl-comment">/// <b>REQUIREMENT</b>: self.to_bytes().len() ≤ Self::MAX_SIZE as usize</span></span>
+<span class="line">    <span class="hl-kw">const</span> <span class="hl-id">MAX_SIZE</span>: <span class="hl-id">u32</span>;<span id="max-size-attribute"></span></span>
 <span class="line"></span>
-<span class="line">    <em>/// Whether all values of this type have the same length (equal to Self::MAX_SIZE)</em></span>
-<span class="line">    <em>/// when serialized. If you are unsure about this flag, set it to <b>false</b>.</em></span>
-<span class="line">    <em>///</em></span>
-<span class="line">    <em>/// <b>REQUIREMENT</b>: Self::IS_FIXED_SIZE ⇒ self.to_bytes().len() == Self::MAX_SIZE as usize</em></span>
-<span class="line">    const <b>IS_FIXED_SIZE</b>: bool;<span id="is-fixed-size-attribute"></span></span>
+<span class="line">    <span class="hl-comment">/// Whether all values of this type have the same length (equal to Self::MAX_SIZE)</span></span>
+<span class="line">    <span class="hl-comment">/// when serialized. If you are unsure about this flag, set it to <b>false</b>.</span></span>
+<span class="line">    <span class="hl-comment">///</span></span>
+<span class="line">    <span class="hl-comment">/// <b>REQUIREMENT</b>: Self::IS_FIXED_SIZE ⇒ self.to_bytes().len() == Self::MAX_SIZE as usize</span></span>
+<span class="line">    <span class="hl-kw">const</span> <span class="hl-id">IS_FIXED_SIZE</span>: <span class="hl-id">bool</span>;<span id="is-fixed-size-attribute"></span></span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -178,14 +178,14 @@ For example, SQL databases do not allow tables to hold other tables as values, a
 Cell’s contents in stable memory updates every time you change the underlying value.</p>
 <figure><label class="margin-toggle" for="mn-cell-interface">⊕</label><input type="checkbox" id="mn-cell-interface" class="margin-toggle"><span class="marginnote">
   The core interface of the <code>Cell</code> stable structure.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">impl&lt;T: <a href="#storable-trait"><code>Storable</code></a>, M: <a href="#memory"><code>Memory</code></a>&gt; struct <b>Cell</b>&lt;T, M&gt; {</span>
-<span class="line">    <em>/// Returns the current cell value.</em></span>
-<span class="line">    <em>/// Complexity: O(1).</em></span>
-<span class="line">    pub fn <b>get</b>(&amp;self) -&gt; Option&lt;&amp;T&gt;;</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">impl</span>&lt;<span class="hl-id">T</span>: <a href="#storable-trait"><code>Storable</code></a>, <span class="hl-id">M</span>: <a href="#memory"><code>Memory</code></a>&gt; <span class="hl-kw">struct</span> <span class="hl-typedef">Cell</span>&lt;<span class="hl-id">T</span>, <span class="hl-id">M</span>&gt; {</span>
+<span class="line">    <span class="hl-comment">/// Returns the current cell value.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(1).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">get</span>(&amp;<span class="hl-kw">self</span>) -&gt; <span class="hl-id">Option</span>&lt;&amp;<span class="hl-id">T</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Updates the cell value.</em></span>
-<span class="line">    <em>/// Complexity: O(value size).</em></span>
-<span class="line">    pub fn <b>set</b>(&amp;mut self, value: T) -&gt; Result&lt;T, ValueError&gt;;</span>
+<span class="line">    <span class="hl-comment">/// Updates the cell value.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(value size).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">set</span>(&amp;<span class="hl-kw">mut</span> <span class="hl-kw">self</span>, <span class="hl-var">value</span>: <span class="hl-id">T</span>) -&gt; <span class="hl-id">Result</span>&lt;<span class="hl-id">T</span>, <span class="hl-id">ValueError</span>&gt;;</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -196,7 +196,7 @@ Cell’s contents in stable memory updates every time you change the underlying 
 </figure>
 <p>The primary use case for cells is storing canister configuration:
 </p>
-<ul class="bullets"><li>The ICRC-1 Ledger Archive canister persists its initialization arguments in a <a href="https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L49">cell</a>.
+<ul class="bullets"><li>The <span class="smallcaps">icrc-1</span> Ledger Archive canister persists its initialization arguments in a <a href="https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L49">cell</a>.
   </li><li>The Internet Identity Archive canister holds its init arguments in a <a href="https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L85">cell</a>.
 </li></ul>
 <h3 id="stable-vec"><a href="#stable-vec">Stable vector</a></h3>
@@ -208,26 +208,26 @@ If all the values are the same size, the vector implementation uses <a href="#ma
 This reduction is primarily helpful for vectors of primitives (e.g., <code>StableVec&lt;u64&gt;</code>).</p>
 <figure><label class="margin-toggle" for="mn-vec-interface">⊕</label><input type="checkbox" id="mn-vec-interface" class="margin-toggle"><span class="marginnote">
   The core interface of the <code>Vec</code> stable structure.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">impl&lt;T: <a href="#storable-types"><code>BoundedStorable</code></a>, Data: <a href="#memory"><code>Memory</code></a>&gt; struct <b>Vec</b>&lt;T, Memory&gt; {</span>
-<span class="line">    <em>/// Adds a new item at the vector's back.</em></span>
-<span class="line">    <em>/// Complexity: O(T::MAX_SIZE).</em></span>
-<span class="line">    pub fn <b>push</b>(&amp;self, item: &amp;T) -&gt; Result&lt;usize, GrowFailed&gt;;</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">impl</span>&lt;<span class="hl-id">T</span>: <a href="#storable-types"><code>BoundedStorable</code></a>, <span class="hl-id">Data</span>: <a href="#memory"><code>Memory</code></a>&gt; <span class="hl-kw">struct</span> <span class="hl-typedef">Vec</span>&lt;<span class="hl-id">T</span>, <span class="hl-id">Memory</span>&gt; {</span>
+<span class="line">    <span class="hl-comment">/// Adds a new item at the vector's back.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(T::MAX_SIZE).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">push</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">item</span>: &amp;<span class="hl-id">T</span>) -&gt; <span class="hl-id">Result</span>&lt;<span class="hl-id">usize</span>, <span class="hl-id">GrowFailed</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Removes an item from the vector's back.</em></span>
-<span class="line">    <em>/// Complexity: O(T::MAX_SIZE).</em></span>
-<span class="line">    pub fn <b>pop</b>(&amp;self) -&gt; Option&lt;T&gt;;</span>
+<span class="line">    <span class="hl-comment">/// Removes an item from the vector's back.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(T::MAX_SIZE).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">pop</span>(&amp;<span class="hl-kw">self</span>) -&gt; <span class="hl-id">Option</span>&lt;<span class="hl-id">T</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Returns the item at the specified index.</em></span>
-<span class="line">    <em>/// Complexity: O(T::MAX_SIZE).</em></span>
-<span class="line">    pub fn <b>get</b>(&amp;self, index: usize) -&gt; Option&lt;T&gt;;</span>
+<span class="line">    <span class="hl-comment">/// Returns the item at the specified index.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(T::MAX_SIZE).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">get</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">index</span>: <span class="hl-id">usize</span>) -&gt; <span class="hl-id">Option</span>&lt;<span class="hl-id">T</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Updates the item at the specified index.</em></span>
-<span class="line">    <em>/// Complexity: O(T::MAX_SIZE).</em></span>
-<span class="line">    pub fn <b>set</b>(&amp;self, index: usize, item: &amp;T);</span>
+<span class="line">    <span class="hl-comment">/// Updates the item at the specified index.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(T::MAX_SIZE).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">set</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">index</span>: <span class="hl-id">usize</span>, <span class="hl-var">item</span>: &amp;<span class="hl-id">T</span>);</span>
 <span class="line"></span>
-<span class="line">    <em>/// Returns the number of items in the vector.</em></span>
-<span class="line">    <em>/// Complexity: O(1).</em></span>
-<span class="line">    pub fn <b>len</b>() -&gt; usize;</span>
+<span class="line">    <span class="hl-comment">/// Returns the number of items in the vector.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(1).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">len</span>() -&gt; <span class="hl-id">usize</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -245,23 +245,23 @@ The log requires two memories: the <em>index</em> storing entry offsets and the 
 The number of instructions needed to access old and append new entries does not depend on the number of items in the log, only on the entry size.</p>
 <figure><label class="margin-toggle" for="mn-log-interface">⊕</label><input type="checkbox" id="mn-log-interface" class="margin-toggle"><span class="marginnote">
   The core interface of the <code>Log</code> stable structure.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">impl&lt;T, Index, Data&gt; struct <b>Log</b>&lt;T, Index, Data&gt;</span>
-<span class="line">where</span>
-<span class="line">  T: <a href="#storable-trait"><code>Storable</code></a>,</span>
-<span class="line">  Index: <a href="#memory"><code>Memory</code></a>,</span>
-<span class="line">  Data: <a href="#memory"><code>Memory</code></a>,</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">impl</span>&lt;<span class="hl-id">T</span>, <span class="hl-id">Index</span>, <span class="hl-id">Data</span>&gt; <span class="hl-kw">struct</span> <span class="hl-typedef">Log</span>&lt;<span class="hl-id">T</span>, <span class="hl-id">Index</span>, <span class="hl-id">Data</span>&gt;</span>
+<span class="line"><span class="hl-kw">where</span></span>
+<span class="line">  <span class="hl-id">T</span>: <a href="#storable-trait"><code>Storable</code></a>,</span>
+<span class="line">  <span class="hl-id">Index</span>: <a href="#memory"><code>Memory</code></a>,</span>
+<span class="line">  <span class="hl-id">Data</span>: <a href="#memory"><code>Memory</code></a>,</span>
 <span class="line">{</span>
-<span class="line">    <em>/// Adds a new entry to the log.</em></span>
-<span class="line">    <em>/// Complexity: O(entry size).</em></span>
-<span class="line">    pub fn <b>append</b>(&amp;self, bytes: &amp;T) -&gt; Result&lt;u64, WriteError&gt;;</span>
+<span class="line">    <span class="hl-comment">/// Adds a new entry to the log.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(entry size).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">append</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">bytes</span>: &amp;<span class="hl-id">T</span>) -&gt; <span class="hl-id">Result</span>&lt;<span class="hl-id">u64</span>, <span class="hl-id">WriteError</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Returns the entry at the specified index.</em></span>
-<span class="line">    <em>/// Complexity: O(entry size).</em></span>
-<span class="line">    pub fn <b>get</b>(&amp;self, idx: u64) -&gt; Option&lt;T&gt;;</span>
+<span class="line">    <span class="hl-comment">/// Returns the entry at the specified index.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(entry size).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">get</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">idx</span>: <span class="hl-id">u64</span>) -&gt; <span class="hl-id">Option</span>&lt;<span class="hl-id">T</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Returns the number of entries in the log.</em></span>
-<span class="line">    <em>/// Complexity: O(1).</em></span>
-<span class="line">    pub fn <b>len</b>() -&gt; u64;</span>
+<span class="line">    <span class="hl-comment">/// Returns the number of entries in the log.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(1).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">len</span>() -&gt; <span class="hl-id">u64</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -274,7 +274,7 @@ The number of instructions needed to access old and append new entries does not 
 <p>The log is a versatile data structure that can be helpful in almost any application:
 </p>
 <ul class="bullets"><li>
-    The ICRC-1 Ledger Archive canister stores archived transactions in a <a href="https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L58">stable log</a>.
+    The <span class="smallcaps">icrc-1</span> Ledger Archive canister stores archived transactions in a <a href="https://github.com/dfinity/ic/blob/9cdb1e62bcd199f28ae0005ed3f762487a1454df/rs/rosetta-api/icrc1/archive/src/main.rs#L58">stable log</a>.
   </li><li>
     The Internet Identity Archive canister holds events in a <a href="https://github.com/dfinity/internet-identity/blob/b66fe925fb0a337b09aaaa5beaf1a60994b19f14/src/archive/src/main.rs#L90">stable log</a>.
   </li><li>
@@ -290,30 +290,30 @@ The <a href="https://github.com/dfinity/stable-structures/blob/ed2fb6de50e56d2f9
 <p>The interface of stable <code>BTreeMap</code> will look familiar to any seasoned Rust programmer.</p>
 <figure><label class="margin-toggle" for="mn-btreemap-interface">⊕</label><input type="checkbox" id="mn-btreemap-interface" class="margin-toggle"><span class="marginnote">
   The core interface of the <code>BTreeMap</code> stable structure.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">impl&lt;K, V, M&gt; struct <b>BTreeMap</b>&lt;K, V, M&gt;</span>
-<span class="line">where</span>
-<span class="line">  K: <a href="#bounded-storable-trait"><code>BoundedStorable</code></a> + Ord + Clone,</span>
-<span class="line">  V: <a href="#bounded-storable-trait"><code>BoundedStorable</code></a>,</span>
-<span class="line">  M: <a href="#memory"><code>Memory</code></a>,</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">impl</span>&lt;<span class="hl-id">K</span>, <span class="hl-id">V</span>, <span class="hl-id">M</span>&gt; <span class="hl-kw">struct</span> <span class="hl-typedef">BTreeMap</span>&lt;<span class="hl-id">K</span>, <span class="hl-id">V</span>, <span class="hl-id">M</span>&gt;</span>
+<span class="line"><span class="hl-kw">where</span></span>
+<span class="line">  <span class="hl-id">K</span>: <a href="#bounded-storable-trait"><code>BoundedStorable</code></a> + <span class="hl-id">Ord</span> + <span class="hl-id">Clone</span>,</span>
+<span class="line">  <span class="hl-id">V</span>: <a href="#bounded-storable-trait"><code>BoundedStorable</code></a>,</span>
+<span class="line">  <span class="hl-id">M</span>: <a href="#memory"><code>Memory</code></a>,</span>
 <span class="line">{</span>
-<span class="line">    <em>/// Adds a new entry to the map.</em></span>
-<span class="line">    <em>/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).</em></span>
-<span class="line">    pub fn <b>insert</b>(&amp;self, key: K, value: V) -&gt; Option&lt;V&gt;;</span>
+<span class="line">    <span class="hl-comment">/// Adds a new entry to the map.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">insert</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">key</span>: <span class="hl-id">K</span>, <span class="hl-var">value</span>: <span class="hl-id">V</span>) -&gt; <span class="hl-id">Option</span>&lt;<span class="hl-id">V</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Returns the value associated with the specified key.</em></span>
-<span class="line">    <em>/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).</em></span>
-<span class="line">    pub fn <b>get</b>(&amp;self, key: &amp;K) -&gt; Option&lt;V&gt;;</span>
+<span class="line">    <span class="hl-comment">/// Returns the value associated with the specified key.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">get</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">key</span>: &amp;<span class="hl-id">K</span>) -&gt; <span class="hl-id">Option</span>&lt;<span class="hl-id">V</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Removes an entry from the map.</em></span>
-<span class="line">    <em>/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).</em></span>
-<span class="line">    pub fn <b>remove</b>(&amp;self, key: &amp;K) -&gt; Option&lt;V&gt;;</span>
+<span class="line">    <span class="hl-comment">/// Removes an entry from the map.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(log(N) * K::MAX_SIZE + V::MAX_SIZE).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">remove</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">key</span>: &amp;<span class="hl-id">K</span>) -&gt; <span class="hl-id">Option</span>&lt;<span class="hl-id">V</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Returns an iterator over the entries in the specified key range.</em></span>
-<span class="line">    pub fn <b>range</b>(&amp;self, range: impl RangeBounds&lt;K&gt;) -&gt; impl Iterator&lt;Item = (K, V)&gt;;</span>
+<span class="line">    <span class="hl-comment">/// Returns an iterator over the entries in the specified key range.</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">range</span>(&amp;<span class="hl-kw">self</span>, <span class="hl-var">range</span>: <span class="hl-kw">impl</span> <span class="hl-id">RangeBounds</span>&lt;<span class="hl-id">K</span>&gt;) -&gt; <span class="hl-kw">impl</span> <span class="hl-id">Iterator</span>&lt;<span class="hl-id">Item</span> = (<span class="hl-id">K</span>, <span class="hl-id">V</span>)&gt;;</span>
 <span class="line"></span>
-<span class="line">    <em>/// Returns the number of entries in the map.</em></span>
-<span class="line">    <em>/// Complexity: O(1).</em></span>
-<span class="line">    pub fn <b>len</b>() -&gt; usize;</span>
+<span class="line">    <span class="hl-comment">/// Returns the number of entries in the map.</span></span>
+<span class="line">    <span class="hl-comment">/// Complexity: O(1).</span></span>
+<span class="line">    <span class="hl-kw">pub</span> <span class="hl-kw">fn</span> <span class="hl-defun">len</span>() -&gt; <span class="hl-id">usize</span>;</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -329,28 +329,28 @@ The <a href="https://github.com/dfinity/stable-structures/blob/ed2fb6de50e56d2f9
 <figure><span id="range-scan-example"></span>
 <label class="margin-toggle" for="mn-range-scan-example">⊕</label><input type="checkbox" id="mn-range-scan-example" class="margin-toggle"><span class="marginnote">
   Two examples of using the <code>StableBTreeMap::range</code> method.
-</span><div class="source-container"><pre class="source rust"><code><span class="line"><em>/// Selects all subaccounts of the specified principal.</em></span>
-<span class="line">fn <b>principal_subaccounts</b>(</span>
-<span class="line">  balance_map: &amp;StableBTreeMap&lt;(Principal, Subaccount), Tokens&gt;,</span>
-<span class="line">  principal: Principal,</span>
-<span class="line">) -&gt; impl Iterator&lt;Item = (Subaccount, Tokens)&gt; + '_ {</span>
-<span class="line">  balance_map</span>
-<span class="line">    .<b>range</b>((principal, Subaccount::default())..)</span>
-<span class="line">    .take_while(|((p, _), )| p == principal)</span>
-<span class="line">    .map(|((_, s), t)| (s, t))</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-comment">/// Selects all subaccounts of the specified principal.</span></span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">principal_subaccounts</span>(</span>
+<span class="line">  <span class="hl-var">balance_map</span>: &amp;<span class="hl-id">StableBTreeMap</span>&lt;(<span class="hl-id">Principal</span>, <span class="hl-id">Subaccount</span>), <span class="hl-id">Tokens</span>&gt;,</span>
+<span class="line">  <span class="hl-var">principal</span>: <span class="hl-id">Principal</span>,</span>
+<span class="line">) -&gt; <span class="hl-kw">impl</span> <span class="hl-id">Iterator</span>&lt;<span class="hl-id">Item</span> = (<span class="hl-id">Subaccount</span>, <span class="hl-id">Tokens</span>)&gt; + '<span class="hl-id">_</span> {</span>
+<span class="line">  <span class="hl-id">balance_map</span></span>
+<span class="line">    .<b>range</b>((<span class="hl-id">principal</span>, <span class="hl-id">Subaccount</span>::<span class="hl-id">default</span>())..)</span>
+<span class="line">    .<span class="hl-id">take_while</span>(|((<span class="hl-id">p</span>, <span class="hl-id">_</span>), )| <span class="hl-id">p</span> == <span class="hl-id">principal</span>)</span>
+<span class="line">    .<span class="hl-id">map</span>(|((<span class="hl-id">_</span>, <span class="hl-id">s</span>), <span class="hl-id">t</span>)| (<span class="hl-id">s</span>, <span class="hl-id">t</span>))</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line"><em>/// Selects a transaction range for the specified principal.</em></span>
-<span class="line">fn <b>principal_tx_range</b>(</span>
-<span class="line">  tx_index: &amp;StableBTreeMap&lt;(Principal, TxId), Transaction&gt;,</span>
-<span class="line">  principal: Principal,</span>
-<span class="line">  start: TxId,</span>
-<span class="line">  len: usize,</span>
-<span class="line">) -&gt; impl Iterator&lt;Item = Transaction&gt; + '_ {</span>
-<span class="line">  tx_index</span>
-<span class="line">    .<b>range</b>((principal, start)..)</span>
-<span class="line">    .take(len)</span>
-<span class="line">    .map(|((_, _), tx)| tx)</span>
+<span class="line"><span class="hl-comment">/// Selects a transaction range for the specified principal.</span></span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">principal_tx_range</span>(</span>
+<span class="line">  <span class="hl-var">tx_index</span>: &amp;<span class="hl-id">StableBTreeMap</span>&lt;(<span class="hl-id">Principal</span>, <span class="hl-id">TxId</span>), <span class="hl-id">Transaction</span>&gt;,</span>
+<span class="line">  <span class="hl-var">principal</span>: <span class="hl-id">Principal</span>,</span>
+<span class="line">  <span class="hl-var">start</span>: <span class="hl-id">TxId</span>,</span>
+<span class="line">  <span class="hl-var">len</span>: <span class="hl-id">usize</span>,</span>
+<span class="line">) -&gt; <span class="hl-kw">impl</span> <span class="hl-id">Iterator</span>&lt;<span class="hl-id">Item</span> = <span class="hl-id">Transaction</span>&gt; + '<span class="hl-id">_</span> {</span>
+<span class="line">  <span class="hl-id">tx_index</span></span>
+<span class="line">    .<b>range</b>((<span class="hl-id">principal</span>, <span class="hl-id">start</span>)..)</span>
+<span class="line">    .<span class="hl-id">take</span>(<span class="hl-id">len</span>)</span>
+<span class="line">    .<span class="hl-id">map</span>(|((<span class="hl-id">_</span>, <span class="hl-id">_</span>), <span class="hl-id">tx</span>)| <span class="hl-id">tx</span>)</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -371,12 +371,12 @@ Each data structure <code>T</code> in the library declares at least three constr
 This approach reminds me of the way we organize tables in relational databases.</p>
 <figure><label class="margin-toggle" for="mn-stable-init">⊕</label><input type="checkbox" id="mn-stable-init" class="margin-toggle"><span class="marginnote">
   Declaring a stable data structure as a standalone global variable.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">use ic_stable_structures::{StableBTreeMap, DefaultMemoryImpl};</span>
-<span class="line">use std::cell::RefCell;</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">use</span> <span class="hl-id">ic_stable_structures</span>::{<span class="hl-id">StableBTreeMap</span>, <span class="hl-id">DefaultMemoryImpl</span>};</span>
+<span class="line"><span class="hl-kw">use</span> <span class="hl-id">std</span>::<span class="hl-id">cell</span>::<span class="hl-id">RefCell</span>;</span>
 <span class="line"></span>
-<span class="line">thread_local! {</span>
-<span class="line">  static <b>USERS</b>: RefCell&lt;<a href="#stable-btree"><code>StableBTreeMap</code></a>&lt;UserId, User, <a href="#default-memory-impl"><code>DefaultMemoryImpl</code></a>&gt;&gt; =</span>
-<span class="line">    RefCell::new(StableBTreeMap::init(DefaultMemoryImpl::default()));</span>
+<span class="line"><span class="hl-id">thread_local</span>! {</span>
+<span class="line">  <span class="hl-kw">static</span> <span class="hl-id">USERS</span>: <span class="hl-id">RefCell</span>&lt;<a href="#stable-btree"><code>StableBTreeMap</code></a>&lt;<span class="hl-id">UserId</span>, <span class="hl-id">User</span>, <a href="#default-memory-impl"><code>DefaultMemoryImpl</code></a>&gt;&gt; =</span>
+<span class="line">    <span class="hl-id">RefCell</span>::<span class="hl-id">new</span>(<span class="hl-id">StableBTreeMap</span>::<span class="hl-id">init</span>(<span class="hl-id">DefaultMemoryImpl</span>::<span class="hl-id">default</span>()));</span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
@@ -401,109 +401,109 @@ We will need three collections:
 We will allocate the metadata cell in a <a href="#restricted-memory">restricted memory</a>, partitioning the rest of the stable memory between the accounts map and the log using the <a href="#memory-manager">memory manager</a>.</p>
 <p>Let us put these ideas to code.
 First, we must import a few type definitions from the library.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">use ic_stable_structures::{</span>
-<span class="line">  DefaultMemoryImpl as DefMem,</span>
-<span class="line">  RestrictedMemory,</span>
-<span class="line">  StableBTreeMap,</span>
-<span class="line">  StableCell,</span>
-<span class="line">  StableLog,</span>
-<span class="line">  Storable,</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">use</span> <span class="hl-id">ic_stable_structures</span>::{</span>
+<span class="line">  <span class="hl-id">DefaultMemoryImpl</span> <span class="hl-kw">as</span> <span class="hl-id">DefMem</span>,</span>
+<span class="line">  <span class="hl-id">RestrictedMemory</span>,</span>
+<span class="line">  <span class="hl-id">StableBTreeMap</span>,</span>
+<span class="line">  <span class="hl-id">StableCell</span>,</span>
+<span class="line">  <span class="hl-id">StableLog</span>,</span>
+<span class="line">  <span class="hl-id">Storable</span>,</span>
 <span class="line">};</span>
-<span class="line">use ic_stable_structures::memory_manager::{</span>
-<span class="line">  MemoryId,</span>
-<span class="line">  MemoryManager as MM,</span>
-<span class="line">  VirtualMemory,</span>
+<span class="line"><span class="hl-kw">use</span> <span class="hl-id">ic_stable_structures</span>::<span class="hl-id">memory_manager</span>::{</span>
+<span class="line">  <span class="hl-id">MemoryId</span>,</span>
+<span class="line">  <span class="hl-id">MemoryManager</span> <span class="hl-kw">as</span> <span class="hl-id">MM</span>,</span>
+<span class="line">  <span class="hl-id">VirtualMemory</span>,</span>
 <span class="line">};</span>
-<span class="line">use ic_stable_structures::storable::Blob;</span>
-<span class="line">use std::borrow::Cow;</span>
-<span class="line">use std::cell::RefCell;</span>
+<span class="line"><span class="hl-kw">use</span> <span class="hl-id">ic_stable_structures</span>::<span class="hl-id">storable</span>::<span class="hl-id">Blob</span>;</span>
+<span class="line"><span class="hl-kw">use</span> <span class="hl-id">std</span>::<span class="hl-id">borrow</span>::<span class="hl-id">Cow</span>;</span>
+<span class="line"><span class="hl-kw">use</span> <span class="hl-id">std</span>::<span class="hl-id">cell</span>::<span class="hl-id">RefCell</span>;</span>
 </code></pre></div>
 <p>Next, let us define the types of data we will store in our stable structures.
 I omit the field definitions because they are not essential for understanding the example.
 We derive serialization boilerplate for the <code>Metadata</code> and <code>Tx</code> types using the <a href="https://serde.rs/">serde</a> framework.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line">type Account = (Blob&lt;29&gt;, [u8; 32]);</span>
-<span class="line">type Amount = u64;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Account</span> = (<span class="hl-id">Blob</span>&lt;29&gt;, [<span class="hl-id">u8</span>; 32]);</span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">Amount</span> = <span class="hl-id">u64</span>;</span>
 <span class="line"></span>
-<span class="line">#[derive(serde::Serialize, serde::Deserialize)]</span>
-<span class="line">struct <b>Metadata</b> { /* … */ }</span>
+<span class="line">#[<span class="hl-id">derive</span>(<span class="hl-id">serde</span>::<span class="hl-id">Serialize</span>, <span class="hl-id">serde</span>::<span class="hl-id">Deserialize</span>)]</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">Metadata</span> { <span class="hl-comment">/* … */</span> }</span>
 <span class="line"></span>
-<span class="line">#[derive(serde::Serialize, serde::Deserialize)]</span>
-<span class="line">enum <b>Tx</b> {</span>
-<span class="line">  Mint { /* … */ },</span>
-<span class="line">  Burn { /* … */ },</span>
-<span class="line">  Transfer { /* … */ },</span>
+<span class="line">#[<span class="hl-id">derive</span>(<span class="hl-id">serde</span>::<span class="hl-id">Serialize</span>, <span class="hl-id">serde</span>::<span class="hl-id">Deserialize</span>)]</span>
+<span class="line"><span class="hl-kw">enum</span> <span class="hl-typedef">Tx</span> {</span>
+<span class="line">  <span class="hl-id">Mint</span> { <span class="hl-comment">/* … */</span> },</span>
+<span class="line">  <span class="hl-id">Burn</span> { <span class="hl-comment">/* … */</span> },</span>
+<span class="line">  <span class="hl-id">Transfer</span> { <span class="hl-comment">/* … */</span> },</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>The next step is to decide on the data serialization format.
 I use <a href="https://cbor.io/">Concise Binary Object Representation</a> in the example because this encoding served me well in production.
 Instead of implementing the <a href="#storable-trait"><code>Storable</code></a> trait for <code>Metadata</code> and <code>Tx</code>, I define a generic wrapper type <code>Cbor&lt;T&gt;</code> that I use for all types I want to encode as <span class="smallcaps">cbor</span> and implement <a href="#storable-trait"><code>Storable</code></a> only for the wrapper.
 I also implement <a href="https://doc.rust-lang.org/std/ops/trait.Deref.html"><code>std::ops::Deref</code></a> to improve the ergonomics of the wrapper type.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line"><em>/// A helper type implementing Storable for all</em></span>
-<span class="line"><em>/// serde-serializable types using the CBOR encoding.</em></span>
-<span class="line">#[derive(Default)]</span>
-<span class="line">struct <b>Cbor</b>&lt;T&gt;(pub T)</span>
-<span class="line">where T: serde::Serialize + serde::de::DeserializeOwned;</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-comment">/// A helper type implementing Storable for all</span></span>
+<span class="line"><span class="hl-comment">/// serde-serializable types using the CBOR encoding.</span></span>
+<span class="line">#[<span class="hl-id">derive</span>(<span class="hl-id">Default</span>)]</span>
+<span class="line"><span class="hl-kw">struct</span> <span class="hl-typedef">Cbor</span>&lt;<span class="hl-id">T</span>&gt;(<span class="hl-kw">pub</span> <span class="hl-id">T</span>)</span>
+<span class="line"><span class="hl-kw">where</span> <span class="hl-id">T</span>: <span class="hl-id">serde</span>::<span class="hl-id">Serialize</span> + <span class="hl-id">serde</span>::<span class="hl-id">de</span>::<span class="hl-id">DeserializeOwned</span>;</span>
 <span class="line"></span>
-<span class="line"><b>impl</b>&lt;T&gt; std::ops::Deref for <b>Cbor</b>&lt;T&gt;</span>
-<span class="line">where T: serde::Serialize + serde::de::DeserializeOwned</span>
+<span class="line"><span class="hl-kw">impl</span>&lt;<span class="hl-id">T</span>&gt; <span class="hl-id">std</span>::<span class="hl-id">ops</span>::<span class="hl-id">Deref</span> <span class="hl-kw">for</span> <span class="hl-id">Cbor</span>&lt;<span class="hl-id">T</span>&gt;</span>
+<span class="line"><span class="hl-kw">where</span> <span class="hl-id">T</span>: <span class="hl-id">serde</span>::<span class="hl-id">Serialize</span> + <span class="hl-id">serde</span>::<span class="hl-id">de</span>::<span class="hl-id">DeserializeOwned</span></span>
 <span class="line">{</span>
-<span class="line">  type Target = T;</span>
+<span class="line">  <span class="hl-kw">type</span> <span class="hl-typedef">Target</span> = <span class="hl-id">T</span>;</span>
 <span class="line"></span>
-<span class="line">  fn deref(&amp;self) -&gt; &amp;Self::Target { &amp;self.0 }</span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">deref</span>(&amp;<span class="hl-kw">self</span>) -&gt; &amp;<span class="hl-kw">Self</span>::<span class="hl-id">Target</span> { &amp;<span class="hl-kw">self</span>.0 }</span>
 <span class="line">}</span>
 <span class="line"></span>
-<span class="line"><b>impl</b>&lt;T&gt; <a href="#storable-trait"><code>Storable</code></a> for <b>Cbor</b>&lt;T&gt;</span>
-<span class="line">where T: serde::Serialize + serde::de::DeserializeOwned</span>
+<span class="line"><span class="hl-kw">impl</span>&lt;<span class="hl-id">T</span>&gt; <a href="#storable-trait"><code>Storable</code></a> <span class="hl-kw">for</span> <span class="hl-id">Cbor</span>&lt;<span class="hl-id">T</span>&gt;</span>
+<span class="line"><span class="hl-kw">where</span> <span class="hl-id">T</span>: <span class="hl-id">serde</span>::<span class="hl-id">Serialize</span> + <span class="hl-id">serde</span>::<span class="hl-id">de</span>::<span class="hl-id">DeserializeOwned</span></span>
 <span class="line">{</span>
-<span class="line">  fn to_bytes(&amp;self) -&gt; Cow&lt;[u8]&gt; {</span>
-<span class="line">    let mut buf = vec![];</span>
-<span class="line">    <a href="https://docs.rs/ciborium/0.2.0/ciborium/ser/fn.into_writer.html"><code>ciborium::ser::into_writer</code></a>(&amp;self.0, &amp;mut buf).unwrap();</span>
-<span class="line">    Cow::Owned(buf)</span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">to_bytes</span>(&amp;<span class="hl-kw">self</span>) -&gt; <span class="hl-id">Cow</span>&lt;[<span class="hl-id">u8</span>]&gt; {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-kw">mut</span> <span class="hl-var">buf</span> = <span class="hl-id">vec</span>![];</span>
+<span class="line">    <a href="https://docs.rs/ciborium/0.2.0/ciborium/ser/fn.into_writer.html"><code>ciborium::ser::into_writer</code></a>(&amp;<span class="hl-kw">self</span>.0, &amp;<span class="hl-kw">mut</span> <span class="hl-id">buf</span>).<span class="hl-id">unwrap</span>();</span>
+<span class="line">    <span class="hl-id">Cow</span>::<span class="hl-id">Owned</span>(<span class="hl-id">buf</span>)</span>
 <span class="line">  }</span>
 <span class="line"></span>
-<span class="line">  fn from_bytes(bytes: Cow&lt;[u8]&gt;) -&gt; Self {</span>
-<span class="line">    Self(<a href="https://docs.rs/ciborium/0.2.0/ciborium/de/fn.from_reader.html"><code>ciborium::de::from_reader</code></a>(bytes.as_ref()).unwrap())</span>
+<span class="line">  <span class="hl-kw">fn</span> <span class="hl-defun">from_bytes</span>(<span class="hl-var">bytes</span>: <span class="hl-id">Cow</span>&lt;[<span class="hl-id">u8</span>]&gt;) -&gt; <span class="hl-kw">Self</span> {</span>
+<span class="line">    <span class="hl-kw">Self</span>(<a href="https://docs.rs/ciborium/0.2.0/ciborium/de/fn.from_reader.html"><code>ciborium::de::from_reader</code></a>(<span class="hl-id">bytes</span>.<span class="hl-id">as_ref</span>()).<span class="hl-id">unwrap</span>())</span>
 <span class="line">  }</span>
 <span class="line">}</span>
 </code></pre></div>
 <p>The final and most important part is defining stable structures as <a href="/posts/01-effective-rust-canisters.html#use-threadlocal">global canister variables</a>.
 Note the use of <a href="#restricted-memory"><code>RestrictedMemory</code></a> to split the canister memory into two non-intersecting regions and <a href="#memory-manager"><code>MemoryManager</code></a> (abbreviated as <code>MM</code>) to interleave multiple data structures in the second region.</p>
-<div class="source-container"><pre class="source rust"><code><span class="line"><em>// NOTE: ensure that all memory ids are unique and</em></span>
-<span class="line"><em>// do not change across upgrades!</em></span>
-<span class="line">const <b>BALANCES_MEM_ID</b>: MemoryId = MemoryId::new(0);</span>
-<span class="line">const <b>LOG_INDX_MEM_ID</b>: MemoryId = MemoryId::new(1);</span>
-<span class="line">const <b>LOG_DATA_MEM_ID</b>: MemoryId = MemoryId::new(2);</span>
+<div class="source-container"><pre class="source rust"><code><span class="line"><span class="hl-comment">// NOTE: ensure that all memory ids are unique and</span></span>
+<span class="line"><span class="hl-comment">// do not change across upgrades!</span></span>
+<span class="line"><span class="hl-kw">const</span> <span class="hl-id">BALANCES_MEM_ID</span>: <span class="hl-id">MemoryId</span> = <span class="hl-id">MemoryId</span>::<span class="hl-id">new</span>(0);</span>
+<span class="line"><span class="hl-kw">const</span> <span class="hl-id">LOG_INDX_MEM_ID</span>: <span class="hl-id">MemoryId</span> = <span class="hl-id">MemoryId</span>::<span class="hl-id">new</span>(1);</span>
+<span class="line"><span class="hl-kw">const</span> <span class="hl-id">LOG_DATA_MEM_ID</span>: <span class="hl-id">MemoryId</span> = <span class="hl-id">MemoryId</span>::<span class="hl-id">new</span>(2);</span>
 <span class="line"></span>
-<span class="line"><em>// NOTE: we allocate the first 16 pages (about 2 MiB) of the</em></span>
-<span class="line"><em>// canister memory for the metadata.</em></span>
-<span class="line">const <b>METADATA_PAGES</b>: u64 = 16;</span>
+<span class="line"><span class="hl-comment">// NOTE: we allocate the first 16 pages (about 2 MiB) of the</span></span>
+<span class="line"><span class="hl-comment">// canister memory for the metadata.</span></span>
+<span class="line"><span class="hl-kw">const</span> <span class="hl-id">METADATA_PAGES</span>: <span class="hl-id">u64</span> = 16;</span>
 <span class="line"></span>
-<span class="line">type RM = RestrictedMemory&lt;DefMem&gt;;</span>
-<span class="line">type VM = VirtualMemory&lt;RM&gt;;</span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">RM</span> = <span class="hl-id">RestrictedMemory</span>&lt;<span class="hl-id">DefMem</span>&gt;;</span>
+<span class="line"><span class="hl-kw">type</span> <span class="hl-typedef">VM</span> = <span class="hl-id">VirtualMemory</span>&lt;<span class="hl-id">RM</span>&gt;;</span>
 <span class="line"></span>
-<span class="line">thread_local! {</span>
-<span class="line">  static <b>METADATA</b>: RefCell&lt;<a href="#stable-cell"><code>StableCell</code></a>&lt;Cbor&lt;Option&lt;Metadata&gt;&gt;, RM&gt;&gt; =</span>
-<span class="line">    RefCell::new(StableCell::init(</span>
-<span class="line">        RM::new(DefMem::default(), 0..METADATA_PAGES),</span>
-<span class="line">        Cbor::default(),</span>
-<span class="line">      ).expect(&quot;failed to initialize the metadata cell&quot;)</span>
+<span class="line"><span class="hl-id">thread_local</span>! {</span>
+<span class="line">  <span class="hl-kw">static</span> <span class="hl-id">METADATA</span>: <span class="hl-id">RefCell</span>&lt;<a href="#stable-cell"><code>StableCell</code></a>&lt;<span class="hl-id">Cbor</span>&lt;<span class="hl-id">Option</span>&lt;<span class="hl-id">Metadata</span>&gt;&gt;, <span class="hl-id">RM</span>&gt;&gt; =</span>
+<span class="line">    <span class="hl-id">RefCell</span>::<span class="hl-id">new</span>(<span class="hl-id">StableCell</span>::<span class="hl-id">init</span>(</span>
+<span class="line">        <span class="hl-id">RM</span>::<span class="hl-id">new</span>(<span class="hl-id">DefMem</span>::<span class="hl-id">default</span>(), 0..<span class="hl-id">METADATA_PAGES</span>),</span>
+<span class="line">        <span class="hl-id">Cbor</span>::<span class="hl-id">default</span>(),</span>
+<span class="line">      ).<span class="hl-id">expect</span>(<span class="hl-str">&quot;failed to initialize the metadata cell&quot;</span>)</span>
 <span class="line">    );</span>
 <span class="line"></span>
-<span class="line">  static <b>MEMORY_MANAGER</b>: RefCell&lt;MM&lt;RM&gt;&gt; = RefCell::new(</span>
-<span class="line">    MM::init(RM::new(DefMem::default(), METADATA_PAGES..u64::MAX))</span>
+<span class="line">  <span class="hl-kw">static</span> <span class="hl-id">MEMORY_MANAGER</span>: <span class="hl-id">RefCell</span>&lt;<span class="hl-id">MM</span>&lt;<span class="hl-id">RM</span>&gt;&gt; = <span class="hl-id">RefCell</span>::<span class="hl-id">new</span>(</span>
+<span class="line">    <span class="hl-id">MM</span>::<span class="hl-id">init</span>(<span class="hl-id">RM</span>::<span class="hl-id">new</span>(<span class="hl-id">DefMem</span>::<span class="hl-id">default</span>(), <span class="hl-id">METADATA_PAGES</span>..<span class="hl-id">u64</span>::<span class="hl-id">MAX</span>))</span>
 <span class="line">  );</span>
 <span class="line"></span>
-<span class="line">  static <b>BALANCES</b>: RefCell&lt;<a href="#stable-btree"><code>StableBTreeMap</code></a>&lt;Account, Amount, VM&gt;&gt; =</span>
-<span class="line">    MEMORY_MANAGER.with(|mm| {</span>
-<span class="line">      RefCell::new(StableBTreeMap::init(mm.borrow().get(<b>BALANCES_MEM_ID</b>)))</span>
+<span class="line">  <span class="hl-kw">static</span> <span class="hl-id">BALANCES</span>: <span class="hl-id">RefCell</span>&lt;<a href="#stable-btree"><code>StableBTreeMap</code></a>&lt;<span class="hl-id">Account</span>, <span class="hl-id">Amount</span>, <span class="hl-id">VM</span>&gt;&gt; =</span>
+<span class="line">    <span class="hl-id">MEMORY_MANAGER</span>.<span class="hl-id">with</span>(|<span class="hl-id">mm</span>| {</span>
+<span class="line">      <span class="hl-id">RefCell</span>::<span class="hl-id">new</span>(<span class="hl-id">StableBTreeMap</span>::<span class="hl-id">init</span>(<span class="hl-id">mm</span>.<span class="hl-id">borrow</span>().<span class="hl-id">get</span>(<b>BALANCES_MEM_ID</b>)))</span>
 <span class="line">    });</span>
 <span class="line"></span>
-<span class="line">  static <b>TX_LOG</b>: RefCell&lt;<a href="#stable-log"><code>StableLog</code></a>&lt;Cbor&lt;Tx&gt;, VM, VM&gt;&gt; =</span>
-<span class="line">    MEMORY_MANAGER.with(|mm| {</span>
-<span class="line">      RefCell::new(StableLog::init(</span>
-<span class="line">        mm.borrow().get(<b>LOG_INDX_MEM_ID</b>),</span>
-<span class="line">        mm.borrow().get(<b>LOG_DATA_MEM_ID</b>),</span>
-<span class="line">      ).expect(&quot;failed to initialize the tx log&quot;))</span>
+<span class="line">  <span class="hl-kw">static</span> <span class="hl-id">TX_LOG</span>: <span class="hl-id">RefCell</span>&lt;<a href="#stable-log"><code>StableLog</code></a>&lt;<span class="hl-id">Cbor</span>&lt;<span class="hl-id">Tx</span>&gt;, <span class="hl-id">VM</span>, <span class="hl-id">VM</span>&gt;&gt; =</span>
+<span class="line">    <span class="hl-id">MEMORY_MANAGER</span>.<span class="hl-id">with</span>(|<span class="hl-id">mm</span>| {</span>
+<span class="line">      <span class="hl-id">RefCell</span>::<span class="hl-id">new</span>(<span class="hl-id">StableLog</span>::<span class="hl-id">init</span>(</span>
+<span class="line">        <span class="hl-id">mm</span>.<span class="hl-id">borrow</span>().<span class="hl-id">get</span>(<b>LOG_INDX_MEM_ID</b>),</span>
+<span class="line">        <span class="hl-id">mm</span>.<span class="hl-id">borrow</span>().<span class="hl-id">get</span>(<b>LOG_DATA_MEM_ID</b>),</span>
+<span class="line">      ).<span class="hl-id">expect</span>(<span class="hl-str">&quot;failed to initialize the tx log&quot;</span>))</span>
 <span class="line">    });</span>
 <span class="line">}</span>
 </code></pre></div>

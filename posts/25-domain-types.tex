@@ -54,8 +54,8 @@ Newtypes are flexible but may need boilerplate code to implement all features re
   Inheriting basic operations, such as comparison and hashing, is easy, but arithmetic operations require a lot of boilerplate code.
   Some third-party packages, such as \href{https://crates.io/crates/derive_more}{\code{derive\_more}}, make this task easier.
 }
-\begin{code}
-\emph{/// The number of standard SI apples.}
+\begin{code}[rust]
+/// The number of standard SI apples.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct MetricApples(i64);
 
@@ -79,14 +79,15 @@ Typedefs introduce a new name for an existing type, inheriting all underlying ty
   An example of using typedefs in Go.
   Typedefs inherit all operations from the underlying type, even those meaningless for the new type.
 }
-\begin{code}
-\emph{/// MetricApples hold the number of standard SI apples.}
+\begin{code}[go]
+// MetricApples hold the number of standard SI apples.
 type MetricApples int64
 
 func main() {
   a, b := MetricApples(2), MetricApples(3)
   // Go allows us to add, multiply, and divide MetricApples.
-  // Note that all these operations give us MetricApples back, which doesn’t always make sense.
+  // Note that all these operations give us MetricApples back,
+  // which doesn’t always make sense.
   // Apples times apples should give apples squared.
   // Dividing apples should give a dimensionless number.
   fmt.Printf("\%[1]T \%[1]d, \%[2]T \%[2]d, \%[3]T \%[3]d\\n", a+b, a*b, b/a)
@@ -116,15 +117,15 @@ I use pseudo-Rust syntax to illustrate the concepts, but the ideas should easily
 \marginnote{mn-fig-domain-type}{
   The interface shared by all universal domain types in this article.
 }
-\begin{code}
+\begin{code}[rust]
 trait DomainType {
-  \emph{/// The primitive type representing the domain value.}
+  /// The primitive type representing the domain value.
   type Representation; \label{representation-type}
 
-  \emph{/// Creates a domain value from its representation value.}
+  /// Creates a domain value from its representation value.
   fn from_repr(repr: Representation) -> Self;
 
-  \emph{/// Extracts the representation value from the domain value.}
+  /// Extracts the representation value from the domain value.
   fn to_repr(self) -> Representation;
 }
 \end{code}
@@ -147,9 +148,9 @@ This lack of structure suggests an appropriate mathematical model for such types
 \marginnote{mn-identifiers-interface}{
   The minimal interface for identifiers.
 }
-\begin{code}
+\begin{code}[rust]
 trait Eq {
-  \emph{/// Returns true if two values are equal.}
+  /// Returns true if two values are equal.
   fn eq(&self, other: &Self) -> bool;
 }
 
@@ -182,29 +183,29 @@ Vector space is a set with additional operations defined on the elements of this
 \marginnote{mn-amounts-interface}{
   The minimal interface for amounts.
 }
-\begin{code}
+\begin{code}[rust]
 trait Ord: Eq {
-  \emph{/// Compares two values.}
+  /// Compares two values.
   fn cmp(&self, other: &Self) -> Ordering;
 }
 
 trait VectorSpace {
-  \emph{/// The scalar type is usually the same as the \href{#representation-type}{Representation} type.}
+  /// The scalar type is usually the same as the \href{#representation-type}{Representation} type.
   type Scalar;
 
-  \emph{/// Returns the additive inverse of the value.}
+  /// Returns the additive inverse of the value.
   fn neg(self) -> Self;
 
-  \emph{/// Adds two vectors.}
+  /// Adds two vectors.
   fn add(self, other: Self) -> Self;
 
-  \emph{/// Subtracts the other vector from self.}
+  /// Subtracts the other vector from self.
   fn sub(self, other: Self) -> Self;
 
-  \emph{/// Multiplies the vector by a scalar.}
+  /// Multiplies the vector by a scalar.
   fn mul(self, factor: Scalar) -> Self;
 
-  \emph{/// Divides the vector by a scalar.}
+  /// Divides the vector by a scalar.
   fn div(self, factor: Scalar) -> Self;
 }
 
@@ -243,18 +244,18 @@ Changing the origin or the distance type calls for a new locus type.
 \marginnote{mn-loci-interface}{
   The minimal interface for loci.
 }
-\begin{code}
+\begin{code}[rust]
 trait LocusLike: IdentifierLike + Ord {
-  \emph{/// The type representing the distance between two positions.}
+  /// The type representing the distance between two positions.
   type Distance: AmountLike;
 
-  \emph{/// The origin for the absolute coordinate system.}
+  /// The origin for the absolute coordinate system.
   const ORIGIN: Self;
 
-  \emph{/// Moves the point away from the origin by the specified distance.}
+  /// Moves the point away from the origin by the specified distance.
   fn add(self, other: Distance) -> Self;
 
-  \emph{/// Returns the distance between two points.}
+  /// Returns the distance between two points.
   fn sub(self, other: Self) -> Distance;
 }
 \end{code}
@@ -296,13 +297,13 @@ For example, running pace computation could use an expression like \math{10 (min
 \marginnote{mn-quantities}{
   The minimal interface for quantities.
 }
-\begin{code}
+\begin{code}[rust]
 trait QuantityLike<DimA>: AmountLike {
-  \emph{/// Multiplies two quantities.}
+  /// Multiplies two quantities.
   fn mul<O: QuantityLike<DimB>>(self, other: O)
     -> impl QuantityLike<AddUnitPowers<DimA, DimB>>;
 
-  \emph{/// Divides self by the specified quantity.}
+  /// Divides self by the specified quantity.
   fn div<O: QuantityLike<DimB>>(self, other: O)
     -> impl QuantityLike<SubUnitPowers<DimA, DimB>>;
 }

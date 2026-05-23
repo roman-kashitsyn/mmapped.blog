@@ -122,16 +122,16 @@ After each update call, the debug version replays the log and compares the resul
 If the log becomes inconsistent with the internal state, the test causing the divergence must fail.</p>
 <figure><label class="margin-toggle" for="mn-debug-replay-log">⊕</label><input type="checkbox" id="mn-debug-replay-log" class="margin-toggle"><span class="marginnote">
   Enabling self-checks in the debug canister version to ensure that the event log captures all state transitions.
-</span><div class="source-container"><pre class="source rust"><code><span class="line">#[update]</span>
-<span class="line">fn update_balance(arg: UpdateBalanceArg) -&gt; UpdateBalanceResult {</span>
-<span class="line">    let result = update_balance_impl(arg);</span>
+</span><div class="source-container"><pre class="source rust"><code><span class="line">#[<span class="hl-id">update</span>]</span>
+<span class="line"><span class="hl-kw">fn</span> <span class="hl-defun">update_balance</span>(<span class="hl-var">arg</span>: <span class="hl-id">UpdateBalanceArg</span>) -&gt; <span class="hl-id">UpdateBalanceResult</span> {</span>
+<span class="line">    <span class="hl-kw">let</span> <span class="hl-var">result</span> = <span class="hl-id">update_balance_impl</span>(<span class="hl-id">arg</span>);</span>
 <span class="line"></span>
-<span class="line">    #[cfg(feature = &quot;debug_version&quot;)]</span>
-<span class="line">    if let Err(msg) = replay_event_log().check_equals_to(&amp;canister_state) {</span>
-<span class="line">      ic_cdk::trap(&amp;msg);</span>
+<span class="line">    #[<span class="hl-id">cfg</span>(<span class="hl-id">feature</span> = <span class="hl-str">&quot;debug_version&quot;</span>)]</span>
+<span class="line">    <span class="hl-kw">if</span> <span class="hl-kw">let</span> <span class="hl-var">Err</span>(<span class="hl-id">msg</span>) = <span class="hl-id">replay_event_log</span>().<span class="hl-id">check_equals_to</span>(&amp;<span class="hl-id">canister_state</span>) {</span>
+<span class="line">      <span class="hl-id">ic_cdk</span>::<span class="hl-id">trap</span>(&amp;<span class="hl-id">msg</span>);</span>
 <span class="line">    }</span>
 <span class="line"></span>
-<span class="line">    result</span>
+<span class="line">    <span class="hl-id">result</span></span>
 <span class="line">}</span>
 </code></pre></div>
 </figure>
