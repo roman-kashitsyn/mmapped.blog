@@ -414,8 +414,7 @@ and classify_cmd pos sym opts args =
   | S_bibref, Arg_symbol (_, key) :: Arg_nodes (_, postnote) :: _ ->
       let* ils = elaborate_inlines postnote in
       Ok (CInline (Bibref (key, ils)))
-  | S_bibref, Arg_symbol (_, key) :: _ ->
-      Ok (CInline (Bibref (key, [])))
+  | S_bibref, Arg_symbol (_, key) :: _ -> Ok (CInline (Bibref (key, [])))
   | S_figcaption, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CBlock (Figcaption ils))

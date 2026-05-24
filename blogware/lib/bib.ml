@@ -123,9 +123,7 @@ type bib_file = entry list
 
 (* --- low-level BibTeX syntax --- *)
 
-let is_alpha c =
-  (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-
+let is_alpha c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 let is_digit c = c >= '0' && c <= '9'
 
 let is_key_char c =
@@ -133,7 +131,8 @@ let is_key_char c =
 
 let is_field_name_char c = is_alpha c || is_digit c || c = '_' || c = '-'
 
-let ws : unit t = skip_while (fun c -> c = ' ' || c = '\n' || c = '\r' || c = '\t')
+let ws : unit t =
+  skip_while (fun c -> c = ' ' || c = '\n' || c = '\r' || c = '\t')
 
 let braced_value : Text.t t =
   let* _ = expect_char '{' in
@@ -146,21 +145,19 @@ let braced_value : Text.t t =
       let st' = { st with ofs = st.ofs + 1; pos = Pos.advance st.pos c } in
       match c with
       | '{' ->
-        Buffer.add_char buf c;
-        loop (depth + 1) st'
+          Buffer.add_char buf c;
+          loop (depth + 1) st'
       | '}' when depth > 0 ->
-        Buffer.add_char buf c;
-        loop (depth - 1) st'
-      | '}' ->
-        POk (Text.of_string (Buffer.contents buf), st', true)
+          Buffer.add_char buf c;
+          loop (depth - 1) st'
+      | '}' -> POk (Text.of_string (Buffer.contents buf), st', true)
       | _ ->
-        Buffer.add_char buf c;
-        loop depth st'
+          Buffer.add_char buf c;
+          loop depth st'
   in
   fun st -> loop 0 st
 
 let bare_number : Text.t t = take_while1 is_digit
-
 let field_value : Text.t t = braced_value <|> bare_number
 
 let field : (Text.t * Text.t) t =
@@ -175,13 +172,11 @@ let fields : (Text.t * Text.t) list t =
   match first with
   | None -> return []
   | Some f ->
-    let* rest = many (try_ (sep *> field)) in
-    let* _ = optional (try_ (ws *> expect_char ',')) in
-    return (f :: rest)
+      let* rest = many (try_ (sep *> field)) in
+      let* _ = optional (try_ (ws *> expect_char ',')) in
+      return (f :: rest)
 
-let raw_entry_type : Text.t t =
-  expect_char '@' *> take_while1 is_alpha
-
+let raw_entry_type : Text.t t = expect_char '@' *> take_while1 is_alpha
 let raw_entry_key : Text.t t = take_while1 is_key_char
 
 (* --- field lookup in raw (key, value) list --- *)
@@ -189,17 +184,16 @@ let raw_entry_key : Text.t t = take_while1 is_key_char
 let find_field fs name =
   List.find_map
     (fun (k, v) ->
-      if String.lowercase_ascii (Text.to_string k) = name then Some v
-      else None)
+      if String.lowercase_ascii (Text.to_string k) = name then Some v else None)
     fs
 
-let require_field fs field_name key =
+let require_field fs field_name ~entry_type key =
   match find_field fs field_name with
   | Some v -> return v
   | None ->
-    fail
-      (Printf.sprintf "@%s{%s}: missing required field '%s'"
-         (Text.to_string key) (Text.to_string key) field_name)
+      fail
+        (Printf.sprintf "@%s{%s}: missing required field '%s'" entry_type
+           (Text.to_string key) field_name)
 
 (* --- classification into typed entries --- *)
 
@@ -207,66 +201,90 @@ let classify_entry typ key fs : entry t =
   let t = String.lowercase_ascii (Text.to_string typ) in
   match t with
   | "book" ->
-    let* author = require_field fs "author" key in
-    let* title = require_field fs "title" key in
-    return (Book {
-      book_key = key; book_author = author; book_title = title;
-      book_year = find_field fs "year";
-      book_url = find_field fs "url";
-      book_isbn = find_field fs "isbn";
-    })
+      let* author = require_field fs ~entry_type:t "author" key in
+      let* title = require_field fs ~entry_type:t "title" key in
+      return
+        (Book
+           {
+             book_key = key;
+             book_author = author;
+             book_title = title;
+             book_year = find_field fs "year";
+             book_url = find_field fs "url";
+             book_isbn = find_field fs "isbn";
+           })
   | "article" ->
-    let* author = require_field fs "author" key in
-    let* title = require_field fs "title" key in
-    return (Article {
-      article_key = key; article_author = author; article_title = title;
-      article_journal = find_field fs "journal";
-      article_year = find_field fs "year";
-      article_url = find_field fs "url";
-    })
+      let* author = require_field fs ~entry_type:t "author" key in
+      let* title = require_field fs ~entry_type:t "title" key in
+      return
+        (Article
+           {
+             article_key = key;
+             article_author = author;
+             article_title = title;
+             article_journal = find_field fs "journal";
+             article_year = find_field fs "year";
+             article_url = find_field fs "url";
+           })
   | "phdthesis" ->
-    let* author = require_field fs "author" key in
-    let* title = require_field fs "title" key in
-    return (Phdthesis {
-      phdthesis_key = key; phdthesis_author = author; phdthesis_title = title;
-      phdthesis_school = find_field fs "school";
-      phdthesis_year = find_field fs "year";
-      phdthesis_url = find_field fs "url";
-    })
+      let* author = require_field fs ~entry_type:t "author" key in
+      let* title = require_field fs ~entry_type:t "title" key in
+      return
+        (Phdthesis
+           {
+             phdthesis_key = key;
+             phdthesis_author = author;
+             phdthesis_title = title;
+             phdthesis_school = find_field fs "school";
+             phdthesis_year = find_field fs "year";
+             phdthesis_url = find_field fs "url";
+           })
   | "blog" ->
-    let* title = require_field fs "title" key in
-    let* url = require_field fs "url" key in
-    return (Blog {
-      blog_key = key; blog_title = title;
-      blog_author = find_field fs "author";
-      blog_url = url;
-    })
+      let* title = require_field fs ~entry_type:t "title" key in
+      let* url = require_field fs ~entry_type:t "url" key in
+      return
+        (Blog
+           {
+             blog_key = key;
+             blog_title = title;
+             blog_author = find_field fs "author";
+             blog_url = url;
+           })
   | "podcast" ->
-    let* title = require_field fs "title" key in
-    let* url = require_field fs "url" key in
-    return (Podcast {
-      podcast_key = key; podcast_title = title;
-      podcast_author = find_field fs "author";
-      podcast_url = url;
-    })
+      let* title = require_field fs ~entry_type:t "title" key in
+      let* url = require_field fs ~entry_type:t "url" key in
+      return
+        (Podcast
+           {
+             podcast_key = key;
+             podcast_title = title;
+             podcast_author = find_field fs "author";
+             podcast_url = url;
+           })
   | "talk" ->
-    let* author = require_field fs "author" key in
-    let* title = require_field fs "title" key in
-    return (Talk {
-      talk_key = key; talk_author = author; talk_title = title;
-      talk_year = find_field fs "year";
-      talk_url = find_field fs "url";
-    })
+      let* author = require_field fs ~entry_type:t "author" key in
+      let* title = require_field fs ~entry_type:t "title" key in
+      return
+        (Talk
+           {
+             talk_key = key;
+             talk_author = author;
+             talk_title = title;
+             talk_year = find_field fs "year";
+             talk_url = find_field fs "url";
+           })
   | "misc" ->
-    let* title = require_field fs "title" key in
-    return (Misc {
-      misc_key = key; misc_title = title;
-      misc_author = find_field fs "author";
-      misc_year = find_field fs "year";
-      misc_url = find_field fs "url";
-    })
-  | _ ->
-    fail (Printf.sprintf "unknown entry type '@%s'" t)
+      let* title = require_field fs ~entry_type:t "title" key in
+      return
+        (Misc
+           {
+             misc_key = key;
+             misc_title = title;
+             misc_author = find_field fs "author";
+             misc_year = find_field fs "year";
+             misc_url = find_field fs "url";
+           })
+  | _ -> fail (Printf.sprintf "unknown entry type '@%s'" t)
 
 let parse_entry : entry t =
   let* typ = ws *> raw_entry_type in
@@ -302,10 +320,8 @@ let is_skipped_type t =
 
 let item : entry option t =
   let* typ = ws *> look_ahead (try_ raw_entry_type) in
-  if is_skipped_type typ then
-    skip_comment *> return None
-  else
-    map (fun e -> Some e) parse_entry
+  if is_skipped_type typ then skip_comment *> return None
+  else map (fun e -> Some e) parse_entry
 
 (* --- top-level --- *)
 
@@ -315,15 +331,14 @@ let bib_file : bib_file t =
     let rec loop acc st =
       match skip_junk st with
       | PFail _ as e -> e
-      | POk ((), st', _) ->
-        if st'.ofs >= String.length st'.src then
-          POk (List.rev (List.filter_map Fun.id acc), st', true)
-        else (
-          match item st' with
-          | POk (x, st'', _) -> loop (x :: acc) st''
-          | PFail _ as e -> e)
+      | POk ((), st', _) -> (
+          if st'.ofs >= String.length st'.src then
+            POk (List.rev (List.filter_map Fun.id acc), st', true)
+          else
+            match item st' with
+            | POk (x, st'', _) -> loop (x :: acc) st''
+            | PFail _ as e -> e)
     in
     loop [] st
 
-let parse ~source_name input =
-  run bib_file ~source_name input
+let parse ~source_name input = run bib_file ~source_name input

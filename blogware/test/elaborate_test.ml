@@ -111,11 +111,7 @@ let tests : Test_framework.t list =
              ( None,
                [
                  Para
-                   [
-                     Bibref
-                       ( key,
-                         [ Str post_text; Emph [ Str page_text ] ] );
-                   ];
+                   [ Bibref (key, [ Str post_text; Emph [ Str page_text ] ]) ];
                ] );
           ]
             when Text.equal_string key "rfc:2119_v2"

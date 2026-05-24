@@ -157,14 +157,16 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
             | [] -> empty
             | ils ->
                 text (txt ", ")
-                ++ span_ [ class_ (txt "bibref-postnote") ]
+                ++ span_
+                     [ class_ (txt "bibref-postnote") ]
                      (render_inlines ctx ils)
           in
           let citation =
             match Bib.entry_author entry with
             | Some author ->
                 span_ [ class_ (txt "bibref-author") ] (text author)
-                ++ text (txt ", ") ++ cited
+                ++ text (txt ", ")
+                ++ cited
             | None -> cited
           in
           citation ++ postnote_html)
