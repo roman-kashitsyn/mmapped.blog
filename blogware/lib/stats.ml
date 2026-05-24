@@ -56,7 +56,7 @@ let count_inlines (ils : inline list) : int =
         go state ils
     | Ref (_, ils) -> go state ils
     | Code _ | Math _ | Horizontal_rule | Circled_ref _ | Line_break
-    | Numeric_space | Nameref _ | Image_inline _ ->
+    | Numeric_space | Nameref _ | Bibref _ | Image_inline _ ->
         break_word state
     | Anchor _ -> state
   in

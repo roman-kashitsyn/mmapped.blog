@@ -31,6 +31,17 @@ let table ?(opts = []) () =
       table_opts = List.map txt opts;
     }
 
+let bib_entry =
+  Bib.Book
+    {
+      book_key = txt "knuth";
+      book_author = txt "Donald Knuth";
+      book_title = txt "The Art of Computer Programming";
+      book_year = Some (txt "1968");
+      book_url = Some (txt "https://example.com/taocp");
+      book_isbn = None;
+    }
+
 let tests : Test_framework.t list =
   group "render"
     [
@@ -42,6 +53,14 @@ let tests : Test_framework.t list =
         (Render.render_inline Render.empty_ctx (Strong [ s "bold" ]));
       t "link" "<a href=\"/x\">x</a>"
         (Render.render_inline Render.empty_ctx (Link (txt "/x", [ s "x" ])));
+      t "bibref renders postnote after cite"
+        "<span class=\"bibref-author\">Donald Knuth</span>, <cite><a \
+         href=\"https://example.com/taocp\">The Art of Computer \
+         Programming</a></cite>, <span class=\"bibref-postnote\">p. \
+         <em>6</em></span>"
+        (Render.render_inline
+           { Render.empty_ctx with bib = [ bib_entry ] }
+           (Bibref (txt "knuth", [ s "p. "; Emph [ s "6" ] ])));
       t "anchor" "<span id=\"foo\"></span>"
         (Render.render_inline Render.empty_ctx (Anchor (txt "foo")));
       t "line break" "<br>" (Render.render_inline Render.empty_ctx Line_break);

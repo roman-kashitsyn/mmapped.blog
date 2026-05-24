@@ -23,6 +23,7 @@ let all_tests : Test_framework.t list =
       Strings_test.tests;
       Pipeline_test.tests;
       Text_test.tests;
+      Bib_test.tests;
     ]
 
 let () =

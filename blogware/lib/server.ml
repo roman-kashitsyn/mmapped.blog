@@ -101,91 +101,109 @@ let find_note (notes : note list) (path : string) : note option =
 
 let serve_index fd (config : site_config) : unit =
   let index_tex = Filename.concat config.site_input "index.tex" in
-  match Site.load_articles config.site_input with
+  match Site.load_bib config.site_input with
   | Error err -> send_response fd 500 "text/plain" err
-  | Ok articles -> (
-      match Site.load_notes config.site_input with
+  | Ok bib -> (
+      match Site.load_articles config.site_input with
       | Error err -> send_response fd 500 "text/plain" err
-      | Ok notes -> (
-          if not (Sys.file_exists index_tex) then
-            send_response fd 404 "text/plain"
-              ("Index file not found: " ^ index_tex)
-          else
-            let content = Site.read_file_contents index_tex in
-            match Tex_parser.parse_document ~source_name:index_tex content with
-            | Error err ->
-                send_response fd 500 "text/plain"
-                  (Error.format_parse_error content err)
-            | Ok nodes -> (
-                match Elaborate.elaborate "index" nodes with
+      | Ok articles -> (
+          match Site.load_notes config.site_input with
+          | Error err -> send_response fd 500 "text/plain" err
+          | Ok notes -> (
+              if not (Sys.file_exists index_tex) then
+                send_response fd 404 "text/plain"
+                  ("Index file not found: " ^ index_tex)
+              else
+                let content = Site.read_file_contents index_tex in
+                match
+                  Tex_parser.parse_document ~source_name:index_tex content
+                with
                 | Error err ->
                     send_response fd 500 "text/plain"
-                      (Error.format_elab_error ~source_name:index_tex content
-                         err)
-                | Ok index_article ->
-                    let ref_table =
-                      Layout.build_global_ref_table articles notes
-                    in
-                    let ctx = { Render.ref_table } in
-                    let body =
-                      Render.render_blocks ctx index_article.art_body
-                    in
-                    let featured =
-                      Site.take 5
-                        (List.filter (fun a -> a.art_featured) articles)
-                    in
-                    let latest = Site.take 5 articles in
-                    let page_html =
-                      Html.render
-                        (Layout.render_index_page body featured latest)
-                    in
-                    send_response fd 200 "text/html; charset=utf-8" page_html)))
+                      (Error.format_parse_error content err)
+                | Ok nodes -> (
+                    match Elaborate.elaborate "index" nodes with
+                    | Error err ->
+                        send_response fd 500 "text/plain"
+                          (Error.format_elab_error ~source_name:index_tex
+                             content err)
+                    | Ok index_article ->
+                        let ref_table =
+                          Layout.build_global_ref_table articles notes
+                        in
+                        let ctx = { Render.ref_table; bib } in
+                        let body =
+                          Render.render_blocks ctx index_article.art_body
+                        in
+                        let featured =
+                          Site.take 5
+                            (List.filter (fun a -> a.art_featured) articles)
+                        in
+                        let latest = Site.take 5 articles in
+                        let page_html =
+                          Html.render
+                            (Layout.render_index_page body featured latest)
+                        in
+                        send_response fd 200 "text/html; charset=utf-8"
+                          page_html))))
 
 let serve_post fd (config : site_config) (path : string) : unit =
-  match Site.load_articles config.site_input with
+  match Site.load_bib config.site_input with
   | Error err -> send_response fd 500 "text/plain" err
-  | Ok articles -> (
-      match Site.load_notes config.site_input with
+  | Ok bib -> (
+      match Site.load_articles config.site_input with
       | Error err -> send_response fd 500 "text/plain" err
-      | Ok notes -> (
-          match find_article articles path with
-          | None -> send_response fd 404 "text/plain" ("No post at path " ^ path)
-          | Some (i, article) ->
-              let toc = Layout.extract_toc article.art_body in
-              let similar = Layout.find_similar_articles articles i in
-              let ref_table = Layout.build_ref_table articles notes article in
-              let ctx = { Render.ref_table } in
-              let body = Render.render_blocks ctx article.art_body in
-              let page_html =
-                Html.render
-                  (Layout.render_post_page config.site_root article toc similar
-                     body)
-              in
-              send_response fd 200 "text/html; charset=utf-8" page_html))
+      | Ok articles -> (
+          match Site.load_notes config.site_input with
+          | Error err -> send_response fd 500 "text/plain" err
+          | Ok notes -> (
+              match find_article articles path with
+              | None ->
+                  send_response fd 404 "text/plain" ("No post at path " ^ path)
+              | Some (i, article) ->
+                  let toc = Layout.extract_toc article.art_body in
+                  let similar = Layout.find_similar_articles articles i in
+                  let ref_table =
+                    Layout.build_ref_table articles notes article
+                  in
+                  let ctx = { Render.ref_table; bib } in
+                  let body = Render.render_blocks ctx article.art_body in
+                  let page_html =
+                    Html.render
+                      (Layout.render_post_page config.site_root article toc
+                         similar body)
+                  in
+                  send_response fd 200 "text/html; charset=utf-8" page_html)))
 
 let serve_note fd (config : site_config) (path : string) : unit =
-  match Site.load_articles config.site_input with
+  match Site.load_bib config.site_input with
   | Error err -> send_response fd 500 "text/plain" err
-  | Ok articles -> (
-      match Site.load_notes config.site_input with
+  | Ok bib -> (
+      match Site.load_articles config.site_input with
       | Error err -> send_response fd 500 "text/plain" err
-      | Ok notes -> (
-          let keyword_articles = Site.build_keyword_map articles in
-          match find_note notes path with
-          | None -> send_response fd 404 "text/plain" ("No note at path " ^ path)
-          | Some note ->
-              let ref_table = Layout.build_note_ref_table articles notes note in
-              let ctx = { Render.ref_table } in
-              let body = Render.render_blocks ctx note.note_body in
-              let referencing =
-                match Text.Map.find_opt note.note_slug keyword_articles with
-                | Some l -> l
-                | None -> []
-              in
-              let page_html =
-                Html.render (Layout.render_note_page note body referencing)
-              in
-              send_response fd 200 "text/html; charset=utf-8" page_html))
+      | Ok articles -> (
+          match Site.load_notes config.site_input with
+          | Error err -> send_response fd 500 "text/plain" err
+          | Ok notes -> (
+              let keyword_articles = Site.build_keyword_map articles in
+              match find_note notes path with
+              | None ->
+                  send_response fd 404 "text/plain" ("No note at path " ^ path)
+              | Some note ->
+                  let ref_table =
+                    Layout.build_note_ref_table articles notes note
+                  in
+                  let ctx = { Render.ref_table; bib } in
+                  let body = Render.render_blocks ctx note.note_body in
+                  let referencing =
+                    match Text.Map.find_opt note.note_slug keyword_articles with
+                    | Some l -> l
+                    | None -> []
+                  in
+                  let page_html =
+                    Html.render (Layout.render_note_page note body referencing)
+                  in
+                  send_response fd 200 "text/html; charset=utf-8" page_html)))
 
 let serve_note_list fd (config : site_config) : unit =
   match Site.load_notes config.site_input with
@@ -223,36 +241,42 @@ let serve_page fd (config : site_config) (name : string) : unit =
   if not (Sys.file_exists path) then
     send_response fd 404 "text/plain" "Not Found"
   else
-    match Site.load_articles config.site_input with
+    match Site.load_bib config.site_input with
     | Error err -> send_response fd 500 "text/plain" err
-    | Ok articles -> (
-        match Site.load_notes config.site_input with
+    | Ok bib -> (
+        match Site.load_articles config.site_input with
         | Error err -> send_response fd 500 "text/plain" err
-        | Ok notes -> (
-            let content = read_file path in
-            match Tex_parser.parse_document ~source_name:path content with
-            | Error err ->
-                send_response fd 500 "text/plain"
-                  (Error.format_parse_error content err)
-            | Ok nodes -> (
-                match Elaborate.elaborate name nodes with
+        | Ok articles -> (
+            match Site.load_notes config.site_input with
+            | Error err -> send_response fd 500 "text/plain" err
+            | Ok notes -> (
+                let content = read_file path in
+                match Tex_parser.parse_document ~source_name:path content with
                 | Error err ->
                     send_response fd 500 "text/plain"
-                      (Error.format_elab_error ~source_name:path content err)
-                | Ok article ->
-                    let ref_table =
-                      Layout.build_global_ref_table articles notes
-                    in
-                    let ctx = { Render.ref_table } in
-                    let body = Render.render_blocks ctx article.art_body in
-                    let title = Render.render_inlines ctx article.art_title in
-                    let page_html =
-                      Html.render
-                        (Layout.render_standalone_page title
-                           ("/" ^ name ^ ".html")
-                           body)
-                    in
-                    send_response fd 200 "text/html; charset=utf-8" page_html)))
+                      (Error.format_parse_error content err)
+                | Ok nodes -> (
+                    match Elaborate.elaborate name nodes with
+                    | Error err ->
+                        send_response fd 500 "text/plain"
+                          (Error.format_elab_error ~source_name:path content err)
+                    | Ok article ->
+                        let ref_table =
+                          Layout.build_global_ref_table articles notes
+                        in
+                        let ctx = { Render.ref_table; bib } in
+                        let body = Render.render_blocks ctx article.art_body in
+                        let title =
+                          Render.render_inlines ctx article.art_title
+                        in
+                        let page_html =
+                          Html.render
+                            (Layout.render_standalone_page title
+                               ("/" ^ name ^ ".html")
+                               body)
+                        in
+                        send_response fd 200 "text/html; charset=utf-8"
+                          page_html))))
 
 let serve_static fd (config : site_config) (path : string) : unit =
   (* Drop leading '/' *)
