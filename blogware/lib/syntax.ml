@@ -57,6 +57,7 @@ type sym =
   | S_epigraph
   | S_blockquote
   | S_cite
+  | S_bibref
   | S_multicolumn
   | S_term
   | S_kbd
@@ -173,6 +174,7 @@ let sym_table : sym SMap.t =
       ("epigraph", S_epigraph);
       ("blockquote", S_blockquote);
       ("cite", S_cite);
+      ("bibref", S_bibref);
       ("multicolumn", S_multicolumn);
       ("term", S_term);
       ("kbd", S_kbd);
@@ -282,6 +284,7 @@ let sym_to_string = function
   | S_epigraph -> "epigraph"
   | S_blockquote -> "blockquote"
   | S_cite -> "cite"
+  | S_bibref -> "bibref"
   | S_multicolumn -> "multicolumn"
   | S_term -> "term"
   | S_kbd -> "kbd"
@@ -391,9 +394,14 @@ and row = { row_borders : row_border; row_cells : cell list }
 type arg_type =
   | At_seq (* {balanced sequence of nodes} *)
   | At_sym (* {symbol token} *)
+  | At_bib_key (* {BibTeX entry key} *)
   | At_num (* {integer literal} *)
   | At_url (* {url string} *)
   | At_align_spec (* {column alignment letters} *)
+
+type opt_arg_type =
+  | Opt_symbols (* [symbol,symbol,...]; the default command option format *)
+  | Opt_arg of arg_type
 
 type math_arg_type = Math_arg_expr | Math_arg_sym
 
@@ -443,6 +451,7 @@ let cmd_args (s : sym) : arg_type list =
   | S_epigraph -> [ At_seq; At_seq ]
   | S_blockquote -> [ At_seq; At_seq ]
   | S_cite -> [ At_seq ]
+  | S_bibref -> [ At_bib_key ]
   | S_multicolumn -> [ At_num; At_align_spec; At_seq ]
   | S_term -> [ At_seq; At_seq ]
   | S_kbd -> [ At_seq ]
@@ -451,6 +460,9 @@ let cmd_args (s : sym) : arg_type list =
   | S_figcaption -> [ At_seq ]
   | S_featured -> []
   | _ -> []
+
+let cmd_opt_arg (s : sym) : opt_arg_type =
+  match s with S_bibref -> Opt_arg At_seq | _ -> Opt_symbols
 
 let math_cmds : math_arg_type list SMap.t =
   smap_of_list

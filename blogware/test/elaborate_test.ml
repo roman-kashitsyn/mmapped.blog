@@ -102,6 +102,27 @@ let tests : Test_framework.t list =
             ->
               Pass
           | _ -> Fail "expected strong inline in anonymous section");
+      elab_ok "bibref optional postnote"
+        "\\begin{document}\\bibref[p. \\emph{6}]{rfc:2119_v2}\\end{document}"
+        (fun blocks ->
+          match blocks with
+          | [
+           Section
+             ( None,
+               [
+                 Para
+                   [
+                     Bibref
+                       ( key,
+                         [ Str post_text; Emph [ Str page_text ] ] );
+                   ];
+               ] );
+          ]
+            when Text.equal_string key "rfc:2119_v2"
+                 && Text.equal_string post_text "p. "
+                 && Text.equal_string page_text "6" ->
+              Pass
+          | _ -> Fail "expected bibref with postnote");
       elab_ok "hrule block" "\\begin{document}\\hrule\\end{document}"
         (fun blocks ->
           match blocks with

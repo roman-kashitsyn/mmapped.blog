@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="keywords" content="glasperlenspiel,programming"><meta name="description" content="Applying scientific method in software engineering."><title>Debug like Feynman, test like Faraday</title><link rel="stylesheet" href="/css/mmapped.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/05-debug-like-feynman.html"><script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","headline":"Debug like Feynman, test like Faraday","url":"https://mmapped.blog/posts/05-debug-like-feynman.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/05-debug-like-feynman.html"},"datePublished":"2022-04-01","dateModified":"2024-09-26","wordCount":2781,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"Applying scientific method in software engineering.","keywords":["glasperlenspiel","programming"]}
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Debug like Feynman, test like Faraday","url":"https://mmapped.blog/posts/05-debug-like-feynman.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/05-debug-like-feynman.html"},"datePublished":"2022-04-01","dateModified":"2024-09-26","wordCount":2735,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"Applying scientific method in software engineering.","keywords":["glasperlenspiel","programming"]}
 </script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/notes/index.html">Notes</a></li><li><a href="/feed.xml">Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/05-debug-like-feynman.html">Debug like Feynman, test like Faraday</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2022-04-01">2022-04-01</time></span><span class="attr-date" title="Last modified"><span class="icon">✂</span><time datetime="2024-09-26">2024-09-26</time></span><span class="post-keywords"><a class="keyword-link" href="/notes/glasperlenspiel.html">glasperlenspiel</a><a class="keyword-link" href="/notes/programming.html">programming</a></span><span class="post-icons"><a class="icon-link" href="https://www.reddit.com/r/programming/comments/ttld4n/1st_april_blog_post_debug_like_feynman_test_like/" title="Discuss on Reddit" rel="nofollow noopener noreferrer" target="_blank"><img class="social-icon" src="/images/Reddit-Icon.svg" alt="Reddit"></a></span></span>
 <hr>
 <ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#scientific-method">Scientific method</a></li><li class="toc toc-level-1"><a href="#think-like-a-scientist">Think like a scientist</a><ul class="toc toc-level-2"><li class="toc toc-level-2"><a href="#record-your-observations">Record your observations</a></li><li class="toc toc-level-2"><a href="#test-causality">Test causality</a></li><li class="toc toc-level-2"><a href="#know-your-data">Know your data</a></li><li class="toc toc-level-2"><a href="#debug-mental-models">Debug mental models</a></li><li class="toc toc-level-2"><a href="#formalize-your-models">Formalize your models</a></li><li class="toc toc-level-2"><a href="#question-method">Question your method</a></li></ul></li><li class="toc toc-level-1"><a href="#conclusion">Conclusion</a></li><li class="toc toc-level-1"><a href="#acknowledgements">Acknowledgements</a></li></ul><hr>
@@ -76,7 +76,7 @@ You might find flaws in your analysis in the process.
 </li></ul>
 <p>Make your bug reports and user stories an interesting read.</p>
 <h3 id="test-causality"><a href="#test-causality">Test causality</a></h3>
-<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>The invalid assumption that correlation implies cause is probably among the two or three most serious and common errors of human reasoning.</p></blockquote><figcaption>Stephen Jay Gould, <cite>The Mismeasure of Man (Revised &amp; Expanded), p.178</cite></figcaption></figure>
+<figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>The invalid assumption that correlation implies cause is probably among the two or three most serious and common errors of human reasoning.</p></blockquote><figcaption><span class="bibref-author">Stephen Jay Gould</span>, <cite>The Mismeasure of Man</cite>, <span class="bibref-postnote">p.178</span></figcaption></figure>
 <p>Phew, hunting down that bug took you a while.
 You fix the code and add a unit test demonstrating the problem.
 The test is green, and your change lands on the main branch.
@@ -104,7 +104,7 @@ I wish there existed tools checking that each test we write used to fail before 
 <figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>About 40 seconds after the explosion the air blast reached me.
   I tried to estimate its strength by dropping from about six feet small pieces of paper before, during and after the passage of the blast wave.
   […]
-  The shift was about 2½ meters, which, at the time, I estimated to correspond to the blast that would be produced by ten thousand tons of <span class="smallcaps">t.n.t.</span></p></blockquote><figcaption>Enrico Fermi, <a href="https://www.atomicarchive.com/resources/documents/trinity/fermi.html"><cite>My Observations During the Explosion at Trinity on July 16, 1945</cite></a></figcaption></figure>
+  The shift was about 2½ meters, which, at the time, I estimated to correspond to the blast that would be produced by ten thousand tons of <span class="smallcaps">t.n.t.</span></p></blockquote><figcaption><span class="bibref-author">Enrico Fermi</span>, <cite><a href="https://www.atomicarchive.com/resources/documents/trinity/fermi.html">My Observations During the Explosion at Trinity on July 16, 1945</a></cite></figcaption></figure>
 <p>A guy from the ops team stops by your desk. You feel uncomfortable because you forgot his name again.</p>
 <p class="hanging-quote"><q>Hi! I need to order machines for that new project you are working on.
 How many servers do we need?
@@ -141,7 +141,7 @@ The next time that <span class="smallcaps">ops</span> guy<label class="margin-to
 you will have an answer for him.</p>
 <h3 id="debug-mental-models"><a href="#debug-mental-models">Debug mental models</a></h3>
 <figure class="epigraph left-gutter-anchor" role="doc-epigraph"><blockquote><p>So the guy says, <q>What are you doing? You come to fix the radio, but you’re only walking back and forth!</q>
-    I say, <q>I’m thinking!</q></p></blockquote><figcaption>Richard Feynman, <cite>Surely You’re Joking, Mr. Feynman!</cite></figcaption></figure>
+    I say, <q>I’m thinking!</q></p></blockquote><figcaption><span class="bibref-author">Richard Feynman</span>, <cite>Surely You're Joking, Mr. Feynman!</cite></figcaption></figure>
 <p>Your team lead rushes into your cubicle to tell you the production system barely works.
 You look at the symptoms and have no clue where to start.
 You launch the debugger and step through the code.
@@ -165,13 +165,13 @@ As <a href="https://en.wikipedia.org/wiki/Linus_Torvalds">Linus Torvalds</a> put
 <figure class="bq left-gutter-anchor"><blockquote><p>It’s that you have to look at the level <em>above</em> sources.
   At the meaning of things.
   Without a debugger, you basically have to go the next step: understand what the program does.
-  Not just that particular line.</p></blockquote><figcaption>Linus Torvalds, <a href="https://lkml.org/lkml/2000/9/6/65"><cite>Re: Availability of kdb</cite></a></figcaption></figure>
+  Not just that particular line.</p></blockquote><figcaption><span class="bibref-author">Linus Torvalds</span>, <cite><a href="https://lkml.org/lkml/2000/9/6/65">Re: Availability of kdb</a></cite></figcaption></figure>
 <p>Or as <a href="https://en.wikipedia.org/wiki/Rob_Pike">Rob Pike</a> wrote about <a href="https://en.wikipedia.org/wiki/Ken_Thompson">Ken Thompson</a>:</p>
 <figure class="bq left-gutter-anchor"><blockquote><p>When something went wrong, I’d reflexively start to dig in to the problem, examining stack traces, sticking in print statements, invoking a debugger, and so on.
   But Ken would just stand and think, ignoring me and the code we’d just written.
   After a while I noticed a pattern: Ken would often understand the problem before I would, and would suddenly announce, &quot;I know what’s wrong.&quot;
   He was usually correct.
-  I realized that Ken was building a mental model of the code and when something broke it was an error in the model.</p></blockquote><figcaption>Rob Pike, <a href="https://www.informit.com/articles/article.aspx?p=1941206"><cite>The Best Programming Advice I Ever Got</cite></a></figcaption></figure>
+  I realized that Ken was building a mental model of the code and when something broke it was an error in the model.</p></blockquote><figcaption><span class="bibref-author">Rob Pike</span>, <cite><a href="https://www.informit.com/articles/article.aspx?p=1941206">The Best Programming Advice I Ever Got</a></cite></figcaption></figure>
 <p>Mental models are essential to the scientific method.
 Raw observations do not exist;
 we always interpret observations based on a theory or a model.

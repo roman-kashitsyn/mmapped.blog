@@ -136,6 +136,29 @@ let tests : Test_framework.t list =
       parse_expect "bare command" "\\qed" [ NCmd (zero, S_qed, [], []) ];
       parse_expect "command with symbol arg" "\\label{foo}"
         [ NCmd (zero, S_label, [], [ Arg_symbol (zero, s "foo") ]) ];
+      parse_expect "bibref accepts bib key characters" "\\bibref{rfc:2119_v2}"
+        [ NCmd (zero, S_bibref, [], [ Arg_symbol (zero, s "rfc:2119_v2") ]) ];
+      parse_expect "bibref accepts optional node sequence"
+        "\\bibref[p. \\emph{6}]{rfc:2119_v2}"
+        [
+          NCmd
+            ( zero,
+              S_bibref,
+              [],
+              [
+                Arg_symbol (zero, s "rfc:2119_v2");
+                Arg_nodes
+                  ( zero,
+                    [
+                      NText (zero, s "p. ");
+                      NCmd
+                        ( zero,
+                          S_emph,
+                          [],
+                          [ Arg_nodes (zero, [ NText (zero, s "6") ]) ] );
+                    ] );
+              ] );
+        ];
       parse_expect "escaped backslash" "\\\\" [ NText (zero, s "\\") ];
       parse_expect "escaped percent" "\\%" [ NText (zero, s "%") ];
       parse_expect "comment is skipped" "% a comment\nhello"

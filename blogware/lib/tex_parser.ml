@@ -276,6 +276,9 @@ let rec parse_arg arg_type =
     | At_sym ->
         let* name = take_while1 is_symbolic in
         return (Arg_symbol (pos, name))
+    | At_bib_key ->
+        let* key = take_while1 Bib.is_key_char in
+        return (Arg_symbol (pos, key))
     | At_num -> (
         let* s = take_while1 (fun c -> is_digit c || c = '-') in
         let s_str = Text.to_string s in
@@ -336,16 +339,77 @@ and parse_quot_item st =
   parse_seq_like_item ~text_p:parse_text_node_in_quot ~allow_single_quote:true
     st
 
+and parse_seq_body_until closing st0 =
+  let rec go acc consumed st =
+    match peek_char st with
+    | POk (Some c, _, _) when c = closing -> POk (List.rev acc, st, consumed)
+    | POk (None, _, _) ->
+        PFail (st.pos, lazy ("expected " ^ String.make 1 closing), consumed)
+    | POk _ -> (
+        match parse_seq_item st with
+        | POk (None, st', c) -> go acc (consumed || c) st'
+        | POk (Some n, st', c) -> go (n :: acc) (consumed || c) st'
+        | PFail _ as e -> e)
+    | PFail _ as e -> e
+  in
+  go [] false st0
+
 (* Optional [opt1,opt2,...] argument list. Returns Text.t list. *)
-and parse_options st =
+and parse_symbol_options st =
+  let ws = skip_while (fun c -> c = ' ' || c = '\t' || c = '\n') in
+  let symbol = ws *> take_while1 is_symbolic <* ws in
   let bracketed =
-    try_
-      (let* content =
-         expect_char '[' *> take_while (fun c -> c <> ']') <* expect_char ']'
-       in
-       return (if Text.is_empty content then [] else Text.split_on content ","))
+    let* _ = expect_char '[' in
+    let* first = option_maybe symbol in
+    match first with
+    | None ->
+        let* _ = expect_char ']' in
+        return []
+    | Some first ->
+        let* rest = many (expect_char ',' *> symbol) in
+        let* _ = expect_char ']' in
+        return (first :: rest)
   in
   (bracketed <|> return []) st
+
+and parse_bracketed_arg arg_type =
+  let* _ = expect_char '[' in
+  let* pos = get_position in
+  let* result =
+    match arg_type with
+    | At_seq ->
+        let* nodes = parse_seq_body_until ']' in
+        return (Arg_nodes (pos, nodes))
+    | At_sym ->
+        let* name = take_while1 is_symbolic in
+        return (Arg_symbol (pos, name))
+    | At_bib_key ->
+        let* key = take_while1 Bib.is_key_char in
+        return (Arg_symbol (pos, key))
+    | At_num -> (
+        let* s = take_while1 (fun c -> is_digit c || c = '-') in
+        let s_str = Text.to_string s in
+        match int_of_string_opt s_str with
+        | Some n -> return (Arg_number (pos, n))
+        | None -> fail ("invalid number: " ^ s_str))
+    | At_url ->
+        let* url = take_while1 is_url_char in
+        return (Arg_url (pos, url))
+    | At_align_spec ->
+        let* spec = take_while1 is_align_char in
+        return (Arg_align (pos, parse_col_specs spec))
+  in
+  let* _ = expect_char ']' in
+  return result
+
+and parse_command_options sym =
+  match cmd_opt_arg sym with
+  | Opt_symbols ->
+      let* opts = parse_symbol_options in
+      return (opts, [])
+  | Opt_arg arg_type ->
+      let* opt = option_maybe (parse_bracketed_arg arg_type) in
+      return ([], Option.to_list opt)
 
 and parse_group st =
   (let* pos = get_position in
@@ -398,16 +462,16 @@ and parse_cmd st =
     st
 
 and parse_command_with_args pos sym st =
-  (let* opts = parse_options in
+  (let* opts, opt_args = parse_command_options sym in
    let arg_types = cmd_args sym in
    let* args = collect_list parse_arg arg_types in
-   return (NCmd (pos, sym, opts, args)))
+   return (NCmd (pos, sym, opts, args @ opt_args)))
     st
 
 (* \begin{envname}[opts] body \end{envname} *)
 and parse_begin_env begin_pos st =
   (let* name = expect_char '{' *> take_while1 is_symbolic <* expect_char '}' in
-   let* opts = parse_options in
+   let* opts = parse_symbol_options in
    let sym = resolve_sym name in
    match sym with
    | S_verbatim -> parse_verbatim_env begin_pos sym opts

@@ -237,7 +237,7 @@ let rec inline_to_text = function
       inlines_to_text ils
   | Ref (_, ils) -> inlines_to_text ils
   | Math _ | Anchor _ | Horizontal_rule | Circled_ref _ | Line_break
-  | Numeric_space | Nameref _ | Image_inline _ ->
+  | Numeric_space | Nameref _ | Bibref _ | Image_inline _ ->
       Text.empty
 
 and inlines_to_text (ils : inline list) : Text.t =
@@ -411,6 +411,11 @@ and classify_cmd pos sym opts args =
   | S_cite, Arg_nodes (_, body) :: _ ->
       let* ils = elaborate_inlines body in
       Ok (CInline (Cite ils))
+  | S_bibref, Arg_symbol (_, key) :: Arg_nodes (_, postnote) :: _ ->
+      let* ils = elaborate_inlines postnote in
+      Ok (CInline (Bibref (key, ils)))
+  | S_bibref, Arg_symbol (_, key) :: _ ->
+      Ok (CInline (Bibref (key, [])))
   | S_figcaption, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CBlock (Figcaption ils))

@@ -26,7 +26,7 @@ The following quote from one of my favorite books on software design illustrates
 \blockquote{
   It took six months, but I eventually found and fixed the bug. [\ldots]
   At one point in the code there was a \code{block} variable containing a logical block number, but it was accidentally used in a context where a physical block number was needed.
-}{John Ousterhout, \cite{A Philosophy of Software Design, Chapter 14}}
+}{\bibref[Chapter 14]{ousterhout-philosophy}}
 
 The author attributes the bug to poor variable naming, but this blame is misplaced.
 If the programmer had defined \emph{distinct types} for logical and physical block numbers, the compiler would have caught this mistake immediately.
@@ -104,9 +104,7 @@ There is a more systematic way to think about domain types.
 
 \section{domain-type-classes}{Domain type classes}
 
-\epigraph{A constraint on component design leads to freedom and power when putting those components together into systems.}{
-  Rúnar Bjarnason, \href{https://www.youtube.com/watch?v=GqmsQeSzMdw}{\cite{Constraints Liberate, Liberties Constrain}}.
-}
+\epigraph{A constraint on component design leads to freedom and power when putting those components together into systems.}{\bibref{bjarnason-constraints}}
 
 Over the years, I found that specific classes of domain types appear repeatedly in most applications I work on.
 This section is an overview of these categories.

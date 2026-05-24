@@ -65,9 +65,9 @@ let border_class top bot =
 
 (* --- Rendering context --- *)
 
-type ctx = { ref_table : Document.ref_table }
+type ctx = { ref_table : Document.ref_table; bib : Bib.entry list }
 
-let empty_ctx = { ref_table = RefTable.empty }
+let empty_ctx = { ref_table = RefTable.empty; bib = [] }
 
 (* --- Inline rendering --- *)
 
@@ -139,6 +139,35 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
       | Some r -> a_ [ href_ r.ref_url ] (render_inlines ctx ils)
       | None ->
           text (Text.concat Text.empty [ txt "[unresolved:"; label; txt "]" ]))
+  | Bibref (key, postnote) -> (
+      match
+        List.find_opt (fun e -> Text.equal (Bib.entry_key e) key) ctx.bib
+      with
+      | None ->
+          text (Text.concat Text.empty [ txt "[unresolved bib:"; key; txt "]" ])
+      | Some entry ->
+          let title = Bib.entry_title entry in
+          let cited =
+            match Bib.entry_url entry with
+            | Some url -> cite_ [] (a_ [ href_ url ] (text title))
+            | None -> cite_ [] (text title)
+          in
+          let postnote_html =
+            match postnote with
+            | [] -> empty
+            | ils ->
+                text (txt ", ")
+                ++ span_ [ class_ (txt "bibref-postnote") ]
+                     (render_inlines ctx ils)
+          in
+          let citation =
+            match Bib.entry_author entry with
+            | Some author ->
+                span_ [ class_ (txt "bibref-author") ] (text author)
+                ++ text (txt ", ") ++ cited
+            | None -> cited
+          in
+          citation ++ postnote_html)
 
 and render_inlines (ctx : ctx) (ils : inline list) : Html.t =
   concat (List.map (render_inline ctx) ils)
