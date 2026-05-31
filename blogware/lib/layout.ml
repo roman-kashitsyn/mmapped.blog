@@ -192,18 +192,22 @@ let render_json_ld (root_url : string) (article : article) : Html.t =
 
 (* --- Page head --- *)
 
-let cloudflare_analytics =
-  raw
-  @@ txt
-       {|
+let enable_analytics = ref true
+
+let cloudflare_analytics () =
+  if not !enable_analytics then empty
+  else
+    raw
+    @@ txt
+         {|
 <!-- Cloudflare Web Analytics -->
 <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c85a31fe0cfd47deb15201fabe2fd285"}'></script>
 <!-- End Cloudflare Web Analytics -->
 |}
 
-let common_head_meta : Html.t =
+let common_head_meta () : Html.t =
   leaf "meta" [ charset_ (txt "UTF-8") ]
-  ++ cloudflare_analytics
+  ++ cloudflare_analytics ()
   ++ leaf "meta"
        [
          content_ (txt "width=device-width, initial-scale=1");
@@ -258,7 +262,7 @@ let page_head (root_url : string) (article : article) : Html.t =
         ]
   in
   head_ []
-    (common_head_meta
+    (common_head_meta ()
     ++ leaf "meta"
          [
            name_ (txt "keywords");
@@ -500,12 +504,12 @@ let render_post_entry (a : article) : Html.t =
 
 let list_page_head (title_text : string) : Html.t =
   head_ []
-    (common_head_meta
+    (common_head_meta ()
     ++ title_ [] (escape_html (txt title_text))
     ++ common_asset_links ++ feed_link)
 
 let standalone_page_head (title : Html.t) : Html.t =
-  head_ [] (common_head_meta ++ title_ [] title ++ common_asset_links)
+  head_ [] (common_head_meta () ++ title_ [] title ++ common_asset_links)
 
 let render_post_list_page (title_text : string) (articles : article list) :
     Html.t =
@@ -580,7 +584,7 @@ let render_note_list_page (notes : note list) : Html.t =
 
 let note_page_head (note : note) : Html.t =
   head_ []
-    (common_head_meta
+    (common_head_meta ()
     ++ title_ [] (Render.render_inlines Render.empty_ctx note.note_title)
     ++ common_asset_links)
 

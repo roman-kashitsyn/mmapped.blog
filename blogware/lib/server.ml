@@ -342,6 +342,7 @@ let rec accept_loop (server_fd : Socket_ffi.fd) (config : site_config) : unit =
   accept_loop server_fd config
 
 let serve (config : site_config) (port : int) : unit =
+  Layout.enable_analytics := false;
   Printf.eprintf "Listening on http://localhost:%d\n%!" port;
   let fd = Socket_ffi.listen_on port in
   accept_loop fd config
