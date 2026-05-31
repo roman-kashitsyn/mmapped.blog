@@ -192,6 +192,58 @@ let render_json_ld (root_url : string) (article : article) : Html.t =
 
 (* --- Page head --- *)
 
+let cloudflare_analytics =
+  raw
+  @@ txt
+       {|
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c85a31fe0cfd47deb15201fabe2fd285"}'></script>
+<!-- End Cloudflare Web Analytics -->
+|}
+
+let common_head_meta : Html.t =
+  leaf "meta" [ charset_ (txt "UTF-8") ]
+  ++ cloudflare_analytics
+  ++ leaf "meta"
+       [
+         content_ (txt "width=device-width, initial-scale=1");
+         name_ (txt "viewport");
+       ]
+  ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
+  ++ leaf "meta" [ name_ (txt "tdm-reservation"); content_ (txt "0") ]
+
+let preload_woff2 path =
+  link_
+    [
+      rel_ (txt "preload");
+      href_ (txt path);
+      attr "as" (txt "font");
+      type_ (txt "font/woff2");
+      attr "crossorigin" Text.empty;
+    ]
+
+let common_asset_links : Html.t =
+  preload_woff2 "/fonts/LibertinusSans-Regular.woff2"
+  ++ preload_woff2 "/fonts/LibertinusSans-Bold.woff2"
+  ++ preload_woff2 "/fonts/LibertinusSerif-Regular.woff2"
+  ++ preload_woff2 "/fonts/LibertinusSerif-Bold.woff2"
+  ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/mmapped.css") ]
+  ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
+  ++ link_
+       [
+         rel_ (txt "mask-icon");
+         href_ (txt "/images/mask-icon.svg");
+         attr "color" (txt "#000000");
+       ]
+
+let feed_link : Html.t =
+  link_
+    [
+      rel_ (txt "alternate");
+      type_ (txt "application/atom+xml");
+      href_ (txt "/feed.xml");
+    ]
+
 let page_head (root_url : string) (article : article) : Html.t =
   let description_meta =
     if article.art_subtitle = [] then empty
@@ -206,13 +258,7 @@ let page_head (root_url : string) (article : article) : Html.t =
         ]
   in
   head_ []
-    (leaf "meta" [ charset_ (txt "UTF-8") ]
-    ++ leaf "meta"
-         [
-           content_ (txt "width=device-width, initial-scale=1");
-           name_ (txt "viewport");
-         ]
-    ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
+    (common_head_meta
     ++ leaf "meta"
          [
            name_ (txt "keywords");
@@ -220,20 +266,7 @@ let page_head (root_url : string) (article : article) : Html.t =
          ]
     ++ description_meta
     ++ title_ [] (Render.render_inlines Render.empty_ctx article.art_title)
-    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/mmapped.css") ]
-    ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
-    ++ link_
-         [
-           rel_ (txt "mask-icon");
-           href_ (txt "/images/mask-icon.svg");
-           attr "color" (txt "#000000");
-         ]
-    ++ link_
-         [
-           rel_ (txt "alternate");
-           type_ (txt "application/atom+xml");
-           href_ (txt "/feed.xml");
-         ]
+    ++ common_asset_links ++ feed_link
     ++ link_ [ rel_ (txt "canonical"); href_ (txt root_url ^^ article.art_url) ]
     ++ render_json_ld root_url article)
 
@@ -467,65 +500,12 @@ let render_post_entry (a : article) : Html.t =
 
 let list_page_head (title_text : string) : Html.t =
   head_ []
-    (leaf "meta" [ charset_ (txt "UTF-8") ]
-    ++ leaf "meta"
-         [
-           content_ (txt "width=device-width, initial-scale=1");
-           name_ (txt "viewport");
-         ]
-    ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
+    (common_head_meta
     ++ title_ [] (escape_html (txt title_text))
-    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/mmapped.css") ]
-    ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
-    ++ link_
-         [
-           rel_ (txt "mask-icon");
-           href_ (txt "/images/mask-icon.svg");
-           attr "color" (txt "#000000");
-         ]
-    ++ link_
-         [
-           rel_ (txt "alternate");
-           type_ (txt "application/atom+xml");
-           href_ (txt "/feed.xml");
-         ])
+    ++ common_asset_links ++ feed_link)
 
-(* Differs from [page_head] and [list_page_head]: includes the
-   tdm-reservation meta and five font preloads, omits keywords/description/
-   alternate feed/canonical. *)
 let standalone_page_head (title : Html.t) : Html.t =
-  let preload path ty =
-    link_
-      [
-        rel_ (txt "preload");
-        href_ (txt path);
-        attr "as" (txt "font");
-        type_ (txt ty);
-        attr "crossorigin" Text.empty;
-      ]
-  in
-  head_ []
-    (leaf "meta" [ charset_ (txt "UTF-8") ]
-    ++ leaf "meta"
-         [
-           content_ (txt "width=device-width, initial-scale=1");
-           name_ (txt "viewport");
-         ]
-    ++ leaf "meta" [ name_ (txt "tdm-reservation"); content_ (txt "0") ]
-    ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
-    ++ title_ [] title
-    ++ preload "/fonts/LibertinusSans-Regular.woff2" "font/woff2"
-    ++ preload "/fonts/LibertinusSans-Bold.woff2" "font/woff2"
-    ++ preload "/fonts/LibertinusSerif-Regular.woff2" "font/woff2"
-    ++ preload "/fonts/LibertinusSerif-Bold.woff2" "font/woff2"
-    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/mmapped.css") ]
-    ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
-    ++ link_
-         [
-           rel_ (txt "mask-icon");
-           href_ (txt "/images/mask-icon.svg");
-           attr "color" (txt "#000000");
-         ])
+  head_ [] (common_head_meta ++ title_ [] title ++ common_asset_links)
 
 let render_post_list_page (title_text : string) (articles : article list) :
     Html.t =
@@ -600,22 +580,9 @@ let render_note_list_page (notes : note list) : Html.t =
 
 let note_page_head (note : note) : Html.t =
   head_ []
-    (leaf "meta" [ charset_ (txt "UTF-8") ]
-    ++ leaf "meta"
-         [
-           content_ (txt "width=device-width, initial-scale=1");
-           name_ (txt "viewport");
-         ]
-    ++ leaf "meta" [ name_ (txt "author"); content_ (txt "Roman Kashitsyn") ]
+    (common_head_meta
     ++ title_ [] (Render.render_inlines Render.empty_ctx note.note_title)
-    ++ link_ [ rel_ (txt "stylesheet"); href_ (txt "/css/mmapped.css") ]
-    ++ link_ [ rel_ (txt "icon"); href_ (txt "/images/favicon.svg") ]
-    ++ link_
-         [
-           rel_ (txt "mask-icon");
-           href_ (txt "/images/mask-icon.svg");
-           attr "color" (txt "#000000");
-         ])
+    ++ common_asset_links)
 
 let render_note_attributes (note : note) : Html.t =
   span_
