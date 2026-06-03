@@ -1380,3 +1380,62 @@ p.svg {
         width: 100%;
     }
 }
+
+@media print {
+    @page {
+        margin: 12mm 10mm;
+    }
+
+    :root {
+        color-scheme: light;
+        --fs-footnotesize: 0.9rem;
+        --fs-small: 1.15rem;
+        --fs-normal: 1.55rem;
+        --fs-large: 2.05rem;
+        --fs-xlarge: 2.75rem;
+        --lh-compact: 1.3rem;
+        --lh-medium: 1.7rem;
+        --lh-body: 2.25rem;
+        --page: #fff;
+        --page-sunk: #f7f7f7;
+        --ink: #000;
+        --ink-subtle: #333;
+        --ink-faint: #555;
+        --rule: #999;
+        --rule-soft: #ddd;
+    }
+
+    header,
+    nav,
+    footer,
+    body > header + hr,
+    body > article + section,
+    body > article + hr,
+    body > section + hr,
+    article > .post-attrs + hr,
+    article .post-icons,
+    article > ul.toc,
+    article > ul.toc + hr {
+        display: none;
+    }
+
+    body {
+        width: 92%;
+        padding-left: 8%;
+        max-width: none;
+        background: #fff;
+        color: #000;
+    }
+
+    div.source-container,
+    div.table-wrapper,
+    pre > code,
+    p.svg {
+        overflow: visible;
+    }
+
+    pre > code {
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+    }
+}
