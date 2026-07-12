@@ -140,6 +140,7 @@ let dd_ a c = parent "dd" a c
 let span_ a c = parent "span" a c
 let a_ a c = parent "a" a c
 let b_ a c = parent "b" a c
+let i_ a c = parent "i" a c
 let em_ a c = parent "em" a c
 let u_ a c = parent "u" a c
 let code_ a c = parent "code" a c

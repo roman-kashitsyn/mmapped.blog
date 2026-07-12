@@ -218,6 +218,7 @@ let rec inline_to_text = function
   | Str t -> t
   | Strong ils
   | Emph ils
+  | Italic ils
   | Underline ils
   | Small_caps ils
   | Strikethrough ils
@@ -346,6 +347,9 @@ and classify_cmd pos sym opts args =
   | S_emph, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Emph ils))
+  | S_i, Arg_nodes (_, ns) :: _ ->
+      let* ils = elaborate_inlines ns in
+      Ok (CInline (Italic ils))
   | S_u, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Underline ils))
@@ -499,6 +503,9 @@ and elaborate_code_inlines (ns : node list) : inline list result_ =
     | NCmd (_, S_b, _, Arg_nodes (_, ns) :: _) :: rest ->
         let* ils = elaborate_code_inlines ns in
         go (Strong ils :: acc) rest
+    | NCmd (_, S_i, _, Arg_nodes (_, ns) :: _) :: rest ->
+        let* ils = elaborate_code_inlines ns in
+        go (Italic ils :: acc) rest
     | NCmd (_, S_emph, _, Arg_nodes (_, ns) :: _) :: rest ->
         let* ils = elaborate_code_inlines ns in
         go (Emph ils :: acc) rest

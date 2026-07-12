@@ -76,6 +76,7 @@ let rec render_inline (ctx : ctx) (il : inline) : Html.t =
   | Str t -> text t (* typography already applied; text escapes &<> *)
   | Strong ils -> b_ [] (render_inlines ctx ils)
   | Emph ils -> em_ [] (render_inlines ctx ils)
+  | Italic ils -> i_ [] (render_inlines ctx ils)
   | Underline ils -> u_ [] (render_inlines ctx ils)
   | Small_caps ils ->
       span_ [ class_ (txt "smallcaps") ] (render_inlines ctx ils)

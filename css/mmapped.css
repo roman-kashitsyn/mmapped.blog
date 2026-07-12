@@ -953,6 +953,7 @@ img {
     line-height: var(--lh-medium);
     vertical-align: baseline;
     position: relative;
+    text-align: left;
 }
 
 .sidenote-number {

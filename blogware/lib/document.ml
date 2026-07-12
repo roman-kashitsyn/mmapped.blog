@@ -19,6 +19,7 @@ type inline =
   | Str of Text.t (* plain text, typography already applied *)
   | Strong of inline list
   | Emph of inline list
+  | Italic of inline list
   | Underline of inline list
   | Small_caps of inline list
   | Strikethrough of inline list
