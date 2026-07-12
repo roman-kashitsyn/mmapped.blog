@@ -263,7 +263,7 @@ let sym_to_string = function
   | S_subtitle -> "subtitle"
   | S_featured -> "featured"
   | S_b -> "b"
-  | S_i -> "i"
+  | S_i -> "textit"
   | S_u -> "u"
   | S_normal -> "normal"
   | S_emph -> "emph"

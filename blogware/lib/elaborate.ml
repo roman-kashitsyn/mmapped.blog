@@ -349,7 +349,7 @@ and classify_cmd pos sym opts args =
       Ok (CInline (Emph ils))
   | S_i, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
-      Ok (CInline (Emph ils))
+      Ok (CInline (Italic ils))
   | S_u, Arg_nodes (_, ns) :: _ ->
       let* ils = elaborate_inlines ns in
       Ok (CInline (Underline ils))

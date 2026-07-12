@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c85a31fe0cfd47deb15201fabe2fd285"}'></script>
+<!-- End Cloudflare Web Analytics -->
+<meta content="width=device-width, initial-scale=1" name="viewport"><meta name="author" content="Roman Kashitsyn"><meta name="tdm-reservation" content="0"><meta name="keywords" content="penmanship"><meta name="description" content="Making English more enjoyable to write."><title>Backtrack-free cursive</title><link rel="preload" href="/fonts/LibertinusSans-Regular.woff2" as="font" type="font/woff2" crossorigin=""><link rel="preload" href="/fonts/LibertinusSans-Bold.woff2" as="font" type="font/woff2" crossorigin=""><link rel="preload" href="/fonts/LibertinusSerif-Regular.woff2" as="font" type="font/woff2" crossorigin=""><link rel="preload" href="/fonts/LibertinusSerif-Bold.woff2" as="font" type="font/woff2" crossorigin=""><link rel="stylesheet" href="/css/mmapped.css"><link rel="icon" href="/images/favicon.svg"><link rel="mask-icon" href="/images/mask-icon.svg" color="#000000"><link rel="alternate" type="application/atom+xml" href="/feed.xml"><link rel="canonical" href="https://mmapped.blog/posts/52-backtrack-free-cursive.html"><script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Backtrack-free cursive","url":"https://mmapped.blog/posts/52-backtrack-free-cursive.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://mmapped.blog/posts/52-backtrack-free-cursive.html"},"datePublished":"2026-07-12","dateModified":"2026-07-12","wordCount":993,"license":"http://creativecommons.org/licenses/by/4.0/","author":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"publisher":{"@type":"Person","givenName":"Roman","familyName":"Kashitsyn"},"description":"Making English more enjoyable to write.","keywords":["penmanship"]}
+</script></head><body><header><nav><ul><li><a class="blog-title" href="/index.html"><img class="logo grayscale" src="/images/logo.svg" alt="logo: circled capital letter M">mmap(blog)</a></li><li><a href="/posts.html">Posts</a></li><li><a href="/notes/index.html">Notes</a></li><li><a href="/feed.xml">Feed</a></li></ul></nav></header><hr><article><h1 class="article-title"><a href="/posts/52-backtrack-free-cursive.html">Backtrack-free cursive</a></h1><span class="post-attrs"><span class="attr-date" title="First published"><span class="icon">✑</span><time datetime="2026-07-12">2026-07-12</time></span><span class="post-keywords"><a class="keyword-link" href="/notes/penmanship.html">penmanship</a></span><span class="post-icons"></span></span>
+<hr>
+<ul class="toc toc-level-1"><li class="toc toc-level-1"><a href="#the-crime">The crime</a></li><li class="toc toc-level-1"><a href="#the-redemption">The redemption</a></li></ul><hr>
+
+<section><p>
+I love writing in cursive,
+shaping each word in one long stroke.
+If you grew up learning the Latin alphabet,
+you likely don’t realize how much joy it sucks out of cursive writing.
+I noticed only because I learned the Cyrillic alphabet first.
+I think and write primarily in English,
+yet Russian feels more enjoyable to write.</p>
+</section>
+<section><h2 id="the-crime"><a href="#the-crime">The crime</a></h2>
+<p>I narrowed the problem to backtracking—the need to add strokes
+to the letters I’ve partially written.
+English wants me to dot my i’s and cross my t’s.
+It has a lot of them,
+and they like to cluster in a single word.
+Instead of thinking about what I want to write next,
+I have to maintain a mental queue of pending strokes.</p>
+<p>Backtracking is rare in Russian.
+Only <a href="https://en.wikipedia.org/wiki/Short_I_(Cyrillic)">й</a> (short i)
+and <a href="https://en.wikipedia.org/wiki/E_(Cyrillic)">э</a> (pronounced like e in <em>e</em>nd)
+require two strokes.
+There is also <a href="https://en.wikipedia.org/wiki/Yo_(Cyrillic)">ё</a> (pronounced <em>yo</em>, like in New York),
+but its umlaut is optional.
+So much of Russian literature is written without ё
+that native speakers infer it unconsciously.</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-destination">⊕</label><input type="checkbox" id="mn-destination" class="margin-toggle"><span class="marginnote">
+  The word <em>destination</em> requires four backtracks (two t’s and two i’s) when written in English.
+  Its Russian translation <em>назначение</em> needs none.
+</span><img src="/images/52-destination.webp">
+</figure>
+<p>To quantify my discomfort,
+I analyzed Dostoevsky’s <em>Crime and Punishment</em> in Russian and English
+and computed how much backtracking I would have to do
+if I were to write it in cursive.
+The English version needs backtracking for 51% of words
+with 0.68 backtracks per word on average.
+In Russian, only 6.4% of words need backtracks,
+with 0.066 backtracks per word on average.</p>
+<p>One way to remove backtracking is to lift the pen immediately
+instead of waiting until the end of the word,
+as if doing italic calligraphy.
+Pen lifts alleviate the mental queue problem
+and give a chance to readjust the palm,
+but they break the writing flow.</p>
+<p>Dots and crosses are even more irritating on digital notebooks
+because the undo feature works on the stroke level.
+Often, I want to remove the last word I’ve written.
+If each word required only one stroke to write,
+I could do it in a single tap.
+But since every other word requires multiple strokes,
+I resort to the eraser tool,
+which is slower and more distracting.</p>
+</section>
+<section><h2 id="the-redemption"><a href="#the-redemption">The redemption</a></h2>
+<p>I couldn’t find a cursive script that would address my annoyances,
+so I designed one.
+It’s based on <a href="https://smithhand.us/">SmithHand</a>,
+with occasional borrowings from the Russian script I learned at school.
+SmithHand renders most lowercase letters in one stroke,
+except <i>x</i>, <i>t</i>, <i>i</i>, and <i>j</i>.</p>
+<p><i>x</i> is the easiest letter to fix.
+Instead of using two diagonal strokes,
+I draw two mirrored <i>c</i>’s,
+as my Russian penmanship teacher would suggest.</p>
+<figure class="center grayscale-diagram"><img src="/images/52-x.webp">
+</figure>
+<p>The fix for <i>t</i> is also straightforward.
+Instead of crossing the vertical line in a separate stroke,
+I add an auxiliary line that moves the pen up and left
+and then crosses the stem.
+It’s the same motion you’d use to draw digit 4,
+but mirrored both horizontally and vertically.</p>
+<figure class="center grayscale-diagram"><img src="/images/52-t.webp">
+</figure>
+<p>This variant of <i>t</i> often appears on logos.
+I counted three instances just walking around Zürich main station.
+For example, logos of <a href="https://gipfeli.ch/">Stocker bakery</a>,
+<a href="https://www.gelaterialeonardo.ch/">Leonardo ice cream parlor</a>,
+and the <a href="https://www.hotelplan.ch/">Hotelplan group</a>
+use it.
+If it reads well on Swiss logos,
+it’s good enough for my scribbles.</p>
+<figure class="center"><label class="margin-toggle" for="mn-leonardo-logo">⊕</label><input type="checkbox" id="mn-leonardo-logo" class="margin-toggle"><span class="marginnote">
+  Single-stroke letter <i>t</i> often appears on logos.
+</span><p class="svg"><img src="/images/52-hotelplan-logo.svg"></p>
+<img class="grayscale" src="/images/52-leonardo-il-gelato.webp">
+</figure>
+<p>If you’re feeling fancy,
+you can make a loop on the upstroke,
+giving the letter a little bow.
+I prefer this variation in the <i>th</i> and <i>te</i> ligatures
+because it pairs well with its neighbors.</p>
+<figure class="grayscale-diagram center"><label class="margin-toggle" for="mn-theater">⊕</label><input type="checkbox" id="mn-theater" class="margin-toggle"><span class="marginnote">
+  Word <em>theater</em> written in a single stroke.
+</span><img src="/images/52-theater.webp">
+</figure>
+<p>The <i>tt</i> ligature requires planning:
+draw two vertical stems first,
+then add a horizontal stroke crossing them both.</p>
+<figure class="center"><label class="margin-toggle" for="mn-pretty-ligature">⊕</label><input type="checkbox" id="mn-pretty-ligature" class="margin-toggle"><span class="marginnote">
+  Word <em>pretty</em> written in a single stroke.
+</span><img class="grayscale" src="/images/52-pretty.webp">
+</figure>
+<p><i>i</i> and <i>j</i> gave me a hard time.
+I tried skipping their dots entirely,
+but the result was subpar.
+I tried writing the dot before the stem,
+trading a backtrack for a pen lift,
+but I couldn’t get used to it.
+It also broke the flow,
+unless the word started with a dotted letter (as in <q>in</q> or <q>just</q>).
+An acceptable solution must connect the dot and the stem in a legible way.</p>
+<p>The breakthrough came from my prior experiments with dot shapes.
+I write with an extra-fine nib,
+so dots can disappear in a dense grid packed with letters.
+I considered using little circles instead.
+The change didn’t seem worth the trouble on its own,
+but the pen lift constraint gave the idea a new appeal:
+dots become invisible when connected to a stem,
+but circles remain distinctive.</p>
+<p>The design that worked fuses the circle and the stem.
+To write an <i>i</i> without lifting a pen,
+I draw a tight loop <em>above</em> the <a href="https://terms.am/en/typography/midline">midline</a>
+that flows into a stem on the downstroke.</p>
+<figure class="grayscale-diagram center"><img src="/images/52-i.webp">
+<img src="/images/52-j.webp">
+</figure>
+<p>The placement and the alignment of the circle are crucial.
+If the circle is below the midline,
+the letter looks like a Greek <i>ε</i>.
+If the circle doesn’t align with the stem,
+the letter looks like an <i>r</i>.</p>
+<figure class="grayscale-diagram center"><label class="margin-toggle" for="mn-bad-i">⊕</label><input type="checkbox" id="mn-bad-i" class="margin-toggle"><span class="marginnote">
+  The circle above the letter <i>i</i>
+  must be above the midline
+  and align with the stem;
+  otherwise, the letter is easy to confuse with
+  <i>ε</i> or <i>r</i>.
+</span><img src="/images/52-i-bad.webp">
+</figure>
+<p>Word <em>jitter</em> is perfect for practicing the script
+because it contains <i>i</i>, <i>j</i>,
+and a challenging <i>tte</i> ligature.</p>
+<figure class="grayscale-diagram center"><label class="margin-toggle" for="mn-jitter">⊕</label><input type="checkbox" id="mn-jitter" class="margin-toggle"><span class="marginnote">
+  Word <em>jitter</em> written in a single stroke.
+</span><img src="/images/52-jitter.webp">
+</figure>
+<p>Some capitals required minor adjustments.
+The horizontal bar of capital <i>T</i> turned into a loop.
+Capital <i>F</i> acquired a little bow that connects to the next letter.
+Capital <i>K</i> has two renderings:
+in two top-down strokes (requires a pen lift)
+or in one stroke that traverses the top arm twice
+(once up and once down).</p>
+<p>Here is the full alphabet for reference:</p>
+<figure class="grayscale-diagram"><label class="margin-toggle" for="mn-alphabet">⊕</label><input type="checkbox" id="mn-alphabet" class="margin-toggle"><span class="marginnote">
+  Backtrack-free cursive Latin alphabet.
+</span><img src="/images/52-alphabet.webp">
+</figure>
+<p>I’ve been using this script for several months,
+both on paper and digital notebooks.
+My <i>i</i>’s are still inconsistent,
+my <i>t</i>’s and <i>x</i>’s
+aren’t as elegant as they used to be,
+but writing English finally brings me as much delight as writing Russian.</p>
+<figure class="grayscale-diagram center"><label class="margin-toggle" for="mn-destination-no-backtrack">⊕</label><input type="checkbox" id="mn-destination-no-backtrack" class="margin-toggle"><span class="marginnote">
+  Words <em>delightful</em> and <em>destination</em>,
+  each written in a single stroke.
+</span><img src="/images/52-delightful.webp">
+<img src="/images/52-destination-new.webp">
+</figure>
+</section>
+
+</article>
+
+<hr><footer role="contentinfo"><span>©Roman Kashitsyn</span>&nbsp;<a rel="license" href="http://creativecommons.org/licenses/by/4.0/" title="This work is licensed under a Creative Commons Attribution 4.0 International License"><img alt="Creative Commons License" style="border-width:0;width:80px;height:15px;text-decoration:none;" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a><br>
+<a class="github-link" href="https://github.com/roman-kashitsyn/mmapped.blog">Source Code</a> · <a href="https://github.com/roman-kashitsyn/mmapped.blog/issues/new">Report Issue</a></footer></body></html>
