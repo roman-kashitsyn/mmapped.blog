@@ -34,6 +34,7 @@ type sym =
   | S_subtitle
   | S_featured
   | S_b
+  | S_i
   | S_u
   | S_normal
   | S_emph
@@ -151,6 +152,7 @@ let sym_table : sym SMap.t =
       ("subtitle", S_subtitle);
       ("featured", S_featured);
       ("b", S_b);
+      ("textit", S_i);
       ("u", S_u);
       ("normal", S_normal);
       ("emph", S_emph);
@@ -261,6 +263,7 @@ let sym_to_string = function
   | S_subtitle -> "subtitle"
   | S_featured -> "featured"
   | S_b -> "b"
+  | S_i -> "i"
   | S_u -> "u"
   | S_normal -> "normal"
   | S_emph -> "emph"
@@ -428,6 +431,7 @@ let cmd_args (s : sym) : arg_type list =
   | S_title -> [ At_seq ]
   | S_subtitle -> [ At_seq ]
   | S_b -> [ At_seq ]
+  | S_i -> [ At_seq ]
   | S_u -> [ At_seq ]
   | S_normal -> [ At_seq ]
   | S_emph -> [ At_seq ]

@@ -38,6 +38,7 @@ let count_inlines (ils : inline list) : int =
     | Str t -> count_words_in_text state t
     | Strong ils
     | Emph ils
+    | Italic ils
     | Underline ils
     | Small_caps ils
     | Strikethrough ils

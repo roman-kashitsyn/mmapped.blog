@@ -1,0 +1,232 @@
+\documentclass{article}
+
+\title{Backtrack-free cursive}
+\subtitle{Making English more enjoyable to write.}
+\date{2026-07-12}
+\modified{2026-07-12}
+
+\keyword{penmanship}
+
+\begin{document}
+I love writing in cursive,
+shaping each word in one long stroke.
+If you grew up learning the Latin alphabet,
+you likely don't realize how much joy it sucks out of cursive writing.
+I noticed only because I learned the Cyrillic alphabet first.
+I think and write primarily in English,
+yet Russian feels more enjoyable to write.
+
+\section{the-crime}{The crime}
+
+I narrowed the problem to backtracking---%
+the need to add strokes
+to the letters I've partially written.
+English wants me to dot my i's and cross my t's.
+It has a lot of them,
+and they like to cluster in a single word.
+Instead of thinking about what I want to write next,
+I have to maintain a mental queue of pending strokes.
+
+Backtracking is rare in Russian.
+Only \href{https://en.wikipedia.org/wiki/Short_I_(Cyrillic)}{й} (short i)
+and \href{https://en.wikipedia.org/wiki/E_(Cyrillic)}{э} (pronounced like e in \emph{e}nd)
+require two strokes.
+There is also \href{https://en.wikipedia.org/wiki/Yo_(Cyrillic)}{ё} (pronounced \emph{yo}, like in New York),
+but its umlaut is optional.
+So much of Russian literature is written without ё
+that native speakers infer it unconsciously.
+
+\begin{figure}[grayscale-diagram]
+\marginnote{mn-destination}{
+  The word \emph{destination} requires four backtracks (two t's and two i's) when written in English.
+  Its Russian translation \emph{назначение} needs none.
+}
+  \includegraphics{/images/52-destination.webp}
+\end{figure}
+
+To quantify my discomfort,
+I analyzed Dostoevsky's \emph{Crime and Punishment} in Russian and English
+and computed how much backtracking I would have to do
+if I were to write it in cursive.
+The English version needs backtracking for 51\% of words
+with 0.68 backtracks per word on average.
+In Russian, only 6.4\% of words need backtracks,
+with 0.066 backtracks per word on average.
+
+One way to remove backtracking is to lift the pen immediately
+instead of waiting until the end of the word,
+as if doing italic calligraphy.
+Pen lifts alleviate the mental queue problem
+and give a chance to readjust the palm,
+but they break the writing flow.
+
+Dots and crosses are even more irritating on digital notebooks
+because the undo feature works on the stroke level.
+Often, I want to remove the last word I've written.
+If each word required only one stroke to write,
+I could do it in a single tap.
+But since every other word requires multiple strokes,
+I resort to the eraser tool,
+which is slower and more distracting.
+
+\section{the-redemption}{The redemption}
+
+I couldn't find a cursive script that would address my annoyances,
+so I designed one.
+It's based on \href{https://smithhand.us/}{SmithHand},
+with occasional borrowings from the Russian script I learned at school.
+SmithHand renders most lowercase letters in one stroke,
+except \textit{x}, \textit{t}, \textit{i}, and \textit{j}.
+
+\textit{x} is the easiest letter to fix.
+Instead of using two diagonal strokes,
+I draw two mirrored \textit{c}'s,
+as my Russian penmanship teacher would suggest.
+
+\begin{figure}[center,grayscale-diagram]
+\includegraphics{/images/52-x.webp}
+\end{figure}
+
+The fix for \textit{t} is also straightforward.
+Instead of crossing the vertical line in a separate stroke,
+I add an auxiliary line that moves the pen up and left
+and then crosses the stem.
+It's the same motion you'd use to draw digit 4,
+but mirrored both horizontally and vertically.
+
+\begin{figure}[center,grayscale-diagram]
+\includegraphics{/images/52-t.webp}
+\end{figure}
+
+This variant of \textit{t} often appears on logos.
+I counted three instances just walking around Zürich main station.
+For example, logos of \href{https://gipfeli.ch/}{Stocker bakery},
+\href{https://www.gelaterialeonardo.ch/}{Leonardo ice cream parlor},
+and the \href{https://www.hotelplan.ch/}{Hotelplan group}
+use it.
+If it reads well on Swiss logos,
+it's good enough for my scribbles.
+
+\begin{figure}[center]
+\marginnote{mn-leonardo-logo}{
+  Single-stroke letter \textit{t} often appears on logos.
+}
+\includegraphics{/images/52-hotelplan-logo.svg}
+\includegraphics[grayscale]{/images/52-leonardo-il-gelato.webp}
+\end{figure}
+
+If you're feeling fancy,
+you can make a loop on the upstroke,
+giving the letter a little bow.
+I prefer this variation in the \textit{th} and \textit{te} ligatures
+because it pairs well with its neighbors.
+
+\begin{figure}[grayscale-diagram,center]
+\marginnote{mn-theater}{
+  Word \emph{theater} written in a single stroke.
+}
+\includegraphics{/images/52-theater.webp}
+\end{figure}
+
+The \textit{tt} ligature requires planning:
+draw two vertical stems first,
+then add a horizontal stroke crossing them both.
+
+\begin{figure}[center]
+\marginnote{mn-pretty-ligature}{
+  Word \emph{pretty} written in a single stroke.
+}
+\includegraphics[grayscale]{/images/52-pretty.webp}
+\end{figure}
+
+\textit{i} and \textit{j} gave me a hard time.
+I tried skipping their dots entirely,
+but the result was subpar.
+I tried writing the dot before the stem,
+trading a backtrack for a pen lift,
+but I couldn't get used to it.
+It also broke the flow,
+unless the word started with a dotted letter (as in ``in'' or ``just'').
+An acceptable solution must connect the dot and the stem in a legible way.
+
+The breakthrough came from my prior experiments with dot shapes.
+I write with an extra-fine nib,
+so dots can disappear in a dense grid packed with letters.
+I considered using little circles instead.
+The change didn't seem worth the trouble on its own,
+but the pen lift constraint gave the idea a new appeal:
+dots become invisible when connected to a stem,
+but circles remain distinctive.
+
+The design that worked fuses the circle and the stem.
+To write an \textit{i} without lifting a pen,
+I draw a tight loop \emph{above} the \href{https://terms.am/en/typography/midline}{midline}
+that flows into a stem on the downstroke.
+
+\begin{figure}[grayscale-diagram,center]
+\includegraphics{/images/52-i.webp}
+\includegraphics{/images/52-j.webp}
+\end{figure}
+
+The placement and the alignment of the circle are crucial.
+If the circle is below the midline,
+the letter looks like a Greek \textit{ε}.
+If the circle doesn't align with the stem,
+the letter looks like an \textit{r}.
+
+\begin{figure}[grayscale-diagram,center]
+\marginnote{mn-bad-i}{
+  The circle above the letter \textit{i}
+  must be above the midline
+  and align with the stem;
+  otherwise, the letter is easy to confuse with
+  \textit{ε} or \textit{r}.
+}
+\includegraphics{/images/52-i-bad.webp}
+\end{figure}
+
+Word \emph{jitter} is perfect for practicing the script
+because it contains \textit{i}, \textit{j},
+and a challenging \textit{tte} ligature.
+
+\begin{figure}[grayscale-diagram,center]
+\marginnote{mn-jitter}{
+  Word \emph{jitter} written in a single stroke.
+}
+\includegraphics{/images/52-jitter.webp}
+\end{figure}
+
+Some capitals required minor adjustments.
+The horizontal bar of capital \textit{T} turned into a loop.
+Capital \textit{F} acquired a little bow that connects to the next letter.
+Capital \textit{K} has two renderings:
+in two top-down strokes (requires a pen lift)
+or in one stroke that traverses the top arm twice
+(once up and once down).
+
+Here is the full alphabet for reference:
+
+\begin{figure}[grayscale-diagram]
+\marginnote{mn-alphabet}{
+  Backtrack-free cursive Latin alphabet.
+}
+\includegraphics{/images/52-alphabet.webp}
+\end{figure}
+
+I've been using this script for several months,
+both on paper and digital notebooks.
+My \textit{i}'s are still inconsistent,
+my \textit{t}'s and \textit{x}'s
+aren't as elegant as they used to be,
+but writing English finally brings me as much delight as writing Russian.
+
+\begin{figure}[grayscale-diagram,center]
+\marginnote{mn-destination-no-backtrack}{
+  Words \emph{delightful} and \emph{destination},
+  each written in a single stroke.
+}
+\includegraphics{/images/52-delightful.webp}
+\includegraphics{/images/52-destination-new.webp}
+\end{figure}
+
+\end{document}
