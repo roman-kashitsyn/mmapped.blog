@@ -1,0 +1,20 @@
+#!/bin/sh
+# Refuse to commit if the test suite is broken.
+#
+# Note: the tests run against the working tree, not against the staged
+# snapshot, so a commit of a partially staged tree can still break the build.
+#
+# Bypass with `git commit --no-verify` when you need to.
+
+set -e
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+echo "pre-commit: running 'make test'..."
+
+if ! make test; then
+    echo "pre-commit: tests failed, aborting the commit." >&2
+    echo "pre-commit: use 'git commit --no-verify' to bypass this check." >&2
+    exit 1
+fi

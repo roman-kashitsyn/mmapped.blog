@@ -68,6 +68,7 @@ help:
 	@echo "distclean    - remove build artifacts and installed toolchains"
 	@echo "deps         - install the minimal build dependencies"
 	@echo "dev-deps     - install optional documentation tooling"
+	@echo "hooks        - install the git hooks from .githooks"
 	@echo "dir-locals   - generate .dir-locals.el for Emacs"
 
 $(OPAM_STATE_ROOT)/config: $(OPAM)
@@ -131,6 +132,11 @@ deps: $(OPAM_ROOT)/.deps
 
 .PHONY: dev-deps
 dev-deps: $(OPAM_ROOT)/.dev-deps
+
+.PHONY: hooks
+hooks:
+	git config core.hooksPath .githooks
+	@echo "Git hooks installed from .githooks"
 
 SWITCH_BIN := $(OPAM_SWITCH_ABS)/_opam/bin
 
