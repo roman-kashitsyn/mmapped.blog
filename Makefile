@@ -49,7 +49,7 @@ DUNE := $(OPAM) exec $(OPAM_COMMON_ARGS) -- dune
 BLOGWARE := _build/default/$(BLOGWARE_DIR)/bin/main.exe
 BLOGWARE_BENCH := _build/default/$(BLOGWARE_DIR)/bin/bench.exe
 BLOGWARE_BUILD_DIR := _build
-ARTICLE_SOURCES := about.tex $(wildcard posts/*.tex)
+ARTICLE_SOURCES := about.rftex $(wildcard posts/*.rftex)
 
 .PHONY: help
 help:

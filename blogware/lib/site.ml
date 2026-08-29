@@ -1,5 +1,5 @@
 (* Full-site loader and renderer.
-   It loads all posts/*.tex, parses, elaborates, and writes the rendered HTML/XML output. *)
+   It loads all posts/*.rftex, parses, elaborates, and writes the rendered HTML/XML output. *)
 
 open Document
 
@@ -95,10 +95,10 @@ let load_notes (input_dir : string) : (note list, string) result =
   if not (is_directory notes_dir) then Ok []
   else begin
     let files = list_dir notes_dir in
-    let tex_files =
-      List.filter (fun f -> Filename.extension f = ".tex") files
+    let rftex_files =
+      List.filter (fun f -> Filename.extension f = ".rftex") files
     in
-    let sorted = List.sort compare tex_files in
+    let sorted = List.sort compare rftex_files in
     let rec load_all acc = function
       | [] -> Ok (List.rev acc)
       | f :: rest -> (
@@ -120,17 +120,17 @@ let load_bib (input_dir : string) : (Bib.entry list, string) result =
     | Error err -> Error (Error.format_parse_error content err)
     | Ok entries -> Ok entries
 
-(* Load and sort all *.tex files under {input}/posts, newest-first. *)
+(* Load and sort all *.rftex files under {input}/posts, newest-first. *)
 let load_articles (input_dir : string) : (article list, string) result =
   let posts_dir = input_dir // "posts" in
   if not (is_directory posts_dir) then
     Error ("Posts directory not found: " ^ posts_dir)
   else begin
     let files = list_dir posts_dir in
-    let tex_files =
-      List.filter (fun f -> Filename.extension f = ".tex") files
+    let rftex_files =
+      List.filter (fun f -> Filename.extension f = ".rftex") files
     in
-    let sorted = List.sort (fun a b -> compare b a) tex_files in
+    let sorted = List.sort (fun a b -> compare b a) rftex_files in
     let rec load_all acc = function
       | [] -> Ok (List.rev acc)
       | f :: rest -> (
@@ -183,8 +183,8 @@ let strip_leading_slash s =
   | Some stripped -> stripped
   | None -> s
 
-(* Replace the ".html" suffix with ".tex". *)
-let html_to_tex path = Filename.remove_extension path ^ ".tex"
+(* Replace the ".html" suffix with ".rftex". *)
+let html_to_rftex path = Filename.remove_extension path ^ ".rftex"
 
 let take n lst =
   let rec aux acc n = function
@@ -236,18 +236,18 @@ let render_one_note ~bib ~all_articles ~all_notes ~keyword_articles
   Html.render (Layout.render_note_page note body articles)
 
 (* Render the standalone page at [page_path] (e.g. "/about.html"). The
-   source file is the sibling [.tex] in [input_dir]. *)
+   source file is the sibling [.rftex] in [input_dir]. *)
 let render_standalone_from ~bib ~input_dir ~all_articles ~all_notes page_path :
     (string, string) result =
-  let tex_path = input_dir // strip_leading_slash (html_to_tex page_path) in
-  let slug = take_base_name tex_path in
-  let content = read_file_contents tex_path in
-  match Tex_parser.parse_document ~source_name:tex_path content with
+  let rftex_path = input_dir // strip_leading_slash (html_to_rftex page_path) in
+  let slug = take_base_name rftex_path in
+  let content = read_file_contents rftex_path in
+  match Tex_parser.parse_document ~source_name:rftex_path content with
   | Error err -> Error (Error.format_parse_error content err)
   | Ok nodes -> (
       match Elaborate.elaborate slug nodes with
       | Error err ->
-          Error (Error.format_elab_error ~source_name:tex_path content err)
+          Error (Error.format_elab_error ~source_name:rftex_path content err)
       | Ok article ->
           let ref_table =
             Layout.build_global_ref_table all_articles all_notes
@@ -320,13 +320,13 @@ let rendered_outputs (config : site_config) :
                     (match le_type with
                       | Static_files -> Ok ()
                       | Index_page -> (
-                          let index_tex = input_dir // "index.tex" in
-                          if not (is_regular_file index_tex) then
-                            Error ("Index file not found: " ^ index_tex)
+                          let index_rftex = input_dir // "index.rftex" in
+                          if not (is_regular_file index_rftex) then
+                            Error ("Index file not found: " ^ index_rftex)
                           else
-                            let content = read_file_contents index_tex in
+                            let content = read_file_contents index_rftex in
                             match
-                              Tex_parser.parse_document ~source_name:index_tex
+                              Tex_parser.parse_document ~source_name:index_rftex
                                 content
                             with
                             | Error err ->
@@ -336,7 +336,7 @@ let rendered_outputs (config : site_config) :
                                 | Error err ->
                                     Error
                                       (Error.format_elab_error
-                                         ~source_name:index_tex content err)
+                                         ~source_name:index_rftex content err)
                                 | Ok index_article ->
                                     let ref_table =
                                       Layout.build_global_ref_table articles

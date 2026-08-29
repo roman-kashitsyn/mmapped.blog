@@ -1,4 +1,4 @@
-(* Profiling harness: parse, elaborate, and render a single .tex file. *)
+(* Profiling harness: parse, elaborate, and render a single .rftex file. *)
 
 open Blogware
 
@@ -29,4 +29,4 @@ let () =
                      article.Document.art_body)
               in
               print_string html))
-  | _ -> prerr_endline "Usage: profile <file.tex>"
+  | _ -> prerr_endline "Usage: profile <file.rftex>"

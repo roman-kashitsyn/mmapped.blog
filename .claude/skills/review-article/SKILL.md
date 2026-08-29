@@ -2,15 +2,15 @@
 name: review-article
 description: >
   Review a technical article written in classical style.
-  Use when the user asks to review, proofread, or critique a blog post or essay (.tex file).
+  Use when the user asks to review, proofread, or critique a blog post or essay (.rftex file).
   Checks prose quality, argument structure and clarity.
 disable-model-invocation: true
 allowed-tools: Read Grep Glob
 arguments:
   - name: file
     required: false
-    description: Path to the .tex file to review. If omitted, review the article with unstaged changes.
-argument-hint: "[path/to/article.tex]"
+    description: Path to the .rftex file to review. If omitted, review the article with unstaged changes.
+argument-hint: "[path/to/article.rftex]"
 ---
 
 # Technical Article Review
@@ -21,7 +21,7 @@ Articles use LaTeX with a custom document class.
 
 ## How to find the article
 
-If `$file` is provided, review that file. Otherwise, run `git diff --name-only` and look for modified `.tex` files under `posts/`.
+If `$file` is provided, review that file. Otherwise, run `git diff --name-only` and look for modified `.rftex` files under `posts/`.
 
 ## Review process
 

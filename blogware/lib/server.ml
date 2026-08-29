@@ -100,7 +100,7 @@ let find_note (notes : note list) (path : string) : note option =
   List.find_opt (fun (n : note) -> Text.equal_string n.note_url path) notes
 
 let serve_index fd (config : site_config) : unit =
-  let index_tex = Filename.concat config.site_input "index.tex" in
+  let index_rftex = Filename.concat config.site_input "index.rftex" in
   match Site.load_bib config.site_input with
   | Error err -> send_response fd 500 "text/plain" err
   | Ok bib -> (
@@ -110,13 +110,13 @@ let serve_index fd (config : site_config) : unit =
           match Site.load_notes config.site_input with
           | Error err -> send_response fd 500 "text/plain" err
           | Ok notes -> (
-              if not (Sys.file_exists index_tex) then
+              if not (Sys.file_exists index_rftex) then
                 send_response fd 404 "text/plain"
-                  ("Index file not found: " ^ index_tex)
+                  ("Index file not found: " ^ index_rftex)
               else
-                let content = Site.read_file_contents index_tex in
+                let content = Site.read_file_contents index_rftex in
                 match
-                  Tex_parser.parse_document ~source_name:index_tex content
+                  Tex_parser.parse_document ~source_name:index_rftex content
                 with
                 | Error err ->
                     send_response fd 500 "text/plain"
@@ -125,7 +125,7 @@ let serve_index fd (config : site_config) : unit =
                     match Elaborate.elaborate "index" nodes with
                     | Error err ->
                         send_response fd 500 "text/plain"
-                          (Error.format_elab_error ~source_name:index_tex
+                          (Error.format_elab_error ~source_name:index_rftex
                              content err)
                     | Ok index_article ->
                         let ref_table =
@@ -237,7 +237,7 @@ let read_file path =
       really_input_string ic n)
 
 let serve_page fd (config : site_config) (name : string) : unit =
-  let path = Filename.concat config.site_input (name ^ ".tex") in
+  let path = Filename.concat config.site_input (name ^ ".rftex") in
   if not (Sys.file_exists path) then
     send_response fd 404 "text/plain" "Not Found"
   else

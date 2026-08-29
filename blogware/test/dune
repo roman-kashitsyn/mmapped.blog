@@ -10,7 +10,7 @@
  (deps
   (source_tree ../../posts)
   (source_tree ../../notes)
-  ../../index.tex
+  ../../index.rftex
   (source_tree snapshots))
  (action
   (progn
