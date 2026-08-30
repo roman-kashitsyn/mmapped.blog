@@ -1,0 +1,24 @@
+{
+  "name": "tree-sitter-rftex",
+  "version": "0.1.0",
+  "description": "Tree-sitter grammar for blogware's .rftex markup",
+  "license": "CC-BY-4.0",
+  "main": "bindings/node",
+  "keywords": ["parser", "tree-sitter", "rftex", "latex"],
+  "files": ["grammar.js", "queries/*", "src/**"],
+  "devDependencies": {
+    "tree-sitter-cli": "^0.25.10"
+  },
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.rftex",
+      "file-types": ["rftex"],
+      "highlights": "queries/highlights.scm",
+      "injections": "queries/injections.scm"
+    }
+  ]
+}

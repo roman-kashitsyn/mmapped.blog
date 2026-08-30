@@ -1,0 +1,83 @@
+================================================================================
+Tabular with options, rules and cells
+================================================================================
+\begin{tabular}[uniform]{l l r}
+From & To & Amount \\
+\hrule
+Allen & Bardot & 6.66 \\
+\end{tabular}
+--------------------------------------------------------------------------------
+
+(source_file
+  (tabular
+    (environment_name)
+    (options
+      (option))
+    (column_spec
+      (column_alignment))
+    (text)
+    (cell_separator)
+    (text)
+    (cell_separator)
+    (text)
+    (row_separator)
+    (text)
+    (command
+      (command_name))
+    (text)
+    (cell_separator)
+    (text)
+    (cell_separator)
+    (text)
+    (row_separator)
+    (text)
+    (environment_name)))
+
+================================================================================
+Starred tabular with multicolumn
+================================================================================
+\begin{tabular*}{r c c}
+a & b & c \\
+\multicolumn{3}{c}{\cdots} \\
+\end{tabular*}
+--------------------------------------------------------------------------------
+
+(source_file
+  (tabular
+    (environment_name)
+    (column_spec
+      (column_alignment))
+    (text)
+    (cell_separator)
+    (text)
+    (cell_separator)
+    (text)
+    (row_separator)
+    (text)
+    (command
+      (command_name)
+      (group
+        (text))
+      (group
+        (text))
+      (group
+        (command
+          (command_name))))
+    (text)
+    (row_separator)
+    (text)
+    (environment_name)))
+
+================================================================================
+Empty first cell
+================================================================================
+\begin{tabular}{c}\\\end{tabular}
+--------------------------------------------------------------------------------
+
+(source_file
+  (tabular
+    (environment_name)
+    (column_spec
+      (column_alignment))
+    (row_separator)
+    (environment_name)))

@@ -1,0 +1,142 @@
+================================================================================
+Generic environment
+================================================================================
+\begin{itemize}
+\item One
+\end{itemize}
+--------------------------------------------------------------------------------
+
+(source_file
+  (environment
+    (environment_name)
+    (text)
+    (command
+      (command_name))
+    (text)
+    (environment_name)))
+
+================================================================================
+Nested environments with options
+================================================================================
+\begin{figure}[grayscale-diagram,medium-size]
+\includegraphics{/images/x.webp}
+\end{figure}
+--------------------------------------------------------------------------------
+
+(source_file
+  (environment
+    (environment_name)
+    (options
+      (option)
+      (option))
+    (text)
+    (command
+      (command_name)
+      (group
+        (text)))
+    (text)
+    (environment_name)))
+
+================================================================================
+Code block keeps braces literal but commands live
+================================================================================
+\begin{code}[good,cpp]
+struct Point { int x; };
+let \b{s} = map{k: v};
+// \ldots and \circled{1}
+\end{code}
+--------------------------------------------------------------------------------
+
+(source_file
+  (code_block
+    (environment_name)
+    (options
+      (option)
+      (option))
+    (code_body
+      (code_text)
+      (code_text)
+      (code_text)
+      (command
+        (command_name)
+        (group
+          (text)))
+      (code_text)
+      (code_text)
+      (code_text)
+      (command
+        (command_name))
+      (code_text)
+      (command
+        (command_name)
+        (group
+          (text)))
+      (code_text))
+    (environment_name)))
+
+================================================================================
+Code block with escaped percent and backslash
+================================================================================
+\begin{code}[ocaml]
+Scanf.bscanf b "Register A: \%d\\nRegister B: \%d"
+\end{code}
+--------------------------------------------------------------------------------
+
+(source_file
+  (code_block
+    (environment_name)
+    (options
+      (option))
+    (code_body
+      (code_text)
+      (escaped_char)
+      (code_text)
+      (escaped_char)
+      (code_text)
+      (escaped_char)
+      (code_text))
+    (environment_name)))
+
+================================================================================
+Verbatim body is raw
+================================================================================
+\begin{verbatim}
+16.42%  $ cargo install twiggy
+\not{a} command   │ ┊ ─ Σ
+\end{verbatim}
+--------------------------------------------------------------------------------
+
+(source_file
+  (verbatim_block
+    (environment_name)
+    (verbatim_body)
+    (environment_name)))
+
+================================================================================
+Verbatim with options
+================================================================================
+\begin{verbatim}[j]
+%b <- %a mod 8
+\end{verbatim}
+--------------------------------------------------------------------------------
+
+(source_file
+  (verbatim_block
+    (environment_name)
+    (options
+      (option))
+    (verbatim_body)
+    (environment_name)))
+
+================================================================================
+Verbatim body keeps the newline after \begin
+================================================================================
+\begin{verbatim}
+\end{verbatim}
+--------------------------------------------------------------------------------
+
+(source_file
+  (verbatim_block
+    (environment_name)
+    (verbatim_body)
+    (environment_name)))

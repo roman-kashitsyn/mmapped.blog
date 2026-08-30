@@ -1,0 +1,28 @@
+{
+  "grammars": [
+    {
+      "name": "rftex",
+      "camelcase": "Rftex",
+      "scope": "source.rftex",
+      "path": ".",
+      "file-types": ["rftex"],
+      "highlights": ["queries/highlights.scm"],
+      "injections": ["queries/injections.scm"]
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "CC-BY-4.0",
+    "description": "Tree-sitter grammar for blogware's .rftex markup",
+    "authors": [{ "name": "Roman Kashitsyn" }]
+  },
+  "bindings": {
+    "c": true,
+    "go": false,
+    "node": false,
+    "python": false,
+    "rust": true,
+    "swift": false,
+    "zig": false
+  }
+}
