@@ -1,7 +1,7 @@
 # tree-sitter-rftex
 
 A [tree-sitter](https://tree-sitter.github.io/) grammar for `.rftex`,
-the LaTeX flavor used by every post in this blog.
+the LaTeX flavor used by every post on [mmapped.blog](https://mmapped.blog).
 
 ## Using it
 

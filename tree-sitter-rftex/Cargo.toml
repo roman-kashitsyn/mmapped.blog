@@ -1,9 +1,15 @@
 [package]
 name = "tree-sitter-rftex"
+authors = ["Roman Kashitsyn <roman.kashitsyn@gmail.com>"]
 description = "rftex grammar for tree-sitter"
-version = "0.1.0"
+repository = "https://github.com/roman-kashitsyn/mmapped.blog"
+homepage = "https://mmapped.blog"
+documentation = "https://docs.rs/tree-sitter-rftex"
+version = "0.1.1"
 license = "CC-BY-4.0"
 readme = "README.md"
+links = "tree-sitter-rftex"
+rust-version = "1.77"
 keywords = ["incremental", "parsing", "tree-sitter", "rftex"]
 categories = ["parser-implementations", "parsing", "text-editors"]
 edition = "2021"
