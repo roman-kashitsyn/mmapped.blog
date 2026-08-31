@@ -270,8 +270,12 @@
     "url": {
       "type": "TOKEN",
       "content": {
-        "type": "PATTERN",
-        "value": "[A-Za-z0-9\\-._~:\\/?#\\[\\]@!$&()*+,;%=']+"
+        "type": "PREC",
+        "value": 1,
+        "content": {
+          "type": "PATTERN",
+          "value": "[A-Za-z0-9\\-._~:\\/?#\\[\\]@!$&()*+,;%=']+"
+        }
       }
     },
     "options": {
@@ -656,6 +660,18 @@
             {
               "type": "STRING",
               "value": "}"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_verbatim_before_options"
+            },
+            {
+              "type": "BLANK"
             }
           ]
         },
@@ -1256,6 +1272,10 @@
     {
       "type": "SYMBOL",
       "name": "_error_sentinel"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_verbatim_before_options"
     }
   ],
   "inline": [],

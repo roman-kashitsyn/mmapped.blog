@@ -12,11 +12,18 @@
 //    (`skip_char ' '`, tex_parser.ml:455). It has to be external because the `text`
 //    token would otherwise win on match length and absorb it, which would silently
 //    reintroduce the space that `\code{1355\ldots 48de}` relies on being dropped.
+//  - VERBATIM_BEFORE_OPTIONS: never lexed. The grammar places it before the
+//    verbatim option list so that the pre-options parser state has a distinct
+//    valid-symbols set: the scanner can decline `[` there (letting the parser take
+//    it as the option list) while accepting `[` as body text afterwards, in
+//    `\begin{verbatim}[j][output]`. Like `_error_sentinel`, it only discriminates
+//    scanner states.
 
 enum TokenType {
   VERBATIM_BODY,
   CMD_SPACE,
   ERROR_SENTINEL,
+  VERBATIM_BEFORE_OPTIONS,
 };
 
 static const char END_VERBATIM[] = "\\end{verbatim}";
@@ -92,10 +99,12 @@ bool tree_sitter_rftex_external_scanner_scan(void *payload, TSLexer *lexer,
   }
 
   if (valid_symbols[VERBATIM_BODY]) {
-    // `\begin{verbatim}[opts]` — the option list is still ahead of the body, and the
-    // external scanner runs before the internal lexer, so decline the `[` explicitly.
-    // A real body always starts with the newline that follows `\begin{verbatim}`.
-    if (lexer->lookahead == '[') {
+    // `\begin{verbatim}[opts]` — at the start of the environment the option list
+    // may still be ahead of the body, and the external scanner runs before the
+    // internal lexer, so decline the `[` explicitly. VERBATIM_BEFORE_OPTIONS is
+    // valid only in that pre-options state, so a `[` after an option list
+    // (`\begin{verbatim}[j][output]`) is body text.
+    if (lexer->lookahead == '[' && valid_symbols[VERBATIM_BEFORE_OPTIONS]) {
       return false;
     }
     return scan_verbatim_body(lexer);

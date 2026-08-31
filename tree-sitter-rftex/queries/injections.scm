@@ -7,6 +7,7 @@
 
 ((code_block
    (options (option) @injection.language)
-   (code_body) @injection.content))
+   (code_body) @injection.content)
+ (#set! injection.include-children))
 
 ; \begin{verbatim}[j] is deliberately not injected: verbatim is raw output, not source.

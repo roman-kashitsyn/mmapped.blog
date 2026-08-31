@@ -129,6 +129,20 @@ Verbatim with options
     (environment_name)))
 
 ================================================================================
+Bracket text after verbatim options is body text
+================================================================================
+\begin{verbatim}[j][output]\end{verbatim}
+--------------------------------------------------------------------------------
+
+(source_file
+  (verbatim_block
+    (environment_name)
+    (options
+      (option))
+    (verbatim_body)
+    (environment_name)))
+
+================================================================================
 Verbatim body keeps the newline after \begin
 ================================================================================
 \begin{verbatim}

@@ -48,13 +48,13 @@ The grammar defines special cases for commands that require custom lexing:
    A precise parser identifies '-1' as a literal.
 3. Tree-sitter parser doesn't check whether \begin/\end pairs match correctly.
 4. Tree-sitter parser doesn't tokenize paragraph splits.
-5. Tree-sitter parser doesn't remove a trailing newline after `\begin{code}`, `\begin{verbatim}` and `\begin{align*}`.
-   It leaves the newline as part of the body.
+5. Tree-sitter parser doesn't remove the newline that immediately follows `\begin{code}`, `\begin{verbatim}` and `\begin{align*}`.
+   It leaves that newline as part of the body.
 6. Tree-sitter parser classifies optional bracket arguments and positional arguments
-   (e.g., `\bibref[p. 5]{key}` as a single generic `option` token.
+   (e.g., `\bibref[p. 5]{key}`) as a single generic `option` token.
 7. `\operatorname{lcm}` and similar commands emit a `math_group` with individual symbols
    rather than a symbol token.
-8. Quotations marks stay plain text.
+8. Quotation marks stay plain text.
 9. Tree sitter doesn't accept a space after `\begin` (`\begin {code}`).
 10. `\end{foo}` with no matching `\begin` is not a parse error.
 11. A command followed by two spaces and an argument (`\emph  {x}`) is not a parse error.

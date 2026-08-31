@@ -75,6 +75,7 @@ help:
 	@echo "hooks        - install the git hooks from .githooks"
 	@echo "grammar      - regenerate the tree-sitter grammar parser"
 	@echo "grammar-test - run the tree-sitter grammar test suite"
+	@echo "parse-tree   - print the tree-sitter parse tree for FILE"
 	@echo "dir-locals   - generate .dir-locals.el for Emacs"
 
 $(OPAM_STATE_ROOT)/config: $(OPAM)
@@ -154,6 +155,11 @@ grammar-test:
 	@cd $(GRAMMAR_DIR) && npx tree-sitter parse --quiet --stat \
 		'../index.rftex' '../posts/*.rftex' '../notes/*.rftex'
 	cargo test --manifest-path $(GRAMMAR_DIR)/Cargo.toml
+
+# Print the parse tree for a single .rftex file as a pretty-printed CST.
+.PHONY: parse-tree
+parse-tree:
+	cd $(GRAMMAR_DIR) && npx tree-sitter parse --cst '../$(FILE)'
 
 .PHONY: hooks
 hooks:

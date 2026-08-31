@@ -57,7 +57,12 @@ module.exports = grammar({
   // blogware skips them in every context except verbatim (tex_parser.ml:509-518).
   extras: ($) => [$.comment],
 
-  externals: ($) => [$.verbatim_body, $._cmd_space, $._error_sentinel],
+  externals: ($) => [
+    $.verbatim_body,
+    $._cmd_space,
+    $._error_sentinel,
+    $._verbatim_before_options,
+  ],
 
   rules: {
     source_file: ($) => repeat($._content),
@@ -125,7 +130,11 @@ module.exports = grammar({
     // `url` is optional so a half-typed `\href{` parses instead of stranding the
     // whole line in an ERROR node. blogware rejects an empty URL (take_while1).
     url_group: ($) => seq('{', optional($.url), '}'),
-    url: ($) => token(URL),
+    // Higher precedence so a leading `%` (a valid first URL character, e.g.
+    // `\href{%2Fdocs}{...}`) is lexed as the URL rather than as the `comment`
+    // extra, which would otherwise win on match length and swallow the rest of
+    // the line.
+    url: ($) => token(prec(1, URL)),
 
     // `[sym,sym,...]` (tex_parser.ml:358-372). The option token is deliberately looser
     // than `is_symbolic` so that `\bibref[p. 5]{key}` (`Opt_arg At_seq`, syntax.ml:469)
@@ -210,6 +219,10 @@ module.exports = grammar({
     verbatim_block: ($) =>
       seq(
         envDelims($, 'verbatim').begin(),
+        // Never lexed; marks the state where the option list may still follow.
+        // Its presence in valid_symbols lets the scanner decline `[` only before
+        // the options are consumed (see src/scanner.c).
+        optional($._verbatim_before_options),
         optional($.options),
         optional($.verbatim_body),
         envDelims($, 'verbatim').end(),

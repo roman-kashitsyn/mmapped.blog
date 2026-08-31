@@ -117,6 +117,20 @@ URL argument keeps percent, ampersand and hash literal
       (text))))
 
 ================================================================================
+URL argument can start with a percent escape
+================================================================================
+\href{%2Fdocs}{docs}
+--------------------------------------------------------------------------------
+
+(source_file
+  (url_command
+    (url_command_name)
+    (url_group
+      (url))
+    (group
+      (text))))
+
+================================================================================
 Unknown command falls back to the generic rule
 ================================================================================
 \nosuchcommand{arg}
