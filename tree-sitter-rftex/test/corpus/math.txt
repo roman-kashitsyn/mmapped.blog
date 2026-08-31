@@ -1,0 +1,260 @@
+================================================================================
+Inline math atoms
+================================================================================
+$a+b$ and $42$ and $-1$
+--------------------------------------------------------------------------------
+
+(source_file
+  (inline_math
+    (math_symbol)
+    (math_operator)
+    (math_symbol))
+  (text)
+  (inline_math
+    (math_number))
+  (text)
+  (inline_math
+    (math_operator)
+    (math_number)))
+
+================================================================================
+Subscript and superscript
+================================================================================
+$x_i$ and $x^2$ and $x_i^2$ and $f^{\prime}(x)$
+--------------------------------------------------------------------------------
+
+(source_file
+  (inline_math
+    (math_term
+      (math_symbol)
+      (math_symbol)))
+  (text)
+  (inline_math
+    (math_term
+      (math_symbol)
+      (math_number)))
+  (text)
+  (inline_math
+    (math_term
+      (math_symbol)
+      (math_symbol)
+      (math_number)))
+  (text)
+  (inline_math
+    (math_term
+      (math_symbol)
+      (math_group
+        (math_command
+          (command_name))))
+    (math_operator)
+    (math_symbol)
+    (math_operator)))
+
+================================================================================
+Math commands with group arguments
+================================================================================
+$\frac{a}{b}$ and $\mathcal{Abc}$ and $\binom{100}{12} = 5$
+--------------------------------------------------------------------------------
+
+(source_file
+  (inline_math
+    (math_command
+      (command_name)
+      (math_group
+        (math_symbol))
+      (math_group
+        (math_symbol))))
+  (text)
+  (inline_math
+    (math_command
+      (command_name)
+      (math_group
+        (math_symbol)
+        (math_symbol)
+        (math_symbol))))
+  (text)
+  (inline_math
+    (math_command
+      (command_name)
+      (math_group
+        (math_number))
+      (math_group
+        (math_number)))
+    (math_operator)
+    (math_number)))
+
+================================================================================
+Ampersand is an operator in plain math
+================================================================================
+$a&b$
+--------------------------------------------------------------------------------
+
+(source_file
+  (inline_math
+    (math_symbol)
+    (math_operator)
+    (math_symbol)))
+
+================================================================================
+Space between a math command and the next atom
+================================================================================
+$\mathrm{distance} \times \mathrm{time}^{-2}$
+--------------------------------------------------------------------------------
+
+(source_file
+  (inline_math
+    (math_command
+      (command_name)
+      (math_group
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)))
+    (math_command
+      (command_name))
+    (math_term
+      (math_command
+        (command_name)
+        (math_group
+          (math_symbol)
+          (math_symbol)
+          (math_symbol)
+          (math_symbol)))
+      (math_group
+        (math_operator)
+        (math_number)))))
+
+================================================================================
+Left and right take a bare delimiter
+================================================================================
+$\operatorname{ActiveSet}\left(v\right) \setminus \left\{v\right\}$
+--------------------------------------------------------------------------------
+
+(source_file
+  (inline_math
+    (math_command
+      (command_name)
+      (math_group
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)
+        (math_symbol)))
+    (math_command
+      (command_name))
+    (math_operator)
+    (math_symbol)
+    (math_command
+      (command_name))
+    (math_operator)
+    (math_command
+      (command_name))
+    (math_command
+      (command_name))
+    (escaped_char)
+    (math_symbol)
+    (math_command
+      (command_name))
+    (escaped_char)))
+
+================================================================================
+Display math
+================================================================================
+\[ \sum_{i=k}^n D_f(i) = f(n) - f(k-1) \]
+--------------------------------------------------------------------------------
+
+(source_file
+  (display_math
+    (math_term
+      (math_command
+        (command_name))
+      (math_group
+        (math_symbol)
+        (math_operator)
+        (math_symbol))
+      (math_symbol))
+    (math_term
+      (math_symbol)
+      (math_symbol))
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (math_number)
+    (math_operator)))
+
+================================================================================
+Align environment
+================================================================================
+\begin{align*}
+  D_f(i) &=& f(i+1) - f(i) \\
+  S_f(i) &=& \sum_{k=0}^i f(k)
+\end{align*}
+--------------------------------------------------------------------------------
+
+(source_file
+  (align_block
+    (environment_name)
+    (math_operator)
+    (math_term
+      (math_symbol)
+      (math_symbol))
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (cell_separator)
+    (math_operator)
+    (cell_separator)
+    (math_symbol)
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (math_number)
+    (math_operator)
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (row_separator)
+    (math_operator)
+    (math_term
+      (math_symbol)
+      (math_symbol))
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (cell_separator)
+    (math_operator)
+    (cell_separator)
+    (math_term
+      (math_command
+        (command_name))
+      (math_group
+        (math_symbol)
+        (math_operator)
+        (math_number))
+      (math_symbol))
+    (math_symbol)
+    (math_operator)
+    (math_symbol)
+    (math_operator)
+    (math_operator)
+    (environment_name)))

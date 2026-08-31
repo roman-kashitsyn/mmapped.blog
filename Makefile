@@ -51,6 +51,10 @@ BLOGWARE_BENCH := _build/default/$(BLOGWARE_DIR)/bin/bench.exe
 BLOGWARE_BUILD_DIR := _build
 ARTICLE_SOURCES := about.rftex $(wildcard posts/*.rftex)
 
+# Tree-sitter grammar for .rftex. Its toolchain (node, cargo) is deliberately kept off
+# the `test` target, and therefore off the pre-commit hook.
+GRAMMAR_DIR := tree-sitter-rftex
+
 .PHONY: help
 help:
 	@echo "Supported targets"
@@ -69,6 +73,9 @@ help:
 	@echo "deps         - install the minimal build dependencies"
 	@echo "dev-deps     - install optional documentation tooling"
 	@echo "hooks        - install the git hooks from .githooks"
+	@echo "grammar      - regenerate the tree-sitter grammar parser"
+	@echo "grammar-test - run the tree-sitter grammar test suite"
+	@echo "parse-tree   - print the tree-sitter parse tree for FILE"
 	@echo "dir-locals   - generate .dir-locals.el for Emacs"
 
 $(OPAM_STATE_ROOT)/config: $(OPAM)
@@ -132,6 +139,27 @@ deps: $(OPAM_ROOT)/.deps
 
 .PHONY: dev-deps
 dev-deps: $(OPAM_ROOT)/.dev-deps
+
+# Regenerate src/parser.c from grammar.js. The generated sources are committed, so
+# this only needs running after editing the grammar.
+.PHONY: grammar
+grammar:
+	cd $(GRAMMAR_DIR) && npm install && npx tree-sitter generate
+
+# Corpus fixtures, then the fidelity gate: every real .rftex file must parse with no
+# ERROR node. `cargo test` repeats the gate through the Rust bindings and also checks
+# that the shipped queries compile.
+.PHONY: grammar-test
+grammar-test:
+	cd $(GRAMMAR_DIR) && npx tree-sitter test
+	@cd $(GRAMMAR_DIR) && npx tree-sitter parse --quiet --stat \
+		'../index.rftex' '../posts/*.rftex' '../notes/*.rftex'
+	cargo test --manifest-path $(GRAMMAR_DIR)/Cargo.toml
+
+# Print the parse tree for a single .rftex file as a pretty-printed CST.
+.PHONY: parse-tree
+parse-tree:
+	cd $(GRAMMAR_DIR) && npx tree-sitter parse --cst '../$(FILE)'
 
 .PHONY: hooks
 hooks:

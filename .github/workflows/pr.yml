@@ -2,6 +2,29 @@ on: [pull_request]
 
 name: Build website
 jobs:
+  grammar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: tree-sitter-rftex
+
+      - name: Install grammar dependencies
+        working-directory: tree-sitter-rftex
+        run: npm ci
+
+      - name: Run grammar tests
+        run: make grammar-test
+
   publish:
     runs-on: ubuntu-latest
 

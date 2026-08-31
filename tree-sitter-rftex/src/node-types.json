@@ -1,0 +1,967 @@
+[
+  {
+    "type": "align_block",
+    "named": true,
+    "fields": {
+      "end_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "environment_name",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "environment_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "cell_separator",
+          "named": true
+        },
+        {
+          "type": "escaped_char",
+          "named": true
+        },
+        {
+          "type": "math_command",
+          "named": true
+        },
+        {
+          "type": "math_group",
+          "named": true
+        },
+        {
+          "type": "math_number",
+          "named": true
+        },
+        {
+          "type": "math_operator",
+          "named": true
+        },
+        {
+          "type": "math_symbol",
+          "named": true
+        },
+        {
+          "type": "math_term",
+          "named": true
+        },
+        {
+          "type": "row_separator",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "code_block",
+    "named": true,
+    "fields": {
+      "end_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "environment_name",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "environment_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "code_body",
+          "named": true
+        },
+        {
+          "type": "options",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "code_body",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "code_text",
+          "named": true
+        },
+        {
+          "type": "command",
+          "named": true
+        },
+        {
+          "type": "display_math",
+          "named": true
+        },
+        {
+          "type": "escaped_char",
+          "named": true
+        },
+        {
+          "type": "inline_math",
+          "named": true
+        },
+        {
+          "type": "url_command",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "column_spec",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "column_alignment",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "command",
+    "named": true,
+    "fields": {
+      "argument": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "group",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "command_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "options",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "display_math",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "escaped_char",
+          "named": true
+        },
+        {
+          "type": "math_command",
+          "named": true
+        },
+        {
+          "type": "math_group",
+          "named": true
+        },
+        {
+          "type": "math_number",
+          "named": true
+        },
+        {
+          "type": "math_operator",
+          "named": true
+        },
+        {
+          "type": "math_symbol",
+          "named": true
+        },
+        {
+          "type": "math_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "environment",
+    "named": true,
+    "fields": {
+      "end_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "environment_name",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "environment_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "align_block",
+          "named": true
+        },
+        {
+          "type": "code_block",
+          "named": true
+        },
+        {
+          "type": "command",
+          "named": true
+        },
+        {
+          "type": "display_math",
+          "named": true
+        },
+        {
+          "type": "environment",
+          "named": true
+        },
+        {
+          "type": "escaped_char",
+          "named": true
+        },
+        {
+          "type": "group",
+          "named": true
+        },
+        {
+          "type": "inline_math",
+          "named": true
+        },
+        {
+          "type": "options",
+          "named": true
+        },
+        {
+          "type": "tabular",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "url_command",
+          "named": true
+        },
+        {
+          "type": "verbatim_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "group",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "align_block",
+          "named": true
+        },
+        {
+          "type": "code_block",
+          "named": true
+        },
+        {
+          "type": "command",
+          "named": true
+        },
+        {
+          "type": "display_math",
+          "named": true
+        },
+        {
+          "type": "environment",
+          "named": true
+        },
+        {
+          "type": "escaped_char",
+          "named": true
+        },
+        {
+          "type": "group",
+          "named": true
+        },
+        {
+          "type": "inline_math",
+          "named": true
+        },
+        {
+          "type": "tabular",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "url_command",
+          "named": true
+        },
+        {
+          "type": "verbatim_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "inline_math",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "escaped_char",
+          "named": true
+        },
+        {
+          "type": "math_command",
+          "named": true
+        },
+        {
+          "type": "math_group",
+          "named": true
+        },
+        {
+          "type": "math_number",
+          "named": true
+        },
+        {
+          "type": "math_operator",
+          "named": true
+        },
+        {
+          "type": "math_symbol",
+          "named": true
+        },
+        {
+          "type": "math_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "math_command",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "command_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "math_group",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "math_group",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "escaped_char",
+          "named": true
+        },
+        {
+          "type": "math_command",
+          "named": true
+        },
+        {
+          "type": "math_group",
+          "named": true
+        },
+        {
+          "type": "math_number",
+          "named": true
+        },
+        {
+          "type": "math_operator",
+          "named": true
+        },
+        {
+          "type": "math_symbol",
+          "named": true
+        },
+        {
+          "type": "math_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "math_term",
+    "named": true,
+    "fields": {
+      "nucleus": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "escaped_char",
+            "named": true
+          },
+          {
+            "type": "math_command",
+            "named": true
+          },
+          {
+            "type": "math_group",
+            "named": true
+          },
+          {
+            "type": "math_number",
+            "named": true
+          },
+          {
+            "type": "math_operator",
+            "named": true
+          },
+          {
+            "type": "math_symbol",
+            "named": true
+          }
+        ]
+      },
+      "sub": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "escaped_char",
+            "named": true
+          },
+          {
+            "type": "math_command",
+            "named": true
+          },
+          {
+            "type": "math_group",
+            "named": true
+          },
+          {
+            "type": "math_number",
+            "named": true
+          },
+          {
+            "type": "math_operator",
+            "named": true
+          },
+          {
+            "type": "math_symbol",
+            "named": true
+          }
+        ]
+      },
+      "sup": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "escaped_char",
+            "named": true
+          },
+          {
+            "type": "math_command",
+            "named": true
+          },
+          {
+            "type": "math_group",
+            "named": true
+          },
+          {
+            "type": "math_number",
+            "named": true
+          },
+          {
+            "type": "math_operator",
+            "named": true
+          },
+          {
+            "type": "math_symbol",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "option",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "options",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "option",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "source_file",
+    "named": true,
+    "root": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "align_block",
+          "named": true
+        },
+        {
+          "type": "code_block",
+          "named": true
+        },
+        {
+          "type": "command",
+          "named": true
+        },
+        {
+          "type": "display_math",
+          "named": true
+        },
+        {
+          "type": "environment",
+          "named": true
+        },
+        {
+          "type": "escaped_char",
+          "named": true
+        },
+        {
+          "type": "group",
+          "named": true
+        },
+        {
+          "type": "inline_math",
+          "named": true
+        },
+        {
+          "type": "tabular",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "url_command",
+          "named": true
+        },
+        {
+          "type": "verbatim_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tabular",
+    "named": true,
+    "fields": {
+      "columns": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "column_spec",
+            "named": true
+          }
+        ]
+      },
+      "end_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "environment_name",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "environment_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "cell_separator",
+          "named": true
+        },
+        {
+          "type": "command",
+          "named": true
+        },
+        {
+          "type": "display_math",
+          "named": true
+        },
+        {
+          "type": "escaped_char",
+          "named": true
+        },
+        {
+          "type": "group",
+          "named": true
+        },
+        {
+          "type": "inline_math",
+          "named": true
+        },
+        {
+          "type": "options",
+          "named": true
+        },
+        {
+          "type": "row_separator",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "url_command",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "url_command",
+    "named": true,
+    "fields": {
+      "argument": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "group",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "url_command_name",
+            "named": true
+          }
+        ]
+      },
+      "url": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "url_group",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "options",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "url_command_name",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "url_group",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "url",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "verbatim_block",
+    "named": true,
+    "fields": {
+      "end_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "environment_name",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "environment_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "options",
+          "named": true
+        },
+        {
+          "type": "verbatim_body",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "$",
+    "named": false
+  },
+  {
+    "type": ",",
+    "named": false
+  },
+  {
+    "type": "[",
+    "named": false
+  },
+  {
+    "type": "\\[",
+    "named": false
+  },
+  {
+    "type": "\\]",
+    "named": false
+  },
+  {
+    "type": "\\begin",
+    "named": false
+  },
+  {
+    "type": "\\end",
+    "named": false
+  },
+  {
+    "type": "\\hackernews",
+    "named": false
+  },
+  {
+    "type": "\\href",
+    "named": false
+  },
+  {
+    "type": "\\lobsters",
+    "named": false
+  },
+  {
+    "type": "\\reddit",
+    "named": false
+  },
+  {
+    "type": "]",
+    "named": false
+  },
+  {
+    "type": "^",
+    "named": false
+  },
+  {
+    "type": "_",
+    "named": false
+  },
+  {
+    "type": "cell_separator",
+    "named": true
+  },
+  {
+    "type": "code_text",
+    "named": true
+  },
+  {
+    "type": "column_alignment",
+    "named": true
+  },
+  {
+    "type": "command_name",
+    "named": true
+  },
+  {
+    "type": "comment",
+    "named": true,
+    "extra": true
+  },
+  {
+    "type": "environment_name",
+    "named": true
+  },
+  {
+    "type": "escaped_char",
+    "named": true
+  },
+  {
+    "type": "math_number",
+    "named": true
+  },
+  {
+    "type": "math_operator",
+    "named": true
+  },
+  {
+    "type": "math_symbol",
+    "named": true
+  },
+  {
+    "type": "row_separator",
+    "named": true
+  },
+  {
+    "type": "text",
+    "named": true
+  },
+  {
+    "type": "url",
+    "named": true
+  },
+  {
+    "type": "verbatim_body",
+    "named": true
+  },
+  {
+    "type": "{",
+    "named": false
+  },
+  {
+    "type": "}",
+    "named": false
+  }
+]

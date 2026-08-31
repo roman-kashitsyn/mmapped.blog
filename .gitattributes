@@ -1,2 +1,5 @@
 *.rftex linguist-language=TeX
 
+tree-sitter-rftex/src/parser.c linguist-generated
+tree-sitter-rftex/src/grammar.json linguist-generated
+tree-sitter-rftex/src/node-types.json linguist-generated
