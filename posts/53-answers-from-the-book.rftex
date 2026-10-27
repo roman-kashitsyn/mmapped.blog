@@ -1,0 +1,106 @@
+\documentclass{article}
+
+\title{Answers at the back of The Book}
+\subtitle{Why solved math is still fun.}
+\date{2026-10-27}
+\modified{2026-10-27}
+
+\keyword{ai}
+\keyword{math}
+
+\begin{document}
+
+Sometime during my second year at university,
+learning math stopped being drudgery and started to feel like visiting fantastic places.
+I wandered the bonsai gardens of abstract algebra,
+peered into the abysses of transfinite numbers,
+and sailed the chaotic oceans of dynamical systems.
+I would never have reached these places without guides:
+textbooks, teachers, and fellow students.
+I climbed staircases polished by the feet of those who came before me.
+
+Math is one of my biggest joys.
+And according to recent headlines, it’s in trouble.
+
+In August 2026,
+Daniel Litt warned that OpenAI’s progress might mean
+\href{https://www.daniellitt.com/blog/2026/8/11/the-end-of-mathematics/}{the end of mathematics}.
+On September 8th,
+OpenAI published
+\href{https://openai.com/index/navier-stokes-solution/}{a solution to the Navier-Stokes Millennium Prize Problem}.
+On October 6th,
+the company released
+\href{https://github.com/openai/math/blob/301488868beec11bfd897168433b0a64f5258559/overview.pdf}{over 700 manuscripts} with new mathematical results.
+
+The response of the math community was mixed.
+Litt outlined a new \href{https://www.daniellitt.com/blog/2026/9/13/a-beginning-for-mathematics/}{beginning for mathematics}.
+Tristan Buckmaster,
+who used \textsc{llm}s to prove the \href{https://cims.nyu.edu/~tristanb/euler.pdf}{blowup of Euler's equations},
+\href{https://cims.nyu.edu/~tristanb/statement.pdf}{called} his experience a Deep Blue-Kasparov moment.
+Terence Tao,
+an early advocate of formalization and \textsc{ai},
+published a declaration proclaiming
+\href{https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/}{A Severe Misalignment of \textsc{ai} in Mathematics}
+signed by 25 Fields Medalists.
+
+Mathematicians are worried that \textsc{ai} produces answers
+that don't yield better understanding.
+Though I agree with this sentiment,
+I don't think \textsc{ai} takes away the joy.
+Transforming answers into understanding is what people studying math do.
+Why should it matter whether answers come from the back of a textbook or an \textsc{llm}?
+
+Almost all math that humans engage with is solved math.
+School kids memorize theorems known for millennia.
+Undergraduates study centuries-old theories.
+PhD students absorb decades of research before they can meaningfully contribute.
+International Mathematical Olympiad participants deal with problems
+that have known solutions.
+
+Professional mathematicians love inventing neater proofs of old theorems.
+Early in his career,
+Peter Scholze distilled a
+\href{https://press.princeton.edu/books/paperback/9780691090924/the-geometry-and-cohomology-of-some-simple-shimura-varieties}{288-page proof by Michael Harris and Richard Taylor}
+to \href{https://people.mpim-bonn.mpg.de/scholze/LocalLanglands.pdf}{37 pages}.
+The \href{https://en.wikipedia.org/wiki/Four_color_theorem}{four-color theorem} is settled,
+yet mathematicians won't leave it alone
+until they have a proof that doesn't involve computers\sidenote{sn-4-color}{
+``What I would like is a proof without the use of a computer,''
+Thomassen said.
+``And I will never stop thinking about that.''
+\newline
+--- \bibref{quanta-four-color-new-proof}}.
+Casting old math into new shapes gives new insights,
+as witnessed by
+\href{https://en.wikipedia.org/wiki/Nicolas_Bourbaki}{Bourbaki},
+\href{https://en.wikipedia.org/wiki/Constructivism_(philosophy_of_mathematics)}{constructivists},
+\href{https://classes.golem.ph.utexas.edu/category/2014/01/an_elementary_theory_of_the_ca.html}{category theorists},
+and, most recently, \href{https://xenaproject.wordpress.com}{formalization aficionados}.
+
+Knowing that the answer exists is a great motivator.
+I like to imagine that Fermat's remark about his Last Theorem,
+``I have discovered a truly marvelous proof of this,
+which this margin is too narrow to contain,''
+was a clever hoax.
+It created an illusion that a proof was within reach,
+pushing generations of mathematicians to try harder.
+Conversely, progress on the quasi-Riemann Hypothesis stalled for a long time
+because mathematicians believed it required novel ideas.
+\textsc{ai} proved them wrong using their own tools\sidenote{sn-quanta-quasi-riemann}{
+``contrary to what mathematicians had long expected,
+the proof didn't need to introduce any new concepts—it instead unearthed hidden connections between old ones''
+\newline
+--- \bibref{quanta-quasi-riemann}}.
+
+Mathematicians stay relevant even in a world
+where \textsc{ai} can conjure perfect proofs straight from \href{https://en.wikipedia.org/wiki/Proofs_from_THE_BOOK}{The Book}.
+Mathematics feels like an eternal space independent of human existence,
+but it comes to live in the minds of people,
+when a teacher makes a student want to explore it.
+People care about things that other people care about.
+
+The wonders of math don't become less beautiful or enjoyable
+just because a silicon mind found them first and sent you a selfie.
+You still have to climb there yourself to claim them, ideally in good company.
+There will never be a royal road.
+\end{document}
