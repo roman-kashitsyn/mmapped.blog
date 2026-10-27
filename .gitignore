@@ -2,6 +2,7 @@ _build/
 opam/
 _site/
 _opam/
+target/
 *.install
 .merlin
 .dir-locals.el
