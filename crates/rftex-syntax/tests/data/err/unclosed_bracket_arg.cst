@@ -1,0 +1,15 @@
+Document@0..18
+  Command@0..12
+    ControlWord@0..7 "\\bibref"
+    BracketArg@7..12
+      LBracket@7..8 "["
+      Text@8..12 "p. 5"
+  ParBreak@12..14 "\n\n"
+  Group@14..17
+    LBrace@14..15 "{"
+    Text@15..16 "k"
+    RBrace@16..17 "}"
+  Text@17..18 "\n"
+errors:
+  7..8: missing closing ]
+  12..12: missing argument

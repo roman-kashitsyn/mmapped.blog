@@ -1,0 +1,139 @@
+(cmd 0 documentclass
+  (opts)
+  (sym 15 "article"))
+(text 23 "\n")
+(cmd 24 title
+  (opts)
+  (nodes 31
+    (text 31 "A title with ")
+    (cmd 44 emph
+      (opts)
+      (nodes 50
+        (text 50 "nested ")
+        (cmd 57 b
+          (opts)
+          (nodes 60
+            (text 60 "bold")))))
+    (text 66 " text")))
+(text 72 "\n")
+(cmd 73 date
+  (opts)
+  (sym 79 "2024-01-31"))
+(text 90 "\n")
+(cmd 91 keyword
+  (opts)
+  (sym 100 "programming"))
+(text 112 "\n")
+(cmd 113 section
+  (opts)
+  (sym 122 "sec-1.a")
+  (nodes 131
+    (text 131 "Heading")))
+(text 139 "\n")
+(cmd 140 section*
+  (opts))
+(text 149 "\n")
+(cmd 150 href
+  (opts)
+  (url 156 "https://example.org/a%20b?q=[1]&r=$x#frag")
+  (nodes 199
+    (text 199 "link text")))
+(text 209 "\n")
+(cmd 210 label
+  (opts)
+  (sym 217 "anchor"))
+(cmd 224 ref
+  (opts)
+  (sym 229 "anchor")
+  (nodes 237
+    (text 237 "see ")
+    (cmd 241 emph
+      (opts)
+      (nodes 247
+        (text 247 "here")))))
+(cmd 253 nameref
+  (opts)
+  (sym 262 "anchor"))
+(text 269 "\n")
+(cmd 270 circled
+  (opts)
+  (num 279 12))
+(cmd 282 circled
+  (opts)
+  (num 291 -3))
+(cmd 294 dingbat
+  (opts)
+  (sym 303 "heavy-check"))
+(text 315 "\n")
+(cmd 316 ldots
+  (opts))
+(text 322 ". ")
+(cmd 324 ldots
+  (opts))
+(text 331 " two spaces ")
+(cmd 343 qed
+  (opts))
+(text 347 "-x ")
+(cmd 350 unknown
+  (opts))
+(group 358
+  (text 359 "group after unknown"))
+(text 379 "\n")
+(cmd 380 item
+  (opts))
+(text 386 " ")
+(text 387 "[")
+(text 388 "not options")
+(text 399 "]")
+(text 400 " ")
+(cmd 401 item
+  (opts "opt-1" "opt.2" "x"))
+(text 423 " ")
+(cmd 424 item
+  (opts "spaced"))
+(text 438 "\n")
+(cmd 439 includegraphics
+  (opts "grayscale" "w-50")
+  (nodes 472
+    (text 472 "/images/x.png")))
+(text 486 "\n")
+(cmd 487 details
+  (opts)
+  (nodes 496
+    (text 496 "Summary"))
+  (nodes 505
+    (text 505 "Body\n\nwith paragraphs")))
+(text 527 "\n")
+(cmd 528 epigraph
+  (opts)
+  (nodes 538
+    (text 538 "Quote\n\ntwo"))
+  (nodes 550
+    (text 550 "Author")))
+(text 557 "\n")
+(cmd 558 bibref
+  (opts)
+  (sym 566 "rfc:2119_v2"))
+(text 578 " ")
+(cmd 579 bibref
+  (opts)
+  (sym 608 "knuth-74")
+  (nodes 587
+    (text 587 "p. ")
+    (cmd 590 emph
+      (opts)
+      (nodes 596
+        (text 596 "6")))
+    (text 598 ", ")
+    (text 600 "[")
+    (text 601 "sic x")))
+(text 617 " ")
+(cmd 618 bibref
+  (opts)
+  (sym 633 "k")
+  (nodes 626
+    (group 626
+      (text 627 "a")
+      (text 628 "]")
+      (text 629 "b"))))
+(text 635 "\n")

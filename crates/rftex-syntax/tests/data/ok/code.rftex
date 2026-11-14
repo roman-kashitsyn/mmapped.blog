@@ -1,0 +1,14 @@
+\begin{code}[rust]
+fn main() { let x = a[0] & b; } // 100\% \b{bold {x}}
+\emph{it``s}\\n $x_1$ \[y\] % comment
+next ``line'' \ldots[0] \circled{1}
+
+blank above \unknown{x}
+\end{code}
+\begin{code}\end{code}
+\begin{code}
+\end{code}
+\begin{code}x\end{code}
+\begin{code}% c
+y\end{code}
+\code{inline {braces} here}

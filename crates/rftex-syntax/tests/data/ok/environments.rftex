@@ -1,0 +1,22 @@
+\begin{document}
+\begin{abstract}
+Text.
+\end{abstract}
+\begin{itemize}
+\item One
+\item Two \begin{enumerate}\item nested\end{enumerate}
+\end{itemize}
+\begin{figure}[grayscale-diagram,medium]
+\includegraphics{/images/a.png}
+\figcaption{Caption}
+\end{figure}
+\begin{description}
+\term{T}{D
+
+D2}
+\end{description}
+\begin {custom}[a]body\end{custom}
+\emph{an environment in an inline argument \begin{itemize}\item a
+
+\item b\end{itemize} may hold paragraphs}
+\end{document}

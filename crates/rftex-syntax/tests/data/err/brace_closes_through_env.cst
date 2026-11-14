@@ -1,0 +1,14 @@
+Document@0..17
+  Group@0..14
+    LBrace@0..1 "{"
+    Environment@1..13
+      Begin@1..10
+        ControlWord@1..7 "\\begin"
+        LBrace@7..8 "{"
+        Atom@8..9 "a"
+        RBrace@9..10 "}"
+      Text@10..13 " x "
+    RBrace@13..14 "}"
+  Text@14..17 " y\n"
+errors:
+  1..7: missing \end for this environment

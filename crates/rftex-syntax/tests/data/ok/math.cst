@@ -1,0 +1,413 @@
+Document@0..442
+  InlineMath@0..7
+    Dollar@0..1 "$"
+    Letter@1..2 "a"
+    Operator@2..3 "+"
+    Letter@3..4 "b"
+    Operator@4..5 "="
+    Letter@5..6 "c"
+    Dollar@6..7 "$"
+  Text@7..8 " "
+  InlineMath@8..13
+    Dollar@8..9 "$"
+    MathTerm@9..12
+      Letter@9..10 "x"
+      Underscore@10..11 "_"
+      Number@11..12 "1"
+    Dollar@12..13 "$"
+  Text@13..14 " "
+  InlineMath@14..19
+    Dollar@14..15 "$"
+    MathTerm@15..18
+      Letter@15..16 "x"
+      Caret@16..17 "^"
+      Number@17..18 "2"
+    Dollar@18..19 "$"
+  Text@19..20 " "
+  InlineMath@20..27
+    Dollar@20..21 "$"
+    MathTerm@21..26
+      Letter@21..22 "x"
+      Underscore@22..23 "_"
+      Number@23..24 "1"
+      Caret@24..25 "^"
+      Number@25..26 "2"
+    Dollar@26..27 "$"
+  Text@27..28 " "
+  InlineMath@28..35
+    Dollar@28..29 "$"
+    MathTerm@29..34
+      Letter@29..30 "x"
+      Caret@30..31 "^"
+      Number@31..32 "2"
+      Underscore@32..33 "_"
+      Number@33..34 "1"
+    Dollar@34..35 "$"
+  Text@35..36 " "
+  InlineMath@36..50
+    Dollar@36..37 "$"
+    MathTerm@37..49
+      Letter@37..38 "x"
+      Underscore@38..39 "_"
+      MathGroup@39..44
+        LBrace@39..40 "{"
+        Letter@40..41 "i"
+        Operator@41..42 "+"
+        Number@42..43 "1"
+        RBrace@43..44 "}"
+      Caret@44..45 "^"
+      MathGroup@45..49
+        LBrace@45..46 "{"
+        MathNegNumber@46..48
+          Operator@46..47 "-"
+          Number@47..48 "2"
+        RBrace@48..49 "}"
+    Dollar@49..50 "$"
+  Text@50..51 " "
+  InlineMath@51..59
+    Dollar@51..52 "$"
+    Letter@52..53 "a"
+    MathTerm@53..56
+      Letter@53..54 "b"
+      Underscore@54..55 "_"
+      Letter@55..56 "c"
+    Space@56..57 " "
+    Letter@57..58 "d"
+    Dollar@58..59 "$"
+  Text@59..60 "\n"
+  InlineMath@60..64
+    Dollar@60..61 "$"
+    MathNegNumber@61..63
+      Operator@61..62 "-"
+      Number@62..63 "1"
+    Dollar@63..64 "$"
+  Text@64..65 " "
+  InlineMath@65..70
+    Dollar@65..66 "$"
+    Letter@66..67 "a"
+    Operator@67..68 "-"
+    Number@68..69 "1"
+    Dollar@69..70 "$"
+  Text@70..71 " "
+  InlineMath@71..77
+    Dollar@71..72 "$"
+    Letter@72..73 "a"
+    Operator@73..74 "="
+    MathNegNumber@74..76
+      Operator@74..75 "-"
+      Number@75..76 "1"
+    Dollar@76..77 "$"
+  Text@77..78 " "
+  InlineMath@78..87
+    Dollar@78..79 "$"
+    Letter@79..80 "a"
+    Space@80..81 " "
+    Operator@81..82 "-"
+    Space@82..83 " "
+    MathNegNumber@83..86
+      Operator@83..84 "-"
+      Number@84..86 "12"
+    Dollar@86..87 "$"
+  Text@87..88 " "
+  InlineMath@88..94
+    Dollar@88..89 "$"
+    Operator@89..90 "("
+    MathNegNumber@90..92
+      Operator@90..91 "-"
+      Number@91..92 "3"
+    Operator@92..93 ")"
+    Dollar@93..94 "$"
+  Text@94..95 " "
+  InlineMath@95..101
+    Dollar@95..96 "$"
+    MathTerm@96..100
+      Letter@96..97 "x"
+      Caret@97..98 "^"
+      MathNegNumber@98..100
+        Operator@98..99 "-"
+        Number@99..100 "1"
+    Dollar@100..101 "$"
+  Text@101..102 " "
+  InlineMath@102..106
+    Dollar@102..103 "$"
+    Operator@103..104 "-"
+    Letter@104..105 "x"
+    Dollar@105..106 "$"
+  Text@106..107 " "
+  InlineMath@107..113
+    Dollar@107..108 "$"
+    Letter@108..109 "a"
+    Operator@109..110 ","
+    MathNegNumber@110..112
+      Operator@110..111 "-"
+      Number@111..112 "5"
+    Dollar@112..113 "$"
+  Text@113..114 " "
+  InlineMath@114..131
+    Dollar@114..115 "$"
+    MathCommand@115..121
+      ControlWord@115..120 "\\left"
+      Operator@120..121 "("
+    MathNegNumber@121..123
+      Operator@121..122 "-"
+      Number@122..123 "1"
+    MathCommand@123..130
+      ControlWord@123..129 "\\right"
+      Operator@129..130 ")"
+    Dollar@130..131 "$"
+  Text@131..132 "\n"
+  InlineMath@132..145
+    Dollar@132..133 "$"
+    MathCommand@133..144
+      ControlWord@133..138 "\\frac"
+      MathGroup@138..141
+        LBrace@138..139 "{"
+        Letter@139..140 "a"
+        RBrace@140..141 "}"
+      MathGroup@141..144
+        LBrace@141..142 "{"
+        Letter@142..143 "b"
+        RBrace@143..144 "}"
+    Dollar@144..145 "$"
+  Text@145..146 " "
+  InlineMath@146..160
+    Dollar@146..147 "$"
+    MathCommand@147..159
+      ControlWord@147..153 "\\binom"
+      MathGroup@153..156
+        LBrace@153..154 "{"
+        Letter@154..155 "n"
+        RBrace@155..156 "}"
+      MathGroup@156..159
+        LBrace@156..157 "{"
+        Letter@157..158 "k"
+        RBrace@158..159 "}"
+    Dollar@159..160 "$"
+  Text@160..161 " "
+  InlineMath@161..187
+    Dollar@161..162 "$"
+    MathTerm@162..186
+      MathCommand@162..184
+        ControlWord@162..175 "\\operatorname"
+        MathArg@175..184
+          LBrace@175..176 "{"
+          Atom@176..183 "arg-max"
+          RBrace@183..184 "}"
+      Underscore@184..185 "_"
+      Letter@185..186 "x"
+    Dollar@186..187 "$"
+  Text@187..188 " "
+  InlineMath@188..201
+    Dollar@188..189 "$"
+    MathCommand@189..199
+      ControlWord@189..196 "\\mathrm"
+      MathArg@196..199
+        LBrace@196..197 "{"
+        Atom@197..198 "d"
+        RBrace@198..199 "}"
+    Letter@199..200 "x"
+    Dollar@200..201 "$"
+  Text@201..202 " "
+  InlineMath@202..218
+    Dollar@202..203 "$"
+    MathCommand@203..214
+      ControlWord@203..211 "\\mathcal"
+      MathArg@211..214
+        LBrace@211..212 "{"
+        Atom@212..213 "O"
+        RBrace@213..214 "}"
+    Operator@214..215 "("
+    Letter@215..216 "n"
+    Operator@216..217 ")"
+    Dollar@217..218 "$"
+  Text@218..219 "\n"
+  InlineMath@219..239
+    Dollar@219..220 "$"
+    MathCommand@220..227
+      ControlWord@220..225 "\\left"
+      Escape@225..227 "\\{"
+    Space@227..228 " "
+    Letter@228..229 "x"
+    Space@229..230 " "
+    MathCommand@230..238
+      ControlWord@230..236 "\\right"
+      Escape@236..238 "\\}"
+    Dollar@238..239 "$"
+  Text@239..240 " "
+  InlineMath@240..258
+    Dollar@240..241 "$"
+    MathCommand@241..247
+      ControlWord@241..246 "\\left"
+      Operator@246..247 "["
+    Space@247..248 " "
+    Letter@248..249 "a"
+    Space@249..250 " "
+    MathCommand@250..257
+      ControlWord@250..256 "\\right"
+      Operator@256..257 "|"
+    Dollar@257..258 "$"
+  Text@258..259 " "
+  InlineMath@259..266
+    Dollar@259..260 "$"
+    MathCommand@260..263
+      ControlWord@260..263 "\\pi"
+    Operator@263..264 "-"
+    Number@264..265 "1"
+    Dollar@265..266 "$"
+  Text@266..267 " "
+  InlineMath@267..283
+    Dollar@267..268 "$"
+    MathTerm@268..280
+      MathCommand@268..272
+        ControlWord@268..272 "\\sum"
+      Underscore@272..273 "_"
+      MathGroup@273..278
+        LBrace@273..274 "{"
+        Letter@274..275 "i"
+        Operator@275..276 "="
+        Number@276..277 "0"
+        RBrace@277..278 "}"
+      Caret@278..279 "^"
+      Letter@279..280 "n"
+    Space@280..281 " "
+    Letter@281..282 "i"
+    Dollar@282..283 "$"
+  Text@283..284 " "
+  InlineMath@284..297
+    Dollar@284..285 "$"
+    MathCommand@285..293
+      ControlWord@285..293 "\\unknown"
+    MathGroup@293..296
+      LBrace@293..294 "{"
+      Letter@294..295 "x"
+      RBrace@295..296 "}"
+    Dollar@296..297 "$"
+  Text@297..298 "\n"
+  InlineMath@298..308
+    Dollar@298..299 "$"
+    Letter@299..300 "a"
+    Space@300..301 " "
+    MathCommand@301..305
+      ControlWord@301..305 "\\leq"
+    Space@305..306 " "
+    Letter@306..307 "b"
+    Dollar@307..308 "$"
+  Text@308..309 " "
+  InlineMath@309..328
+    Dollar@309..310 "$"
+    Escape@310..312 "\\{"
+    Space@312..313 " "
+    Escape@313..315 "\\}"
+    Space@315..316 " "
+    DoubleBackslash@316..318 "\\\\"
+    Space@318..319 " "
+    Escape@319..321 "\\%"
+    Space@321..322 " "
+    Escape@322..324 "\\_"
+    Space@324..325 " "
+    Escape@325..327 "\\^"
+    Dollar@327..328 "$"
+  Text@328..329 " "
+  InlineMath@329..336
+    Dollar@329..330 "$"
+    Letter@330..331 "a"
+    Space@331..332 " "
+    Amp@332..333 "&"
+    Space@333..334 " "
+    Letter@334..335 "b"
+    Dollar@335..336 "$"
+  Text@336..337 " "
+  InlineMath@337..356
+    Dollar@337..338 "$"
+    Space@338..339 " "
+    Letter@339..340 "x"
+    Space@340..341 " "
+    Comment@341..351 "% comment\n"
+    Operator@351..352 "+"
+    Space@352..353 " "
+    Letter@353..354 "y"
+    Space@354..355 " "
+    Dollar@355..356 "$"
+  Text@356..357 " "
+  InlineMath@357..362
+    Dollar@357..358 "$"
+    Letter@358..359 "a"
+    Newline@359..360 "\n"
+    Letter@360..361 "b"
+    Dollar@361..362 "$"
+  Text@362..363 "\n"
+  DisplayMath@363..374
+    DisplayOpen@363..365 "\\["
+    Space@365..366 " "
+    Letter@366..367 "a"
+    Space@367..368 " "
+    Operator@368..369 "="
+    Space@369..370 " "
+    Letter@370..371 "b"
+    Newline@371..372 "\n"
+    DisplayClose@372..374 "\\]"
+  Text@374..375 "\n"
+  DisplayMath@375..417
+    DisplayOpen@375..377 "\\["
+    Newline@377..378 "\n"
+    MathCommand@378..391
+      ControlWord@378..383 "\\frac"
+      Space@383..384 " "
+      MathGroup@384..387
+        LBrace@384..385 "{"
+        Number@385..386 "1"
+        RBrace@386..387 "}"
+      Space@387..388 " "
+      MathGroup@388..391
+        LBrace@388..389 "{"
+        Number@389..390 "2"
+        RBrace@390..391 "}"
+    Space@391..393 "  "
+    Operator@393..394 "+"
+    Space@394..396 "  "
+    MathCommand@396..403
+      ControlWord@396..401 "\\left"
+      Space@401..402 " "
+      Operator@402..403 "("
+    Space@403..404 " "
+    Letter@404..405 "x"
+    Space@405..406 " "
+    MathCommand@406..414
+      ControlWord@406..412 "\\right"
+      Space@412..413 " "
+      Operator@413..414 ")"
+    Newline@414..415 "\n"
+    DisplayClose@415..417 "\\]"
+  Text@417..418 "\n"
+  InlineMath@418..429
+    Dollar@418..419 "$"
+    MathTerm@419..424
+      Letter@419..420 "x"
+      Underscore@420..421 "_"
+      MathGroup@421..424
+        LBrace@421..422 "{"
+        Number@422..423 "1"
+        RBrace@423..424 "}"
+    MathTerm@424..427
+      Letter@424..425 "y"
+      Caret@425..426 "^"
+      Number@426..427 "2"
+    Letter@427..428 "z"
+    Dollar@428..429 "$"
+  Text@429..430 " "
+  InlineMath@430..436
+    Dollar@430..431 "$"
+    MathTerm@431..435
+      Letter@431..432 "x"
+      Underscore@432..433 "_"
+      Space@433..434 " "
+      Number@434..435 "1"
+    Dollar@435..436 "$"
+  Text@436..437 " "
+  InlineMath@437..442
+    Dollar@437..438 "$"
+    MathTerm@438..441
+      Letter@438..439 "x"
+      Underscore@439..440 "_"
+      Amp@440..441 "&"
+    Dollar@441..442 "$"

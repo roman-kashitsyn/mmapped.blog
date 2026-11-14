@@ -1,0 +1,31 @@
+Document@0..40
+  Environment@0..7
+    Begin@0..7
+      ControlWord@0..7 "\\begin "
+  Text@7..9 "x "
+  Environment@9..17
+    Begin@9..17
+      ControlWord@9..15 "\\begin"
+      LBrace@15..16 "{"
+      RBrace@16..17 "}"
+  Text@17..20 " y "
+  Environment@20..39
+    Begin@20..31
+      ControlWord@20..26 "\\begin"
+      LBrace@26..27 "{"
+      Atom@27..28 "a"
+      ErrorTree@28..30
+        ErrorToken@28..29 " "
+        Atom@29..30 "b"
+      RBrace@30..31 "}"
+    Text@31..32 "z"
+    End@32..39
+      ControlWord@32..36 "\\end"
+      LBrace@36..37 "{"
+      Atom@37..38 "a"
+      RBrace@38..39 "}"
+  Text@39..40 "\n"
+errors:
+  7..7: expected an environment name in braces
+  16..17: expected an environment name in braces
+  28..30: unexpected characters in argument

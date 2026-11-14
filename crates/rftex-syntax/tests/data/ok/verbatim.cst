@@ -1,0 +1,68 @@
+Document@0..220
+  Environment@0..66
+    Begin@0..16
+      ControlWord@0..6 "\\begin"
+      LBrace@6..7 "{"
+      Atom@7..15 "verbatim"
+      RBrace@15..16 "}"
+    RawText@16..52 "\nraw % not a comment \\emph{x} $y$ {\n"
+    End@52..66
+      ControlWord@52..56 "\\end"
+      LBrace@56..57 "{"
+      Atom@57..65 "verbatim"
+      RBrace@65..66 "}"
+  Text@66..67 "\n"
+  Environment@67..111
+    Begin@67..83
+      ControlWord@67..73 "\\begin"
+      LBrace@73..74 "{"
+      Atom@74..82 "verbatim"
+      RBrace@82..83 "}"
+    Options@83..86
+      LBracket@83..84 "["
+      Atom@84..85 "j"
+      RBracket@85..86 "]"
+    RawText@86..97 "[output]\nx\n"
+    End@97..111
+      ControlWord@97..101 "\\end"
+      LBrace@101..102 "{"
+      Atom@102..110 "verbatim"
+      RBrace@110..111 "}"
+  Text@111..112 "\n"
+  Environment@112..142
+    Begin@112..128
+      ControlWord@112..118 "\\begin"
+      LBrace@118..119 "{"
+      Atom@119..127 "verbatim"
+      RBrace@127..128 "}"
+    End@128..142
+      ControlWord@128..132 "\\end"
+      LBrace@132..133 "{"
+      Atom@133..141 "verbatim"
+      RBrace@141..142 "}"
+  Text@142..143 "\n"
+  Environment@143..187
+    Begin@143..159
+      ControlWord@143..149 "\\begin"
+      LBrace@149..150 "{"
+      Atom@150..158 "verbatim"
+      RBrace@158..159 "}"
+    RawText@159..173 "\n\ntwo newlines"
+    End@173..187
+      ControlWord@173..177 "\\end"
+      LBrace@177..178 "{"
+      Atom@178..186 "verbatim"
+      RBrace@186..187 "}"
+  Text@187..188 "\n"
+  Environment@188..220
+    Begin@188..204
+      ControlWord@188..194 "\\begin"
+      LBrace@194..195 "{"
+      Atom@195..203 "verbatim"
+      RBrace@203..204 "}"
+    RawText@204..206 "a\\"
+    End@206..220
+      ControlWord@206..210 "\\end"
+      LBrace@210..211 "{"
+      Atom@211..219 "verbatim"
+      RBrace@219..220 "}"

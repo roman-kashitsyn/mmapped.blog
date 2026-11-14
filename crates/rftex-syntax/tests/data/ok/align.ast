@@ -1,0 +1,47 @@
+(math 0 display
+  (align "rcl"
+    (row
+      (cell
+        (mtext "a"))
+      (cell
+        (op "=")
+        (mtext "b")
+        (op "+")
+        (mtext "c")))
+    (row
+      (cell)
+      (cell
+        (op "=")
+        (num "-1"))
+      (cell
+        (mtext "x")))
+    (row
+      (cell
+        (mtext "d"))
+      (cell
+        (op "="))
+      (cell
+        (mtext "e")))))
+(text 67 "\n")
+(math 68 display
+  (align "r"
+    (row
+      (cell
+        (mtext "a")))))
+(text 95 "\n")
+(math 96 display
+  (align "rl"
+    (row
+      (cell
+        (mtext "x"))
+      (cell
+        (op "=")
+        (mgroup
+          (mtext "a")
+          (op "&")
+          (mtext "b")
+          (op "\\")
+          (mtext "c"))))))
+(text 144 "\n")
+(math 145 display
+  (align ""))

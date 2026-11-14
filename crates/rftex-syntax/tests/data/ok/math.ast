@@ -1,0 +1,224 @@
+(math 0 inline
+  (mtext "a")
+  (op "+")
+  (mtext "b")
+  (op "=")
+  (mtext "c"))
+(text 7 " ")
+(math 8 inline
+  (term
+    (mtext "x")
+    (num "1") _))
+(text 13 " ")
+(math 14 inline
+  (term
+    (mtext "x") _
+    (num "2")))
+(text 19 " ")
+(math 20 inline
+  (term
+    (mtext "x")
+    (num "1")
+    (num "2")))
+(text 27 " ")
+(math 28 inline
+  (term
+    (mtext "x")
+    (num "1")
+    (num "2")))
+(text 35 " ")
+(math 36 inline
+  (term
+    (mtext "x")
+    (mgroup
+      (mtext "i")
+      (op "+")
+      (num "1"))
+    (mgroup
+      (num "-2"))))
+(text 50 " ")
+(math 51 inline
+  (mtext "a")
+  (term
+    (mtext "b")
+    (mtext "c") _)
+  (mtext "d"))
+(text 59 "\n")
+(math 60 inline
+  (num "-1"))
+(text 64 " ")
+(math 65 inline
+  (mtext "a")
+  (op "-")
+  (num "1"))
+(text 70 " ")
+(math 71 inline
+  (mtext "a")
+  (op "=")
+  (num "-1"))
+(text 77 " ")
+(math 78 inline
+  (mtext "a")
+  (op "-")
+  (num "-12"))
+(text 87 " ")
+(math 88 inline
+  (op "(")
+  (num "-3")
+  (op ")"))
+(text 94 " ")
+(math 95 inline
+  (term
+    (mtext "x") _
+    (num "-1")))
+(text 101 " ")
+(math 102 inline
+  (op "-")
+  (mtext "x"))
+(text 106 " ")
+(math 107 inline
+  (mtext "a")
+  (op ",")
+  (num "-5"))
+(text 113 " ")
+(math 114 inline
+  (mcmd left
+    (sop "("))
+  (num "-1")
+  (mcmd right
+    (sop ")")))
+(text 131 "\n")
+(math 132 inline
+  (mcmd frac
+    (mgroup
+      (mtext "a"))
+    (mgroup
+      (mtext "b"))))
+(text 145 " ")
+(math 146 inline
+  (mcmd binom
+    (mgroup
+      (mtext "n"))
+    (mgroup
+      (mtext "k"))))
+(text 160 " ")
+(math 161 inline
+  (term
+    (mcmd operatorname
+      (op "arg-max"))
+    (mtext "x") _))
+(text 187 " ")
+(math 188 inline
+  (mcmd mathrm
+    (op "d"))
+  (mtext "x"))
+(text 201 " ")
+(math 202 inline
+  (mcmd mathcal
+    (op "O"))
+  (op "(")
+  (mtext "n")
+  (op ")"))
+(text 218 "\n")
+(math 219 inline
+  (mcmd left
+    (sop "{"))
+  (mtext "x")
+  (mcmd right
+    (sop "}")))
+(text 239 " ")
+(math 240 inline
+  (mcmd left
+    (sop "["))
+  (mtext "a")
+  (mcmd right
+    (sop "|")))
+(text 258 " ")
+(math 259 inline
+  (mcmd pi)
+  (op "-")
+  (num "1"))
+(text 266 " ")
+(math 267 inline
+  (term
+    (mcmd sum)
+    (mgroup
+      (mtext "i")
+      (op "=")
+      (num "0"))
+    (mtext "n"))
+  (mtext "i"))
+(text 283 " ")
+(math 284 inline
+  (mcmd unknown)
+  (mgroup
+    (mtext "x")))
+(text 297 "\n")
+(math 298 inline
+  (mtext "a")
+  (mcmd leq)
+  (mtext "b"))
+(text 308 " ")
+(math 309 inline
+  (op "{")
+  (op "}")
+  (op "\\")
+  (op "%")
+  (op "_")
+  (op "^"))
+(text 328 " ")
+(math 329 inline
+  (mtext "a")
+  (op "&")
+  (mtext "b"))
+(text 336 " ")
+(math 337 inline
+  (mtext "x")
+  (op "+")
+  (mtext "y"))
+(text 356 " ")
+(math 357 inline
+  (mtext "a")
+  (op "\n")
+  (mtext "b"))
+(text 362 "\n")
+(math 363 display
+  (mtext "a")
+  (op "=")
+  (mtext "b")
+  (op "\n"))
+(text 374 "\n")
+(math 375 display
+  (op "\n")
+  (mcmd frac
+    (mgroup
+      (num "1"))
+    (mgroup
+      (num "2")))
+  (op "+")
+  (mcmd left
+    (sop "("))
+  (mtext "x")
+  (mcmd right
+    (sop ")"))
+  (op "\n"))
+(text 417 "\n")
+(math 418 inline
+  (term
+    (mtext "x")
+    (mgroup
+      (num "1")) _)
+  (term
+    (mtext "y") _
+    (num "2"))
+  (mtext "z"))
+(text 429 " ")
+(math 430 inline
+  (term
+    (mtext "x")
+    (num "1") _))
+(text 436 " ")
+(math 437 inline
+  (term
+    (mtext "x")
+    (op "&") _))

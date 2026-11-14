@@ -3,7 +3,10 @@
    Supports two modes:
      -output DIR    static site generation
      -serve PORT    dev HTTP server
-   plus shared options -input, -root. *)
+   plus shared options -input, -root.
+
+   -dump-ast FILE... prints the parser's output as S-expressions; it is the
+   oracle for the differential test of the Rust parser. *)
 
 open Blogware
 open Site
@@ -15,6 +18,7 @@ let usage =
   ^ "  -root URL      Root URL (default: https://mmapped.blog)\n"
   ^ "  -serve PORT    Start HTTP server on PORT\n"
   ^ "  -f FILE        Render a single file (not yet implemented)\n"
+  ^ "  -dump-ast FILE...  Print the parsed syntax tree of each FILE\n"
 
 type parsed = {
   input : string option;
@@ -63,11 +67,25 @@ let run (p : parsed) : unit =
           in
           Site.render_site config)
 
+let dump_ast (paths : string list) : unit =
+  List.iter
+    (fun path ->
+      let content = read_file_contents path in
+      match Tex_parser.parse_document ~source_name:path content with
+      | Ok nodes -> print_string (Ast_dump.dump_document nodes)
+      | Error err ->
+          prerr_endline (Error.format_parse_error content err);
+          exit 1)
+    paths
+
 let () =
   let args = Array.to_list Sys.argv |> List.tl in
-  match parse_args empty args with
-  | Error err ->
-      prerr_endline ("Error: " ^ err);
-      prerr_endline usage;
-      exit 1
-  | Ok p -> run p
+  match args with
+  | "-dump-ast" :: (_ :: _ as paths) -> dump_ast paths
+  | _ -> (
+      match parse_args empty args with
+      | Error err ->
+          prerr_endline ("Error: " ^ err);
+          prerr_endline usage;
+          exit 1
+      | Ok p -> run p)

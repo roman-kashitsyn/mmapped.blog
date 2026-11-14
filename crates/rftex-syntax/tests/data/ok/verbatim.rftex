@@ -1,0 +1,11 @@
+\begin{verbatim}
+raw % not a comment \emph{x} $y$ {
+\end{verbatim}
+\begin{verbatim}[j][output]
+x
+\end{verbatim}
+\begin{verbatim}\end{verbatim}
+\begin{verbatim}
+
+two newlines\end{verbatim}
+\begin{verbatim}a\\end{verbatim}

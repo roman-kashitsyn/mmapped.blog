@@ -13,6 +13,14 @@ let is_special c =
 
 let is_symbolic c = match c with '*' | '-' | '.' -> true | c -> is_alpha_num c
 
+(* Command names are narrower than symbols: `\ldots.` and `\pi-1` end the
+   name before the punctuation. The star keeps `\section*` one name. *)
+let is_cmd_name_char c = c = '*' || is_alpha_num c
+
+(* TeX comment: '%' to end of line. *)
+let parse_comment : unit t =
+  expect_char '%' *> skip_while (fun c -> c <> '\n') *> skip_char '\n'
+
 let is_url_char c =
   match c with
   | '-' | '.' | '_' | '~' | ':' | '/' | '?' | '#' | '[' | ']' | '@' | '!' | '$'
@@ -33,7 +41,14 @@ module Math = struct
         true
     | _ -> false
 
-  let skip_math_spaces : unit t = skip_while (fun c -> c = ' ')
+  (* Blanks between math atoms: spaces and comments. *)
+  let rec skip_math_spaces st =
+    (let* () = skip_while (fun c -> c = ' ') in
+     let* next = peek_char in
+     match next with
+     | Some '%' -> parse_comment *> skip_math_spaces
+     | _ -> return ())
+      st
 
   let is_operator_like = function
     | Math_op _ -> true
@@ -139,7 +154,7 @@ module Math = struct
          let* c = look_ahead any_char in
          if c = ']' then unexpected "\\] (unmatched display math delimiter)"
          else
-           let* name = take_while1 is_symbolic in
+           let* name = take_while1 is_cmd_name_char in
            let sym = resolve_sym name in
            match SMap.find_opt name math_cmds with
            | Some _ when sym = S_left || sym = S_right ->
@@ -187,10 +202,6 @@ module Math = struct
     in
     parse_m_list ~end_p
 end
-
-(* TeX comment: '%' to end of line. *)
-let parse_comment : unit t =
-  expect_char '%' *> skip_while (fun c -> c <> '\n') *> skip_char '\n'
 
 let parse_text_node : node t =
   let* pos = get_position in
@@ -447,11 +458,11 @@ and parse_cmd st =
    | Some ']' ->
        let* _ = any_char in
        unexpected "display math end"
-   | Some c when not (is_symbolic c) ->
+   | Some c when not (is_cmd_name_char c) ->
        let* _ = any_char in
        fail "expected matching character"
    | Some _ ->
-       let* name = take_while1 is_symbolic in
+       let* name = take_while1 is_cmd_name_char in
        let* () = skip_char ' ' in
        if Text.equal_string name "begin" then parse_begin_env pos
        else if Text.equal_string name "end" then
@@ -583,11 +594,20 @@ and parse_table_rows env_name spec st =
   let fresh_cell pos align =
     { cell_pos = pos; cell_align = align; cell_colspan = 1; cell_body = [] }
   in
-  let parse_hrule : unit t = try_ (expect_string "\\hrule") *> skip_char ' ' in
+  (* The name must end here: `\hrulefill` is some other command. *)
+  let end_of_name : unit t =
+    let* next = peek_char in
+    match next with
+    | Some c when is_cmd_name_char c -> fail "expected end of command name"
+    | _ -> return ()
+  in
+  let parse_hrule : unit t =
+    try_ (expect_string "\\hrule" *> end_of_name) *> skip_char ' '
+  in
   let parse_multicolumn : (pos * arg * arg * arg) t =
     try_
       (let* pos = get_position in
-       let* _ = expect_string "\\multicolumn" in
+       let* _ = expect_string "\\multicolumn" *> end_of_name *> skip_char ' ' in
        let* n = parse_arg At_num in
        let* a = parse_arg At_align_spec in
        let* b = parse_arg At_seq in

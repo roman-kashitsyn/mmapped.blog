@@ -1,0 +1,22 @@
+Document@0..27
+  Text@0..2 "a "
+  ErrorTree@2..3
+    RBrace@2..3 "}"
+  Text@3..6 " b "
+  ErrorTree@6..15
+    ControlWord@6..10 "\\end"
+    LBrace@10..11 "{"
+    Atom@11..14 "foo"
+    RBrace@14..15 "}"
+  Text@15..18 " c "
+  ErrorTree@18..20
+    DisplayClose@18..20 "\\]"
+  Text@20..23 " d "
+  ErrorTree@23..24
+    Amp@23..24 "&"
+  Text@24..27 " e\n"
+errors:
+  2..3: unmatched }
+  6..10: \end without a matching \begin
+  18..20: unmatched math delimiter
+  23..24: unexpected & outside a table

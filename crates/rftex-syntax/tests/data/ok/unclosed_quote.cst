@@ -1,0 +1,24 @@
+Document@0..84
+  Text@0..4 "see "
+  UnclosedQuotation@4..84
+    OpenQuote@4..6 "``"
+    Text@6..35 "this never closes, it's text."
+    ParBreak@35..37 "\n\n"
+    Command@37..61
+      ControlWord@37..42 "\\emph"
+      Arg@42..61
+        LBrace@42..43 "{"
+        Text@43..49 "inner "
+        UnclosedQuotation@49..60
+          OpenQuote@49..51 "``"
+          Text@51..60 "also open"
+        RBrace@60..61 "}"
+    Text@61..68 " after "
+    Group@68..79
+      LBrace@68..69 "{"
+      Text@69..75 "group "
+      UnclosedQuotation@75..78
+        OpenQuote@75..77 "``"
+        Text@77..78 "x"
+      RBrace@78..79 "}"
+    Text@79..84 " tail"

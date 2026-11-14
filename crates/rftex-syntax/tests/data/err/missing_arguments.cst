@@ -1,0 +1,25 @@
+Document@0..36
+  Command@0..12
+    ControlWord@0..8 "\\section"
+    Arg@8..12
+      LBrace@8..9 "{"
+      Atom@9..11 "id"
+      RBrace@11..12 "}"
+  Text@12..13 "\n"
+  Command@13..18
+    ControlWord@13..18 "\\href"
+  Text@18..19 "\n"
+  Command@19..27
+    ControlWord@19..25 "\\label"
+    Arg@25..27
+      LBrace@25..26 "{"
+      RBrace@26..27 "}"
+  Text@27..28 " "
+  Command@28..34
+    ControlWord@28..34 "\\emph "
+  Text@34..36 "x\n"
+errors:
+  12..12: missing argument
+  18..18: missing argument
+  26..27: missing or malformed argument value
+  34..34: missing argument

@@ -1,0 +1,14 @@
+Document@0..21
+  Environment@0..21
+    Begin@0..12
+      ControlWord@0..6 "\\begin"
+      LBrace@6..7 "{"
+      Atom@7..11 "code"
+      RBrace@11..12 "}"
+    Text@12..19 "\nfoo { "
+    InlineMath@19..21
+      Dollar@19..20 "$"
+      Letter@20..21 "x"
+errors:
+  0..6: missing \end for this environment
+  19..20: missing closing math delimiter

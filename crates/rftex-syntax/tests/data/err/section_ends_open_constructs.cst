@@ -1,0 +1,37 @@
+Document@0..70
+  Environment@0..69
+    Begin@0..16
+      ControlWord@0..6 "\\begin"
+      LBrace@6..7 "{"
+      Atom@7..15 "document"
+      RBrace@15..16 "}"
+    Text@16..17 "\n"
+    Command@17..35
+      ControlWord@17..22 "\\emph"
+      Arg@22..35
+        LBrace@22..23 "{"
+        Text@23..32 "unclosed "
+        InlineMath@32..35
+          Dollar@32..33 "$"
+          Letter@33..34 "x"
+          Newline@34..35 "\n"
+    Command@35..49
+      ControlWord@35..43 "\\section"
+      Arg@43..46
+        LBrace@43..44 "{"
+        Atom@44..45 "s"
+        RBrace@45..46 "}"
+      Arg@46..49
+        LBrace@46..47 "{"
+        Text@47..48 "T"
+        RBrace@48..49 "}"
+    Text@49..55 "\ntext\n"
+    End@55..69
+      ControlWord@55..59 "\\end"
+      LBrace@59..60 "{"
+      Atom@60..68 "document"
+      RBrace@68..69 "}"
+  Text@69..70 "\n"
+errors:
+  22..23: missing closing }
+  32..33: missing closing math delimiter

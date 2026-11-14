@@ -1,0 +1,6 @@
+\begin{tabular}
+a & b \\
+\end{tabular}
+\begin{tabular}{l}
+\multicolumn{2}{lr}{x} \\ } \\
+\end{tabular}

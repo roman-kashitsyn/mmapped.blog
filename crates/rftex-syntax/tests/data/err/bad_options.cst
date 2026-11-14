@@ -1,0 +1,42 @@
+Document@0..30
+  Command@0..10
+    ControlWord@0..2 "\\b"
+    Options@2..7
+      LBracket@2..3 "["
+      Atom@3..4 "a"
+      Whitespace@4..5 " "
+      Atom@5..6 "b"
+      RBracket@6..7 "]"
+    Arg@7..10
+      LBrace@7..8 "{"
+      Text@8..9 "x"
+      RBrace@9..10 "}"
+  Text@10..11 " "
+  Command@11..20
+    ControlWord@11..13 "\\b"
+    Options@13..17
+      LBracket@13..14 "["
+      Atom@14..15 "a"
+      Comma@15..16 ","
+      RBracket@16..17 "]"
+    Arg@17..20
+      LBrace@17..18 "{"
+      Text@18..19 "y"
+      RBrace@19..20 "}"
+  Text@20..21 " "
+  Command@21..29
+    ControlWord@21..23 "\\b"
+    Options@23..26
+      LBracket@23..24 "["
+      Atom@24..25 "a"
+      Comma@25..26 ","
+    Arg@26..29
+      LBrace@26..27 "{"
+      Text@27..28 "z"
+      RBrace@28..29 "}"
+  Text@29..30 "\n"
+errors:
+  3..6: malformed option list
+  14..16: malformed option list
+  23..24: missing closing ]
+  24..26: malformed option list

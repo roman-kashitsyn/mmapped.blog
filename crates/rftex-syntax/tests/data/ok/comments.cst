@@ -1,0 +1,16 @@
+Document@0..64
+  Text@0..2 "a "
+  Comment@2..12 "% comment\n"
+  Text@12..14 "b\n"
+  Comment@14..25 "% line one\n"
+  Comment@25..36 "% line two\n"
+  Text@36..38 "\nc"
+  Command@38..57
+    ControlWord@38..43 "\\emph"
+    Arg@43..57
+      LBrace@43..44 "{"
+      Text@44..46 "x "
+      Comment@46..55 "% inside\n"
+      Text@55..56 "y"
+      RBrace@56..57 "}"
+  Comment@57..64 "% tail\n"

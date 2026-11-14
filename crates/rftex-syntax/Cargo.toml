@@ -1,0 +1,11 @@
+[package]
+name = "rftex-syntax"
+version = "0.1.0"
+edition = "2021"
+authors = ["Roman Kashitsyn <roman.kashitsyn@gmail.com>"]
+description = "Resilient parser, syntax tree and AST for the rftex markup language"
+repository = "https://github.com/roman-kashitsyn/mmapped.blog"
+license = "CC-BY-4.0"
+publish = false
+
+[dependencies]

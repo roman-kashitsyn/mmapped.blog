@@ -1,0 +1,62 @@
+(env 0 182 code
+  (opts "rust")
+  (text 19 "fn main() { let x = a[0] & b; } // 100")
+  (text 57 "%")
+  (text 59 " ")
+  (cmd 60 b
+    (opts)
+    (nodes 63
+      (text 63 "bold ")
+      (group 68
+        (text 69 "x"))))
+  (text 72 "\n")
+  (cmd 73 emph
+    (opts)
+    (nodes 79
+      (text 79 "it")
+      (text 81 "`")
+      (text 82 "`")
+      (text 83 "s")))
+  (text 85 "\\")
+  (text 87 "n ")
+  (math 89 inline
+    (term
+      (mtext "x")
+      (num "1") _))
+  (text 94 " ")
+  (math 95 display
+    (mtext "y"))
+  (text 100 " ")
+  (text 111 "next ``line'' ")
+  (cmd 125 ldots
+    (opts "0"))
+  (text 134 " ")
+  (cmd 135 circled
+    (opts)
+    (num 144 1))
+  (text 146 "\n\nblank above ")
+  (cmd 160 unknown
+    (opts))
+  (text 168 "{x}\n"))
+(text 182 "\n")
+(env 183 205 code
+  (opts))
+(text 205 "\n")
+(env 206 229 code
+  (opts))
+(text 229 "\n")
+(env 230 253 code
+  (opts)
+  (text 242 "x"))
+(text 253 "\n")
+(env 254 281 code
+  (opts)
+  (text 270 "y"))
+(text 281 "\n")
+(cmd 282 code
+  (opts)
+  (nodes 288
+    (text 288 "inline ")
+    (group 295
+      (text 296 "braces"))
+    (text 303 " here")))

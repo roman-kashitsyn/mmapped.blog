@@ -1,0 +1,67 @@
+(env 0 469 document
+  (opts)
+  (text 16 "\n")
+  (env 17 54 abstract
+    (opts)
+    (text 33 "\nText.\n"))
+  (text 54 "\n")
+  (env 55 149 itemize
+    (opts)
+    (text 70 "\n")
+    (cmd 71 item
+      (opts))
+    (text 77 "One\n")
+    (cmd 81 item
+      (opts))
+    (text 87 "Two ")
+    (env 91 135 enumerate
+      (opts)
+      (cmd 108 item
+        (opts))
+      (text 114 "nested"))
+    (text 135 "\n"))
+  (text 149 "\n")
+  (env 150 256 figure
+    (opts "grayscale-diagram" "medium")
+    (text 190 "\n")
+    (cmd 191 includegraphics
+      (opts)
+      (nodes 208
+        (text 208 "/images/a.png")))
+    (text 222 "\n")
+    (cmd 223 figcaption
+      (opts)
+      (nodes 235
+        (text 235 "Caption")))
+    (text 243 "\n"))
+  (text 256 "\n")
+  (env 257 310 description
+    (opts)
+    (text 276 "\n")
+    (cmd 277 term
+      (opts)
+      (nodes 283
+        (text 283 "T"))
+      (nodes 286
+        (text 286 "D\n\nD2")))
+    (text 292 "\n"))
+  (text 310 "\n")
+  (env 311 345 custom
+    (opts "a")
+    (text 329 "body"))
+  (text 345 "\n")
+  (cmd 346 emph
+    (opts)
+    (nodes 352
+      (text 352 "an environment in an inline argument ")
+      (env 389 433 itemize
+        (opts)
+        (cmd 404 item
+          (opts))
+        (text 410 "a\n\n")
+        (cmd 413 item
+          (opts))
+        (text 419 "b"))
+      (text 433 " may hold paragraphs")))
+  (text 454 "\n"))
+(text 469 "\n")

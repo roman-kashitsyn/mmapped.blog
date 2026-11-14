@@ -1,0 +1,18 @@
+Document@0..25
+  Text@0..8 "cost is "
+  InlineMath@8..14
+    Dollar@8..9 "$"
+    Letter@9..10 "x"
+    Space@10..11 " "
+    Operator@11..12 "+"
+    Space@12..13 " "
+    Number@13..14 "1"
+  ParBreak@14..16 "\n\n"
+  Text@16..21 "next "
+  InlineMath@21..24
+    Dollar@21..22 "$"
+    Letter@22..23 "y"
+    Dollar@23..24 "$"
+  Text@24..25 "\n"
+errors:
+  8..9: missing closing math delimiter

@@ -1,0 +1,19 @@
+\documentclass{article}
+\title{A title with \emph{nested \b{bold}} text}
+\date{2024-01-31}
+\keyword{programming}
+\section{sec-1.a}{Heading}
+\section*
+\href{https://example.org/a%20b?q=[1]&r=$x#frag}{link text}
+\label{anchor}\ref{anchor}{see \emph{here}}\nameref{anchor}
+\circled{12}\circled{-3}\dingbat{heavy-check}
+\ldots. \ldots  two spaces \qed-x \unknown{group after unknown}
+\item  [not options] \item[opt-1, opt.2 ,x] \item [spaced]
+\includegraphics[grayscale,w-50]{/images/x.png}
+\details{Summary}{Body
+
+with paragraphs}
+\epigraph{Quote
+
+two}{Author}
+\bibref{rfc:2119_v2} \bibref[p. \emph{6}, [sic x]{knuth-74} \bibref[{a]b}]{k}
