@@ -67,6 +67,19 @@ impl<'a> Lower<'a> {
             .take_while(move |&child| self.kind(child) != closer)
     }
 
+    /// The range between the opener of `id` and its closer. Without a
+    /// closer the range extends to the end of the element.
+    fn inner_range(&self, id: NodeId, closer: SyntaxKind) -> TextRange {
+        let range = self.tree.range(id);
+        let start = (range.start + 1).min(range.end);
+        let end = self
+            .children(id)
+            .skip(1)
+            .find(|&child| self.kind(child) == closer)
+            .map_or(range.end, |closer| self.tree.range(closer).start);
+        TextRange::new(start, end.max(start))
+    }
+
     fn kind(&self, id: NodeId) -> SyntaxKind {
         self.tree.kind(id)
     }
@@ -87,11 +100,21 @@ impl<'a> Lower<'a> {
         }
     }
 
-    fn name(&self, text: &str) -> Name {
+    fn name(&self, text: &str, range: TextRange) -> Name {
         Name {
             sym: Sym::from_name(text),
             text: text.to_string(),
+            range,
         }
+    }
+
+    /// The name of a command: its control word without the backslash and
+    /// without the spaces that follow it.
+    fn command_name(&self, id: NodeId) -> Name {
+        let start = self.tree.range(id).start;
+        let word = self.child_text(id, ControlWord).unwrap_or("\\");
+        let text = word[1..].trim_end_matches(' ');
+        self.name(text, TextRange::new(start, start + 1 + text.len() as u32))
     }
 
     // ------------------------------------------------------------ content
@@ -204,8 +227,7 @@ impl<'a> Lower<'a> {
     // ----------------------------------------------------------- commands
 
     fn command(&self, id: NodeId) -> Node {
-        let name = self.child_text(id, ControlWord).unwrap_or("\\");
-        let name = self.name(name[1..].trim_end_matches(' '));
+        let name = self.command_name(id);
         let mut specs = name.sym.spec().args.iter();
         let mut opts = Vec::new();
         let mut args = Vec::new();
@@ -216,7 +238,7 @@ impl<'a> Lower<'a> {
                 BracketArg => {
                     let inner = self.inner_children(child, RBracket);
                     bracket = Some(ast::Arg {
-                        pos: self.tree.range(child).start + 1,
+                        range: self.inner_range(child, RBracket),
                         value: ArgValue::Nodes(self.content(inner, Ctx::Plain)),
                     });
                 }
@@ -254,7 +276,7 @@ impl<'a> Lower<'a> {
             ArgSpec::AlignSpec => ArgValue::Align(col_specs(atom)),
         };
         ast::Arg {
-            pos: self.tree.range(id).start + 1,
+            range: self.inner_range(id, RBrace),
             value,
         }
     }
@@ -265,7 +287,7 @@ impl<'a> Lower<'a> {
     /// nothing.
     fn environment(&self, id: NodeId) -> Option<Node> {
         let begin = self.tree.child(id, Begin)?;
-        let name = self.name(self.child_text(begin, Atom)?);
+        let name = self.name(self.child_text(begin, Atom)?, self.tree.range(begin));
         let options = self.tree.child(id, Options);
         let opts = options
             .map(|options| self.options(options))
@@ -465,8 +487,7 @@ impl<'a> Lower<'a> {
     }
 
     fn math_command(&self, id: NodeId) -> MathNode {
-        let name = self.child_text(id, ControlWord).unwrap_or("\\");
-        let name = self.name(name[1..].trim_end_matches(' '));
+        let name = self.command_name(id);
         let args = match name.sym.spec().math {
             MathSig::Plain => Vec::new(),
             MathSig::Delimiter => self

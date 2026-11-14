@@ -1,0 +1,19 @@
+\documentclass{note}
+\title{A post with many errors}
+\date{not-a-date}
+\begin{document}
+Héllo \foobar{x}, see \nameref{sec-missing} and \bibref{no-such-book}.
+
+\subsection{early}{Too early}
+\begin{fancybox}
+text
+\end{fancybox}
+
+\section*
+\subsection{late}{Too late}
+\dingbat{heavy-czech} \code{let x = \frobnicate;}
+
+\section{real}{A real section}
+\ref{real}{This} and \nameref{01-good} are fine; \ref{late}{this} is not.
+\item stray
+\end{document}

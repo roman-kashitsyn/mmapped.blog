@@ -1,0 +1,5 @@
+\documentclass{article}
+\title{Index}
+\begin{document}
+See \nameref{01-good}, \nameref{garden} and \nameref{nowhere}.
+\end{document}

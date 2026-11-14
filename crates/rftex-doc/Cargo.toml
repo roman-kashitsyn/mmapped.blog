@@ -1,0 +1,12 @@
+[package]
+name = "rftex-doc"
+version = "0.1.0"
+edition = "2021"
+authors = ["Roman Kashitsyn <roman.kashitsyn@gmail.com>"]
+description = "Document model, elaboration and checks for the rftex markup language"
+repository = "https://github.com/roman-kashitsyn/mmapped.blog"
+license = "CC-BY-4.0"
+publish = false
+
+[dependencies]
+rftex-syntax = { path = "../rftex-syntax" }

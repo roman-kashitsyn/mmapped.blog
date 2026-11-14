@@ -79,6 +79,8 @@ help:
 	@echo "syntax-test  - run the test suite of the Rust parser"
 	@echo "diff-ast     - compare the Rust parser with the OCaml one on every article"
 	@echo "syntax-tree  - print the Rust parser's syntax tree for FILE"
+	@echo "engine-test  - run the test suite of the Rust engine"
+	@echo "check        - report every error in the sources of the site"
 	@echo "dir-locals   - generate .dir-locals.el for Emacs"
 
 $(OPAM_STATE_ROOT)/config: $(OPAM)
@@ -179,6 +181,19 @@ diff-ast: build
 .PHONY: syntax-tree
 syntax-tree:
 	cargo run --quiet -p rftex-syntax --bin rftex-dump -- cst '$(FILE)'
+
+# The Rust engine (crates/rftex-doc and crates/blogware), which is replacing the
+# OCaml one. It stays off the `test` target for the same reason as the parser.
+.PHONY: engine-test
+engine-test:
+	cargo test -p rftex-doc -p blogware
+
+# Check the whole site with the Rust engine: syntax, structure, references and the
+# bibliography. Unlike `render`, it reports all errors at once and fails if there
+# are any.
+.PHONY: check
+check:
+	cargo run --quiet -p blogware -- check --input $(INPUT)
 
 .PHONY: hooks
 hooks:

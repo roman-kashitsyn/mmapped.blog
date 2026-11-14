@@ -49,6 +49,12 @@ jobs:
       - name: Run parser tests
         run: make syntax-test
 
+      - name: Run engine tests
+        run: make engine-test
+
+      - name: Check the site
+        run: make check
+
   publish:
     runs-on: ubuntu-latest
 
