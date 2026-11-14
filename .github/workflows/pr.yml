@@ -1,6 +1,19 @@
-on: [pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
 
 name: Build website
+
+permissions:
+  contents: read
+
+# A newer push to a pull request supersedes the run in progress. Runs on main are
+# never cancelled, so a production deployment always finishes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   grammar:
     runs-on: ubuntu-latest
@@ -65,3 +78,30 @@ jobs:
 
       - name: Render the site
         run: make render DEST=site
+
+      # blogware exits with status 0 even when rendering fails, so make sure the
+      # output is there before it replaces the live site.
+      - name: Check the rendered site
+        run: test -s site/index.html && test -s site/feed.xml && test -s site/posts.html
+
+      # A push to main deploys to production; a pull request deploys a preview under
+      # the name of its branch. Pull requests from forks have no access to the token,
+      # so they stop after the checks above.
+      - name: Deploy to Cloudflare Pages
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 880d6a8c80226e3cbbd921dd8fdccc30
+          DEPLOY_BRANCH: ${{ github.head_ref || github.ref_name }}
+          DEPLOY_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          npx --yes wrangler@4 pages deploy site \
+            --project-name=mmapped-blog \
+            --branch="$DEPLOY_BRANCH" \
+            --commit-hash="$DEPLOY_COMMIT" \
+            --commit-dirty=true | tee deploy.log
+          {
+            echo "### Deployed to Cloudflare Pages"
+            grep -o 'https://[^ ]*\.pages\.dev' deploy.log | sort -u | sed 's/^/- /'
+          } >> "$GITHUB_STEP_SUMMARY"
