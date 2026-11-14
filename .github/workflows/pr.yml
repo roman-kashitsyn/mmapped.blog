@@ -15,8 +15,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: swatinem/rust-cache@v2
-        with:
-          workspaces: tree-sitter-rftex
 
       - name: Install grammar dependencies
         working-directory: tree-sitter-rftex
@@ -24,6 +22,19 @@ jobs:
 
       - name: Run grammar tests
         run: make grammar-test
+
+  syntax:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+
+      - name: Run parser tests
+        run: make syntax-test
 
   publish:
     runs-on: ubuntu-latest
@@ -44,6 +55,13 @@ jobs:
 
       - name: Run tests
         run: make test
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+
+      - name: Compare the Rust parser with the OCaml one
+        run: make diff-ast
 
       - name: Render the site
         run: make render DEST=site

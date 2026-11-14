@@ -1,0 +1,22 @@
+(quote 0
+  (text 2 "quoted"))
+(text 10 " and ")
+(quote 15
+  (text 17 "it")
+  (text 19 "'")
+  (text 20 "s ")
+  (text 22 "'")
+  (text 23 "nested")
+  (text 29 "'")
+  (text 30 " ")
+  (quote 31
+    (text 33 "deep"))
+  (text 39 " ok"))
+(text 44 " and ")
+(text 49 "`")
+(text 50 "single")
+(text 56 "`")
+(text 57 " tick.\n")
+(quote 64
+  (text 66 "spans\n\nparagraphs"))
+(text 85 " x''' y")

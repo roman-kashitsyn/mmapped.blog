@@ -1,0 +1,17 @@
+Document@0..33
+  Command@0..9
+    ControlWord@0..5 "\\emph"
+    Arg@5..9
+      LBrace@5..6 "{"
+      Text@6..9 "foo"
+  ParBreak@9..11 "\n\n"
+  Text@11..26 "next paragraph "
+  Command@26..32
+    ControlWord@26..28 "\\b"
+    Arg@28..32
+      LBrace@28..29 "{"
+      Text@29..31 "ok"
+      RBrace@31..32 "}"
+  Text@32..33 "\n"
+errors:
+  5..6: missing closing }

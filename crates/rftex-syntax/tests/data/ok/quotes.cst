@@ -1,0 +1,29 @@
+Document@0..92
+  Quotation@0..10
+    OpenQuote@0..2 "``"
+    Text@2..8 "quoted"
+    CloseQuote@8..10 "''"
+  Text@10..15 " and "
+  Quotation@15..44
+    OpenQuote@15..17 "``"
+    Text@17..31 "it's 'nested' "
+    Quotation@31..39
+      OpenQuote@31..33 "``"
+      Text@33..37 "deep"
+      CloseQuote@37..39 "''"
+    Text@39..42 " ok"
+    CloseQuote@42..44 "''"
+  Text@44..49 " and "
+  Backtick@49..50 "`"
+  Text@50..56 "single"
+  Backtick@56..57 "`"
+  Text@57..64 " tick.\n"
+  Quotation@64..85
+    OpenQuote@64..66 "``"
+    Text@66..71 "spans"
+    ParBreak@71..73 "\n\n"
+    Text@73..83 "paragraphs"
+    CloseQuote@83..85 "''"
+  Text@85..87 " x"
+  CloseQuote@87..89 "''"
+  Text@89..92 "' y"

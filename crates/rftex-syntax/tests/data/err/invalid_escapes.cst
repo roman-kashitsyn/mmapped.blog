@@ -1,0 +1,10 @@
+Document@0..9
+  Text@0..2 "a "
+  ErrorTree@2..5
+    ErrorToken@2..5 "\\é"
+  Text@5..8 " b "
+  ErrorTree@8..9
+    ErrorToken@8..9 "\\"
+errors:
+  2..5: invalid escape sequence
+  8..9: invalid escape sequence

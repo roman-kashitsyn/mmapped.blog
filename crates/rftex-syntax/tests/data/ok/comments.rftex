@@ -1,0 +1,7 @@
+a % comment
+b
+% line one
+% line two
+
+c\emph{x % inside
+y}% tail

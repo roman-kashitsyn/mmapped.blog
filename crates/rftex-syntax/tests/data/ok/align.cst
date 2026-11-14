@@ -1,0 +1,130 @@
+Document@0..172
+  Environment@0..67
+    Begin@0..14
+      ControlWord@0..6 "\\begin"
+      LBrace@6..7 "{"
+      Atom@7..13 "align*"
+      RBrace@13..14 "}"
+    Row@14..28
+      Cell@14..17
+        Newline@14..15 "\n"
+        Letter@15..16 "a"
+        Space@16..17 " "
+      Amp@17..18 "&"
+      Cell@18..26
+        Operator@18..19 "="
+        Space@19..20 " "
+        Letter@20..21 "b"
+        Space@21..22 " "
+        Operator@22..23 "+"
+        Space@23..24 " "
+        Letter@24..25 "c"
+        Space@25..26 " "
+      DoubleBackslash@26..28 "\\\\"
+    Row@28..43
+      Cell@28..31
+        Newline@28..29 "\n"
+        Space@29..31 "  "
+      Amp@31..32 "&"
+      Cell@32..37
+        Operator@32..33 "="
+        Space@33..34 " "
+        MathNegNumber@34..36
+          Operator@34..35 "-"
+          Number@35..36 "1"
+        Space@36..37 " "
+      Amp@37..38 "&"
+      Cell@38..41
+        Space@38..39 " "
+        Letter@39..40 "x"
+        Space@40..41 " "
+      DoubleBackslash@41..43 "\\\\"
+    Row@43..55
+      Cell@43..47
+        Newline@43..44 "\n"
+        Newline@44..45 "\n"
+        Letter@45..46 "d"
+        Space@46..47 " "
+      Amp@47..48 "&"
+      Cell@48..51
+        Space@48..49 " "
+        Operator@49..50 "="
+        Space@50..51 " "
+      Amp@51..52 "&"
+      Cell@52..55
+        Space@52..53 " "
+        Letter@53..54 "e"
+        Newline@54..55 "\n"
+    End@55..67
+      ControlWord@55..59 "\\end"
+      LBrace@59..60 "{"
+      Atom@60..66 "align*"
+      RBrace@66..67 "}"
+  Text@67..68 "\n"
+  Environment@68..95
+    Begin@68..82
+      ControlWord@68..74 "\\begin"
+      LBrace@74..75 "{"
+      Atom@75..81 "align*"
+      RBrace@81..82 "}"
+    Row@82..83
+      Cell@82..83
+        Letter@82..83 "a"
+    End@83..95
+      ControlWord@83..87 "\\end"
+      LBrace@87..88 "{"
+      Atom@88..94 "align*"
+      RBrace@94..95 "}"
+  Text@95..96 "\n"
+  Environment@96..144
+    Begin@96..110
+      ControlWord@96..102 "\\begin"
+      LBrace@102..103 "{"
+      Atom@103..109 "align*"
+      RBrace@109..110 "}"
+    Row@110..131
+      Cell@110..113
+        Newline@110..111 "\n"
+        Letter@111..112 "x"
+        Space@112..113 " "
+      Amp@113..114 "&"
+      Cell@114..129
+        Operator@114..115 "="
+        Space@115..116 " "
+        MathGroup@116..128
+          LBrace@116..117 "{"
+          Letter@117..118 "a"
+          Space@118..119 " "
+          Amp@119..120 "&"
+          Space@120..121 " "
+          Letter@121..122 "b"
+          Space@122..123 " "
+          DoubleBackslash@123..125 "\\\\"
+          Space@125..126 " "
+          Letter@126..127 "c"
+          RBrace@127..128 "}"
+        Space@128..129 " "
+      DoubleBackslash@129..131 "\\\\"
+    Row@131..132
+      Cell@131..132
+        Newline@131..132 "\n"
+    End@132..144
+      ControlWord@132..136 "\\end"
+      LBrace@136..137 "{"
+      Atom@137..143 "align*"
+      RBrace@143..144 "}"
+  Text@144..145 "\n"
+  Environment@145..172
+    Begin@145..159
+      ControlWord@145..151 "\\begin"
+      LBrace@151..152 "{"
+      Atom@152..158 "align*"
+      RBrace@158..159 "}"
+    Row@159..160
+      Cell@159..160
+        Newline@159..160 "\n"
+    End@160..172
+      ControlWord@160..164 "\\end"
+      LBrace@164..165 "{"
+      Atom@165..171 "align*"
+      RBrace@171..172 "}"

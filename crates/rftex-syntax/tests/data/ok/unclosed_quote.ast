@@ -1,0 +1,18 @@
+(text 0 "see ")
+(text 4 "`")
+(text 5 "`")
+(text 6 "this never closes, it's text.\n\n")
+(cmd 37 emph
+  (opts)
+  (nodes 43
+    (text 43 "inner ")
+    (text 49 "`")
+    (text 50 "`")
+    (text 51 "also open")))
+(text 61 " after ")
+(group 68
+  (text 69 "group ")
+  (text 75 "`")
+  (text 76 "`")
+  (text 77 "x"))
+(text 79 " tail")

@@ -9,3 +9,6 @@ target/
 *~lock~
 purgatory/
 .rtk
+
+# Cargo
+/target/

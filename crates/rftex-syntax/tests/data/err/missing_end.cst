@@ -1,0 +1,27 @@
+Document@0..68
+  Environment@0..61
+    Begin@0..15
+      ControlWord@0..6 "\\begin"
+      LBrace@6..7 "{"
+      Atom@7..14 "itemize"
+      RBrace@14..15 "}"
+    Command@15..21
+      ControlWord@15..21 "\\item "
+    Text@21..23 "a "
+    Environment@23..48
+      Begin@23..40
+        ControlWord@23..29 "\\begin"
+        LBrace@29..30 "{"
+        Atom@30..39 "enumerate"
+        RBrace@39..40 "}"
+      Command@40..46
+        ControlWord@40..46 "\\item "
+      Text@46..48 "b\n"
+    End@48..61
+      ControlWord@48..52 "\\end"
+      LBrace@52..53 "{"
+      Atom@53..60 "itemize"
+      RBrace@60..61 "}"
+  Text@61..68 "\nafter\n"
+errors:
+  23..29: missing \end for this environment

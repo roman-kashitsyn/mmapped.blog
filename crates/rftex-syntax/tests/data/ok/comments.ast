@@ -1,0 +1,8 @@
+(text 0 "a ")
+(text 12 "b\n")
+(text 36 "\nc")
+(cmd 38 emph
+  (opts)
+  (nodes 44
+    (text 44 "x ")
+    (text 55 "y")))

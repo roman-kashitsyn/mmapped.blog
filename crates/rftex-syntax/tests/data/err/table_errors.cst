@@ -1,0 +1,72 @@
+Document@0..103
+  Environment@0..38
+    Begin@0..15
+      ControlWord@0..6 "\\begin"
+      LBrace@6..7 "{"
+      Atom@7..14 "tabular"
+      RBrace@14..15 "}"
+    Row@15..24
+      Cell@15..18
+        Text@15..18 "\na "
+      Amp@18..19 "&"
+      Cell@19..22
+        Text@19..22 " b "
+      DoubleBackslash@22..24 "\\\\"
+    Row@24..25
+      Cell@24..25
+        Text@24..25 "\n"
+    End@25..38
+      ControlWord@25..29 "\\end"
+      LBrace@29..30 "{"
+      Atom@30..37 "tabular"
+      RBrace@37..38 "}"
+  Text@38..39 "\n"
+  Environment@39..102
+    Begin@39..54
+      ControlWord@39..45 "\\begin"
+      LBrace@45..46 "{"
+      Atom@46..53 "tabular"
+      RBrace@53..54 "}"
+    Arg@54..57
+      LBrace@54..55 "{"
+      Atom@55..56 "l"
+      RBrace@56..57 "}"
+    Row@57..83
+      Cell@57..81
+        Text@57..58 "\n"
+        Command@58..80
+          ControlWord@58..70 "\\multicolumn"
+          Arg@70..73
+            LBrace@70..71 "{"
+            Atom@71..72 "2"
+            RBrace@72..73 "}"
+          Arg@73..77
+            LBrace@73..74 "{"
+            Atom@74..76 "lr"
+            RBrace@76..77 "}"
+          Arg@77..80
+            LBrace@77..78 "{"
+            Text@78..79 "x"
+            RBrace@79..80 "}"
+        Text@80..81 " "
+      DoubleBackslash@81..83 "\\\\"
+    Row@83..88
+      Cell@83..86
+        Text@83..84 " "
+        ErrorTree@84..85
+          RBrace@84..85 "}"
+        Text@85..86 " "
+      DoubleBackslash@86..88 "\\\\"
+    Row@88..89
+      Cell@88..89
+        Text@88..89 "\n"
+    End@89..102
+      ControlWord@89..93 "\\end"
+      LBrace@93..94 "{"
+      Atom@94..101 "tabular"
+      RBrace@101..102 "}"
+  Text@102..103 "\n"
+errors:
+  15..15: missing argument
+  74..76: \multicolumn requires {N}{alignment}{content}
+  84..85: unmatched }

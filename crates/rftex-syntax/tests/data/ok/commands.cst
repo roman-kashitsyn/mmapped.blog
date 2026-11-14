@@ -1,0 +1,240 @@
+Document@0..636
+  Command@0..23
+    ControlWord@0..14 "\\documentclass"
+    Arg@14..23
+      LBrace@14..15 "{"
+      Atom@15..22 "article"
+      RBrace@22..23 "}"
+  Text@23..24 "\n"
+  Command@24..72
+    ControlWord@24..30 "\\title"
+    Arg@30..72
+      LBrace@30..31 "{"
+      Text@31..44 "A title with "
+      Command@44..66
+        ControlWord@44..49 "\\emph"
+        Arg@49..66
+          LBrace@49..50 "{"
+          Text@50..57 "nested "
+          Command@57..65
+            ControlWord@57..59 "\\b"
+            Arg@59..65
+              LBrace@59..60 "{"
+              Text@60..64 "bold"
+              RBrace@64..65 "}"
+          RBrace@65..66 "}"
+      Text@66..71 " text"
+      RBrace@71..72 "}"
+  Text@72..73 "\n"
+  Command@73..90
+    ControlWord@73..78 "\\date"
+    Arg@78..90
+      LBrace@78..79 "{"
+      Atom@79..89 "2024-01-31"
+      RBrace@89..90 "}"
+  Text@90..91 "\n"
+  Command@91..112
+    ControlWord@91..99 "\\keyword"
+    Arg@99..112
+      LBrace@99..100 "{"
+      Atom@100..111 "programming"
+      RBrace@111..112 "}"
+  Text@112..113 "\n"
+  Command@113..139
+    ControlWord@113..121 "\\section"
+    Arg@121..130
+      LBrace@121..122 "{"
+      Atom@122..129 "sec-1.a"
+      RBrace@129..130 "}"
+    Arg@130..139
+      LBrace@130..131 "{"
+      Text@131..138 "Heading"
+      RBrace@138..139 "}"
+  Text@139..140 "\n"
+  Command@140..149
+    ControlWord@140..149 "\\section*"
+  Text@149..150 "\n"
+  Command@150..209
+    ControlWord@150..155 "\\href"
+    Arg@155..198
+      LBrace@155..156 "{"
+      Atom@156..197 "https://example.org/a%20b?q=[1]&r=$x#frag"
+      RBrace@197..198 "}"
+    Arg@198..209
+      LBrace@198..199 "{"
+      Text@199..208 "link text"
+      RBrace@208..209 "}"
+  Text@209..210 "\n"
+  Command@210..224
+    ControlWord@210..216 "\\label"
+    Arg@216..224
+      LBrace@216..217 "{"
+      Atom@217..223 "anchor"
+      RBrace@223..224 "}"
+  Command@224..253
+    ControlWord@224..228 "\\ref"
+    Arg@228..236
+      LBrace@228..229 "{"
+      Atom@229..235 "anchor"
+      RBrace@235..236 "}"
+    Arg@236..253
+      LBrace@236..237 "{"
+      Text@237..241 "see "
+      Command@241..252
+        ControlWord@241..246 "\\emph"
+        Arg@246..252
+          LBrace@246..247 "{"
+          Text@247..251 "here"
+          RBrace@251..252 "}"
+      RBrace@252..253 "}"
+  Command@253..269
+    ControlWord@253..261 "\\nameref"
+    Arg@261..269
+      LBrace@261..262 "{"
+      Atom@262..268 "anchor"
+      RBrace@268..269 "}"
+  Text@269..270 "\n"
+  Command@270..282
+    ControlWord@270..278 "\\circled"
+    Arg@278..282
+      LBrace@278..279 "{"
+      Atom@279..281 "12"
+      RBrace@281..282 "}"
+  Command@282..294
+    ControlWord@282..290 "\\circled"
+    Arg@290..294
+      LBrace@290..291 "{"
+      Atom@291..293 "-3"
+      RBrace@293..294 "}"
+  Command@294..315
+    ControlWord@294..302 "\\dingbat"
+    Arg@302..315
+      LBrace@302..303 "{"
+      Atom@303..314 "heavy-check"
+      RBrace@314..315 "}"
+  Text@315..316 "\n"
+  Command@316..322
+    ControlWord@316..322 "\\ldots"
+  Text@322..324 ". "
+  Command@324..331
+    ControlWord@324..331 "\\ldots "
+  Text@331..343 " two spaces "
+  Command@343..347
+    ControlWord@343..347 "\\qed"
+  Text@347..350 "-x "
+  Command@350..358
+    ControlWord@350..358 "\\unknown"
+  Group@358..379
+    LBrace@358..359 "{"
+    Text@359..378 "group after unknown"
+    RBrace@378..379 "}"
+  Text@379..380 "\n"
+  Command@380..386
+    ControlWord@380..386 "\\item "
+  Text@386..387 " "
+  LBracket@387..388 "["
+  Text@388..399 "not options"
+  RBracket@399..400 "]"
+  Text@400..401 " "
+  Command@401..423
+    ControlWord@401..406 "\\item"
+    Options@406..423
+      LBracket@406..407 "["
+      Atom@407..412 "opt-1"
+      Comma@412..413 ","
+      Whitespace@413..414 " "
+      Atom@414..419 "opt.2"
+      Whitespace@419..420 " "
+      Comma@420..421 ","
+      Atom@421..422 "x"
+      RBracket@422..423 "]"
+  Text@423..424 " "
+  Command@424..438
+    ControlWord@424..430 "\\item "
+    Options@430..438
+      LBracket@430..431 "["
+      Atom@431..437 "spaced"
+      RBracket@437..438 "]"
+  Text@438..439 "\n"
+  Command@439..486
+    ControlWord@439..455 "\\includegraphics"
+    Options@455..471
+      LBracket@455..456 "["
+      Atom@456..465 "grayscale"
+      Comma@465..466 ","
+      Atom@466..470 "w-50"
+      RBracket@470..471 "]"
+    Arg@471..486
+      LBrace@471..472 "{"
+      Text@472..485 "/images/x.png"
+      RBrace@485..486 "}"
+  Text@486..487 "\n"
+  Command@487..527
+    ControlWord@487..495 "\\details"
+    Arg@495..504
+      LBrace@495..496 "{"
+      Text@496..503 "Summary"
+      RBrace@503..504 "}"
+    Arg@504..527
+      LBrace@504..505 "{"
+      Text@505..509 "Body"
+      ParBreak@509..511 "\n\n"
+      Text@511..526 "with paragraphs"
+      RBrace@526..527 "}"
+  Text@527..528 "\n"
+  Command@528..557
+    ControlWord@528..537 "\\epigraph"
+    Arg@537..549
+      LBrace@537..538 "{"
+      Text@538..543 "Quote"
+      ParBreak@543..545 "\n\n"
+      Text@545..548 "two"
+      RBrace@548..549 "}"
+    Arg@549..557
+      LBrace@549..550 "{"
+      Text@550..556 "Author"
+      RBrace@556..557 "}"
+  Text@557..558 "\n"
+  Command@558..578
+    ControlWord@558..565 "\\bibref"
+    Arg@565..578
+      LBrace@565..566 "{"
+      Atom@566..577 "rfc:2119_v2"
+      RBrace@577..578 "}"
+  Text@578..579 " "
+  Command@579..617
+    ControlWord@579..586 "\\bibref"
+    BracketArg@586..607
+      LBracket@586..587 "["
+      Text@587..590 "p. "
+      Command@590..598
+        ControlWord@590..595 "\\emph"
+        Arg@595..598
+          LBrace@595..596 "{"
+          Text@596..597 "6"
+          RBrace@597..598 "}"
+      Text@598..600 ", "
+      LBracket@600..601 "["
+      Text@601..606 "sic x"
+      RBracket@606..607 "]"
+    Arg@607..617
+      LBrace@607..608 "{"
+      Atom@608..616 "knuth-74"
+      RBrace@616..617 "}"
+  Text@617..618 " "
+  Command@618..635
+    ControlWord@618..625 "\\bibref"
+    BracketArg@625..632
+      LBracket@625..626 "["
+      Group@626..631
+        LBrace@626..627 "{"
+        Text@627..628 "a"
+        RBracket@628..629 "]"
+        Text@629..630 "b"
+        RBrace@630..631 "}"
+      RBracket@631..632 "]"
+    Arg@632..635
+      LBrace@632..633 "{"
+      Atom@633..634 "k"
+      RBrace@634..635 "}"
+  Text@635..636 "\n"

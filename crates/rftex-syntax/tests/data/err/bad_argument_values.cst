@@ -1,0 +1,48 @@
+Document@0..56
+  Command@0..11
+    ControlWord@0..6 "\\label"
+    Arg@6..11
+      LBrace@6..7 "{"
+      Atom@7..8 "a"
+      ErrorTree@8..10
+        ErrorToken@8..9 " "
+        Atom@9..10 "b"
+      RBrace@10..11 "}"
+  Command@11..22
+    ControlWord@11..19 "\\circled"
+    Arg@19..22
+      LBrace@19..20 "{"
+      ErrorTree@20..21
+        ErrorToken@20..21 "x"
+      RBrace@21..22 "}"
+  Command@22..34
+    ControlWord@22..30 "\\circled"
+    Arg@30..34
+      LBrace@30..31 "{"
+      Atom@31..33 "1-"
+      RBrace@33..34 "}"
+  Command@34..47
+    ControlWord@34..39 "\\href"
+    Arg@39..44
+      LBrace@39..40 "{"
+      Atom@40..41 "a"
+      ErrorTree@41..43
+        ErrorToken@41..42 " "
+        Atom@42..43 "b"
+      RBrace@43..44 "}"
+    Arg@44..47
+      LBrace@44..45 "{"
+      Text@45..46 "c"
+      RBrace@46..47 "}"
+  Command@47..55
+    ControlWord@47..53 "\\label"
+    Arg@53..55
+      LBrace@53..54 "{"
+      Atom@54..55 "a"
+  Text@55..56 "\n"
+errors:
+  8..10: unexpected characters in argument
+  20..21: missing or malformed argument value
+  31..33: invalid number
+  41..43: unexpected characters in argument
+  53..54: missing closing }

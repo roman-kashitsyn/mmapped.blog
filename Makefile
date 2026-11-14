@@ -76,6 +76,9 @@ help:
 	@echo "grammar      - regenerate the tree-sitter grammar parser"
 	@echo "grammar-test - run the tree-sitter grammar test suite"
 	@echo "parse-tree   - print the tree-sitter parse tree for FILE"
+	@echo "syntax-test  - run the test suite of the Rust parser"
+	@echo "diff-ast     - compare the Rust parser with the OCaml one on every article"
+	@echo "syntax-tree  - print the Rust parser's syntax tree for FILE"
 	@echo "dir-locals   - generate .dir-locals.el for Emacs"
 
 $(OPAM_STATE_ROOT)/config: $(OPAM)
@@ -160,6 +163,22 @@ grammar-test:
 .PHONY: parse-tree
 parse-tree:
 	cd $(GRAMMAR_DIR) && npx tree-sitter parse --cst '../$(FILE)'
+
+# The Rust parser (crates/rftex-syntax). Like the grammar, it stays off the `test`
+# target so that the pre-commit hook needs only the OCaml toolchain.
+.PHONY: syntax-test
+syntax-test:
+	cargo test -p rftex-syntax
+
+# The differential gate: on every article and every valid fixture, the Rust parser
+# must produce the same AST as `blogware -dump-ast`.
+.PHONY: diff-ast
+diff-ast: build
+	RFTEX_ORACLE=$(abspath $(BLOGWARE)) cargo test -p rftex-syntax --test differential -- --nocapture
+
+.PHONY: syntax-tree
+syntax-tree:
+	cargo run --quiet -p rftex-syntax --bin rftex-dump -- cst '$(FILE)'
 
 .PHONY: hooks
 hooks:

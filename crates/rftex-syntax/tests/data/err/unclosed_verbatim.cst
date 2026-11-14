@@ -1,0 +1,10 @@
+Document@0..30
+  Environment@0..30
+    Begin@0..16
+      ControlWord@0..6 "\\begin"
+      LBrace@6..7 "{"
+      Atom@7..15 "verbatim"
+      RBrace@15..16 "}"
+    RawText@16..30 "\nraw \\end{verb"
+errors:
+  0..6: missing \end for this environment

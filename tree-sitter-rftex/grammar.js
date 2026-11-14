@@ -16,9 +16,10 @@
 // newlines and UTF-8 included, is literal.
 const TEXT = /[^%{}\\\[\]&$]+/;
 
-// Command names: `[A-Za-z0-9*.-]+` (`is_symbolic`, tex_parser.ml:14). Note the `*`,
-// which is what makes `\section*` and `align*` single names.
-const CMD_NAME = /\\[A-Za-z0-9*.\-]+/;
+// Command names: `[A-Za-z0-9*]+` (`is_cmd_name_char` in tex_parser.ml). The `*` is
+// what makes `\section*` a single name; `.` and `-` end a name, so `\ldots.` is a
+// command followed by a period. Environment names are wider, see `environment_name`.
+const CMD_NAME = /\\[A-Za-z0-9*]+/;
 
 // Escapes producing one literal character. Text mode allows `% \ & # _ { } $` and a
 // newline (tex_parser.ml:441-446); math mode allows `% { } \ ^ _` (tex_parser.ml:134-137).

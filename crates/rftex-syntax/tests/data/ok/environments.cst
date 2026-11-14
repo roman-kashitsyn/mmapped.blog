@@ -1,0 +1,163 @@
+Document@0..470
+  Environment@0..469
+    Begin@0..16
+      ControlWord@0..6 "\\begin"
+      LBrace@6..7 "{"
+      Atom@7..15 "document"
+      RBrace@15..16 "}"
+    Text@16..17 "\n"
+    Environment@17..54
+      Begin@17..33
+        ControlWord@17..23 "\\begin"
+        LBrace@23..24 "{"
+        Atom@24..32 "abstract"
+        RBrace@32..33 "}"
+      Text@33..40 "\nText.\n"
+      End@40..54
+        ControlWord@40..44 "\\end"
+        LBrace@44..45 "{"
+        Atom@45..53 "abstract"
+        RBrace@53..54 "}"
+    Text@54..55 "\n"
+    Environment@55..149
+      Begin@55..70
+        ControlWord@55..61 "\\begin"
+        LBrace@61..62 "{"
+        Atom@62..69 "itemize"
+        RBrace@69..70 "}"
+      Text@70..71 "\n"
+      Command@71..77
+        ControlWord@71..77 "\\item "
+      Text@77..81 "One\n"
+      Command@81..87
+        ControlWord@81..87 "\\item "
+      Text@87..91 "Two "
+      Environment@91..135
+        Begin@91..108
+          ControlWord@91..97 "\\begin"
+          LBrace@97..98 "{"
+          Atom@98..107 "enumerate"
+          RBrace@107..108 "}"
+        Command@108..114
+          ControlWord@108..114 "\\item "
+        Text@114..120 "nested"
+        End@120..135
+          ControlWord@120..124 "\\end"
+          LBrace@124..125 "{"
+          Atom@125..134 "enumerate"
+          RBrace@134..135 "}"
+      Text@135..136 "\n"
+      End@136..149
+        ControlWord@136..140 "\\end"
+        LBrace@140..141 "{"
+        Atom@141..148 "itemize"
+        RBrace@148..149 "}"
+    Text@149..150 "\n"
+    Environment@150..256
+      Begin@150..164
+        ControlWord@150..156 "\\begin"
+        LBrace@156..157 "{"
+        Atom@157..163 "figure"
+        RBrace@163..164 "}"
+      Options@164..190
+        LBracket@164..165 "["
+        Atom@165..182 "grayscale-diagram"
+        Comma@182..183 ","
+        Atom@183..189 "medium"
+        RBracket@189..190 "]"
+      Text@190..191 "\n"
+      Command@191..222
+        ControlWord@191..207 "\\includegraphics"
+        Arg@207..222
+          LBrace@207..208 "{"
+          Text@208..221 "/images/a.png"
+          RBrace@221..222 "}"
+      Text@222..223 "\n"
+      Command@223..243
+        ControlWord@223..234 "\\figcaption"
+        Arg@234..243
+          LBrace@234..235 "{"
+          Text@235..242 "Caption"
+          RBrace@242..243 "}"
+      Text@243..244 "\n"
+      End@244..256
+        ControlWord@244..248 "\\end"
+        LBrace@248..249 "{"
+        Atom@249..255 "figure"
+        RBrace@255..256 "}"
+    Text@256..257 "\n"
+    Environment@257..310
+      Begin@257..276
+        ControlWord@257..263 "\\begin"
+        LBrace@263..264 "{"
+        Atom@264..275 "description"
+        RBrace@275..276 "}"
+      Text@276..277 "\n"
+      Command@277..292
+        ControlWord@277..282 "\\term"
+        Arg@282..285
+          LBrace@282..283 "{"
+          Text@283..284 "T"
+          RBrace@284..285 "}"
+        Arg@285..292
+          LBrace@285..286 "{"
+          Text@286..287 "D"
+          ParBreak@287..289 "\n\n"
+          Text@289..291 "D2"
+          RBrace@291..292 "}"
+      Text@292..293 "\n"
+      End@293..310
+        ControlWord@293..297 "\\end"
+        LBrace@297..298 "{"
+        Atom@298..309 "description"
+        RBrace@309..310 "}"
+    Text@310..311 "\n"
+    Environment@311..345
+      Begin@311..326
+        ControlWord@311..318 "\\begin "
+        LBrace@318..319 "{"
+        Atom@319..325 "custom"
+        RBrace@325..326 "}"
+      Options@326..329
+        LBracket@326..327 "["
+        Atom@327..328 "a"
+        RBracket@328..329 "]"
+      Text@329..333 "body"
+      End@333..345
+        ControlWord@333..337 "\\end"
+        LBrace@337..338 "{"
+        Atom@338..344 "custom"
+        RBrace@344..345 "}"
+    Text@345..346 "\n"
+    Command@346..454
+      ControlWord@346..351 "\\emph"
+      Arg@351..454
+        LBrace@351..352 "{"
+        Text@352..389 "an environment in an inline argument "
+        Environment@389..433
+          Begin@389..404
+            ControlWord@389..395 "\\begin"
+            LBrace@395..396 "{"
+            Atom@396..403 "itemize"
+            RBrace@403..404 "}"
+          Command@404..410
+            ControlWord@404..410 "\\item "
+          Text@410..411 "a"
+          ParBreak@411..413 "\n\n"
+          Command@413..419
+            ControlWord@413..419 "\\item "
+          Text@419..420 "b"
+          End@420..433
+            ControlWord@420..424 "\\end"
+            LBrace@424..425 "{"
+            Atom@425..432 "itemize"
+            RBrace@432..433 "}"
+        Text@433..453 " may hold paragraphs"
+        RBrace@453..454 "}"
+    Text@454..455 "\n"
+    End@455..469
+      ControlWord@455..459 "\\end"
+      LBrace@459..460 "{"
+      Atom@460..468 "document"
+      RBrace@468..469 "}"
+  Text@469..470 "\n"

@@ -1,0 +1,19 @@
+(env 0 66 verbatim
+  (opts)
+  (text 17 "raw % not a comment \\emph{x} $y$ {\n"))
+(text 66 "\n")
+(env 67 111 verbatim
+  (opts "j")
+  (text 86 "[output]\nx\n"))
+(text 111 "\n")
+(env 112 142 verbatim
+  (opts)
+  (text 128 ""))
+(text 142 "\n")
+(env 143 187 verbatim
+  (opts)
+  (text 160 "\ntwo newlines"))
+(text 187 "\n")
+(env 188 220 verbatim
+  (opts)
+  (text 204 "a\\"))

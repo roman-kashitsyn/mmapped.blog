@@ -1,0 +1,24 @@
+Document@0..29
+  Environment@0..26
+    Begin@0..9
+      ControlWord@0..6 "\\begin"
+      LBrace@6..7 "{"
+      Atom@7..8 "a"
+      RBrace@8..9 "}"
+    Group@9..19
+      LBrace@9..10 "{"
+      Text@10..12 "x "
+      Command@12..19
+        ControlWord@12..17 "\\emph"
+        Arg@17..19
+          LBrace@17..18 "{"
+          Text@18..19 "y"
+    End@19..26
+      ControlWord@19..23 "\\end"
+      LBrace@23..24 "{"
+      Atom@24..25 "a"
+      RBrace@25..26 "}"
+  Text@26..29 " z\n"
+errors:
+  9..10: missing closing }
+  17..18: missing closing }

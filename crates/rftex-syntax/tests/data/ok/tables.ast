@@ -1,0 +1,93 @@
+(table 0 204 tabular
+  (opts) "lrc"
+  (row top
+    (cell "l" 1
+      (text 22 "\n")
+      (text 29 "\nA "))
+    (cell "r" 1
+      (text 33 " B "))
+    (cell "c" 1
+      (text 37 " C ")))
+  (row top
+    (cell "l" 1
+      (text 42 "\n")
+      (text 49 "\na `tick` ``q'' "))
+    (cell "r" 1
+      (text 66 " ")
+      (math 67 inline
+        (mtext "x"))
+      (text 70 " "))
+    (cell "c" 1
+      (text 72 " ")
+      (group 73
+        (text 74 "g h"))
+      (text 78 " ")))
+  (row none
+    (cell "l" 1
+      (text 81 "\n1 "))
+    (cell "r" 1
+      (text 85 " ")
+      (cmd 86 emph
+        (opts)
+        (nodes 92
+          (text 92 "2")))
+      (text 94 " "))
+    (cell "c" 1
+      (text 96 " ")
+      (math 97 display
+        (num "3"))
+      (text 102 " ")))
+  (row none
+    (cell "c" 2
+      (text 125 "wide"))
+    (cell "c" 1
+      (text 130 " "))
+    (cell "l" 1
+      (text 132 " z ")))
+  (row none
+    (cell "l" 1
+      (text 137 "\np "))
+    (cell "r" 2
+      (text 161 "tail"))
+    (cell "l" 1
+      (text 166 " "))))
+(text 204 "\n")
+(table 205 301 tabular*
+  (opts "uniform") "ll"
+  (row none
+    (cell "l" 1
+      (text 235 "\nx "))
+    (cell "l" 1
+      (text 239 " y ")))
+  (row bottom
+    (cell "l" 1
+      (text 244 " ")
+      (text 255 " z "))
+    (cell "l" 1
+      (text 259 " w "))
+    (cell "l" 1
+      (text 263 " extra "))
+    (cell "l" 1
+      (text 271 " more "))))
+(text 301 "\n")
+(table 302 337 tabular
+  (opts) "c"
+  (row none
+    (cell "c" 1))
+  (row none
+    (cell "c" 1)))
+(text 337 "\n")
+(table 338 369 tabular
+  (opts) "c")
+(text 369 "\n")
+(table 370 440 tabular
+  (opts) "l"
+  (row top
+    (cell "l" 1
+      (text 388 "\n")
+      (text 395 "\na ")))
+  (row both
+    (cell "l" 1
+      (text 400 "\n")
+      (text 407 "\n")
+      (text 414 "\nb "))))

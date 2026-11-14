@@ -1,0 +1,25 @@
+\begin{tabular}{l r c}
+\hrule
+A & B & C \\
+\hrule
+a `tick` ``q'' & $x$ & {g h} \\
+1 & \emph{2} & \[3\] \\
+\multicolumn{2}{c}{wide} & z \\
+p & \multicolumn{2}{r}{tail} \\
+last & row & dropped
+\end{tabular}
+\begin{tabular*}[uniform]{l|l}
+x & y \\ % comment
+ z & w & extra & more \\
+\hrule
+\end{tabular*}
+\begin{tabular}{c}\\\\\end{tabular}
+\begin{tabular}{c}\end{tabular}
+\begin{tabular}{l}
+\hrule
+a \\
+\hrule
+\hrule
+b \\
+\hrule
+\end{tabular}

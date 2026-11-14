@@ -1,0 +1,13 @@
+Document@0..11
+  InlineMath@0..6
+    Dollar@0..1 "$"
+    MathTerm@1..5
+      Letter@1..2 "x"
+      Underscore@2..3 "_"
+      MathGroup@3..5
+        LBrace@3..4 "{"
+        Number@4..5 "1"
+    Dollar@5..6 "$"
+  Text@6..11 " foo\n"
+errors:
+  3..4: missing closing }

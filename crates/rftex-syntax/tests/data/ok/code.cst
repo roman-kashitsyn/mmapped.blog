@@ -1,0 +1,137 @@
+Document@0..309
+  Environment@0..182
+    Begin@0..12
+      ControlWord@0..6 "\\begin"
+      LBrace@6..7 "{"
+      Atom@7..11 "code"
+      RBrace@11..12 "}"
+    Options@12..18
+      LBracket@12..13 "["
+      Atom@13..17 "rust"
+      RBracket@17..18 "]"
+    Text@18..57 "\nfn main() { let x = a[0] & b; } // 100"
+    Escape@57..59 "\\%"
+    Text@59..60 " "
+    Command@60..72
+      ControlWord@60..62 "\\b"
+      Arg@62..72
+        LBrace@62..63 "{"
+        Text@63..68 "bold "
+        Group@68..71
+          LBrace@68..69 "{"
+          Text@69..70 "x"
+          RBrace@70..71 "}"
+        RBrace@71..72 "}"
+    Text@72..73 "\n"
+    Command@73..85
+      ControlWord@73..78 "\\emph"
+      Arg@78..85
+        LBrace@78..79 "{"
+        Text@79..81 "it"
+        UnclosedQuotation@81..84
+          OpenQuote@81..83 "``"
+          Text@83..84 "s"
+        RBrace@84..85 "}"
+    DoubleBackslash@85..87 "\\\\"
+    Text@87..89 "n "
+    InlineMath@89..94
+      Dollar@89..90 "$"
+      MathTerm@90..93
+        Letter@90..91 "x"
+        Underscore@91..92 "_"
+        Number@92..93 "1"
+      Dollar@93..94 "$"
+    Text@94..95 " "
+    DisplayMath@95..100
+      DisplayOpen@95..97 "\\["
+      Letter@97..98 "y"
+      DisplayClose@98..100 "\\]"
+    Text@100..101 " "
+    Comment@101..111 "% comment\n"
+    Text@111..125 "next ``line'' "
+    Command@125..134
+      ControlWord@125..131 "\\ldots"
+      Options@131..134
+        LBracket@131..132 "["
+        Atom@132..133 "0"
+        RBracket@133..134 "]"
+    Text@134..135 " "
+    Command@135..146
+      ControlWord@135..143 "\\circled"
+      Arg@143..146
+        LBrace@143..144 "{"
+        Atom@144..145 "1"
+        RBrace@145..146 "}"
+    Text@146..160 "\n\nblank above "
+    Command@160..168
+      ControlWord@160..168 "\\unknown"
+    Text@168..172 "{x}\n"
+    End@172..182
+      ControlWord@172..176 "\\end"
+      LBrace@176..177 "{"
+      Atom@177..181 "code"
+      RBrace@181..182 "}"
+  Text@182..183 "\n"
+  Environment@183..205
+    Begin@183..195
+      ControlWord@183..189 "\\begin"
+      LBrace@189..190 "{"
+      Atom@190..194 "code"
+      RBrace@194..195 "}"
+    End@195..205
+      ControlWord@195..199 "\\end"
+      LBrace@199..200 "{"
+      Atom@200..204 "code"
+      RBrace@204..205 "}"
+  Text@205..206 "\n"
+  Environment@206..229
+    Begin@206..218
+      ControlWord@206..212 "\\begin"
+      LBrace@212..213 "{"
+      Atom@213..217 "code"
+      RBrace@217..218 "}"
+    Text@218..219 "\n"
+    End@219..229
+      ControlWord@219..223 "\\end"
+      LBrace@223..224 "{"
+      Atom@224..228 "code"
+      RBrace@228..229 "}"
+  Text@229..230 "\n"
+  Environment@230..253
+    Begin@230..242
+      ControlWord@230..236 "\\begin"
+      LBrace@236..237 "{"
+      Atom@237..241 "code"
+      RBrace@241..242 "}"
+    Text@242..243 "x"
+    End@243..253
+      ControlWord@243..247 "\\end"
+      LBrace@247..248 "{"
+      Atom@248..252 "code"
+      RBrace@252..253 "}"
+  Text@253..254 "\n"
+  Environment@254..281
+    Begin@254..266
+      ControlWord@254..260 "\\begin"
+      LBrace@260..261 "{"
+      Atom@261..265 "code"
+      RBrace@265..266 "}"
+    Comment@266..270 "% c\n"
+    Text@270..271 "y"
+    End@271..281
+      ControlWord@271..275 "\\end"
+      LBrace@275..276 "{"
+      Atom@276..280 "code"
+      RBrace@280..281 "}"
+  Text@281..282 "\n"
+  Command@282..309
+    ControlWord@282..287 "\\code"
+    Arg@287..309
+      LBrace@287..288 "{"
+      Text@288..295 "inline "
+      Group@295..303
+        LBrace@295..296 "{"
+        Text@296..302 "braces"
+        RBrace@302..303 "}"
+      Text@303..308 " here"
+      RBrace@308..309 "}"

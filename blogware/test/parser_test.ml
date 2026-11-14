@@ -55,6 +55,14 @@ let parse_fails name input : Test_framework.t =
 let parse_ok input =
   match parse input with Ok nodes -> Ok nodes | Error e -> Error e.pe_message
 
+(* Compare through the S-expression dump: [Text.t] values that print the
+   same may differ structurally, so [=] on math nodes is unreliable. *)
+let dump_expect name input expected : Test_framework.t =
+  test name (fun () ->
+      match parse_ok input with
+      | Error msg -> Fail ("parse error: " ^ msg)
+      | Ok nodes -> assert_equal_string expected (Ast_dump.dump_document nodes))
+
 let scan_with p input =
   let open Parser in
   run (p <* eof) ~source_name:"<test>" input
@@ -166,6 +174,47 @@ let tests : Test_framework.t list =
       parse_expect "group with nested text" "{abc}"
         [ NGroup (zero, [ NText (zero, s "abc") ]) ];
       parse_fails "unmatched end" "\\end{foo}";
+      parse_expect "command name ends before a period" "\\qed."
+        [ NCmd (zero, S_qed, [], []); NText (zero, s ".") ];
+      parse_expect "command name ends before a hyphen" "\\qed-x"
+        [ NCmd (zero, S_qed, [], []); NText (zero, s "-x") ];
+      parse_expect "starred command name" "\\section*"
+        [ NCmd (zero, S_section_star, [], []) ];
+      dump_expect "math command name ends before a hyphen" "$\\pi-1$"
+        "(math 0 inline\n  (mcmd pi)\n  (op \"-\")\n  (num \"1\"))\n";
+      dump_expect "comment inside math" "$a % note\n+ b$"
+        "(math 0 inline\n  (mtext \"a\")\n  (op \"+\")\n  (mtext \"b\"))\n";
+      dump_expect "comment before the math terminator" "$a% note\n$"
+        "(math 0 inline\n  (mtext \"a\"))\n";
+      dump_expect "hrule is not a prefix of longer names"
+        "\\begin{tabular}{l}\\hrulefill a \\\\\\end{tabular}"
+        "(table 0 46 tabular\n\
+        \  (opts) \"l\"\n\
+        \  (row none\n\
+        \    (cell \"l\" 1\n\
+        \      (cmd 18 hrulefill\n\
+        \        (opts))\n\
+        \      (text 29 \"a \"))))\n";
+      dump_expect "multicolumn tolerates a space after its name"
+        "\\begin{tabular}{l l}\\multicolumn {2}{c}{x} \\\\\\end{tabular}"
+        "(table 0 58 tabular\n\
+        \  (opts) \"ll\"\n\
+        \  (row none\n\
+        \    (cell \"c\" 2\n\
+        \      (text 40 \"x\"))\n\
+        \    (cell \"l\" 1\n\
+        \      (text 42 \" \"))))\n";
+      dump_expect "ast dump layout" "a\\b{x}\n$y_1$"
+        "(text 0 \"a\")\n\
+         (cmd 1 b\n\
+        \  (opts)\n\
+        \  (nodes 4\n\
+        \    (text 4 \"x\")))\n\
+         (text 6 \"\\n\")\n\
+         (math 7 inline\n\
+        \  (term\n\
+        \    (mtext \"y\")\n\
+        \    (num \"1\") _))\n";
       test "align* basic" (fun () ->
           let input = "\\begin{align*}\na &= b \\\\\nc &= d\n\\end{align*}" in
           match parse_ok input with
