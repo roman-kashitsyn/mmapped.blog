@@ -1,0 +1,14 @@
+[package]
+name = "blogware"
+version = "0.1.0"
+edition = "2021"
+authors = ["Roman Kashitsyn <roman.kashitsyn@gmail.com>"]
+description = "The engine of mmapped.blog: checks, renders and serves the site"
+repository = "https://github.com/roman-kashitsyn/mmapped.blog"
+license = "CC-BY-4.0"
+publish = false
+
+[dependencies]
+annotate-snippets = "0.12.18"
+rftex-doc = { path = "../rftex-doc" }
+rftex-syntax = { path = "../rftex-syntax" }

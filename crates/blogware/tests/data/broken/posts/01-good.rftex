@@ -1,0 +1,8 @@
+\documentclass{article}
+\title{A good post}
+\date{2025-01-01}
+\begin{document}
+\section{intro}{Introduction}
+This post has no errors.
+It refers to \nameref{intro}, \nameref{02-errors}, \nameref{03-syntax} and \nameref{garden}.
+\end{document}

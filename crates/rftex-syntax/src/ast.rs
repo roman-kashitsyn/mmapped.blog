@@ -53,12 +53,16 @@ pub enum NodeKind {
 pub struct Name {
     pub sym: Sym,
     pub text: String,
+    /// Where the name is written: the control word of a command, backslash
+    /// included, or the whole `\begin{name}` of an environment.
+    pub range: TextRange,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Arg {
-    /// The offset just past the opening delimiter.
-    pub pos: u32,
+    /// The range between the delimiters. For a value argument this is the
+    /// range of the value, as nothing else may stand between the braces.
+    pub range: TextRange,
     pub value: ArgValue,
 }
 
