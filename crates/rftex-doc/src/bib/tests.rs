@@ -400,6 +400,23 @@ fn an_error_costs_one_entry() {
 }
 
 #[test]
+fn a_broken_entry_does_not_hide_the_next_one() {
+    // The parser stops at the `@` of the next entry.
+    assert_eq!(
+        errors("@misc{a, title = {A}\n@book{b, title = {B}}\n"),
+        ["expected `}`", "@book{b}: missing required field `author`"]
+    );
+    // The unclosed value runs on to the end of the file.
+    assert_eq!(
+        errors("@misc{a, title = {A\n@book{b, title = {B}}\n"),
+        [
+            "missing closing `}`",
+            "@book{b}: missing required field `author`"
+        ]
+    );
+}
+
+#[test]
 fn errors_point_inside_the_source() {
     for src in ["@misc{x, title = é", "@misc{é", "@é", "@misc{x, title = {é"] {
         let bibliography = parse(src);

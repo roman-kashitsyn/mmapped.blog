@@ -96,18 +96,20 @@ fn rftex_files(dir: &Path) -> Result<Vec<String>, String> {
     Ok(names)
 }
 
-/// Loads and analyzes one document. The name of the file without the
-/// extension is its slug.
+/// The slug of a document: the name of its file without the extension.
+fn slug(path: &Path) -> String {
+    path.file_stem()
+        .map(|stem| stem.to_string_lossy().into_owned())
+        .unwrap_or_default()
+}
+
+/// Loads and analyzes one document.
 fn load_document<T>(
     path: &Path,
     analyze: fn(&str, &str) -> Analysis<T>,
 ) -> Result<Loaded<T>, String> {
     let source = read(path)?;
-    let slug = path
-        .file_stem()
-        .map(|stem| stem.to_string_lossy())
-        .unwrap_or_default();
-    let analysis = analyze(&slug, &source);
+    let analysis = analyze(&slug(path), &source);
     Ok(Loaded {
         path: display(path),
         source,
@@ -220,7 +222,7 @@ pub fn load(input: &Path) -> Result<Site, Failure> {
     let slugs = post_names
         .iter()
         .chain(&note_names)
-        .map(|name| name.trim_end_matches(".rftex").to_string());
+        .map(|name| slug(Path::new(name)));
     let targets = Index::new(slugs, bib.as_deref());
 
     // The second pass: resolve the references and tell the good documents

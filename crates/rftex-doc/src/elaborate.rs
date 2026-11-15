@@ -926,7 +926,12 @@ impl Elaborator {
                 NodeKind::Cmd { name, opts, args } => {
                     out.extend(self.code_command(name, opts, args))
                 }
-                NodeKind::Env { .. } | NodeKind::Table { .. } => {}
+                NodeKind::Env { name, .. } | NodeKind::Table { name, .. } => {
+                    self.error(Diagnostic::new(
+                        name.range,
+                        format!("environment `{}` is not allowed in code", name.text),
+                    ));
+                }
             }
         }
         out

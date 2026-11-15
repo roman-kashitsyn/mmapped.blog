@@ -505,6 +505,25 @@ fn commands_that_code_cannot_hold() {
 }
 
 #[test]
+fn environments_that_code_cannot_hold() {
+    let src = "\\begin{document}\\begin{code}a\\begin{figure}b\\end{figure}c\
+               \\begin{tabular}{l}d\\end{tabular}\\end{code}\\end{document}";
+    assert_eq!(
+        errors(src),
+        [
+            error(
+                "environment `figure` is not allowed in code",
+                "\\begin{figure}"
+            ),
+            error(
+                "environment `tabular` is not allowed in code",
+                "\\begin{tabular}"
+            ),
+        ]
+    );
+}
+
+#[test]
 fn subsection_needs_a_named_section() {
     let src = "\\begin{document}\\subsection{a}{A}x\\section* \\subsection{b}{B}y\\end{document}";
     let diagnostics = analyze_article("slug", src).diagnostics;

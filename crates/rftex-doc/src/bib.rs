@@ -438,9 +438,11 @@ impl<'a> Parser<'a> {
     }
 
     /// Moves to the next line that starts with `@` after an entry that
-    /// starts at `start` turned out to be broken.
+    /// starts at `start` turned out to be broken. The search starts right
+    /// after `start`, not where the parser gave up: a broken entry can stop
+    /// at the `@` of the next one, or run on to the end of the file.
     fn recover(&mut self, start: usize) {
-        let from = self.pos.max(start + 1).min(self.src.len());
+        let from = (start + 1).min(self.src.len());
         let rest = &self.src.as_bytes()[from..];
         self.pos = match rest.windows(2).position(|pair| pair == b"\n@") {
             Some(offset) => from + offset + 1,
