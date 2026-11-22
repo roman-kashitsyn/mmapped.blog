@@ -52,7 +52,7 @@ pub fn read(path: &Path) -> String {
 /// Compares `actual` with the snapshot at `path`. With `UPDATE_SNAPSHOTS=1`
 /// in the environment the snapshot is rewritten instead.
 pub fn check_snapshot(path: &Path, actual: &str) -> Result<(), String> {
-    if std::env::var_os("UPDATE_SNAPSHOTS").is_some() {
+    if std::env::var_os("UPDATE_SNAPSHOTS").is_some_and(|value| value == "1") {
         fs::write(path, actual).unwrap();
         return Ok(());
     }

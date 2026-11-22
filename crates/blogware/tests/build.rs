@@ -1,7 +1,7 @@
 //! End-to-end tests of `blogware build`.
 //!
-//! Byte-for-byte parity with the OCaml engine is checked by `make diff-site`,
-//! which needs both engines; these tests need only this one.
+//! The content of the pages is compared with their snapshots in
+//! `tests/snapshots.rs`; these tests check what the build writes, and where.
 
 use std::fs;
 use std::path::{Path, PathBuf};

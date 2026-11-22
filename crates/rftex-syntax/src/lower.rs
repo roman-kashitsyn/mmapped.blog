@@ -6,8 +6,8 @@
 //! broken piece is dropped or takes a neutral value, so callers that need a
 //! faithful result must check the parse errors first.
 //!
-//! The output is kept identical to the OCaml parser's (`tex_parser.ml`),
-//! node boundaries included; the differential test enforces that.
+//! The output matches that of the OCaml parser this crate replaced, node
+//! boundaries and quirks included; the `.ast` snapshots pin it.
 
 use crate::ast::{self, ArgValue, ColSpec, MathDisplay, MathNode, Name, Node, NodeKind, RowBorder};
 use crate::kind::SyntaxKind::{self, *};

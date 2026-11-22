@@ -163,8 +163,7 @@ fn document_refs(site: &Site, body: &[Block]) -> RefTable {
 
 /// OCaml's `Array.sort`, a ternary heap sort, ported line by line. It is not
 /// stable: ties among similar articles come out in the order it leaves them,
-/// so the port must be exact while pages are compared with the OCaml
-/// engine's.
+/// so the port must be exact for the pages to match their snapshots.
 fn ocaml_array_sort<T: Copy>(a: &mut [T], cmp: &dyn Fn(&T, &T) -> Ordering) {
     /// The largest child of `i` in a heap of `l` elements; `Err(i)` (OCaml's
     /// `Bottom i`) if `i` has no children.
@@ -296,7 +295,7 @@ fn similar_articles(articles: &[Article], index: usize) -> Vec<&Article> {
             candidates.push((similarity, article));
         }
     }
-    // The OCaml engine collects the candidates in reverse.
+    // The OCaml engine collected the candidates in reverse.
     candidates.reverse();
     ocaml_array_sort(&mut candidates, &|(a, _), (b, _)| {
         b.partial_cmp(a).unwrap_or(Ordering::Equal)

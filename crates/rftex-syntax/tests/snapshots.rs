@@ -2,8 +2,9 @@
 //!
 //! Each `tests/data/ok/NAME.rftex` is valid input: it must parse without
 //! errors, and its syntax tree and AST must match `NAME.cst` and `NAME.ast`.
-//! The `.ast` files are what the OCaml parser prints for the same input (the
-//! differential test checks that), so they are never to be edited by hand.
+//! The `.ast` files began as what the OCaml parser this crate replaced
+//! printed for the same input. They pin the AST the rest of the engine relies
+//! on, so change them only deliberately.
 //!
 //! Each `tests/data/err/NAME.rftex` is malformed input that shows one way the
 //! parser recovers; `NAME.cst` holds the tree and the errors.

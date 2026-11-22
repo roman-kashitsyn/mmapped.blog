@@ -1,7 +1,7 @@
 //! This crate provides rftex language support for the [tree-sitter] parsing library.
 //!
 //! rftex is the LaTeX flavor parsed by blogware, the static site generator behind
-//! <https://mmapped.blog/>. The reference implementation is `blogware/lib/tex_parser.ml`
+//! <https://mmapped.blog/>. The reference implementation is the `rftex-syntax` crate
 //! in that repository.
 //!
 //! ```

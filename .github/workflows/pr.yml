@@ -36,7 +36,7 @@ jobs:
       - name: Run grammar tests
         run: make grammar-test
 
-  syntax:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -46,52 +46,25 @@ jobs:
 
       - uses: swatinem/rust-cache@v2
 
-      - name: Run parser tests
-        run: make syntax-test
-
+      # Includes checking the whole site, which reports every error it finds.
       - name: Run engine tests
-        run: make engine-test
-
-      - name: Check the site
-        run: make check
-
-  publish:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache local opam state
-        uses: actions/cache@v4
-        with:
-          path: |
-            opam/2.3.0/root
-            opam/2.3.0/local-switch
-          key: ${{ runner.os }}-opam-${{ hashFiles('Makefile', 'dune-project') }}
-
-      - name: Install dependencies
-        run: make deps
-
-      - name: Run tests
         run: make test
 
+  # Deploys only what passed the tests.
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: swatinem/rust-cache@v2
 
-      - name: Compare the Rust parser with the OCaml one
-        run: make diff-ast
-
-      - name: Compare the site the Rust engine builds with the OCaml one
-        run: make diff-site
-
+      # Fails, and so stops the deployment, if the site has any error.
       - name: Render the site
         run: make render DEST=site
-
-      # blogware exits with status 0 even when rendering fails, so make sure the
-      # output is there before it replaces the live site.
-      - name: Check the rendered site
-        run: test -s site/index.html && test -s site/feed.xml && test -s site/posts.html
 
       # A push to main deploys to production; a pull request deploys a preview under
       # the name of its branch. Pull requests from forks have no access to the token,

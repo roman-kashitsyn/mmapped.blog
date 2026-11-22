@@ -13,7 +13,7 @@
 (url_command name: (url_command_name) @function.macro)
 (math_command name: (command_name) @function.macro)
 
-; Metadata and document structure (blogware/lib/syntax.ml `sym_table`).
+; Metadata and document structure (crates/rftex-syntax/src/registry.rs).
 ((command_name) @keyword
   (#any-of? @keyword
     "\\documentclass" "\\title" "\\subtitle" "\\date" "\\modified" "\\keyword"

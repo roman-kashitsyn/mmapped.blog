@@ -1,8 +1,10 @@
-//! The gate of the port: every post and note page must be byte-identical to
-//! the snapshot the OCaml engine made of it.
+//! Every post and note page must be byte-identical to its snapshot in
+//! `tests/data/snapshots`, so that any change to the output is deliberate
+//! and shows in review.
 //!
-//! The snapshots live in `blogware/test/snapshots` and belong to the OCaml
-//! engine until the cutover; this test only reads them.
+//! The snapshots were first made by the OCaml engine this one replaced.
+//! After a deliberate change, run with `UPDATE_SNAPSHOTS=1` (or
+//! `make snapshots`) to rewrite them.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -15,7 +17,7 @@ use blogware::{build, report, site};
 const EXCLUDED: [&str; 3] = ["feed.xml", "index.html", "posts.html"];
 
 fn snapshot_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../blogware/test/snapshots")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/data/snapshots")
 }
 
 fn files(root: &Path, dir: &Path, out: &mut BTreeSet<String>) {
@@ -56,7 +58,7 @@ fn first_difference(expected: &str, actual: &str) -> String {
 }
 
 #[test]
-fn pages_match_the_ocaml_snapshots() {
+fn pages_match_the_snapshots() {
     let site = match site::load(
         Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../..")
@@ -74,6 +76,20 @@ fn pages_match_the_ocaml_snapshots() {
         .collect();
 
     let root = snapshot_root();
+    if std::env::var_os("UPDATE_SNAPSHOTS").is_some_and(|value| value == "1") {
+        // Obsolete snapshots must go, or the next run fails on them.
+        match fs::remove_dir_all(&root) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => panic!("cannot remove {}: {error}", root.display()),
+        }
+        for (path, content) in &rendered {
+            let path = root.join(path);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(path, content).unwrap();
+        }
+        return;
+    }
     let mut expected_paths = BTreeSet::new();
     files(&root, &root, &mut expected_paths);
     let rendered_paths: BTreeSet<String> = rendered.iter().map(|(path, _)| path.clone()).collect();
@@ -81,7 +97,10 @@ fn pages_match_the_ocaml_snapshots() {
         .into_iter()
         .filter(|path| !EXCLUDED.contains(&path.as_str()))
         .collect();
-    assert_eq!(rendered_paths, snapshot_paths, "the set of pages differs");
+    assert_eq!(
+        rendered_paths, snapshot_paths,
+        "the set of pages differs (rerun with UPDATE_SNAPSHOTS=1 to accept)"
+    );
 
     let mut failures = Vec::new();
     for (path, actual) in &rendered {
@@ -92,7 +111,7 @@ fn pages_match_the_ocaml_snapshots() {
     }
     assert!(
         failures.is_empty(),
-        "{} of {} pages differ:\n{}",
+        "{} of {} pages differ (rerun with UPDATE_SNAPSHOTS=1 to accept):\n{}",
         failures.len(),
         rendered.len(),
         failures.join("\n")
