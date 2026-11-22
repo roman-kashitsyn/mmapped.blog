@@ -336,6 +336,15 @@ enum Mode {
     Code,
 }
 
+/// Content that renders inside a link, so it can't hold links of its own.
+#[derive(Clone, Copy)]
+enum LinkScope {
+    /// The body of `\href` or `\ref`.
+    Link(TextRange),
+    /// The title of a section, which links to the section.
+    Title(TextRange),
+}
+
 macro_rules! symbol {
     ($value:pat) => {
         Arg {
@@ -397,6 +406,8 @@ fn span(sym: Sym) -> Option<fn(Vec<Inline>) -> Inline> {
 struct Elaborator {
     diagnostics: Vec<Diagnostic>,
     references: Vec<Reference>,
+    /// The innermost link scope around the content being elaborated.
+    link_scope: Option<LinkScope>,
 }
 
 impl Elaborator {
@@ -410,6 +421,41 @@ impl Elaborator {
 
     fn error(&mut self, diagnostic: Diagnostic) {
         self.diagnostics.push(diagnostic);
+    }
+
+    /// Runs `elaborate` on content that renders inside a link.
+    fn in_link_scope<T>(
+        &mut self,
+        scope: LinkScope,
+        elaborate: impl FnOnce(&mut Elaborator) -> T,
+    ) -> T {
+        let outer = self.link_scope.replace(scope);
+        let result = elaborate(self);
+        self.link_scope = outer;
+        result
+    }
+
+    /// Reports the link command `name` if it appears inside a link.
+    fn forbid_nested_link(&mut self, name: &Name) {
+        let diagnostic = match self.link_scope {
+            None => return,
+            Some(LinkScope::Link(range)) => Diagnostic::new(
+                name.range,
+                format!("`\\{}` is not allowed inside a link", name.text),
+            )
+            .with_related(range, "the link starts here")
+            .with_help("Links can't nest. Move this link out of the enclosing one."),
+            Some(LinkScope::Title(range)) => Diagnostic::new(
+                name.range,
+                format!("`\\{}` is not allowed in a section title", name.text),
+            )
+            .with_related(range, "the section starts here")
+            .with_help(
+                "Section titles link to their sections, so they can't hold links. \
+                 Move this link into the section body.",
+            ),
+        };
+        self.error(diagnostic);
     }
 
     fn reference(&mut self, target: Target, name: &str, range: TextRange) {
@@ -695,7 +741,7 @@ impl Elaborator {
             (Sym::Section, [symbol!(anchor), nodes!(title), ..]) => {
                 return Classified::Mark(Flat::Section(Heading {
                     anchor: anchor.clone(),
-                    title: self.inlines(title),
+                    title: self.title(name, title),
                 }));
             }
             (Sym::SectionStar, _) => {
@@ -704,7 +750,7 @@ impl Elaborator {
             (Sym::Subsection, [symbol!(anchor), nodes!(title), ..]) => {
                 let heading = Heading {
                     anchor: anchor.clone(),
-                    title: self.inlines(title),
+                    title: self.title(name, title),
                 };
                 return Classified::Mark(Flat::Subsection(name.range, heading));
             }
@@ -712,6 +758,7 @@ impl Elaborator {
                 return Classified::Inline(Inline::Cite(self.inlines(body)));
             }
             (Sym::Bibref, [key_arg @ symbol!(key), rest @ ..]) => {
+                self.forbid_nested_link(name);
                 self.reference(Target::Bib, key, key_arg.range);
                 let postnote = match rest {
                     [nodes!(postnote), ..] => self.inlines(postnote),
@@ -964,6 +1011,16 @@ impl Elaborator {
         }
     }
 
+    /// Elaborates the title of the section that `name` starts.
+    fn title(&mut self, name: &Name, nodes: &[Node]) -> Vec<Inline> {
+        self.in_link_scope(LinkScope::Title(name.range), |e| e.inlines(nodes))
+    }
+
+    /// Elaborates the body of the link that `name` starts.
+    fn link_body(&mut self, mode: Mode, name: &Name, nodes: &[Node]) -> Vec<Inline> {
+        self.in_link_scope(LinkScope::Link(name.range), |e| e.inlines_in(mode, nodes))
+    }
+
     fn inlines_in(&mut self, mode: Mode, nodes: &[Node]) -> Vec<Inline> {
         match mode {
             Mode::Prose => self.inlines(nodes),
@@ -988,19 +1045,24 @@ impl Elaborator {
                 classes: opts.to_vec(),
                 body: self.code_inlines(body),
             },
-            (Sym::Href, [url!(url), nodes!(body), ..]) => Inline::Link {
-                url: url.clone(),
-                body: self.inlines_in(mode, body),
-            },
+            (Sym::Href, [url!(url), nodes!(body), ..]) => {
+                self.forbid_nested_link(name);
+                Inline::Link {
+                    url: url.clone(),
+                    body: self.link_body(mode, name, body),
+                }
+            }
             (Sym::Nameref, [arg @ symbol!(label), ..]) => {
+                self.forbid_nested_link(name);
                 self.reference(Target::Label, label, arg.range);
                 Inline::Nameref(label.clone())
             }
             (Sym::Ref, [arg @ symbol!(label), nodes!(body), ..]) => {
+                self.forbid_nested_link(name);
                 self.reference(Target::Label, label, arg.range);
                 Inline::Ref {
                     label: label.clone(),
-                    body: self.inlines_in(mode, body),
+                    body: self.link_body(mode, name, body),
                 }
             }
             (Sym::Label, [symbol!(anchor), ..]) => Inline::Anchor(anchor.clone()),

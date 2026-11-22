@@ -494,6 +494,52 @@ fn unknown_dingbat() {
 }
 
 #[test]
+fn links_cannot_nest() {
+    let src = "\\begin{document}\\label{l}\
+               \\href{https://a.org}{x \\href{https://b.org}{y}}\
+               \\ref{l}{\\nameref{l} \\bibref{k}}\
+               \\href{https://a.org}{\\code{\\href{https://b.org}{z}}}\
+               \\end{document}";
+    let message = "`\\href` is not allowed inside a link";
+    assert_eq!(
+        errors(src),
+        [
+            error(message, "\\href"),
+            error("`\\nameref` is not allowed inside a link", "\\nameref"),
+            error("`\\bibref` is not allowed inside a link", "\\bibref"),
+            error(message, "\\href"),
+        ]
+    );
+    let diagnostics = analyze_article("slug", src).diagnostics;
+    let [related] = diagnostics[0].related.as_slice() else {
+        panic!("{:?}", diagnostics[0].related);
+    };
+    assert_eq!(related.range.slice(src), "\\href");
+    assert_eq!(related.range.start, src.find("\\href").unwrap() as u32);
+}
+
+#[test]
+fn section_titles_cannot_hold_links() {
+    let src = "\\begin{document}\
+               \\section{docs}{\\href{https://example.org}{Docs}}\
+               \\subsection{more}{More \\nameref{docs}}\
+               \\href{https://example.org}{a} \\nameref{docs}\
+               \\end{document}";
+    assert_eq!(
+        errors(src),
+        [
+            error("`\\href` is not allowed in a section title", "\\href"),
+            error("`\\nameref` is not allowed in a section title", "\\nameref"),
+        ]
+    );
+    let diagnostics = analyze_article("slug", src).diagnostics;
+    let [related] = diagnostics[1].related.as_slice() else {
+        panic!("{:?}", diagnostics[1].related);
+    };
+    assert_eq!(related.range.slice(src), "\\subsection");
+}
+
+#[test]
 fn commands_that_code_cannot_hold() {
     assert_eq!(
         errors("\\begin{document}\\code{a \\foo b \\cite{c}}\\end{document}"),
