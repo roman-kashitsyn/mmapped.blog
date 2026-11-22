@@ -7,7 +7,7 @@
 //! [`get`] decides what to answer; axum speaks HTTP for it.
 
 use std::fs;
-use std::io;
+use std::io::{self, ErrorKind};
 use std::net::{Ipv4Addr, TcpListener};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -18,12 +18,13 @@ use axum::http::{header, StatusCode, Uri};
 use axum::middleware::{self, Next};
 use axum::response::IntoResponse;
 use axum::{routing, Router};
+use percent_encoding::percent_decode_str;
 
 use crate::build::{self, STATIC};
 use crate::html::escape;
 use crate::pages::Options;
 use crate::report;
-use crate::site::{self, Failure};
+use crate::site::{self, display, Failure};
 
 /// The answer to a request.
 #[derive(Clone, Debug)]
@@ -42,25 +43,33 @@ impl Response {
         }
     }
 
-    fn not_found() -> Response {
-        Response::text(404, "Not Found")
+    fn not_found(what: &str) -> Response {
+        Response::text(404, &format!("Not Found: {what}"))
+    }
+
+    /// A failure the author should see in the terminal as well as in the
+    /// browser.
+    fn failed(status: u16, message: &str) -> Response {
+        eprintln!("error: {message}");
+        Response::text(status, message)
     }
 }
 
-/// The answer to `GET target` for the site in `input`.
-pub fn get(input: &Path, options: &Options, target: &str) -> Response {
-    let Some(path) = request_path(target) else {
-        return Response::not_found();
+/// The answer to `GET uri` for the site in `input`.
+pub fn get(input: &Path, options: &Options, uri: &Uri) -> Response {
+    let path = match site_path(uri) {
+        Ok(path) => path,
+        Err(response) => return response,
     };
     let first = path.split('/').next().unwrap_or_default();
     if STATIC.contains(&first) {
         return match static_file(input, &path) {
-            Some(body) => Response {
+            Ok(body) => Response {
                 status: 200,
                 content_type: content_type(&path),
                 body,
             },
-            None => Response::not_found(),
+            Err(response) => response,
         };
     }
     match site::load(input) {
@@ -70,7 +79,7 @@ pub fn get(input: &Path, options: &Options, target: &str) -> Response {
                 content_type: content_type(&path),
                 body: content.into_bytes(),
             },
-            None => Response::not_found(),
+            None => Response::not_found(&format!("no page at /{path}")),
         },
         Err(failure) => error_page(&failure),
     }
@@ -78,45 +87,58 @@ pub fn get(input: &Path, options: &Options, target: &str) -> Response {
 
 /// The contents of the file at `path` in `input`, if it is a file and,
 /// with symbolic links followed, still inside `input`.
-fn static_file(input: &Path, path: &str) -> Option<Vec<u8>> {
-    let root = input.canonicalize().ok()?;
-    let file = input.join(path).canonicalize().ok()?;
-    if !file.starts_with(&root) || !file.is_file() {
-        return None;
+fn static_file(input: &Path, path: &str) -> Result<Vec<u8>, Response> {
+    let root = input.canonicalize().map_err(|err| {
+        Response::failed(
+            500,
+            &format!("cannot open the site {}: {err}", display(input)),
+        )
+    })?;
+    let requested = input.join(path);
+    let file = match requested.canonicalize() {
+        Ok(file) => file,
+        Err(err) if matches!(err.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) => {
+            return Err(Response::not_found(&format!("no file at /{path}")));
+        }
+        Err(err) => {
+            let message = format!("cannot open {}: {err}", display(&requested));
+            return Err(Response::failed(500, &message));
+        }
+    };
+    if !file.starts_with(&root) {
+        let message = format!(
+            "{} leads to {}, outside the site",
+            display(&requested),
+            file.display()
+        );
+        return Err(Response::failed(403, &message));
     }
-    fs::read(file).ok()
-}
-
-/// The file a request target names, relative to the site: without the
-/// query, percent-decoded, and with the directory indexes filled in.
-/// `None` for anything that could step outside the site.
-fn request_path(target: &str) -> Option<String> {
-    let path = target.split(['?', '#']).next()?.strip_prefix('/')?;
-    let path = percent_decode(path)?;
-    if path.contains(['\\', '\0']) || path.split('/').any(|part| part == "." || part == "..") {
-        return None;
+    if file.is_dir() {
+        return Err(Response::not_found(&format!("/{path} is a directory")));
     }
-    Some(match path.as_str() {
-        "" => "index.html".to_string(),
-        "notes" | "notes/" => format!("notes/{}.html", site::NOTE_LIST),
-        _ => path,
+    fs::read(&file).map_err(|err| {
+        Response::failed(500, &format!("cannot read {}: {err}", display(&requested)))
     })
 }
 
-fn percent_decode(text: &str) -> Option<String> {
-    let mut bytes = Vec::with_capacity(text.len());
-    let mut rest = text.as_bytes();
-    while let Some((&byte, tail)) = rest.split_first() {
-        if byte == b'%' {
-            let hex = std::str::from_utf8(tail.get(..2)?).ok()?;
-            bytes.push(u8::from_str_radix(hex, 16).ok()?);
-            rest = &tail[2..];
-        } else {
-            bytes.push(byte);
-            rest = tail;
-        }
+/// The file `uri` names, relative to the site: percent-decoded, and with
+/// the directory indexes filled in. Paths that could step outside the site
+/// are refused.
+fn site_path(uri: &Uri) -> Result<String, Response> {
+    let raw = uri.path();
+    let decoded = percent_decode_str(raw)
+        .decode_utf8()
+        .map_err(|_| Response::failed(400, &format!("{raw} is not UTF-8 once percent-decoded")))?;
+    let path = decoded.strip_prefix('/').unwrap_or(&decoded);
+    if path.contains(['\\', '\0']) || path.split('/').any(|part| part == "." || part == "..") {
+        let message = format!("{raw} has a `.` or `..` segment, a backslash or a NUL");
+        return Err(Response::failed(400, &message));
     }
-    String::from_utf8(bytes).ok()
+    Ok(match path {
+        "" => "index.html".to_string(),
+        "notes" | "notes/" => format!("notes/{}.html", site::NOTE_LIST),
+        _ => path.to_string(),
+    })
 }
 
 fn content_type(path: &str) -> &'static str {
@@ -220,13 +242,11 @@ pub fn run(listener: TcpListener, input: PathBuf, options: Options) -> io::Resul
 }
 
 async fn answer(State(config): State<Arc<Config>>, uri: Uri) -> axum::response::Response {
-    let target = uri.path().to_string();
     // Reading and rendering the site blocks, and a panic in it must cost
     // only this request.
-    let response =
-        tokio::task::spawn_blocking(move || get(&config.input, &config.options, &target))
-            .await
-            .unwrap_or_else(|_| Response::text(500, "Internal Server Error"));
+    let response = tokio::task::spawn_blocking(move || get(&config.input, &config.options, &uri))
+        .await
+        .unwrap_or_else(|_| Response::text(500, "Internal Server Error"));
     let status = StatusCode::from_u16(response.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     let headers = [
         (header::CONTENT_TYPE, response.content_type),

@@ -23,7 +23,14 @@ fn preview() -> Options {
 }
 
 fn get(input: &str, target: &str) -> Response {
-    serve::get(Path::new(input), &preview(), target)
+    serve::get(Path::new(input), &preview(), &target.parse().unwrap())
+}
+
+fn text(response: &Response) -> (u16, &str) {
+    (
+        response.status,
+        std::str::from_utf8(&response.body).unwrap(),
+    )
 }
 
 /// The gate: the server shows every page exactly as `build` writes it.
@@ -63,22 +70,32 @@ fn static_files() {
         "application/atom+xml; charset=utf-8"
     );
 
+    // What is missing, and why.
+    for (target, message) in [
+        ("/nowhere.html", "no page at /nowhere.html"),
+        ("/posts/nowhere.html", "no page at /posts/nowhere.html"),
+        ("/notes/nowhere.html", "no page at /notes/nowhere.html"),
+        ("/posts/", "no page at /posts/"),
+        ("/css/nowhere.css", "no file at /css/nowhere.css"),
+        ("/robots.txt/x", "no file at /robots.txt/x"),
+        ("/css", "/css is a directory"),
+    ] {
+        assert_eq!(
+            text(&get(BLOG, target)),
+            (404, format!("Not Found: {message}").as_str())
+        );
+    }
     for target in [
-        "/nowhere.html",
-        "/posts/nowhere.html",
-        "/notes/nowhere.html",
-        "/posts/",
-        "/css/nowhere.css",
-        "/css",
         "/css/../Cargo.toml",
         "/css/%2e%2e/Cargo.toml",
         "/posts/../../Cargo.toml",
     ] {
-        let response = get(BLOG, target);
         assert_eq!(
-            (response.status, response.body.as_slice()),
-            (404, &b"Not Found"[..]),
-            "{target}"
+            text(&get(BLOG, target)),
+            (
+                400,
+                format!("{target} has a `.` or `..` segment, a backslash or a NUL").as_str()
+            )
         );
     }
 }
@@ -142,19 +159,35 @@ fn symbolic_links_stay_inside_the_site() {
     symlink(site.join("robots.txt"), site.join("images/robots.txt")).unwrap();
     symlink(&root, site.join("css")).unwrap();
 
-    let get = |target: &str| serve::get(&site, &preview(), target);
-    for target in [
-        "/images/secret.txt",
-        "/images/up/secret.txt",
-        "/css/secret.txt",
+    let get = |target: &str| serve::get(&site, &preview(), &target.parse().unwrap());
+    let outside = root.canonicalize().unwrap();
+    for (target, link, leads_to) in [
+        (
+            "/images/secret.txt",
+            "images/secret.txt",
+            outside.join("secret.txt"),
+        ),
+        (
+            "/images/up/secret.txt",
+            "images/up/secret.txt",
+            outside.join("secret.txt"),
+        ),
+        (
+            "/css/secret.txt",
+            "css/secret.txt",
+            outside.join("secret.txt"),
+        ),
+        ("/css", "css", outside.clone()),
     ] {
-        assert_eq!(get(target).status, 404, "{target}");
+        let message = format!(
+            "{} leads to {}, outside the site",
+            site.join(link).display(),
+            leads_to.display()
+        );
+        assert_eq!(text(&get(target)), (403, message.as_str()), "{target}");
     }
     let inside = get("/images/robots.txt");
-    assert_eq!(
-        (inside.status, inside.body.as_slice()),
-        (200, &b"inside\n"[..])
-    );
+    assert_eq!(text(&inside), (200, "inside\n"));
 }
 
 #[test]

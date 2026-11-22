@@ -86,6 +86,7 @@ version = "0.1.0"
 dependencies = [
  "annotate-snippets",
  "axum",
+ "percent-encoding",
  "rftex-doc",
  "rftex-syntax",
  "tokio",
