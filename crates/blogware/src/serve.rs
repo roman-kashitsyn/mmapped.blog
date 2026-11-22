@@ -113,8 +113,16 @@ fn static_file(input: &Path, path: &str) -> Result<Vec<u8>, Response> {
         );
         return Err(Response::failed(403, &message));
     }
-    if file.is_dir() {
+    let metadata = fs::metadata(&file).map_err(|err| {
+        Response::failed(500, &format!("cannot open {}: {err}", display(&requested)))
+    })?;
+    if metadata.is_dir() {
         return Err(Response::not_found(&format!("/{path} is a directory")));
+    }
+    // Reading a named pipe or a device could wait forever, or never end.
+    if !metadata.is_file() {
+        let message = format!("{} is not a regular file", display(&requested));
+        return Err(Response::failed(403, &message));
     }
     fs::read(&file).map_err(|err| {
         Response::failed(500, &format!("cannot read {}: {err}", display(&requested)))

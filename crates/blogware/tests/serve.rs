@@ -142,7 +142,7 @@ fn exchange(port: u16, request: &str) -> String {
 }
 
 /// A symbolic link in a static directory is served only if it leads to a
-/// file inside the site.
+/// file inside the site, and only regular files are served at all.
 #[cfg(unix)]
 #[test]
 fn symbolic_links_stay_inside_the_site() {
@@ -158,6 +158,9 @@ fn symbolic_links_stay_inside_the_site() {
     symlink(&root, site.join("images/up")).unwrap();
     symlink(site.join("robots.txt"), site.join("images/robots.txt")).unwrap();
     symlink(&root, site.join("css")).unwrap();
+    let pipe = site.join("images/pipe");
+    let made = Command::new("mkfifo").arg(&pipe).status().unwrap();
+    assert!(made.success());
 
     let get = |target: &str| serve::get(&site, &preview(), &target.parse().unwrap());
     let outside = root.canonicalize().unwrap();
@@ -188,6 +191,10 @@ fn symbolic_links_stay_inside_the_site() {
     }
     let inside = get("/images/robots.txt");
     assert_eq!(text(&inside), (200, "inside\n"));
+
+    // Reading a named pipe would wait for a writer that never comes.
+    let message = format!("{} is not a regular file", pipe.display());
+    assert_eq!(text(&get("/images/pipe")), (403, message.as_str()));
 }
 
 #[test]
