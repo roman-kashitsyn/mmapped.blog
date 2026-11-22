@@ -1,0 +1,5 @@
+\documentclass{article}
+\title{A misspelled document}
+\begin{documemt}
+Real article text
+\end{documemt}

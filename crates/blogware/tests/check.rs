@@ -87,6 +87,8 @@ fn a_broken_document_is_still_a_reference_target() {
             "tests/data/broken/notes/garden.rftex",
             "tests/data/broken/posts/02-errors.rftex",
             "tests/data/broken/posts/03-syntax.rftex",
+            "tests/data/broken/posts/04-misspelled-document.rftex",
+            "tests/data/broken/posts/05-two-documents.rftex",
         ]
     );
 }

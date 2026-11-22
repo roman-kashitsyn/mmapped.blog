@@ -111,6 +111,10 @@ pub fn apply_typography(input: &str) -> String {
     out
 }
 
+/// The numbers that `\circled` can show: the renderer adds them to U+245F,
+/// and U+2460 to U+2473 are the circled digits ① to ⑳.
+const CIRCLED: std::ops::RangeInclusive<i64> = 1..=20;
+
 const DINGBATS: [(&str, &str); 3] = [
     ("heavy-ballot-x", "\u{2717}"),
     ("heavy-check", "\u{2714}"),
@@ -462,12 +466,50 @@ impl Elaborator {
 
     fn document(&mut self, class: DocClass, nodes: &[Node]) -> (Meta, Vec<Block>) {
         let meta = self.metadata(class, nodes);
-        let body = nodes.iter().find_map(|node| match &node.kind {
-            NodeKind::Env { name, body, .. } if name.sym == Sym::Document => Some(body.as_slice()),
+        let documents: Vec<(&Name, &[Node])> = nodes
+            .iter()
+            .filter_map(|node| match &node.kind {
+                NodeKind::Env { name, body, .. } if name.sym == Sym::Document => {
+                    Some((name, body.as_slice()))
+                }
+                _ => None,
+            })
+            .collect();
+        let Some(&(first, body)) = documents.first() else {
+            self.missing_document(nodes);
+            return (meta, Vec::new());
+        };
+        let flat = self.flat_blocks(body);
+        let blocks = self.sections(flat);
+        for &(extra, extra_body) in &documents[1..] {
+            self.error(
+                Diagnostic::new(extra.range, "a file can hold only one document")
+                    .with_related(first.range, "the document begins here"),
+            );
+            // The extra document is not published, but its mistakes are
+            // reported in the same run.
+            let flat = self.flat_blocks(extra_body);
+            self.sections(flat);
+        }
+        (meta, blocks)
+    }
+
+    /// Reports a file without `\begin{document}`, pointing at the first
+    /// environment if there is one: it is most likely a misspelling.
+    fn missing_document(&mut self, nodes: &[Node]) {
+        let found = nodes.iter().find_map(|node| match &node.kind {
+            NodeKind::Env { name, .. } | NodeKind::Table { name, .. } => Some(name),
             _ => None,
         });
-        let flat = self.flat_blocks(body.unwrap_or_default());
-        (meta, self.sections(flat))
+        let diagnostic = match found {
+            Some(name) => Diagnostic::new(name.range, "missing \\begin{document}")
+                .with_label(format!("expected `document`, found `{}`", name.text)),
+            None => Diagnostic::new(TextRange::empty(0), "missing \\begin{document}"),
+        };
+        self.error(diagnostic.with_help(
+            "the text goes between \\begin{document} and \\end{document}; \
+             an empty document is fine",
+        ));
     }
 
     fn metadata(&mut self, class: DocClass, nodes: &[Node]) -> Meta {
@@ -1026,7 +1068,19 @@ impl Elaborator {
                 }
                 Inline::Str(glyph.map_or(String::new(), |(_, glyph)| glyph.to_string()))
             }
-            (Sym::Circled, [number!(number), ..]) => Inline::CircledRef(*number),
+            (Sym::Circled, [arg @ number!(number), ..]) => {
+                if !CIRCLED.contains(number) {
+                    self.error(
+                        Diagnostic::new(arg.range, format!("no circled glyph for {number}"))
+                            .with_help(format!(
+                                "\\circled takes a number from {} to {}",
+                                CIRCLED.start(),
+                                CIRCLED.end()
+                            )),
+                    );
+                }
+                Inline::CircledRef(*number)
+            }
             (sym, _) => Inline::Str(sym.spec().replacement?.to_string()),
         })
     }

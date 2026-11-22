@@ -18,6 +18,18 @@ error: unknown entry type `@thesis`
    |
    = help: known types: book, article, phdthesis, blog, talk, podcast, misc
 
+error: expected a field value
+  --> tests/data/broken/library.bib:14:23
+   |
+14 | @misc{broken, title = oops}
+   |                       ^ expected `{...}` or a number
+
+error: @book{indented}: missing required field `author`
+  --> tests/data/broken/library.bib:16:9
+   |
+16 |   @book{indented, title = {An Indented Book}}
+   |         ^^^^^^^^
+
 error: missing \documentclass{note}
  --> tests/data/broken/notes/garden.rftex:1:1
   |
@@ -116,4 +128,35 @@ error: missing closing }
 7 | é \b{unclosed
   |     ^
 
-18 errors in 5 files
+error: missing \begin{document}
+ --> tests/data/broken/posts/04-misspelled-document.rftex:3:1
+  |
+3 | \begin{documemt}
+  | ^^^^^^^^^^^^^^^^ expected `document`, found `documemt`
+  |
+  = help: the text goes between \begin{document} and \end{document}; an empty document is fine
+
+error: no circled glyph for 2000000
+ --> tests/data/broken/posts/05-two-documents.rftex:4:25
+  |
+4 | The first one, \circled{2000000}.
+  |                         ^^^^^^^
+  |
+  = help: \circled takes a number from 1 to 20
+
+error: a file can hold only one document
+ --> tests/data/broken/posts/05-two-documents.rftex:7:1
+  |
+3 | \begin{document}
+  | ---------------- the document begins here
+...
+7 | \begin{document}
+  | ^^^^^^^^^^^^^^^^
+
+error: unknown reference `no-such-post`
+ --> tests/data/broken/posts/05-two-documents.rftex:8:30
+  |
+8 | The second one, see \nameref{no-such-post}.
+  |                              ^^^^^^^^^^^^ no article, note or section of this document has this name
+
+24 errors in 7 files

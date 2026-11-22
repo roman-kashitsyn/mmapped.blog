@@ -414,6 +414,14 @@ fn a_broken_entry_does_not_hide_the_next_one() {
             "@book{b}: missing required field `author`"
         ]
     );
+    // The next entry is indented.
+    assert_eq!(
+        errors("@misc{a, title = oops}\n\n \t@book{b, title = {B}}\n"),
+        [
+            "expected a field value",
+            "@book{b}: missing required field `author`"
+        ]
+    );
 }
 
 #[test]

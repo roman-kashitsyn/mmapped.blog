@@ -607,3 +607,76 @@ fn references_are_collected() {
         ]
     );
 }
+
+#[test]
+fn a_file_needs_a_document() {
+    let src = "\\title{T}\\begin{documemt}Real article text\\end{documemt}";
+    assert_eq!(
+        errors(src),
+        [error("missing \\begin{document}", "\\begin{documemt}")]
+    );
+    let diagnostic = &analyze_article("slug", src).diagnostics[0];
+    assert_eq!(diagnostic.label, "expected `document`, found `documemt`");
+
+    assert_eq!(
+        errors("\\title{T}\nno environments at all"),
+        [error("missing \\begin{document}", "")]
+    );
+    // An empty document is fine.
+    assert_eq!(body("").len(), 0);
+}
+
+#[test]
+fn a_file_holds_only_one_document() {
+    let src = "\\begin{document}One\\end{document}\n\
+               \\begin{document}Two \\foo\\end{document}";
+    let analysis = analyze_article("slug", src);
+    assert_eq!(
+        errors(src),
+        [
+            error("a file can hold only one document", "\\begin{document}"),
+            error("unknown command `\\foo`", "\\foo"),
+        ]
+    );
+    // The error points at the second document and refers to the first.
+    let diagnostic = &analysis.diagnostics[0];
+    assert_eq!(diagnostic.range.start, 34);
+    assert_eq!(diagnostic.related[0].range.start, 0);
+    // Only the first document is published.
+    assert_eq!(analysis.doc.unwrap().body, [anonymous(vec![para("One")])]);
+
+    // References in the extra document are still checked.
+    let analysis = analyze_article(
+        "slug",
+        "\\begin{document}\\end{document}\\begin{document}\\nameref{x}\\end{document}",
+    );
+    let names: Vec<&str> = analysis
+        .references
+        .iter()
+        .map(|reference| reference.name.as_str())
+        .collect();
+    assert_eq!(names, ["x"]);
+}
+
+#[test]
+fn circled_numbers_have_glyphs() {
+    assert_eq!(inlines("\\circled{20}"), [Inline::CircledRef(20)]);
+    assert_eq!(
+        errors(
+            "\\begin{document}\\circled{0} \\circled{21} \\code{\\circled{2000000}}\\end{document}"
+        ),
+        [
+            error("no circled glyph for 0", "0"),
+            error("no circled glyph for 21", "21"),
+            error("no circled glyph for 2000000", "2000000"),
+        ]
+    );
+    let help = analyze_article("slug", "\\begin{document}\\circled{0}\\end{document}").diagnostics
+        [0]
+    .help
+    .clone();
+    assert_eq!(
+        help.as_deref(),
+        Some("\\circled takes a number from 1 to 20")
+    );
+}
