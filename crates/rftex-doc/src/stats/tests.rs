@@ -107,3 +107,16 @@ fn connectors_join_words_only_between_word_characters() {
     assert_eq!(count("x--y"), 2);
     assert_eq!(count(""), 0);
 }
+
+#[test]
+fn connectors_join_words_across_inline_boundaries() {
+    let count = |inlines: Vec<Inline>| word_count(&[Block::Para(inlines)]);
+    assert_eq!(count(vec![s("well-"), Inline::Strong(vec![s("known")])]), 1);
+    assert_eq!(count(vec![s("isn'"), Inline::Emph(vec![s("t")])]), 1);
+    assert_eq!(count(vec![Inline::Emph(vec![s("rock-")]), s("solid")]), 1);
+    assert_eq!(count(vec![s("well-"), Inline::LineBreak, s("known")]), 2);
+    assert_eq!(
+        count(vec![s("well -"), Inline::Strong(vec![s("known")])]),
+        2
+    );
+}

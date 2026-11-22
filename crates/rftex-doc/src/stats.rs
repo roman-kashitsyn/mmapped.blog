@@ -4,7 +4,7 @@
 //! letters and digits and of non-ASCII bytes. An apostrophe or a hyphen
 //! inside a word does not end it, so `isn't` and `memory-mapped` are one
 //! word each. A word may span inlines: the `s` in `\textsc{llm}s` belongs to
-//! the word before it.
+//! the word before it, and `well-\b{known}` is one word.
 
 use crate::document::{Block, Inline, Table, TableRow};
 
@@ -12,7 +12,7 @@ fn is_word_byte(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || byte >= 0x80
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy)]
 enum Mode {
     Idle,
     InWord,
@@ -22,19 +22,14 @@ enum Mode {
 
 struct Counter {
     words: usize,
-    /// Whether the text seen so far ends inside a word.
-    in_word: bool,
+    /// Where the text seen so far ends relative to a word.
+    mode: Mode,
 }
 
 impl Counter {
     fn text(&mut self, text: &str) {
-        let mut mode = if self.in_word {
-            Mode::InWord
-        } else {
-            Mode::Idle
-        };
         for byte in text.bytes() {
-            mode = match (mode, is_word_byte(byte)) {
+            self.mode = match (self.mode, is_word_byte(byte)) {
                 (Mode::Idle, true) => {
                     self.words += 1;
                     Mode::InWord
@@ -44,7 +39,6 @@ impl Counter {
                 (_, false) => Mode::Idle,
             };
         }
-        self.in_word = mode == Mode::InWord;
     }
 
     fn inlines(&mut self, inlines: &[Inline]) {
@@ -83,7 +77,7 @@ impl Counter {
             | Inline::NumericSpace
             | Inline::Nameref(_)
             | Inline::Bibref { .. }
-            | Inline::Image { .. } => self.in_word = false,
+            | Inline::Image { .. } => self.mode = Mode::Idle,
             // An anchor is invisible: a word continues through it.
             Inline::Anchor(_) => {}
         }
@@ -95,7 +89,7 @@ impl Counter {
 fn count_inlines(inlines: &[Inline]) -> usize {
     let mut counter = Counter {
         words: 0,
-        in_word: false,
+        mode: Mode::Idle,
     };
     counter.inlines(inlines);
     counter.words
