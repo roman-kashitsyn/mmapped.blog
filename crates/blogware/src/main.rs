@@ -161,7 +161,13 @@ fn serve(input: PathBuf, port: u16, options: Options) -> ExitCode {
     };
     let port = listener.local_addr().map_or(port, |addr| addr.port());
     eprintln!("Listening on http://localhost:{port}");
-    serve::run(listener, input, options)
+    match serve::run(listener, input, options) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("error: the server stopped: {err}");
+            ExitCode::FAILURE
+        }
+    }
 }
 
 fn main() -> ExitCode {

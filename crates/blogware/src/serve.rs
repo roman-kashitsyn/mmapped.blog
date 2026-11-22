@@ -4,17 +4,20 @@
 //! it asks for, so the browser always shows the sources as they are now.
 //! While the site has errors, every page lists all of them instead.
 //!
-//! The server speaks just enough HTTP/1.1 for a browser on the same
-//! machine: `GET` and `HEAD`, one request per connection.
+//! [`get`] decides what to answer; axum speaks HTTP for it.
 
 use std::fs;
-use std::io::{self, Read, Write};
-use std::net::{Ipv4Addr, TcpListener, TcpStream};
-use std::panic::{self, AssertUnwindSafe};
+use std::io;
+use std::net::{Ipv4Addr, TcpListener};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Instant;
+
+use axum::extract::{Request, State};
+use axum::http::{header, StatusCode, Uri};
+use axum::middleware::{self, Next};
+use axum::response::IntoResponse;
+use axum::{routing, Router};
 
 use crate::build::{self, STATIC};
 use crate::html::escape;
@@ -189,137 +192,60 @@ b {{ color: var(--error); }}
 
 /// Listens on `port` of this machine only; port 0 picks a free one.
 pub fn bind(port: u16) -> io::Result<TcpListener> {
-    TcpListener::bind((Ipv4Addr::LOCALHOST, port))
+    let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, port))?;
+    listener.set_nonblocking(true)?;
+    Ok(listener)
 }
 
-/// Answers the requests to `listener` until the process stops. Each
-/// connection has a thread of its own, so a browser that opens a connection
-/// and sends nothing does not hold up the others.
-pub fn run(listener: TcpListener, input: PathBuf, options: Options) -> ! {
-    let config = Arc::new((input, options));
-    loop {
-        match listener.accept() {
-            Ok((stream, _)) => {
-                let config = Arc::clone(&config);
-                let spawned = thread::Builder::new()
-                    .name("connection".to_string())
-                    .spawn(move || handle(stream, &config.0, &config.1));
-                // The connection closes with the closure that failed to
-                // start; the next one may find the resources it needs.
-                if let Err(err) = spawned {
-                    eprintln!("error: cannot start a thread for a connection: {err}");
-                }
-            }
-            Err(err) => {
-                eprintln!("error: cannot accept a connection: {err}");
-                thread::sleep(Duration::from_millis(100));
-            }
-        }
-    }
+struct Config {
+    input: PathBuf,
+    options: Options,
 }
 
-fn handle(mut stream: TcpStream, input: &Path, options: &Options) {
+/// Answers the requests to `listener` until the process stops.
+pub fn run(listener: TcpListener, input: PathBuf, options: Options) -> io::Result<()> {
+    let config = Arc::new(Config { input, options });
+    // A `get` route answers `HEAD` as well, and other methods with 405.
+    let app = Router::new()
+        .fallback(routing::get(answer))
+        .layer(middleware::from_fn(log))
+        .with_state(config);
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?;
+    runtime.block_on(async {
+        let listener = tokio::net::TcpListener::from_std(listener)?;
+        axum::serve(listener, app).await
+    })
+}
+
+async fn answer(State(config): State<Arc<Config>>, uri: Uri) -> axum::response::Response {
+    let target = uri.path().to_string();
+    // Reading and rendering the site blocks, and a panic in it must cost
+    // only this request.
+    let response =
+        tokio::task::spawn_blocking(move || get(&config.input, &config.options, &target))
+            .await
+            .unwrap_or_else(|_| Response::text(500, "Internal Server Error"));
+    let status = StatusCode::from_u16(response.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+    let headers = [
+        (header::CONTENT_TYPE, response.content_type),
+        (header::CACHE_CONTROL, "no-cache"),
+    ];
+    (status, headers, response.body).into_response()
+}
+
+/// Logs every request with its status and how long the answer took.
+async fn log(request: Request, next: Next) -> axum::response::Response {
     let start = Instant::now();
-    let _ = stream.set_read_timeout(Some(Duration::from_secs(10)));
-    let head = match read_head(&mut stream) {
-        Head::Complete(head) => head,
-        Head::Empty => return,
-        // Too long, cut short or too slow: the request is not answered,
-        // since it may not be the one the client meant.
-        Head::Incomplete => {
-            let _ = write_response(&mut stream, &Response::text(400, "Bad Request"), true);
-            eprintln!("incomplete request 400");
-            return;
-        }
-    };
-    let mut request_line = head.lines().next().unwrap_or_default().split_whitespace();
-    let method = request_line.next().unwrap_or_default();
-    let target = request_line.next().unwrap_or("/");
-    let response = match method {
-        "GET" | "HEAD" => panic::catch_unwind(AssertUnwindSafe(|| get(input, options, target)))
-            .unwrap_or_else(|_| Response::text(500, "Internal Server Error")),
-        _ => Response::text(405, "Method Not Allowed"),
-    };
-    if let Err(err) = write_response(&mut stream, &response, method != "HEAD") {
-        eprintln!("error: cannot answer {method} {target}: {err}");
-    }
+    let line = format!("{} {}", request.method(), request.uri());
+    let response = next.run(request).await;
     eprintln!(
-        "{method} {target} {} ({:.3}s)",
-        response.status,
+        "{line} {} ({:.3}s)",
+        response.status().as_u16(),
         start.elapsed().as_secs_f64()
     );
-}
-
-/// The longest request line and headers the server reads, with the blank
-/// line that ends them.
-const HEAD_LIMIT: usize = 64 * 1024;
-
-/// What a client sent before its request body.
-#[derive(Debug, PartialEq, Eq)]
-enum Head {
-    /// The request line and the headers, without the blank line after them.
-    Complete(String),
-    /// Nothing: the client closed the connection without a request.
-    Empty,
-    /// No blank line within [`HEAD_LIMIT`] bytes before the client stopped
-    /// sending, closed the connection or timed out.
-    Incomplete,
-}
-
-fn read_head(stream: &mut impl Read) -> Head {
-    const END: &[u8] = b"\r\n\r\n";
-    let mut head = Vec::new();
-    let mut buf = [0; 4096];
-    loop {
-        if let Some(end) = head.windows(END.len()).position(|w| w == END) {
-            if end + END.len() > HEAD_LIMIT {
-                return Head::Incomplete;
-            }
-            head.truncate(end);
-            return Head::Complete(String::from_utf8_lossy(&head).into_owned());
-        }
-        if head.len() >= HEAD_LIMIT {
-            return Head::Incomplete;
-        }
-        match stream.read(&mut buf) {
-            Ok(0) if head.is_empty() => return Head::Empty,
-            Ok(0) => return Head::Incomplete,
-            Ok(n) => head.extend_from_slice(&buf[..n]),
-            Err(err) if err.kind() == io::ErrorKind::Interrupted => {}
-            Err(_) => return Head::Incomplete,
-        }
-    }
-}
-
-fn write_response(stream: &mut TcpStream, response: &Response, body: bool) -> io::Result<()> {
-    let reason = match response.status {
-        200 => "OK",
-        400 => "Bad Request",
-        404 => "Not Found",
-        405 => "Method Not Allowed",
-        _ => "Internal Server Error",
-    };
-    let allow = if response.status == 405 {
-        "Allow: GET, HEAD\r\n"
-    } else {
-        ""
-    };
-    let head = format!(
-        "HTTP/1.1 {} {reason}\r\n\
-         Content-Type: {}\r\n\
-         Content-Length: {}\r\n\
-         Cache-Control: no-cache\r\n\
-         Connection: close\r\n\
-         {allow}\r\n",
-        response.status,
-        response.content_type,
-        response.body.len(),
-    );
-    stream.write_all(head.as_bytes())?;
-    if body {
-        stream.write_all(&response.body)?;
-    }
-    stream.flush()
+    response
 }
 
 #[cfg(test)]
