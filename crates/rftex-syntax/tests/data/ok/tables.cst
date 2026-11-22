@@ -1,5 +1,5 @@
-Document@0..440
-  Environment@0..204
+Document@0..426
+  Environment@0..190
     Begin@0..15
       ControlWord@0..6 "\\begin"
       LBrace@6..7 "{"
@@ -119,142 +119,139 @@ Document@0..440
             RBrace@165..166 "}"
         Text@166..167 " "
       DoubleBackslash@167..169 "\\\\"
-    Row@169..191
-      Cell@169..175
-        Text@169..175 "\nlast "
-      Amp@175..176 "&"
-      Cell@176..181
-        Text@176..181 " row "
-      Amp@181..182 "&"
-      Cell@182..191
-        Text@182..191 " dropped\n"
-    End@191..204
-      ControlWord@191..195 "\\end"
-      LBrace@195..196 "{"
-      Atom@196..203 "tabular"
-      RBrace@203..204 "}"
-  Text@204..205 "\n"
-  Environment@205..301
-    Begin@205..221
-      ControlWord@205..211 "\\begin"
-      LBrace@211..212 "{"
-      Atom@212..220 "tabular*"
+    Row@169..177
+      Cell@169..177
+        Text@169..170 "\n"
+        Command@170..176
+          ControlWord@170..176 "\\hrule"
+        Text@176..177 "\n"
+    End@177..190
+      ControlWord@177..181 "\\end"
+      LBrace@181..182 "{"
+      Atom@182..189 "tabular"
+      RBrace@189..190 "}"
+  Text@190..191 "\n"
+  Environment@191..287
+    Begin@191..207
+      ControlWord@191..197 "\\begin"
+      LBrace@197..198 "{"
+      Atom@198..206 "tabular*"
+      RBrace@206..207 "}"
+    Options@207..216
+      LBracket@207..208 "["
+      Atom@208..215 "uniform"
+      RBracket@215..216 "]"
+    Arg@216..221
+      LBrace@216..217 "{"
+      Atom@217..220 "l|l"
       RBrace@220..221 "}"
-    Options@221..230
-      LBracket@221..222 "["
-      Atom@222..229 "uniform"
-      RBracket@229..230 "]"
-    Arg@230..235
-      LBrace@230..231 "{"
-      Atom@231..234 "l|l"
-      RBrace@234..235 "}"
-    Row@235..244
-      Cell@235..238
-        Text@235..238 "\nx "
-      Amp@238..239 "&"
-      Cell@239..242
-        Text@239..242 " y "
-      DoubleBackslash@242..244 "\\\\"
-    Row@244..279
-      Cell@244..258
-        Text@244..245 " "
-        Comment@245..255 "% comment\n"
-        Text@255..258 " z "
-      Amp@258..259 "&"
-      Cell@259..262
-        Text@259..262 " w "
-      Amp@262..263 "&"
-      Cell@263..270
-        Text@263..270 " extra "
-      Amp@270..271 "&"
-      Cell@271..277
-        Text@271..277 " more "
-      DoubleBackslash@277..279 "\\\\"
-    Row@279..287
-      Cell@279..287
-        Text@279..280 "\n"
-        Command@280..286
-          ControlWord@280..286 "\\hrule"
-        Text@286..287 "\n"
-    End@287..301
-      ControlWord@287..291 "\\end"
-      LBrace@291..292 "{"
-      Atom@292..300 "tabular*"
-      RBrace@300..301 "}"
-  Text@301..302 "\n"
-  Environment@302..337
-    Begin@302..317
-      ControlWord@302..308 "\\begin"
-      LBrace@308..309 "{"
-      Atom@309..316 "tabular"
-      RBrace@316..317 "}"
-    Arg@317..320
-      LBrace@317..318 "{"
-      Atom@318..319 "c"
-      RBrace@319..320 "}"
-    Row@320..322
-      Cell@320..320
-      DoubleBackslash@320..322 "\\\\"
-    Row@322..324
-      Cell@322..322
-      DoubleBackslash@322..324 "\\\\"
-    End@324..337
-      ControlWord@324..328 "\\end"
-      LBrace@328..329 "{"
-      Atom@329..336 "tabular"
-      RBrace@336..337 "}"
-  Text@337..338 "\n"
-  Environment@338..369
-    Begin@338..353
-      ControlWord@338..344 "\\begin"
-      LBrace@344..345 "{"
-      Atom@345..352 "tabular"
-      RBrace@352..353 "}"
-    Arg@353..356
-      LBrace@353..354 "{"
-      Atom@354..355 "c"
-      RBrace@355..356 "}"
-    End@356..369
-      ControlWord@356..360 "\\end"
-      LBrace@360..361 "{"
-      Atom@361..368 "tabular"
-      RBrace@368..369 "}"
-  Text@369..370 "\n"
-  Environment@370..440
-    Begin@370..385
-      ControlWord@370..376 "\\begin"
-      LBrace@376..377 "{"
-      Atom@377..384 "tabular"
-      RBrace@384..385 "}"
-    Arg@385..388
-      LBrace@385..386 "{"
-      Atom@386..387 "l"
-      RBrace@387..388 "}"
-    Row@388..400
-      Cell@388..398
-        Text@388..389 "\n"
-        Command@389..395
-          ControlWord@389..395 "\\hrule"
-        Text@395..398 "\na "
-      DoubleBackslash@398..400 "\\\\"
-    Row@400..419
-      Cell@400..417
-        Text@400..401 "\n"
-        Command@401..407
-          ControlWord@401..407 "\\hrule"
-        Text@407..408 "\n"
-        Command@408..414
-          ControlWord@408..414 "\\hrule"
-        Text@414..417 "\nb "
-      DoubleBackslash@417..419 "\\\\"
-    Row@419..427
-      Cell@419..427
-        Text@419..420 "\n"
-        Command@420..426
-          ControlWord@420..426 "\\hrule"
-        Text@426..427 "\n"
-    End@427..440
-      ControlWord@427..431 "\\end"
-      LBrace@431..432 "{"
-      Atom@432..439 "tabular"
-      RBrace@439..440 "}"
+    Row@221..230
+      Cell@221..224
+        Text@221..224 "\nx "
+      Amp@224..225 "&"
+      Cell@225..228
+        Text@225..228 " y "
+      DoubleBackslash@228..230 "\\\\"
+    Row@230..265
+      Cell@230..244
+        Text@230..231 " "
+        Comment@231..241 "% comment\n"
+        Text@241..244 " z "
+      Amp@244..245 "&"
+      Cell@245..248
+        Text@245..248 " w "
+      Amp@248..249 "&"
+      Cell@249..256
+        Text@249..256 " extra "
+      Amp@256..257 "&"
+      Cell@257..263
+        Text@257..263 " more "
+      DoubleBackslash@263..265 "\\\\"
+    Row@265..273
+      Cell@265..273
+        Text@265..266 "\n"
+        Command@266..272
+          ControlWord@266..272 "\\hrule"
+        Text@272..273 "\n"
+    End@273..287
+      ControlWord@273..277 "\\end"
+      LBrace@277..278 "{"
+      Atom@278..286 "tabular*"
+      RBrace@286..287 "}"
+  Text@287..288 "\n"
+  Environment@288..323
+    Begin@288..303
+      ControlWord@288..294 "\\begin"
+      LBrace@294..295 "{"
+      Atom@295..302 "tabular"
+      RBrace@302..303 "}"
+    Arg@303..306
+      LBrace@303..304 "{"
+      Atom@304..305 "c"
+      RBrace@305..306 "}"
+    Row@306..308
+      Cell@306..306
+      DoubleBackslash@306..308 "\\\\"
+    Row@308..310
+      Cell@308..308
+      DoubleBackslash@308..310 "\\\\"
+    End@310..323
+      ControlWord@310..314 "\\end"
+      LBrace@314..315 "{"
+      Atom@315..322 "tabular"
+      RBrace@322..323 "}"
+  Text@323..324 "\n"
+  Environment@324..355
+    Begin@324..339
+      ControlWord@324..330 "\\begin"
+      LBrace@330..331 "{"
+      Atom@331..338 "tabular"
+      RBrace@338..339 "}"
+    Arg@339..342
+      LBrace@339..340 "{"
+      Atom@340..341 "c"
+      RBrace@341..342 "}"
+    End@342..355
+      ControlWord@342..346 "\\end"
+      LBrace@346..347 "{"
+      Atom@347..354 "tabular"
+      RBrace@354..355 "}"
+  Text@355..356 "\n"
+  Environment@356..426
+    Begin@356..371
+      ControlWord@356..362 "\\begin"
+      LBrace@362..363 "{"
+      Atom@363..370 "tabular"
+      RBrace@370..371 "}"
+    Arg@371..374
+      LBrace@371..372 "{"
+      Atom@372..373 "l"
+      RBrace@373..374 "}"
+    Row@374..386
+      Cell@374..384
+        Text@374..375 "\n"
+        Command@375..381
+          ControlWord@375..381 "\\hrule"
+        Text@381..384 "\na "
+      DoubleBackslash@384..386 "\\\\"
+    Row@386..405
+      Cell@386..403
+        Text@386..387 "\n"
+        Command@387..393
+          ControlWord@387..393 "\\hrule"
+        Text@393..394 "\n"
+        Command@394..400
+          ControlWord@394..400 "\\hrule"
+        Text@400..403 "\nb "
+      DoubleBackslash@403..405 "\\\\"
+    Row@405..413
+      Cell@405..413
+        Text@405..406 "\n"
+        Command@406..412
+          ControlWord@406..412 "\\hrule"
+        Text@412..413 "\n"
+    End@413..426
+      ControlWord@413..417 "\\end"
+      LBrace@417..418 "{"
+      Atom@418..425 "tabular"
+      RBrace@425..426 "}"

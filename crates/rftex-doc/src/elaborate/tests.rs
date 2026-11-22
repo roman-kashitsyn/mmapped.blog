@@ -553,7 +553,7 @@ fn commands_that_code_cannot_hold() {
 #[test]
 fn environments_that_code_cannot_hold() {
     let src = "\\begin{document}\\begin{code}a\\begin{figure}b\\end{figure}c\
-               \\begin{tabular}{l}d\\end{tabular}\\end{code}\\end{document}";
+               \\begin{tabular}{l}d\\\\\\end{tabular}\\end{code}\\end{document}";
     assert_eq!(
         errors(src),
         [

@@ -1,8 +1,7 @@
 //! S-expression dump of the AST.
 //!
-//! The `.ast` snapshots in `tests/data/ok` are written in this format. They
-//! began as the output of the OCaml parser this crate replaced, which printed
-//! the same format; changing it means rewriting them.
+//! The `.ast` snapshots in `tests/data/ok` are written in this format.
+//! Changing it means regenerating them.
 //!
 //! Layout rule: atoms follow the opening parenthesis on the same line, and
 //! every nested list starts a new line indented by two spaces.

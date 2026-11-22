@@ -41,6 +41,10 @@ pub enum ErrorKind {
     InvalidNumber,
     /// `\multicolumn` whose alignment is not exactly one of `l`, `r`, `c`.
     InvalidMulticolumnAlignment,
+    /// `\multicolumn` next to other content of its table cell.
+    MisplacedMulticolumn,
+    /// A table row with content but without `\\` at its end.
+    MissingRowEnd,
     /// An option list that is not `[name, name, ...]`.
     MalformedOptions,
     /// A character that has no meaning in math.
@@ -72,6 +76,10 @@ impl ErrorKind {
             ErrorKind::InvalidMulticolumnAlignment => {
                 "\\multicolumn requires {N}{alignment}{content}"
             }
+            ErrorKind::MisplacedMulticolumn => {
+                "\\multicolumn must be the only content of its table cell"
+            }
+            ErrorKind::MissingRowEnd => "missing \\\\ at the end of the table row",
             ErrorKind::MalformedOptions => "malformed option list",
             ErrorKind::UnexpectedInMath => "unexpected character in math",
             ErrorKind::ExpectedMathAtom => "expected a subscript or superscript",

@@ -1,4 +1,4 @@
-(table 0 204 tabular
+(table 0 190 tabular
   (opts) "lrc"
   (row top
     (cell "l" 1
@@ -41,53 +41,49 @@
     (cell "c" 2
       (text 125 "wide"))
     (cell "c" 1
-      (text 130 " "))
-    (cell "l" 1
       (text 132 " z ")))
-  (row none
+  (row bottom
     (cell "l" 1
       (text 137 "\np "))
     (cell "r" 2
-      (text 161 "tail"))
-    (cell "l" 1
-      (text 166 " "))))
-(text 204 "\n")
-(table 205 301 tabular*
+      (text 161 "tail"))))
+(text 190 "\n")
+(table 191 287 tabular*
   (opts "uniform") "ll"
   (row none
     (cell "l" 1
-      (text 235 "\nx "))
+      (text 221 "\nx "))
     (cell "l" 1
-      (text 239 " y ")))
+      (text 225 " y ")))
   (row bottom
     (cell "l" 1
-      (text 244 " ")
-      (text 255 " z "))
+      (text 230 " ")
+      (text 241 " z "))
     (cell "l" 1
-      (text 259 " w "))
+      (text 245 " w "))
     (cell "l" 1
-      (text 263 " extra "))
+      (text 249 " extra "))
     (cell "l" 1
-      (text 271 " more "))))
-(text 301 "\n")
-(table 302 337 tabular
+      (text 257 " more "))))
+(text 287 "\n")
+(table 288 323 tabular
   (opts) "c"
   (row none
     (cell "c" 1))
   (row none
     (cell "c" 1)))
-(text 337 "\n")
-(table 338 369 tabular
+(text 323 "\n")
+(table 324 355 tabular
   (opts) "c")
-(text 369 "\n")
-(table 370 440 tabular
+(text 355 "\n")
+(table 356 426 tabular
   (opts) "l"
   (row top
     (cell "l" 1
-      (text 388 "\n")
-      (text 395 "\na ")))
+      (text 374 "\n")
+      (text 381 "\na ")))
   (row both
     (cell "l" 1
-      (text 400 "\n")
-      (text 407 "\n")
-      (text 414 "\nb "))))
+      (text 386 "\n")
+      (text 393 "\n")
+      (text 400 "\nb "))))

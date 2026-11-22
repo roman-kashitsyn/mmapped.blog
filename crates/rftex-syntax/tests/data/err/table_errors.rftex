@@ -4,3 +4,13 @@ a & b \\
 \begin{tabular}{l}
 \multicolumn{2}{lr}{x} \\ } \\
 \end{tabular}
+\begin{tabular}{ll}
+a \multicolumn{2}{c}{x} \\
+\multicolumn{1}{l}{y}\multicolumn{1}{l}{z} \\
+\hrule \multicolumn{2}{c}{ok} % blank text, a rule and comments may surround it
+\\
+\end{tabular}
+\begin{tabular}{l}
+a \\
+no row end
+\end{tabular}
