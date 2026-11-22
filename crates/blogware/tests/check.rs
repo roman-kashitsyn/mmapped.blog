@@ -151,6 +151,7 @@ fn command_line() {
         &["frobnicate"],
         &["check", "--input"],
         &["check", "--output", "x"],
+        &["check", "--root", "https://example.test"],
         &["check", "extra"],
     ] {
         let (code, _, stderr) = blogware(args);

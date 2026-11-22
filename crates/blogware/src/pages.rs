@@ -1,4 +1,5 @@
-//! Whole pages: the post and note pages and the index of notes.
+//! Whole pages: the front page, the post and note pages, and the lists of
+//! posts and of notes.
 
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
@@ -751,6 +752,87 @@ pub fn note_page(site: &Site, index: usize, options: &Options) -> String {
             h.raw(SITE_FOOTER);
         },
     );
+    h.finish()
+}
+
+/// The front page: the text of `index.rftex`, then the five newest featured
+/// articles and the five newest articles.
+pub fn index_page(site: &Site, options: &Options) -> String {
+    let refs = global_refs(site);
+    let ctx = Ctx {
+        refs: &refs,
+        bib: &site.bib,
+    };
+    let featured: Vec<&Article> = site
+        .articles
+        .iter()
+        .filter(|article| article.featured)
+        .take(5)
+        .collect();
+    let latest: Vec<&Article> = site.articles.iter().take(5).collect();
+    let mut h = Html::new();
+    page(
+        &mut h,
+        |h| list_head(h, options, "mmap(blog)"),
+        |h| {
+            h.raw(SITE_HEADER);
+            h.elem("article", &[], |h| {
+                render::render_blocks(h, ctx, &site.index.body);
+                h.elem("section", &[], |h| compact_list(h, "Featured", &featured));
+                h.elem("section", &[], |h| compact_list(h, "Latest", &latest));
+            });
+            h.raw(SITE_FOOTER);
+        },
+    );
+    h.finish()
+}
+
+fn post_entry(h: &mut Html, article: &Article) {
+    let (item_class, title_class) = if article.featured {
+        (
+            Some(("class", "featured")),
+            "article-title left-gutter-anchor featured-marker",
+        )
+    } else {
+        (None, "article-title")
+    };
+    h.elem_opt("li", &[item_class], |h| {
+        h.elem("h2", &[("class", title_class)], |h| {
+            h.elem("a", &[("href", &article.url)], |h| {
+                h.elem("span", &[], |h| {
+                    h.raw(&title_html(&article.title));
+                });
+            });
+        });
+        h.elem("div", &[("class", "article-subtitle")], |h| {
+            h.raw(&title_html(&article.subtitle));
+        });
+        post_attributes(h, article);
+    });
+}
+
+/// The list of all articles, newest first.
+pub fn post_list_page(site: &Site, options: &Options) -> String {
+    let mut h = Html::new();
+    h.raw("<!DOCTYPE html>").nl();
+    // Quirk: the final newline is inside the `html` element.
+    h.elem("html", &[("lang", "en")], |h| {
+        list_head(h, options, "All Posts");
+        h.elem("body", &[], |h| {
+            h.raw(SITE_HEADER);
+            h.elem("section", &[("class", "post-list")], |h| {
+                if !site.articles.is_empty() {
+                    h.elem("ul", &[("class", "posts")], |h| {
+                        for article in &site.articles {
+                            post_entry(h, article);
+                        }
+                    });
+                }
+            });
+            h.raw(SITE_FOOTER);
+        });
+        h.nl();
+    });
     h.finish()
 }
 

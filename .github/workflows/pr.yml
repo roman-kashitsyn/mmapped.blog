@@ -82,6 +82,9 @@ jobs:
       - name: Compare the Rust parser with the OCaml one
         run: make diff-ast
 
+      - name: Compare the site the Rust engine builds with the OCaml one
+        run: make diff-site
+
       - name: Render the site
         run: make render DEST=site
 

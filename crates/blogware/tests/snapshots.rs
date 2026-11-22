@@ -8,8 +8,8 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use blogware::pages::{self, Options};
-use blogware::{report, site};
+use blogware::pages::Options;
+use blogware::{build, report, site};
 
 /// The pages the snapshots leave out: they change with every post.
 const EXCLUDED: [&str; 3] = ["feed.xml", "index.html", "posts.html"];
@@ -65,24 +65,13 @@ fn pages_match_the_ocaml_snapshots() {
         Ok(site) => site,
         Err(failure) => panic!("{}", report::render(&failure, false)),
     };
-    let options = Options::default();
-    let mut rendered = Vec::new();
-    for (index, article) in site.articles.iter().enumerate() {
-        rendered.push((
-            format!("posts/{}.html", article.slug),
-            pages::post_page(&site, index, &options),
-        ));
-    }
-    for (index, note) in site.notes.iter().enumerate() {
-        rendered.push((
-            format!("notes/{}.html", note.slug),
-            pages::note_page(&site, index, &options),
-        ));
-    }
-    rendered.push((
-        "notes/index.html".to_string(),
-        pages::note_list_page(&site, &options),
-    ));
+    // The snapshots leave out the pages that change with every post; the
+    // build makes them all the same.
+    let rendered: Vec<(String, String)> = build::pages(&site, &Options::default())
+        .into_iter()
+        .map(|page| (page.path, page.content))
+        .filter(|(path, _)| !EXCLUDED.contains(&path.as_str()))
+        .collect();
 
     let root = snapshot_root();
     let mut expected_paths = BTreeSet::new();

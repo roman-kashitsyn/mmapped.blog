@@ -72,7 +72,7 @@ struct Loaded<T> {
 
 /// The path as shown to the user: without the `./` of the default input
 /// directory.
-fn display(path: &Path) -> String {
+pub(crate) fn display(path: &Path) -> String {
     path.strip_prefix(".")
         .unwrap_or(path)
         .to_string_lossy()
