@@ -115,7 +115,7 @@ fn toc_lists_named_sections_and_subsections() {
     assert_eq!(
         h.finish(),
         "<hr>\n<ul class=\"toc toc-level-1\"><li class=\"toc toc-level-1\"><a \
-         href=\"#intro\">A &amp;amp; B</a></li><li class=\"toc toc-level-1\"><a \
+         href=\"#intro\">A &amp; B</a></li><li class=\"toc toc-level-1\"><a \
          href=\"#body\">Body</a><ul class=\"toc toc-level-2\"><li class=\"toc toc-level-2\"><a \
          href=\"#sub\">Sub</a></li></ul></li></ul><hr>\n"
     );
@@ -141,14 +141,22 @@ fn similar_articles_by_keyword() {
 }
 
 #[test]
-fn heap_sort_sorts() {
-    for len in 0..40 {
-        let mut values: Vec<u32> = (0..len).map(|i| (i * 7919 + 13) % 23).collect();
-        let mut expected = values.clone();
-        expected.sort();
-        ocaml_array_sort(&mut values, &|a, b| a.cmp(b));
-        assert_eq!(values, expected, "{len}");
-    }
+fn similar_articles_break_ties_by_date_then_slug() {
+    let mut old = article("old", &["x"]);
+    old.created_at = Date::parse("2020-01-01").unwrap();
+    let articles = [
+        article("b", &["x"]),
+        old,
+        article("target", &["x"]),
+        article("a", &["x"]),
+        article("c", &["x"]),
+    ];
+    let slugs: Vec<&str> = similar_articles(&articles, 2)
+        .iter()
+        .map(|a| a.slug.as_str())
+        .collect();
+    // "old" and "a" are one step away, "b" and "c" two steps away.
+    assert_eq!(slugs, ["a", "old", "b", "c"]);
 }
 
 #[test]

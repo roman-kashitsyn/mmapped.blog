@@ -78,7 +78,7 @@ annotate them with arbitrary <em>tags</em> like hashtags on social media.</p>
 </code></pre></div>
 <p>To select the events appropriate for our context, we construct a <em>query</em>,
 a logical formula matching the event tags.</p>
-<table class="zebra"><thead><thead><tr><th colspan="1" class="align-l">
+<table class="zebra"><thead><tr><th colspan="1" class="align-l">
 Events we want to see </th><th colspan="1" class="align-l"> The query </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
 
 Only events triggered by user actions </td><td colspan="1" class="align-l"> <code>#user</code> </td></tr><tr><td colspan="1" class="align-l">
@@ -132,7 +132,7 @@ we convert logical disjunctions into separate directives (<code>#a or #b</code> 
 and conjunctions into composite filters (<code>#a and #b</code> becomes <code>[{a}{b}]=debug</code>).
 This scheme doesn’t support negation (in other words, we cannot query events lacking a specific field) and thus our query language isn’t <a href="https://en.wikipedia.org/wiki/Functional_completeness">functionally complete</a>,
 but it is good enough for most use cases.</p>
-<table class="zebra"><thead><thead><tr><th colspan="1" class="align-l">
+<table class="zebra"><thead><tr><th colspan="1" class="align-l">
 Tag query </th><th colspan="1" class="align-l"> RUST_LOG value </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
 
 <code>#user</code> </td><td colspan="1" class="align-l"> <code>[{user}]=debug</code> </td></tr><tr><td colspan="1" class="align-l">
@@ -162,7 +162,7 @@ This approach can’t query secondary tags alone—we must query either the prim
 <span class="line"><span class="hl-id">debug</span>!(<span class="hl-id">target</span>: <span class="hl-str">&quot;rpc::perf&quot;</span>, ?<span class="hl-id">duration</span>, <span class="hl-id">endpoint</span> = <span class="hl-str">&quot;sendTransaction&quot;</span>);</span>
 <span class="line"><span class="hl-id">debug</span>!(<span class="hl-id">target</span>: <span class="hl-str">&quot;db::perf&quot;</span>, ?<span class="hl-id">duration</span>, <span class="hl-id">query</span> = <span class="hl-str">&quot;fetch_transaction&quot;</span>);</span>
 </code></pre></div>
-<table class="zebra"><thead><thead><tr><th colspan="1" class="align-l">
+<table class="zebra"><thead><tr><th colspan="1" class="align-l">
 Tag query </th><th colspan="1" class="align-l"> RUST_LOG value </th></tr></thead><tbody><tr class="border-top"><td colspan="1" class="align-l">
 
 <code>#user</code> </td><td colspan="1" class="align-l"> <code>user=debug</code> </td></tr><tr><td colspan="1" class="align-l">

@@ -124,10 +124,10 @@ fn references() {
         refs: &refs,
         bib: &[],
     };
-    // The title is HTML and gets escaped once more.
+    // The title is HTML and goes into the page as is.
     assert_eq!(
         inlines_to_string(ctx, &[Inline::Nameref("post".to_string())]),
-        "<a href=\"/posts/post.html\">A &amp;amp; B</a>"
+        "<a href=\"/posts/post.html\">A &amp; B</a>"
     );
     assert_eq!(
         inlines_to_string(
@@ -264,7 +264,7 @@ fn tables() {
     with_header.header.as_mut().unwrap().border_bottom = true;
     assert_eq!(
         block(&Block::Table(with_header)),
-        "<table><thead><thead><tr class=\"border-bot\"><th colspan=\"1\" \
+        "<table><thead><tr class=\"border-bot\"><th colspan=\"1\" \
          class=\"align-l\">a</th><th colspan=\"1\" \
          class=\"align-l\">b</th></tr></thead><tbody></tbody></table>\n"
     );
