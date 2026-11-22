@@ -1,7 +1,8 @@
 //! The document model as HTML: blocks and inlines.
 //!
-//! The output must stay byte-identical to the OCaml renderer's until the
-//! cutover, quirks included; they are marked where they occur.
+//! The output matches the page snapshots, which began as the output of the
+//! OCaml renderer this one replaced. Its quirks are kept for now and marked
+//! where they occur.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -19,7 +20,7 @@ use crate::mathml;
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct RefTarget {
     /// HTML. It is escaped once more where it is shown, as the OCaml engine
-    /// does.
+    /// did.
     pub title: String,
     pub url: String,
 }
@@ -202,7 +203,7 @@ pub fn render_inline(h: &mut Html, ctx: Ctx, inline: &Inline) {
         }
         // `blogware check` rejects unresolved references in the body. Titles
         // are rendered without labels, so a reference in a title shows as a
-        // placeholder, as it does in the OCaml engine.
+        // placeholder, as it did in the OCaml engine.
         Inline::Nameref(label) => match ctx.refs.get(label) {
             Some(target) => {
                 h.text_elem("a", &[("href", &target.url)], &target.title);

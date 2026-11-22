@@ -4,7 +4,7 @@ This repository contains the complete source of my blog hosted at https://mmappe
 
 # Build instructions
 
-You’ll need [Make](https://www.gnu.org/software/make/) to build the website.
+You’ll need [Rust](https://rustup.rs/) and [Make](https://www.gnu.org/software/make/) to build the website.
 Execute the following commands in the repository root:
 
 ```shell
@@ -12,19 +12,25 @@ make render DEST=site
 ```
 
 The `site` directory will contain the entire website contents that you can host statically.
+If any source has an error, the build reports all of them and writes nothing.
 
-The default build only installs the minimum OCaml toolchain needed to render and test the site.
-If you also want documentation tooling locally, run:
+While writing, run
 
 ```shell
-make dev-deps
+make serve
 ```
+
+and open http://localhost:9090: every page is rendered from the sources on disk when you load it,
+and if the site has errors, the page lists them all.
+`make check` reports the same errors in the terminal.
 
 To install the git hooks (a pre-commit hook that runs `make test`), run:
 
 ```shell
 make hooks
 ```
+
+Run `make help` for the other targets.
 
 # License
 

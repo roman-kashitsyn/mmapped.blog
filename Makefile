@@ -1,57 +1,13 @@
 PORT ?= 9090
 DEST ?= _site
 INPUT ?= .
-BENCH_ITERATIONS ?= 10
 
-OPAM_VERSION := 2.3.0
-OPAM_DIR := opam
-BLOGWARE_DIR := blogware
+# The engine: crates/rftex-syntax (the parser), crates/rftex-doc (the document
+# model) and crates/blogware (rendering, the site and the command line).
+ENGINE_CRATES := -p rftex-syntax -p rftex-doc -p blogware
+BLOGWARE := cargo run --quiet --release -p blogware --
 
-OPAM_OS_RAW := $(shell uname -s)
-OPAM_ARCH_RAW := $(shell uname -m)
-
-ifeq ($(OPAM_OS_RAW),Darwin)
-  OPAM_OS := macos
-else ifeq ($(OPAM_OS_RAW),Linux)
-  OPAM_OS := linux
-else
-  $(error Unsupported operating system $(OPAM_OS_RAW))
-endif
-
-ifeq ($(OPAM_ARCH_RAW),x86_64)
-  OPAM_ARCH := x86_64
-else ifeq ($(OPAM_ARCH_RAW),arm64)
-  OPAM_ARCH := arm64
-else ifeq ($(OPAM_ARCH_RAW),aarch64)
-  OPAM_ARCH := arm64
-else
-  $(error Unsupported architecture $(OPAM_ARCH_RAW))
-endif
-
-# Map architecture names to opam's naming convention
-ifeq ($(OPAM_ARCH),arm64)
-  OPAM_BIN_ARCH := arm64
-else ifeq ($(OPAM_ARCH),x86_64)
-  OPAM_BIN_ARCH := x86_64
-endif
-
-OPAM_ROOT := $(OPAM_DIR)/$(OPAM_VERSION)
-OPAM_BIN := opam-$(OPAM_VERSION)-$(OPAM_BIN_ARCH)-$(OPAM_OS)
-OPAM_URL := https://github.com/ocaml/opam/releases/download/$(OPAM_VERSION)/$(OPAM_BIN)
-OPAM := $(OPAM_ROOT)/bin/opam
-OPAM_STATE_ROOT := $(abspath $(OPAM_ROOT)/root)
-
-# Use opam to locate tools (they're installed in the switch)
-OPAMSWITCH := $(OPAM_ROOT)/local-switch
-OPAM_SWITCH_ABS := $(abspath $(OPAMSWITCH))
-OPAM_COMMON_ARGS := --root=$(OPAM_STATE_ROOT) --switch=$(OPAM_SWITCH_ABS)
-DUNE := $(OPAM) exec $(OPAM_COMMON_ARGS) -- dune
-BLOGWARE := _build/default/$(BLOGWARE_DIR)/bin/main.exe
-BLOGWARE_BENCH := _build/default/$(BLOGWARE_DIR)/bin/bench.exe
-BLOGWARE_BUILD_DIR := _build
-ARTICLE_SOURCES := about.rftex $(wildcard posts/*.rftex)
-
-# Tree-sitter grammar for .rftex. Its toolchain (node, cargo) is deliberately kept off
+# Tree-sitter grammar for .rftex. Its toolchain (node) is deliberately kept off
 # the `test` target, and therefore off the pre-commit hook.
 GRAMMAR_DIR := tree-sitter-rftex
 
@@ -60,91 +16,58 @@ help:
 	@echo "Supported targets"
 	@echo "================="
 	@echo "build        - build the blog engine"
-	@echo "serve        - serve the blog content on the PORT"
+	@echo "check        - report every error in the sources of the site"
+	@echo "serve        - serve the blog on http://localhost:PORT, re-rendering on every request"
 	@echo "render       - render the website into the DEST directory"
-	@echo "test         - run the test suite"
-	@echo "test-verbose - run tests with verbose output"
-	@echo "utop         - launch utop with blogware libraries loaded"
-	@echo "format       - format all OCaml code"
-	@echo "bench-all    - benchmark all articles ($(BENCH_ITERATIONS) iterations each)"
-	@echo "snapshots    - update website rendering snapshots"
+	@echo "test         - run the test suite of the engine"
+	@echo "snapshots    - update the snapshots the tests compare with"
+	@echo "format       - format the Rust code"
 	@echo "clean        - remove build artifacts"
-	@echo "distclean    - remove build artifacts and installed toolchains"
-	@echo "deps         - install the minimal build dependencies"
-	@echo "dev-deps     - install optional documentation tooling"
 	@echo "hooks        - install the git hooks from .githooks"
 	@echo "grammar      - regenerate the tree-sitter grammar parser"
 	@echo "grammar-test - run the tree-sitter grammar test suite"
 	@echo "parse-tree   - print the tree-sitter parse tree for FILE"
-	@echo "syntax-test  - run the test suite of the Rust parser"
-	@echo "diff-ast     - compare the Rust parser with the OCaml one on every article"
 	@echo "syntax-tree  - print the Rust parser's syntax tree for FILE"
-	@echo "engine-test  - run the test suite of the Rust engine"
-	@echo "check        - report every error in the sources of the site"
-	@echo "diff-site    - compare the site the Rust engine builds with the OCaml one"
-	@echo "dir-locals   - generate .dir-locals.el for Emacs"
-
-$(OPAM_STATE_ROOT)/config: $(OPAM)
-	@echo "Initializing opam..."
-	$(OPAM) init --root=$(OPAM_STATE_ROOT) --disable-sandboxing --bare --no-setup -y
-
-$(OPAMSWITCH)/_opam/.opam-switch/switch-config: $(OPAM_STATE_ROOT)/config
-	@echo "Creating local switch at $(OPAMSWITCH)..."
-	$(OPAM) switch create $(OPAM_SWITCH_ABS) ocaml-base-compiler.5.3.0 --yes --root=$(OPAM_STATE_ROOT)
-
-# Install the minimum toolchain required to build and test the site.
-$(OPAM_ROOT)/.deps: $(OPAMSWITCH)/_opam/.opam-switch/switch-config dune-project
-	@echo "Installing build dependencies..."
-	$(OPAM) install $(OPAM_COMMON_ARGS) dune --yes
-	@touch $@
-
-# Optional documentation tooling. Not required for CI or deployment.
-$(OPAM_ROOT)/.dev-deps: $(OPAM_ROOT)/.deps
-	@echo "Installing development dependencies..."
-	$(OPAM) install $(OPAM_COMMON_ARGS) merlin utop ocamlformat ocp-indent --yes
-	@touch $@
-
-.PHONY: serve
-serve: build
-	$(OPAM) exec $(OPAM_COMMON_ARGS) -- $(BLOGWARE) -input $(INPUT) -serve $(PORT)
-
-.PHONY: render
-render: build
-	$(OPAM) exec $(OPAM_COMMON_ARGS) -- $(BLOGWARE) -input $(INPUT) -output $(DEST)
-
-.PHONY: test
-test: $(OPAM_ROOT)/.deps
-	$(DUNE) test
-
-.PHONY: test-verbose
-test-verbose: $(OPAM_ROOT)/.deps
-	$(DUNE) exec ./blogware/test/test_main.exe -- -verbose
-
-.PHONY: utop
-utop: $(OPAM_ROOT)/.dev-deps
-	$(DUNE) utop $(BLOGWARE_DIR)/lib
-
-.PHONY: format
-format: $(OPAM_ROOT)/.dev-deps
-	$(DUNE) fmt
-
-.PHONY: snapshots
-snapshots: $(OPAM_ROOT)/.deps
-	UPDATE_SNAPSHOTS=1 $(DUNE) exec ./blogware/test/snapshot_test.exe
 
 .PHONY: build
-build: $(OPAM_ROOT)/.deps
-	$(DUNE) build ./blogware/bin/main.exe
+build:
+	cargo build --release -p blogware
 
-.PHONY: bench-all
-bench-all: $(OPAM_ROOT)/.deps
-	$(DUNE) exec ./blogware/bin/bench.exe -- $(BENCH_ITERATIONS) $(ARTICLE_SOURCES)
+# Syntax, structure, references and the bibliography, with every error at once.
+.PHONY: check
+check:
+	$(BLOGWARE) check --input $(INPUT)
 
-.PHONY: deps
-deps: $(OPAM_ROOT)/.deps
+.PHONY: serve
+serve:
+	$(BLOGWARE) serve --input $(INPUT) --port $(PORT)
 
-.PHONY: dev-deps
-dev-deps: $(OPAM_ROOT)/.dev-deps
+# Checks the site first, and writes nothing if it has errors.
+.PHONY: render
+render:
+	$(BLOGWARE) build --input $(INPUT) --output $(DEST)
+
+.PHONY: test
+test:
+	cargo test $(ENGINE_CRATES)
+
+.PHONY: snapshots
+snapshots:
+	UPDATE_SNAPSHOTS=1 cargo test $(ENGINE_CRATES)
+
+.PHONY: format
+format:
+	cargo fmt $(ENGINE_CRATES)
+
+.PHONY: clean
+clean:
+	cargo clean
+	rm -rf $(DEST)
+
+.PHONY: hooks
+hooks:
+	git config core.hooksPath .githooks
+	@echo "Git hooks installed from .githooks"
 
 # Regenerate src/parser.c from grammar.js. The generated sources are committed, so
 # this only needs running after editing the grammar.
@@ -167,73 +90,6 @@ grammar-test:
 parse-tree:
 	cd $(GRAMMAR_DIR) && npx tree-sitter parse --cst '../$(FILE)'
 
-# The Rust parser (crates/rftex-syntax). Like the grammar, it stays off the `test`
-# target so that the pre-commit hook needs only the OCaml toolchain.
-.PHONY: syntax-test
-syntax-test:
-	cargo test -p rftex-syntax
-
-# The differential gate: on every article and every valid fixture, the Rust parser
-# must produce the same AST as `blogware -dump-ast`.
-.PHONY: diff-ast
-diff-ast: build
-	RFTEX_ORACLE=$(abspath $(BLOGWARE)) cargo test -p rftex-syntax --test differential -- --nocapture
-
 .PHONY: syntax-tree
 syntax-tree:
 	cargo run --quiet -p rftex-syntax --bin rftex-dump -- cst '$(FILE)'
-
-# The Rust engine (crates/rftex-doc and crates/blogware), which is replacing the
-# OCaml one. It stays off the `test` target for the same reason as the parser.
-.PHONY: engine-test
-engine-test:
-	cargo test -p rftex-doc -p blogware
-
-# Check the whole site with the Rust engine: syntax, structure, references and the
-# bibliography. Unlike `render`, it reports all errors at once and fails if there
-# are any.
-.PHONY: check
-check:
-	cargo run --quiet -p blogware -- check --input $(INPUT)
-
-# The gate of the Rust engine's `build`: it must write the same files as `render`,
-# byte for byte, static files included.
-DIFF_SITE_DIR := target/diff-site
-
-.PHONY: diff-site
-diff-site: build
-	rm -rf $(DIFF_SITE_DIR)
-	$(OPAM) exec $(OPAM_COMMON_ARGS) -- $(BLOGWARE) -input $(INPUT) -output $(DIFF_SITE_DIR)/ocaml 2>/dev/null
-	cargo run --quiet --release -p blogware -- build --input $(INPUT) --output $(DIFF_SITE_DIR)/rust
-	diff -r $(DIFF_SITE_DIR)/ocaml $(DIFF_SITE_DIR)/rust
-
-.PHONY: hooks
-hooks:
-	git config core.hooksPath .githooks
-	@echo "Git hooks installed from .githooks"
-
-SWITCH_BIN := $(OPAM_SWITCH_ABS)/_opam/bin
-
-.PHONY: dir-locals
-dir-locals: $(OPAM_ROOT)/.dev-deps
-	@echo "Generating .dir-locals.el..."
-	@echo '((nil' > .dir-locals.el
-	@echo '  (opam-switch . "$(SWITCH_BIN)")' >> .dir-locals.el
-	@echo '  (dune-command . "$(SWITCH_BIN)/dune")' >> .dir-locals.el
-	@echo '  (ocamlformat-command . "$(SWITCH_BIN)/ocamlformat")' >> .dir-locals.el
-	@echo '  (ocp-indent-path . "$(SWITCH_BIN)/ocp-indent")' >> .dir-locals.el
-	@echo '  (utop-command . "$(abspath $(OPAM)) exec $(OPAM_COMMON_ARGS) -- dune utop . -- -emacs")))' >> .dir-locals.el
-
-.PHONY: clean
-clean:
-	rm -rf $(BLOGWARE_BUILD_DIR) $(DEST)
-
-.PHONY: distclean
-distclean: clean
-	rm -rf $(OPAM_DIR)
-
-$(OPAM):
-	@echo "Downloading opam $(OPAM_VERSION)..."
-	mkdir -p $(OPAM_ROOT)/bin
-	curl -fsSL $(OPAM_URL) -o $(OPAM)
-	chmod +x $(OPAM)

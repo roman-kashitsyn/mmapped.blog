@@ -1,8 +1,8 @@
 //! S-expression dump of the AST.
 //!
-//! The format is the contract of the differential test against the OCaml
-//! parser (`blogware/lib/ast_dump.ml`): both sides print the same bytes for
-//! the same input. Change them together.
+//! The `.ast` snapshots in `tests/data/ok` are written in this format. They
+//! began as the output of the OCaml parser this crate replaced, which printed
+//! the same format; changing it means rewriting them.
 //!
 //! Layout rule: atoms follow the opening parenthesis on the same line, and
 //! every nested list starts a new line indented by two spaces.

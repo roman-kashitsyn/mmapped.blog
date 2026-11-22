@@ -1,14 +1,10 @@
-_build/
-opam/
 _site/
-_opam/
 target/
-*.install
-.merlin
-.dir-locals.el
 *~lock~
 purgatory/
 .rtk
 
-# Cargo
-/target/
+# Left behind by the OCaml engine; safe to delete.
+_build/
+opam/
+.dir-locals.el

@@ -1,11 +1,13 @@
 /**
  * @file Tree-sitter grammar for .rftex, the LaTeX flavor parsed by blogware.
  *
- * Reference implementation: blogware/lib/tex_parser.ml. Line references in the
- * comments below point at it. The grammar deliberately does NOT model per-command
- * arity (blogware/lib/syntax.ml `cmd_args`): a single generic `command` node keeps
- * highlights.scm small and lets new blogware commands highlight without a grammar
- * change. See README.md for the full list of accepted deviations.
+ * Reference implementation: crates/rftex-syntax. The grammar was written against
+ * the OCaml parser it replaced, so line references in the comments below point at
+ * blogware/lib/tex_parser.ml as of commit 6b9068c. The grammar deliberately does NOT
+ * model per-command arity (crates/rftex-syntax/src/registry.rs): a single generic
+ * `command` node keeps highlights.scm small and lets new blogware commands
+ * highlight without a grammar change. See README.md for the full list of accepted
+ * deviations.
  *
  * @license CC-BY-4.0
  */
