@@ -1,7 +1,6 @@
 //! Whole pages: the front page, the post and note pages, and the lists of
 //! posts and of notes.
 
-use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use rftex_doc::document::{plain_text, Article, Block, Inline, Note};
@@ -82,11 +81,12 @@ fn render_toc(h: &mut Html, toc: &[TocSection]) {
     if toc.is_empty() {
         return;
     }
-    // Quirk: the titles are HTML and get escaped once more.
     let entry = |h: &mut Html, level: &str, entry: &TocEntry| {
         let href = format!("#{}", entry.id);
         h.open("li", &[("class", level)]);
-        h.text_elem("a", &[("href", &href)], &entry.title);
+        h.elem("a", &[("href", &href)], |h| {
+            h.raw(&entry.title);
+        });
     };
     h.open("hr", &[]).nl();
     h.elem("ul", &[("class", "toc toc-level-1")], |h| {
@@ -161,118 +161,10 @@ fn document_refs(site: &Site, body: &[Block]) -> RefTable {
 
 // --------------------------------------------------------------- similar
 
-/// OCaml's `Array.sort`, a ternary heap sort, ported line by line. It is not
-/// stable: ties among similar articles come out in the order it leaves them,
-/// so the port must be exact for the pages to match their snapshots.
-fn ocaml_array_sort<T: Copy>(a: &mut [T], cmp: &dyn Fn(&T, &T) -> Ordering) {
-    /// The largest child of `i` in a heap of `l` elements; `Err(i)` (OCaml's
-    /// `Bottom i`) if `i` has no children.
-    fn maxson<T>(
-        a: &[T],
-        cmp: &dyn Fn(&T, &T) -> Ordering,
-        l: usize,
-        i: usize,
-    ) -> Result<usize, usize> {
-        let i31 = i + i + i + 1;
-        if i31 + 2 < l {
-            let mut x = i31;
-            if cmp(&a[i31], &a[i31 + 1]) == Ordering::Less {
-                x = i31 + 1;
-            }
-            if cmp(&a[x], &a[i31 + 2]) == Ordering::Less {
-                x = i31 + 2;
-            }
-            Ok(x)
-        } else if i31 + 1 < l && cmp(&a[i31], &a[i31 + 1]) == Ordering::Less {
-            Ok(i31 + 1)
-        } else if i31 < l {
-            Ok(i31)
-        } else {
-            Err(i)
-        }
-    }
-
-    fn trickledown<T: Copy>(
-        a: &mut [T],
-        cmp: &dyn Fn(&T, &T) -> Ordering,
-        l: usize,
-        mut i: usize,
-        e: T,
-    ) -> Result<(), usize> {
-        loop {
-            let j = maxson(a, cmp, l, i)?;
-            if cmp(&a[j], &e) == Ordering::Greater {
-                a[i] = a[j];
-                i = j;
-            } else {
-                a[i] = e;
-                return Ok(());
-            }
-        }
-    }
-
-    fn trickle<T: Copy>(a: &mut [T], cmp: &dyn Fn(&T, &T) -> Ordering, l: usize, i: usize, e: T) {
-        if let Err(i) = trickledown(a, cmp, l, i, e) {
-            a[i] = e;
-        }
-    }
-
-    /// Moves the hole at `i` down along the larger children; returns where it
-    /// ends.
-    fn bubble<T: Copy>(
-        a: &mut [T],
-        cmp: &dyn Fn(&T, &T) -> Ordering,
-        l: usize,
-        mut i: usize,
-    ) -> usize {
-        loop {
-            match maxson(a, cmp, l, i) {
-                Ok(j) => {
-                    a[i] = a[j];
-                    i = j;
-                }
-                Err(i) => return i,
-            }
-        }
-    }
-
-    fn trickleup<T: Copy>(a: &mut [T], cmp: &dyn Fn(&T, &T) -> Ordering, mut i: usize, e: T) {
-        loop {
-            let father = (i - 1) / 3;
-            if cmp(&a[father], &e) == Ordering::Less {
-                a[i] = a[father];
-                if father > 0 {
-                    i = father;
-                } else {
-                    a[0] = e;
-                    return;
-                }
-            } else {
-                a[i] = e;
-                return;
-            }
-        }
-    }
-
-    let l = a.len();
-    for i in (0..(l + 1) / 3).rev() {
-        let e = a[i];
-        trickle(a, cmp, l, i, e);
-    }
-    for i in (2..l).rev() {
-        let e = a[i];
-        a[i] = a[0];
-        let hole = bubble(a, cmp, i, 0);
-        trickleup(a, cmp, hole, e);
-    }
-    if l > 1 {
-        a.swap(0, 1);
-    }
-}
-
 /// Up to five articles that share keywords with the one at `index`, most
 /// similar first. Similarity is the Jaccard index of the keywords, slightly
 /// lowered with the distance between the posts.
+/// Ties go to the newer article, then to the smaller slug.
 fn similar_articles(articles: &[Article], index: usize) -> Vec<&Article> {
     let target = &articles[index];
     let target_keywords: BTreeSet<&String> = target.keywords.iter().collect();
@@ -295,10 +187,10 @@ fn similar_articles(articles: &[Article], index: usize) -> Vec<&Article> {
             candidates.push((similarity, article));
         }
     }
-    // The OCaml engine collected the candidates in reverse.
-    candidates.reverse();
-    ocaml_array_sort(&mut candidates, &|(a, _), (b, _)| {
-        b.partial_cmp(a).unwrap_or(Ordering::Equal)
+    candidates.sort_by(|(sa, a), (sb, b)| {
+        sb.total_cmp(sa)
+            .then_with(|| b.created_at.cmp(&a.created_at))
+            .then_with(|| a.slug.cmp(&b.slug))
     });
     candidates.into_iter().take(5).map(|(_, a)| a).collect()
 }
@@ -813,11 +705,10 @@ fn post_entry(h: &mut Html, article: &Article) {
 /// The list of all articles, newest first.
 pub fn post_list_page(site: &Site, options: &Options) -> String {
     let mut h = Html::new();
-    h.raw("<!DOCTYPE html>").nl();
-    // Quirk: the final newline is inside the `html` element.
-    h.elem("html", &[("lang", "en")], |h| {
-        list_head(h, options, "All Posts");
-        h.elem("body", &[], |h| {
+    page(
+        &mut h,
+        |h| list_head(h, options, "All Posts"),
+        |h| {
             h.raw(SITE_HEADER);
             h.elem("section", &[("class", "post-list")], |h| {
                 if !site.articles.is_empty() {
@@ -829,9 +720,8 @@ pub fn post_list_page(site: &Site, options: &Options) -> String {
                 }
             });
             h.raw(SITE_FOOTER);
-        });
-        h.nl();
-    });
+        },
+    );
     h.finish()
 }
 
@@ -840,11 +730,10 @@ pub fn note_list_page(site: &Site, options: &Options) -> String {
     let mut notes: Vec<&Note> = site.notes.iter().collect();
     notes.sort_by_key(|note| plain_text(&note.title));
     let mut h = Html::new();
-    h.raw("<!DOCTYPE html>").nl();
-    // Quirk: the final newline is inside the `html` element.
-    h.elem("html", &[("lang", "en")], |h| {
-        list_head(h, options, "Notes");
-        h.elem("body", &[], |h| {
+    page(
+        &mut h,
+        |h| list_head(h, options, "Notes"),
+        |h| {
             h.raw(SITE_HEADER);
             h.elem("section", &[("class", "note-index")], |h| {
                 h.text_elem("h1", &[("class", "note-title")], "Notes");
@@ -865,9 +754,8 @@ pub fn note_list_page(site: &Site, options: &Options) -> String {
                 }
             });
             h.raw(SITE_FOOTER);
-        });
-        h.nl();
-    });
+        },
+    );
     h.finish()
 }
 

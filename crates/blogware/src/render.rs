@@ -1,8 +1,4 @@
 //! The document model as HTML: blocks and inlines.
-//!
-//! The output matches the page snapshots, which began as the output of the
-//! OCaml renderer this one replaced. Its quirks are kept for now and marked
-//! where they occur.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -19,8 +15,7 @@ use crate::mathml;
 /// Where a label points: the rendered title of its target and its URL.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct RefTarget {
-    /// HTML. It is escaped once more where it is shown, as the OCaml engine
-    /// did.
+    /// HTML.
     pub title: String,
     pub url: String,
 }
@@ -206,7 +201,9 @@ pub fn render_inline(h: &mut Html, ctx: Ctx, inline: &Inline) {
         // placeholder, as it did in the OCaml engine.
         Inline::Nameref(label) => match ctx.refs.get(label) {
             Some(target) => {
-                h.text_elem("a", &[("href", &target.url)], &target.title);
+                h.elem("a", &[("href", &target.url)], |h| {
+                    h.raw(&target.title);
+                });
             }
             None => {
                 h.text(&format!("[unresolved:{label}]"));
@@ -314,8 +311,6 @@ fn table(h: &mut Html, ctx: Ctx, table: &Table) {
     let classes = classes.join(" ");
     h.elem_opt("table", &[class_if_any(&classes)], |h| {
         if let Some(header) = &table.header {
-            // Quirk: the header opens `thead` twice and closes it once.
-            h.raw("<thead>");
             h.elem("thead", &[], |h| table_row(h, ctx, "th", header));
         }
         h.elem("tbody", &[], |h| {
