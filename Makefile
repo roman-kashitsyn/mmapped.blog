@@ -81,6 +81,7 @@ help:
 	@echo "syntax-tree  - print the Rust parser's syntax tree for FILE"
 	@echo "engine-test  - run the test suite of the Rust engine"
 	@echo "check        - report every error in the sources of the site"
+	@echo "diff-site    - compare the site the Rust engine builds with the OCaml one"
 	@echo "dir-locals   - generate .dir-locals.el for Emacs"
 
 $(OPAM_STATE_ROOT)/config: $(OPAM)
@@ -194,6 +195,17 @@ engine-test:
 .PHONY: check
 check:
 	cargo run --quiet -p blogware -- check --input $(INPUT)
+
+# The gate of the Rust engine's `build`: it must write the same files as `render`,
+# byte for byte, static files included.
+DIFF_SITE_DIR := target/diff-site
+
+.PHONY: diff-site
+diff-site: build
+	rm -rf $(DIFF_SITE_DIR)
+	$(OPAM) exec $(OPAM_COMMON_ARGS) -- $(BLOGWARE) -input $(INPUT) -output $(DIFF_SITE_DIR)/ocaml 2>/dev/null
+	cargo run --quiet --release -p blogware -- build --input $(INPUT) --output $(DIFF_SITE_DIR)/rust
+	diff -r $(DIFF_SITE_DIR)/ocaml $(DIFF_SITE_DIR)/rust
 
 .PHONY: hooks
 hooks:
