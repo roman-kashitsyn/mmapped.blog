@@ -7,4 +7,3 @@ purgatory/
 # Left behind by the OCaml engine; safe to delete.
 _build/
 opam/
-.dir-locals.el
