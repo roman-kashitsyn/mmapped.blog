@@ -47,13 +47,22 @@ serve:
 render:
 	$(BLOGWARE) build --input $(INPUT) --output $(DEST)
 
+# Prints one line when every test passes, and the whole report when one fails.
+# Compiler errors and warnings go to stderr and show either way.
+TEST_LOG := target/make-test.log
+
 .PHONY: test
 test:
-	cargo test $(ENGINE_CRATES)
+	@mkdir -p $(dir $(TEST_LOG))
+	@if cargo test --quiet $(ENGINE_CRATES) > $(TEST_LOG); then \
+		awk '/^test result:/ { n += $$4 } END { print "ok: " n " tests passed" }' $(TEST_LOG); \
+	else \
+		cat $(TEST_LOG); exit 1; \
+	fi
 
 .PHONY: snapshots
 snapshots:
-	UPDATE_SNAPSHOTS=1 cargo test $(ENGINE_CRATES)
+	@UPDATE_SNAPSHOTS=1 $(MAKE) --no-print-directory test
 
 .PHONY: format
 format:
