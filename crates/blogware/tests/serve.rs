@@ -1,7 +1,8 @@
 //! End-to-end tests of `blogware serve`.
 
+use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
-use std::net::TcpStream;
+use std::net::{Shutdown, TcpStream};
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::thread;
@@ -55,7 +56,7 @@ fn static_files() {
         (css.status, css.content_type),
         (200, "text/css; charset=utf-8")
     );
-    assert_eq!(css.body, std::fs::read("../../css/mmapped.css").unwrap());
+    assert_eq!(css.body, fs::read("../../css/mmapped.css").unwrap());
     assert_eq!(get(BLOG, "/robots.txt").status, 200);
     assert_eq!(
         get(BLOG, "/feed.xml").content_type,
@@ -97,7 +98,7 @@ fn every_error_is_shown_in_the_browser() {
             page.contains("<title>25 errors in 8 files</title>"),
             "{page}"
         );
-        let expected = std::fs::read_to_string("tests/data/broken.stderr").unwrap();
+        let expected = fs::read_to_string("tests/data/broken.stderr").unwrap();
         for line in expected.lines() {
             assert!(page.contains(&blogware::html::escape(line)), "{line}");
         }
@@ -113,6 +114,39 @@ fn exchange(port: u16, request: &str) -> String {
     response
 }
 
+/// A symbolic link in a static directory is served only if it leads to a
+/// file inside the site.
+#[cfg(unix)]
+#[test]
+fn symbolic_links_stay_inside_the_site() {
+    use std::os::unix::fs::symlink;
+
+    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join("symbolic_links_stay_inside_the_site");
+    let _ = fs::remove_dir_all(&root);
+    let site = root.join("site");
+    fs::create_dir_all(site.join("images")).unwrap();
+    fs::write(root.join("secret.txt"), "outside\n").unwrap();
+    fs::write(site.join("robots.txt"), "inside\n").unwrap();
+    symlink(root.join("secret.txt"), site.join("images/secret.txt")).unwrap();
+    symlink(&root, site.join("images/up")).unwrap();
+    symlink(site.join("robots.txt"), site.join("images/robots.txt")).unwrap();
+    symlink(&root, site.join("css")).unwrap();
+
+    let get = |target: &str| serve::get(&site, &preview(), target);
+    for target in [
+        "/images/secret.txt",
+        "/images/up/secret.txt",
+        "/css/secret.txt",
+    ] {
+        assert_eq!(get(target).status, 404, "{target}");
+    }
+    let inside = get("/images/robots.txt");
+    assert_eq!(
+        (inside.status, inside.body.as_slice()),
+        (200, &b"inside\n"[..])
+    );
+}
+
 #[test]
 fn http() {
     let listener = serve::bind(0).unwrap();
@@ -122,7 +156,7 @@ fn http() {
     // A connection that sends nothing does not hold up the others.
     let _idle = TcpStream::connect(("127.0.0.1", port)).unwrap();
 
-    let robots = std::fs::read_to_string("../../robots.txt").unwrap();
+    let robots = fs::read_to_string("../../robots.txt").unwrap();
     let response = exchange(port, "GET /robots.txt HTTP/1.1\r\nHost: localhost\r\n\r\n");
     assert_eq!(
         response,
@@ -154,6 +188,18 @@ fn http() {
         response.starts_with("HTTP/1.1 404 Not Found\r\n"),
         "{response}"
     );
+
+    // A request cut short is not answered as if it were whole.
+    let mut stream = TcpStream::connect(("127.0.0.1", port)).unwrap();
+    stream.write_all(b"GET /robots.txt HTTP/1.1\r\n").unwrap();
+    stream.shutdown(Shutdown::Write).unwrap();
+    let mut response = String::new();
+    stream.read_to_string(&mut response).unwrap();
+    assert!(
+        response.starts_with("HTTP/1.1 400 Bad Request\r\n"),
+        "{response}"
+    );
+    assert!(response.ends_with("\r\n\r\nBad Request"), "{response}");
 }
 
 #[test]

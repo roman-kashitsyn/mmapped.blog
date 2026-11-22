@@ -51,13 +51,13 @@ pub fn get(input: &Path, options: &Options, target: &str) -> Response {
     };
     let first = path.split('/').next().unwrap_or_default();
     if STATIC.contains(&first) {
-        return match fs::read(input.join(&path)) {
-            Ok(body) => Response {
+        return match static_file(input, &path) {
+            Some(body) => Response {
                 status: 200,
                 content_type: content_type(&path),
                 body,
             },
-            Err(_) => Response::not_found(),
+            None => Response::not_found(),
         };
     }
     match site::load(input) {
@@ -71,6 +71,17 @@ pub fn get(input: &Path, options: &Options, target: &str) -> Response {
         },
         Err(failure) => error_page(&failure),
     }
+}
+
+/// The contents of the file at `path` in `input`, if it is a file and,
+/// with symbolic links followed, still inside `input`.
+fn static_file(input: &Path, path: &str) -> Option<Vec<u8>> {
+    let root = input.canonicalize().ok()?;
+    let file = input.join(path).canonicalize().ok()?;
+    if !file.starts_with(&root) || !file.is_file() {
+        return None;
+    }
+    fs::read(file).ok()
 }
 
 /// The file a request target names, relative to the site: without the
@@ -190,7 +201,14 @@ pub fn run(listener: TcpListener, input: PathBuf, options: Options) -> ! {
         match listener.accept() {
             Ok((stream, _)) => {
                 let config = Arc::clone(&config);
-                thread::spawn(move || handle(stream, &config.0, &config.1));
+                let spawned = thread::Builder::new()
+                    .name("connection".to_string())
+                    .spawn(move || handle(stream, &config.0, &config.1));
+                // The connection closes with the closure that failed to
+                // start; the next one may find the resources it needs.
+                if let Err(err) = spawned {
+                    eprintln!("error: cannot start a thread for a connection: {err}");
+                }
             }
             Err(err) => {
                 eprintln!("error: cannot accept a connection: {err}");
@@ -203,8 +221,16 @@ pub fn run(listener: TcpListener, input: PathBuf, options: Options) -> ! {
 fn handle(mut stream: TcpStream, input: &Path, options: &Options) {
     let start = Instant::now();
     let _ = stream.set_read_timeout(Some(Duration::from_secs(10)));
-    let Some(head) = read_head(&mut stream) else {
-        return;
+    let head = match read_head(&mut stream) {
+        Head::Complete(head) => head,
+        Head::Empty => return,
+        // Too long, cut short or too slow: the request is not answered,
+        // since it may not be the one the client meant.
+        Head::Incomplete => {
+            let _ = write_response(&mut stream, &Response::text(400, "Bad Request"), true);
+            eprintln!("incomplete request 400");
+            return;
+        }
     };
     let mut request_line = head.lines().next().unwrap_or_default().split_whitespace();
     let method = request_line.next().unwrap_or_default();
@@ -224,23 +250,51 @@ fn handle(mut stream: TcpStream, input: &Path, options: &Options) {
     );
 }
 
-/// The request line and the headers, or `None` if the client sent nothing.
-fn read_head(stream: &mut TcpStream) -> Option<String> {
-    const LIMIT: usize = 64 * 1024;
+/// The longest request line and headers the server reads, with the blank
+/// line that ends them.
+const HEAD_LIMIT: usize = 64 * 1024;
+
+/// What a client sent before its request body.
+#[derive(Debug, PartialEq, Eq)]
+enum Head {
+    /// The request line and the headers, without the blank line after them.
+    Complete(String),
+    /// Nothing: the client closed the connection without a request.
+    Empty,
+    /// No blank line within [`HEAD_LIMIT`] bytes before the client stopped
+    /// sending, closed the connection or timed out.
+    Incomplete,
+}
+
+fn read_head(stream: &mut impl Read) -> Head {
+    const END: &[u8] = b"\r\n\r\n";
     let mut head = Vec::new();
     let mut buf = [0; 4096];
-    while head.len() < LIMIT && !head.windows(4).any(|w| w == b"\r\n\r\n") {
+    loop {
+        if let Some(end) = head.windows(END.len()).position(|w| w == END) {
+            if end + END.len() > HEAD_LIMIT {
+                return Head::Incomplete;
+            }
+            head.truncate(end);
+            return Head::Complete(String::from_utf8_lossy(&head).into_owned());
+        }
+        if head.len() >= HEAD_LIMIT {
+            return Head::Incomplete;
+        }
         match stream.read(&mut buf) {
-            Ok(0) | Err(_) => break,
+            Ok(0) if head.is_empty() => return Head::Empty,
+            Ok(0) => return Head::Incomplete,
             Ok(n) => head.extend_from_slice(&buf[..n]),
+            Err(err) if err.kind() == io::ErrorKind::Interrupted => {}
+            Err(_) => return Head::Incomplete,
         }
     }
-    (!head.is_empty()).then(|| String::from_utf8_lossy(&head).into_owned())
 }
 
 fn write_response(stream: &mut TcpStream, response: &Response, body: bool) -> io::Result<()> {
     let reason = match response.status {
         200 => "OK",
+        400 => "Bad Request",
         404 => "Not Found",
         405 => "Method Not Allowed",
         _ => "Internal Server Error",
