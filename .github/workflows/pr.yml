@@ -54,6 +54,10 @@ jobs:
   publish:
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # To comment on the pull request with the preview links.
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -70,6 +74,7 @@ jobs:
       # the name of its branch. Pull requests from forks have no access to the token,
       # so they stop after the checks above.
       - name: Deploy to Cloudflare Pages
+        id: deploy
         if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
         shell: bash
         env:
@@ -87,3 +92,47 @@ jobs:
             echo "### Deployed to Cloudflare Pages"
             grep -o 'https://[^ ]*\.pages\.dev' deploy.log | sort -u | sed 's/^/- /'
           } >> "$GITHUB_STEP_SUMMARY"
+          # Wrangler prints the URL of this deployment and, for a branch, the
+          # alias that always points at the branch's latest deployment.
+          {
+            echo "url=$(grep -o 'Take a peek over at https://[^ ]*' deploy.log | grep -o 'https://.*')"
+            echo "alias=$(grep -o 'Deployment alias URL: https://[^ ]*' deploy.log | grep -o 'https://.*')"
+          } >> "$GITHUB_OUTPUT"
+
+      # One comment per pull request, edited on every push, like the comment
+      # Cloudflare's Git integration used to post.
+      - name: Comment with the preview links
+        if: github.event_name == 'pull_request' && steps.deploy.outputs.url != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          COMMIT: ${{ github.event.pull_request.head.sha }}
+          URL: ${{ steps.deploy.outputs.url }}
+          ALIAS: ${{ steps.deploy.outputs.alias }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          marker='<!-- cloudflare-pages-preview -->'
+          {
+            echo "$marker"
+            echo "### Deployed to Cloudflare Pages"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| **Commit** | ${COMMIT:0:7} |"
+            echo "| **Preview** | $URL |"
+            if [ -n "$ALIAS" ]; then
+              echo "| **Branch preview** | $ALIAS |"
+            fi
+            echo
+            echo "[Workflow run]($RUN)"
+          } > comment.md
+          existing=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id" \
+            | head -n 1)
+          if [ -n "$existing" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$existing" \
+              -F body=@comment.md > /dev/null
+          else
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file comment.md
+          fi
