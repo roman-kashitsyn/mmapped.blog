@@ -1,0 +1,162 @@
+error: unknown reference `nowhere`
+ --> tests/data/broken/index.rftex:4:54
+  |
+4 | See \nameref{01-good}, \nameref{garden} and \nameref{nowhere}.
+  |                                                      ^^^^^^^ no article, note or section of this document has this name
+
+error: @book{no-author}: missing required field `author`
+ --> tests/data/broken/library.bib:6:7
+  |
+6 | @book{no-author,
+  |       ^^^^^^^^^
+
+error: unknown entry type `@thesis`
+  --> tests/data/broken/library.bib:10:1
+   |
+10 | @thesis{bad-kind,
+   | ^^^^^^^
+   |
+   = help: known types: book, article, phdthesis, blog, talk, podcast, misc
+
+error: expected a field value
+  --> tests/data/broken/library.bib:14:23
+   |
+14 | @misc{broken, title = oops}
+   |                       ^ expected `{...}` or a number
+
+error: @book{indented}: missing required field `author`
+  --> tests/data/broken/library.bib:16:9
+   |
+16 |   @book{indented, title = {An Indented Book}}
+   |         ^^^^^^^^
+
+error: missing \documentclass{note}
+ --> tests/data/broken/notes/garden.rftex:1:1
+  |
+1 | \title{A note without a class}
+  | ^
+  |
+  = help: a document without \documentclass is an article
+
+error: expected \documentclass{article} but found \documentclass{note}
+ --> tests/data/broken/posts/02-errors.rftex:1:16
+  |
+1 | \documentclass{note}
+  |                ^^^^
+
+error: invalid date `not-a-date`
+ --> tests/data/broken/posts/02-errors.rftex:3:7
+  |
+3 | \date{not-a-date}
+  |       ^^^^^^^^^^ expected YYYY-MM-DD
+
+error: unknown command `\foobar`
+ --> tests/data/broken/posts/02-errors.rftex:5:7
+  |
+5 | Héllo \foobar{x}, see \nameref{sec-missing} and \bibref{no-such-book}.
+  |       ^^^^^^^
+
+error: unknown reference `sec-missing`
+ --> tests/data/broken/posts/02-errors.rftex:5:32
+  |
+5 | Héllo \foobar{x}, see \nameref{sec-missing} and \bibref{no-such-book}.
+  |                                ^^^^^^^^^^^ no article, note or section of this document has this name
+
+error: \subsection is not allowed in a section without a title
+ --> tests/data/broken/posts/02-errors.rftex:7:1
+  |
+7 | \subsection{early}{Too early}
+  | ^^^^^^^^^^^
+  |
+  = help: start a section with \section{anchor}{title} first
+
+error: unknown environment `fancybox`
+ --> tests/data/broken/posts/02-errors.rftex:8:1
+  |
+8 | \begin{fancybox}
+  | ^^^^^^^^^^^^^^^^
+
+error: \subsection is not allowed in a section without a title
+  --> tests/data/broken/posts/02-errors.rftex:13:1
+   |
+12 | \section*
+   | --------- the section starts here
+13 | \subsection{late}{Too late}
+   | ^^^^^^^^^^^
+
+error: unknown dingbat `heavy-czech`
+  --> tests/data/broken/posts/02-errors.rftex:14:10
+   |
+14 | \dingbat{heavy-czech} \code{let x = \frobnicate;}
+   |          ^^^^^^^^^^^
+   |
+   = help: known dingbats: heavy-ballot-x, heavy-check, lower-right-pencil
+
+error: unknown command `\frobnicate`
+  --> tests/data/broken/posts/02-errors.rftex:14:37
+   |
+14 | \dingbat{heavy-czech} \code{let x = \frobnicate;}
+   |                                     ^^^^^^^^^^^
+
+error: unknown reference `late`
+  --> tests/data/broken/posts/02-errors.rftex:17:55
+   |
+17 | \ref{real}{This} and \nameref{01-good} are fine; \ref{late}{this} is not.
+   |                                                       ^^^^ no article, note or section of this document has this name
+
+error: \item outside of a list
+  --> tests/data/broken/posts/02-errors.rftex:18:1
+   |
+18 | \item stray
+   | ^^^^^ expected inside itemize, enumerate or checklist
+
+error: missing \end for this environment
+ --> tests/data/broken/posts/03-syntax.rftex:4:1
+  |
+4 | \begin{itemize}
+  | ^^^^^^
+
+error: \end without a matching \begin
+ --> tests/data/broken/posts/03-syntax.rftex:6:1
+  |
+6 | \end{enumerate}
+  | ^^^^
+
+error: missing closing }
+ --> tests/data/broken/posts/03-syntax.rftex:7:5
+  |
+7 | é \b{unclosed
+  |     ^
+
+error: missing \begin{document}
+ --> tests/data/broken/posts/04-misspelled-document.rftex:3:1
+  |
+3 | \begin{documemt}
+  | ^^^^^^^^^^^^^^^^ expected `document`, found `documemt`
+  |
+  = help: the text goes between \begin{document} and \end{document}; an empty document is fine
+
+error: no circled glyph for 2000000
+ --> tests/data/broken/posts/05-two-documents.rftex:4:25
+  |
+4 | The first one, \circled{2000000}.
+  |                         ^^^^^^^
+  |
+  = help: \circled takes a number from 1 to 20
+
+error: a file can hold only one document
+ --> tests/data/broken/posts/05-two-documents.rftex:7:1
+  |
+3 | \begin{document}
+  | ---------------- the document begins here
+...
+7 | \begin{document}
+  | ^^^^^^^^^^^^^^^^
+
+error: unknown reference `no-such-post`
+ --> tests/data/broken/posts/05-two-documents.rftex:8:30
+  |
+8 | The second one, see \nameref{no-such-post}.
+  |                              ^^^^^^^^^^^^ no article, note or section of this document has this name
+
+24 errors in 7 files

@@ -1,0 +1,4 @@
+\title{A note without a class}
+\begin{document}
+See \nameref{01-good} and \nameref{02-errors}.
+\end{document}

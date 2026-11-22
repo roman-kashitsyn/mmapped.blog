@@ -1,0 +1,10 @@
+\documentclass{article}
+\title{A post with syntax errors}
+\begin{document}
+\begin{itemize}
+\item one
+\end{enumerate}
+é \b{unclosed
+
+\nameref{nowhere} \foobar
+\end{document}

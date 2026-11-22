@@ -89,7 +89,7 @@ fn math(node: &MathNode) -> Sexp {
 }
 
 fn arg(arg: &Arg) -> Sexp {
-    let pos = int(arg.pos);
+    let pos = int(arg.range.start);
     match &arg.value {
         ArgValue::Nodes(nodes) => list("nodes", std::iter::once(pos).chain(nodes.iter().map(node))),
         ArgValue::Symbol(text) => list("sym", [pos, string(text)]),

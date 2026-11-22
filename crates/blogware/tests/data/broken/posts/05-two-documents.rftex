@@ -1,0 +1,9 @@
+\documentclass{article}
+\title{Two documents}
+\begin{document}
+The first one, \circled{2000000}.
+\end{document}
+
+\begin{document}
+The second one, see \nameref{no-such-post}.
+\end{document}
