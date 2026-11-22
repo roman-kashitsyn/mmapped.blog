@@ -91,6 +91,50 @@ pub enum Inline {
     },
 }
 
+/// The text of inlines without their formatting. Math, images and other
+/// inlines that are not made of text contribute nothing.
+pub fn plain_text(inlines: &[Inline]) -> String {
+    fn collect(inlines: &[Inline], out: &mut String) {
+        for inline in inlines {
+            match inline {
+                Inline::Str(text) => out.push_str(text),
+                Inline::Strong(body)
+                | Inline::Emph(body)
+                | Inline::Italic(body)
+                | Inline::Underline(body)
+                | Inline::SmallCaps(body)
+                | Inline::Strikethrough(body)
+                | Inline::Kbd(body)
+                | Inline::Sub(body)
+                | Inline::Sup(body)
+                | Inline::Quotation(body)
+                | Inline::Cite(body)
+                | Inline::Fun(body)
+                | Inline::MathSpan(body)
+                | Inline::Normal(body)
+                | Inline::Code { body, .. }
+                | Inline::Highlighted(_, body)
+                | Inline::Link { body, .. }
+                | Inline::MarginNote { body, .. }
+                | Inline::SideNote { body, .. }
+                | Inline::Ref { body, .. } => collect(body, out),
+                Inline::Math(..)
+                | Inline::Anchor(_)
+                | Inline::HorizontalRule
+                | Inline::CircledRef(_)
+                | Inline::LineBreak
+                | Inline::NumericSpace
+                | Inline::Nameref(_)
+                | Inline::Bibref { .. }
+                | Inline::Image { .. } => {}
+            }
+        }
+    }
+    let mut out = String::new();
+    collect(inlines, &mut out);
+    out
+}
+
 /// The marker of a bulleted list.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ListStyle {
