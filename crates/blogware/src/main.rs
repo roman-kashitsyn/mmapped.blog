@@ -6,7 +6,7 @@ use std::process::ExitCode;
 
 use blogware::pages::Options;
 use blogware::site::Failure;
-use blogware::{build, report, site};
+use blogware::{build, report, serve, site};
 
 const USAGE: &str = "\
 Usage: blogware <command> [options]
@@ -14,13 +14,18 @@ Usage: blogware <command> [options]
 Commands:
   check          Check the sources of the site and report every error
   build          Check the site, then write it to the output directory
+  serve          Serve the site on this machine, rendering every page anew
 
 Options:
   --input DIR    The directory of the site (default: .)
   --output DIR   Where `build` writes the site (required)
-  --root URL     The URL `build` makes links from (default: https://mmapped.blog)
+  --root URL     The URL `build` and `serve` make links from
+                 (default: https://mmapped.blog)
+  --port PORT    The port `serve` listens on (default: 9090)
   -h, --help     Print this help
 ";
+
+const DEFAULT_PORT: u16 = 9090;
 
 enum Command {
     Check {
@@ -31,6 +36,11 @@ enum Command {
         output: PathBuf,
         options: Options,
     },
+    Serve {
+        input: PathBuf,
+        port: u16,
+        options: Options,
+    },
     Help,
 }
 
@@ -39,18 +49,25 @@ fn parse_args(args: &[String]) -> Result<Command, String> {
     let mut input = PathBuf::from(".");
     let mut output = None;
     let mut root = None;
+    let mut port = None;
     let mut args = args.iter();
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "-h" | "--help" => return Ok(Command::Help),
-            option @ ("--input" | "--output" | "--root") => {
+            option @ ("--input" | "--output" | "--root" | "--port") => {
                 let value = args
                     .next()
                     .ok_or_else(|| format!("{option} requires a value"))?;
                 match option {
                     "--input" => input = PathBuf::from(value),
                     "--output" => output = Some(PathBuf::from(value)),
-                    _ => root = Some(value.trim_end_matches('/').to_string()),
+                    "--root" => root = Some(value.trim_end_matches('/').to_string()),
+                    _ => {
+                        let number = value
+                            .parse()
+                            .map_err(|_| format!("invalid port: {value}"))?;
+                        port = Some(number);
+                    }
                 }
             }
             option if option.starts_with('-') => return Err(format!("unknown option: {option}")),
@@ -58,22 +75,37 @@ fn parse_args(args: &[String]) -> Result<Command, String> {
             extra => return Err(format!("unexpected argument: {extra}")),
         }
     }
+    let mut options = Options::default();
+    if let Some(root) = root.clone() {
+        options.root_url = root;
+    }
     match command {
         Some("check") => {
-            if output.is_some() || root.is_some() {
+            if output.is_some() || root.is_some() || port.is_some() {
                 return Err("check takes only --input".to_string());
             }
             Ok(Command::Check { input })
         }
         Some("build") => {
-            let output = output.ok_or("build requires --output")?;
-            let mut options = Options::default();
-            if let Some(root) = root {
-                options.root_url = root;
+            if port.is_some() {
+                return Err("build does not take --port".to_string());
             }
+            let output = output.ok_or("build requires --output")?;
             Ok(Command::Build {
                 input,
                 output,
+                options,
+            })
+        }
+        Some("serve") => {
+            if output.is_some() {
+                return Err("serve does not take --output".to_string());
+            }
+            // Visits to a preview are not visits to the blog.
+            options.analytics = false;
+            Ok(Command::Serve {
+                input,
+                port: port.unwrap_or(DEFAULT_PORT),
                 options,
             })
         }
@@ -119,6 +151,19 @@ fn build(input: PathBuf, output: PathBuf, options: Options) -> ExitCode {
     }
 }
 
+fn serve(input: PathBuf, port: u16, options: Options) -> ExitCode {
+    let listener = match serve::bind(port) {
+        Ok(listener) => listener,
+        Err(err) => {
+            eprintln!("error: cannot listen on port {port}: {err}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let port = listener.local_addr().map_or(port, |addr| addr.port());
+    eprintln!("Listening on http://localhost:{port}");
+    serve::run(listener, input, options)
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match parse_args(&args) {
@@ -128,6 +173,11 @@ fn main() -> ExitCode {
             output,
             options,
         }) => build(input, output, options),
+        Ok(Command::Serve {
+            input,
+            port,
+            options,
+        }) => serve(input, port, options),
         Ok(Command::Help) => {
             print!("{USAGE}");
             ExitCode::SUCCESS

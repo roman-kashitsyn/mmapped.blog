@@ -19,33 +19,58 @@ pub struct Page {
     pub content: String,
 }
 
+/// The paths of the generated files, as in [`Page::path`].
+pub fn paths(site: &Site) -> Vec<String> {
+    let posts = site
+        .articles
+        .iter()
+        .map(|article| format!("posts/{}.html", article.slug));
+    let notes = site
+        .notes
+        .iter()
+        .map(|note| format!("notes/{}.html", note.slug));
+    let others = [
+        "posts.html".to_string(),
+        format!("notes/{}.html", site::NOTE_LIST),
+        "feed.xml".to_string(),
+        "index.html".to_string(),
+    ];
+    posts.chain(notes).chain(others).collect()
+}
+
+/// The generated file at `path`, one of [`paths`], or `None` for any other
+/// path.
+pub fn render(site: &Site, options: &Options, path: &str) -> Option<String> {
+    match path {
+        "posts.html" => return Some(pages::post_list_page(site, options)),
+        "feed.xml" => return Some(feed::atom(&options.root_url, &site.articles)),
+        "index.html" => return Some(pages::index_page(site, options)),
+        _ => {}
+    }
+    let (dir, slug) = path.strip_suffix(".html")?.split_once('/')?;
+    match dir {
+        "posts" => {
+            let index = site.articles.iter().position(|a| a.slug == slug)?;
+            Some(pages::post_page(site, index, options))
+        }
+        "notes" if slug == site::NOTE_LIST => Some(pages::note_list_page(site, options)),
+        "notes" => {
+            let index = site.notes.iter().position(|n| n.slug == slug)?;
+            Some(pages::note_page(site, index, options))
+        }
+        _ => None,
+    }
+}
+
 /// Every generated file of the site.
 pub fn pages(site: &Site, options: &Options) -> Vec<Page> {
-    let mut out = Vec::new();
-    let mut add = |path: String, content: String| out.push(Page { path, content });
-    for (index, article) in site.articles.iter().enumerate() {
-        add(
-            format!("posts/{}.html", article.slug),
-            pages::post_page(site, index, options),
-        );
-    }
-    for (index, note) in site.notes.iter().enumerate() {
-        add(
-            format!("notes/{}.html", note.slug),
-            pages::note_page(site, index, options),
-        );
-    }
-    add("posts.html".into(), pages::post_list_page(site, options));
-    add(
-        format!("notes/{}.html", site::NOTE_LIST),
-        pages::note_list_page(site, options),
-    );
-    add(
-        "feed.xml".into(),
-        feed::atom(&options.root_url, &site.articles),
-    );
-    add("index.html".into(), pages::index_page(site, options));
-    out
+    paths(site)
+        .into_iter()
+        .map(|path| {
+            let content = render(site, options, &path).expect("a path of the site");
+            Page { path, content }
+        })
+        .collect()
 }
 
 /// What a build wrote.
