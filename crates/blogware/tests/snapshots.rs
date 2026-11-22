@@ -76,8 +76,13 @@ fn pages_match_the_snapshots() {
         .collect();
 
     let root = snapshot_root();
-    if std::env::var_os("UPDATE_SNAPSHOTS").is_some() {
-        let _ = fs::remove_dir_all(&root);
+    if std::env::var_os("UPDATE_SNAPSHOTS").is_some_and(|value| value == "1") {
+        // Obsolete snapshots must go, or the next run fails on them.
+        match fs::remove_dir_all(&root) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => panic!("cannot remove {}: {error}", root.display()),
+        }
         for (path, content) in &rendered {
             let path = root.join(path);
             fs::create_dir_all(path.parent().unwrap()).unwrap();
