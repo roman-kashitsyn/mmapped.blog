@@ -38,6 +38,14 @@ error: missing \documentclass{note}
   |
   = help: a document without \documentclass is an article
 
+error: a note cannot be called `index`
+ --> tests/data/broken/notes/index.rftex:1:1
+  |
+1 | \documentclass{note}
+  | ^
+  |
+  = help: notes/index.html is the list of notes; rename the file
+
 error: expected \documentclass{article} but found \documentclass{note}
  --> tests/data/broken/posts/02-errors.rftex:1:16
   |
@@ -159,4 +167,4 @@ error: unknown reference `no-such-post`
 8 | The second one, see \nameref{no-such-post}.
   |                              ^^^^^^^^^^^^ no article, note or section of this document has this name
 
-24 errors in 7 files
+25 errors in 8 files

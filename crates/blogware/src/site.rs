@@ -5,7 +5,7 @@
 //! ```text
 //! index.rftex      the front page
 //! posts/*.rftex    articles
-//! notes/*.rftex    notes (optional)
+//! notes/*.rftex    notes (optional; none called index.rftex)
 //! library.bib      the bibliography (optional)
 //! ```
 //!
@@ -18,6 +18,10 @@ use rftex_doc::bib::{self, Entry};
 use rftex_doc::document::{Article, Note};
 use rftex_doc::refs::{section_anchors, Index};
 use rftex_doc::{Analysis, Diagnostic};
+use rftex_syntax::TextRange;
+
+/// The name of the page that lists the notes, which no note may take.
+pub const NOTE_LIST: &str = "index";
 
 /// The documents of a site, all of them correct.
 #[derive(Clone, Debug)]
@@ -73,10 +77,11 @@ struct Loaded<T> {
 /// The path as shown to the user: without the `./` of the default input
 /// directory.
 pub(crate) fn display(path: &Path) -> String {
-    path.strip_prefix(".")
-        .unwrap_or(path)
-        .to_string_lossy()
-        .into_owned()
+    match path.strip_prefix(".") {
+        Ok(rest) if rest.as_os_str().is_empty() => ".".to_string(),
+        Ok(rest) => rest.to_string_lossy().into_owned(),
+        Err(_) => path.to_string_lossy().into_owned(),
+    }
 }
 
 fn read(path: &Path) -> Result<String, String> {
@@ -197,12 +202,27 @@ pub fn load(input: &Path) -> Result<Site, Failure> {
             Err(err) => failure.errors.push(err),
         }
     }
-    let notes = load_documents(
+    let mut notes = load_documents(
         &notes_dir,
         &note_names,
         rftex_doc::analyze_note,
         &mut failure,
     );
+    for loaded in &mut notes {
+        // Ignoring case, since the page of `Index.rftex` would replace the
+        // list on a case-insensitive file system.
+        if slug(Path::new(&loaded.path)).eq_ignore_ascii_case(NOTE_LIST) {
+            loaded.analysis.diagnostics.push(
+                Diagnostic::new(
+                    TextRange::empty(0),
+                    format!("a note cannot be called `{NOTE_LIST}`"),
+                )
+                .with_help(format!(
+                    "notes/{NOTE_LIST}.html is the list of notes; rename the file"
+                )),
+            );
+        }
+    }
 
     let index_path = input.join("index.rftex");
     let index = if index_path.is_file() {

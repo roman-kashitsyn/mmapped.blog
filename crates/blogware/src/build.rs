@@ -2,7 +2,7 @@
 //! an output directory.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 
 use crate::feed;
 use crate::pages::{self, Options};
@@ -37,7 +37,7 @@ pub fn pages(site: &Site, options: &Options) -> Vec<Page> {
     }
     add("posts.html".into(), pages::post_list_page(site, options));
     add(
-        "notes/index.html".into(),
+        format!("notes/{}.html", site::NOTE_LIST),
         pages::note_list_page(site, options),
     );
     add(
@@ -58,10 +58,18 @@ pub struct Summary {
 /// Builds the site in `input` into `output`. Files already in `output` stay
 /// unless the build replaces them.
 ///
-/// Nothing is written unless the whole site is correct. A file that cannot
-/// be written does not stop the others.
+/// Nothing is written unless the whole site is correct and `output` does not
+/// overlap the static files, which would be copied onto or into themselves.
+/// A file that cannot be written does not stop the others.
 pub fn build(input: &Path, output: &Path, options: &Options) -> Result<Summary, Failure> {
-    let site = site::load(input)?;
+    let site = match (site::load(input), overlap(input, output)) {
+        (Ok(site), None) => site,
+        (loaded, clash) => {
+            let mut failure = loaded.err().unwrap_or_default();
+            failure.errors.splice(0..0, clash);
+            return Err(failure);
+        }
+    };
     let pages = pages(&site, options);
     let mut errors = Vec::new();
     let mut summary = Summary {
@@ -94,6 +102,56 @@ pub fn build(input: &Path, output: &Path, options: &Options) -> Result<Summary, 
             files: Vec::new(),
         })
     }
+}
+
+/// Explains why `output` cannot hold a build of `input`: some static file or
+/// directory would be its own copy, or contain it.
+fn overlap(input: &Path, output: &Path) -> Option<String> {
+    let clashes: Vec<String> = STATIC
+        .iter()
+        .map(|name| (input.join(name), output.join(name)))
+        .filter(|(src, _)| src.exists())
+        .filter(|(src, dst)| {
+            let (src, dst) = (resolve(src), resolve(dst));
+            src.starts_with(&dst) || dst.starts_with(&src)
+        })
+        .map(|(src, _)| display(&src))
+        .collect();
+    (!clashes.is_empty()).then(|| {
+        format!(
+            "cannot build into {}: the output overlaps the static files {}",
+            display(output),
+            clashes.join(", ")
+        )
+    })
+}
+
+/// The absolute path that `path` names, without symbolic links, `.` or
+/// `..`, as it will be once its missing directories are created.
+fn resolve(path: &Path) -> PathBuf {
+    for existing in path.ancestors() {
+        let dir = if existing.as_os_str().is_empty() {
+            Path::new(".")
+        } else {
+            existing
+        };
+        let Ok(mut resolved) = dir.canonicalize() else {
+            continue;
+        };
+        // A missing directory is no symbolic link, so its `..` is its parent.
+        let missing = path.strip_prefix(existing).unwrap_or(path);
+        for component in missing.components() {
+            match component {
+                Component::ParentDir => {
+                    resolved.pop();
+                }
+                Component::Normal(name) => resolved.push(name),
+                _ => {}
+            }
+        }
+        return resolved;
+    }
+    path.to_path_buf()
 }
 
 fn write(path: &Path, content: &str) -> std::io::Result<()> {

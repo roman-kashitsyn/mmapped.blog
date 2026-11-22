@@ -1,0 +1,7 @@
+\documentclass{note}
+\title{A note that takes the place of the list}
+\date{2024-01-01}
+\modified{2024-01-01}
+\begin{document}
+Nothing is wrong with this note but its name.
+\end{document}
