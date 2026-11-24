@@ -361,8 +361,9 @@ impl<'a> Lower<'a> {
                     _ => {}
                 }
             }
-            // What follows the last `\\` is a row only if it has content.
-            if ended || !all_blank {
+            // What follows the last `\\` is a row only if it has content or
+            // several cells.
+            if ended || !all_blank || cells.len() > 1 {
                 rows.push(ast::Row { border, cells });
             } else if border == RowBorder::Top {
                 if let Some(last) = rows.last_mut() {

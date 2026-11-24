@@ -449,14 +449,14 @@ fn begin<'a>(p: &mut Parser<'a>) -> Option<&'a str> {
 }
 
 /// `{colspec}` followed by rows of cells. Rows end at `\\`, cells at `&`.
-/// Every row with content must end with `\\`.
+/// Every row with content or with several cells must end with `\\`.
 fn table_body(p: &mut Parser) {
     if p.peek_byte() == Some(b'{') {
         arg(p, ArgSpec::AlignSpec);
     } else {
         p.error_missing(ErrorKind::MissingArgument);
     }
-    rows(p, Mode::Text, table_cell);
+    rows(p, Mode::Text, RowEnd::Required, table_cell);
 }
 
 /// The content of a table cell. A `\multicolumn` is the whole cell: only
@@ -472,6 +472,8 @@ fn table_cell(p: &mut Parser) -> bool {
             _ => other = true,
         },
         Text => other |= !p.nth_text(0).trim_ascii().is_empty(),
+        // An escape stands for the character after the backslash.
+        Escape => other |= !p.nth_text(0)[1..].trim_ascii().is_empty(),
         ParBreak => {}
         _ => other = true,
     });
@@ -486,16 +488,24 @@ fn table_cell(p: &mut Parser) -> bool {
 /// Rows of math cells. Rows end at `\\`, cells at `&`.
 /// The last row may go without `\\`.
 fn align_body(p: &mut Parser) {
-    rows(p, Mode::Math, |p| {
+    rows(p, Mode::Math, RowEnd::Optional, |p| {
         math_list(p, true);
         false
     });
 }
 
-/// The row and cell delimiters are shared by tables and aligned math.
-/// `cell_content` tells whether the cell has content that requires its row
-/// to end with `\\`.
-fn rows(p: &mut Parser, mode: Mode, cell_content: impl Fn(&mut Parser) -> bool) {
+/// Tells whether rows must end with `\\`.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum RowEnd {
+    /// A row with content or with several cells must end with `\\`.
+    Required,
+    /// The last row may go without `\\`.
+    Optional,
+}
+
+/// Parses rows of cells; tables and aligned math share the delimiters.
+/// `cell_content` parses a cell and tells whether the cell has content.
+fn rows(p: &mut Parser, mode: Mode, end: RowEnd, cell_content: impl Fn(&mut Parser) -> bool) {
     p.in_mode(mode, |p| loop {
         match flow(p, mode == Mode::Math) {
             Flow::Stop => break,
@@ -510,8 +520,10 @@ fn rows(p: &mut Parser, mode: Mode, cell_content: impl Fn(&mut Parser) -> bool) 
                     if !p.eat(Amp) {
                         break;
                     }
+                    // A cell separator makes a row even if the cells are empty.
+                    needs_end = true;
                 }
-                if !p.eat(DoubleBackslash) && needs_end {
+                if !p.eat(DoubleBackslash) && needs_end && end == RowEnd::Required {
                     p.error_missing(ErrorKind::MissingRowEnd);
                 }
                 p.close(row, Row);
