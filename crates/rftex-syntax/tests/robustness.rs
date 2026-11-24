@@ -104,8 +104,8 @@ fn recovery_unwinds_deeply_nested_constructs() {
 fn oversized_table_spans_do_not_overflow() {
     let src = concat!(
         "\\begin{tabular}{l}",
-        "\\multicolumn{9223372036854775807}{l}{x}",
-        "\\multicolumn{9223372036854775807}{l}{y}",
+        "\\multicolumn{9223372036854775807}{l}{x}&",
+        "\\multicolumn{9223372036854775807}{l}{y}&",
         "\\multicolumn{2}{l}{z}&w\\\\",
         "\\end{tabular}",
     );
@@ -117,7 +117,7 @@ fn oversized_table_spans_do_not_overflow() {
     };
     assert_eq!(rows.len(), 1);
     let spans: Vec<_> = rows[0].cells.iter().map(|cell| cell.colspan).collect();
-    assert_eq!(spans, [i64::MAX, i64::MAX, 2, 1, 1]);
+    assert_eq!(spans, [i64::MAX, i64::MAX, 2, 1]);
 }
 
 /// A random position in `src` that does not split a character.

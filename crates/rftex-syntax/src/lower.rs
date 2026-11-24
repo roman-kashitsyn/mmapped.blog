@@ -5,9 +5,6 @@
 //! column alignment. Lowering never fails. Where the tree has errors, the
 //! broken piece is dropped or takes a neutral value, so callers that need a
 //! faithful result must check the parse errors first.
-//!
-//! The output matches that of the OCaml parser this crate replaced, node
-//! boundaries and quirks included; the `.ast` snapshots pin it.
 
 use crate::ast::{self, ArgValue, ColSpec, MathDisplay, MathNode, Name, Node, NodeKind, RowBorder};
 use crate::kind::SyntaxKind::{self, *};
@@ -17,30 +14,25 @@ use crate::tree::{Children, NodeId, TextRange, Tree};
 /// Lowers a parsed document. `src` must be the source `tree` was parsed from.
 pub fn lower(tree: &Tree, src: &str) -> Vec<Node> {
     let lower = Lower { tree, src };
-    lower.content(lower.children(tree.root()), Ctx::Plain)
+    lower.content(lower.children(tree.root()))
 }
 
-/// How text tokens combine into text nodes.
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum Ctx {
-    Plain,
-    /// Inside a quotation every apostrophe is a node of its own.
-    Quote,
-    /// In a table cell quotes and backticks are ordinary text.
-    Cell,
-    Code,
+/// Tells whether a token stands for its own source text.
+/// Adjacent tokens of this kind form one text node.
+fn is_literal(kind: SyntaxKind) -> bool {
+    matches!(
+        kind,
+        Text | ParBreak | OpenQuote | CloseQuote | Backtick | LBracket | RBracket
+    )
 }
 
-impl Ctx {
-    /// Whether adjacent tokens of this kind join into one text node.
-    fn joins(self, kind: SyntaxKind) -> bool {
-        match self {
-            Ctx::Plain => matches!(kind, Text | ParBreak | CloseQuote),
-            Ctx::Quote => matches!(kind, Text | ParBreak),
-            Ctx::Cell => matches!(kind, Text | ParBreak | CloseQuote | OpenQuote | Backtick),
-            Ctx::Code => kind == Text,
-        }
-    }
+/// A lowered table cell, with what the row builder needs to know about it.
+struct TableCell {
+    cell: ast::Cell,
+    /// Whether the cell contains `\hrule`.
+    hrule: bool,
+    /// Whether the cell has nothing but whitespace in it.
+    blank: bool,
 }
 
 /// What a lowered node means to the table row builder.
@@ -119,9 +111,9 @@ impl<'a> Lower<'a> {
 
     // ------------------------------------------------------------ content
 
-    fn content(&self, items: impl IntoIterator<Item = NodeId>, ctx: Ctx) -> Vec<Node> {
+    fn content(&self, items: impl IntoIterator<Item = NodeId>) -> Vec<Node> {
         let mut out = Vec::new();
-        self.content_into(items, ctx, 0, &mut out);
+        self.content_into(items, 0, &mut out);
         out
     }
 
@@ -130,7 +122,6 @@ impl<'a> Lower<'a> {
     fn content_into(
         &self,
         items: impl IntoIterator<Item = NodeId>,
-        ctx: Ctx,
         min_start: u32,
         out: &mut Vec<Node>,
     ) {
@@ -138,7 +129,7 @@ impl<'a> Lower<'a> {
         for id in items {
             let kind = self.kind(id);
             let range = self.tree.range(id);
-            if ctx.joins(kind) {
+            if is_literal(kind) {
                 let start = range.start.max(min_start);
                 match &mut run {
                     Some((_, joined)) => joined.end = range.end,
@@ -146,9 +137,9 @@ impl<'a> Lower<'a> {
                 }
                 continue;
             }
-            // Anything else ends the run, comments included: text on the two
-            // sides of a comment stays in two nodes.
-            self.flush(run.take(), ctx, out);
+            // Anything else ends the run, comments included: a text node
+            // covers a contiguous piece of the source.
+            self.flush(run.take(), out);
             match kind {
                 // An escape stands for the character after the backslash.
                 Escape | DoubleBackslash => out.push(Node {
@@ -156,30 +147,28 @@ impl<'a> Lower<'a> {
                     range,
                     kind: NodeKind::Text(self.text(id)[1..].to_string()),
                 }),
-                LBracket | RBracket | Backtick | OpenQuote | CloseQuote => {
-                    out.push(self.text_node(id, range))
-                }
                 Command => out.push(self.command(id)),
                 Group => out.push(Node {
                     syntax: id,
                     range,
-                    kind: NodeKind::Group(self.content(self.children(id), Ctx::Plain)),
+                    kind: NodeKind::Group(self.content(self.children(id))),
                 }),
                 Quotation => {
                     let inner = self.inner_children(id, CloseQuote);
                     out.push(Node {
                         syntax: id,
                         range,
-                        kind: NodeKind::Quotation(self.content(inner, Ctx::Quote)),
+                        kind: NodeKind::Quotation(self.content(inner)),
                     });
                 }
                 UnclosedQuotation => {
                     // The quote never closes, so the two backticks are
                     // literal and the rest is ordinary content of the parent.
+                    // Two separate backticks do not read as an opening quote.
                     for offset in [range.start, range.start + 1] {
                         out.push(self.text_node(id, TextRange::new(offset, offset + 1)));
                     }
-                    self.content_into(self.children(id).skip(1), ctx, 0, out);
+                    self.content_into(self.children(id).skip(1), 0, out);
                 }
                 Environment => out.extend(self.environment(id)),
                 InlineMath | DisplayMath => {
@@ -198,29 +187,12 @@ impl<'a> Lower<'a> {
                 _ => {}
             }
         }
-        self.flush(run, ctx, out);
+        self.flush(run, out);
     }
 
-    fn flush(&self, run: Option<(NodeId, TextRange)>, ctx: Ctx, out: &mut Vec<Node>) {
-        let Some((id, range)) = run else { return };
-        if range.is_empty() {
-            return;
-        }
-        if ctx != Ctx::Quote {
+    fn flush(&self, run: Option<(NodeId, TextRange)>, out: &mut Vec<Node>) {
+        if let Some((id, range)) = run.filter(|(_, range)| !range.is_empty()) {
             out.push(self.text_node(id, range));
-            return;
-        }
-        let mut start = range.start;
-        for (index, _) in range.slice(self.src).match_indices('\'') {
-            let quote = range.start + index as u32;
-            if start < quote {
-                out.push(self.text_node(id, TextRange::new(start, quote)));
-            }
-            out.push(self.text_node(id, TextRange::new(quote, quote + 1)));
-            start = quote + 1;
-        }
-        if start < range.end {
-            out.push(self.text_node(id, TextRange::new(start, range.end)));
         }
     }
 
@@ -239,7 +211,7 @@ impl<'a> Lower<'a> {
                     let inner = self.inner_children(child, RBracket);
                     bracket = Some(ast::Arg {
                         range: self.inner_range(child, RBracket),
-                        value: ArgValue::Nodes(self.content(inner, Ctx::Plain)),
+                        value: ArgValue::Nodes(self.content(inner)),
                     });
                 }
                 Arg => {
@@ -269,7 +241,7 @@ impl<'a> Lower<'a> {
     fn arg(&self, id: NodeId, spec: ArgSpec) -> ast::Arg {
         let atom = self.child_text(id, Atom).unwrap_or("");
         let value = match spec {
-            ArgSpec::Seq(_) => ArgValue::Nodes(self.content(self.children(id), Ctx::Plain)),
+            ArgSpec::Seq(_) => ArgValue::Nodes(self.content(self.children(id))),
             ArgSpec::Symbol | ArgSpec::BibKey => ArgValue::Symbol(atom.to_string()),
             ArgSpec::Number => ArgValue::Number(atom.parse().unwrap_or(0)),
             ArgSpec::Url => ArgValue::Url(atom.to_string()),
@@ -336,7 +308,7 @@ impl<'a> Lower<'a> {
             }
             "code" => {
                 let mut nodes = Vec::new();
-                self.content_into(body.iter().copied(), Ctx::Code, after_newline, &mut nodes);
+                self.content_into(body.iter().copied(), after_newline, &mut nodes);
                 NodeKind::Env {
                     name,
                     opts,
@@ -350,7 +322,7 @@ impl<'a> Lower<'a> {
             _ => NodeKind::Env {
                 name,
                 opts,
-                body: self.content(body.iter().copied(), Ctx::Plain),
+                body: self.content(body.iter().copied()),
             },
         };
         Some(Node {
@@ -360,76 +332,71 @@ impl<'a> Lower<'a> {
         })
     }
 
-    /// Groups table content into rows. This replays the row state machine of
-    /// the OCaml parser, quirks included:
-    ///
-    /// - a row counts only once `\\` ends it, so a last row without `\\` is
-    ///   dropped;
-    /// - `\hrule` marks the top border of the row being built, or the bottom
-    ///   border of the previous row when it comes last;
-    /// - `\multicolumn` replaces the cell being built and starts a new one.
+    /// Groups table content into rows.
+    /// A row ends at `\\` or at the end of the table.
+    /// `\hrule` draws a border above the row it starts, or below the last row
+    /// when nothing follows it.
     fn table_rows(&self, body: &[NodeId], spec: &[ColSpec]) -> Vec<ast::Row> {
-        let spec_at = |index: usize| spec.get(index).copied().unwrap_or(ColSpec::Left);
-        let fresh = |align| ast::Cell {
-            align,
-            colspan: 1,
-            body: Vec::new(),
-        };
-
         let mut rows: Vec<ast::Row> = Vec::new();
-        let mut border = RowBorder::None;
-        let mut cells: Vec<ast::Cell> = Vec::new();
-        let mut current = fresh(spec_at(0));
-        let mut count: usize = 1;
-
         for &row in body.iter().filter(|&&child| self.kind(child) == Row) {
-            let mut first_cell = true;
-            for child in self.tree.children(row) {
+            let mut border = RowBorder::None;
+            let mut cells = Vec::new();
+            let mut column: usize = 0;
+            let mut ended = false;
+            let mut all_blank = true;
+            for child in self.children(row) {
                 match self.kind(child) {
                     Cell => {
-                        if !first_cell {
-                            let next = fresh(spec_at(count));
-                            cells.push(std::mem::replace(&mut current, next));
-                            count = count.saturating_add(1);
+                        let align = spec.get(column).copied().unwrap_or(ColSpec::Left);
+                        let TableCell { cell, hrule, blank } = self.table_cell(child, align);
+                        if hrule {
+                            border = RowBorder::Top;
                         }
-                        first_cell = false;
-                        for node in self.content(self.children(child), Ctx::Cell) {
-                            match self.table_item(node) {
-                                TableItem::HRule => border = RowBorder::Top,
-                                TableItem::Multicolumn(cell) => {
-                                    let span = usize::try_from(cell.colspan).unwrap_or(0);
-                                    cells.push(cell);
-                                    count = count.saturating_add(span);
-                                    current = fresh(spec_at(count.saturating_sub(1)));
-                                }
-                                TableItem::Content(node) => current.body.push(node),
-                            }
-                        }
+                        all_blank &= blank;
+                        let span = usize::try_from(cell.colspan).unwrap_or(0);
+                        column = column.saturating_add(span);
+                        cells.push(cell);
                     }
-                    DoubleBackslash => {
-                        let next = fresh(spec_at(0));
-                        cells.push(std::mem::replace(&mut current, next));
-                        rows.push(ast::Row {
-                            border,
-                            cells: std::mem::take(&mut cells),
-                        });
-                        border = RowBorder::None;
-                        count = 1;
-                    }
+                    DoubleBackslash => ended = true,
                     _ => {}
                 }
             }
-        }
-
-        if border == RowBorder::Top && cells.is_empty() {
-            if let Some(last) = rows.last_mut() {
-                last.border = match last.border {
-                    RowBorder::None | RowBorder::Bottom => RowBorder::Bottom,
-                    RowBorder::Top | RowBorder::Both => RowBorder::Both,
-                };
+            // What follows the last `\\` is a row only if it has content or
+            // several cells.
+            if ended || !all_blank || cells.len() > 1 {
+                rows.push(ast::Row { border, cells });
+            } else if border == RowBorder::Top {
+                if let Some(last) = rows.last_mut() {
+                    last.border = match last.border {
+                        RowBorder::None | RowBorder::Bottom => RowBorder::Bottom,
+                        RowBorder::Top | RowBorder::Both => RowBorder::Both,
+                    };
+                }
             }
         }
         rows
+    }
+
+    /// Lowers a table cell with the given column alignment.
+    fn table_cell(&self, id: NodeId, align: ColSpec) -> TableCell {
+        let mut multicolumn = None;
+        let mut hrule = false;
+        let mut body = Vec::new();
+        for node in self.content(self.children(id)) {
+            match self.table_item(node) {
+                TableItem::HRule => hrule = true,
+                // The parser makes sure that only blank text surrounds it.
+                TableItem::Multicolumn(cell) => multicolumn = Some(cell),
+                TableItem::Content(node) => body.push(node),
+            }
+        }
+        let blank = multicolumn.is_none() && body.iter().all(is_blank);
+        let cell = multicolumn.unwrap_or(ast::Cell {
+            align,
+            colspan: 1,
+            body,
+        });
+        TableCell { cell, hrule, blank }
     }
 
     fn table_item(&self, mut node: Node) -> TableItem {
@@ -582,6 +549,11 @@ impl<'a> Lower<'a> {
     }
 }
 
+/// Tells whether a node is text made of whitespace only.
+fn is_blank(node: &Node) -> bool {
+    matches!(&node.kind, NodeKind::Text(text) if text.trim_ascii().is_empty())
+}
+
 /// Reads a column specification: `l`, `r` and `c` name columns, everything
 /// else is decoration.
 fn col_specs(text: &str) -> Vec<ColSpec> {
@@ -594,3 +566,6 @@ fn col_specs(text: &str) -> Vec<ColSpec> {
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests;

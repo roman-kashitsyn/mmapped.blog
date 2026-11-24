@@ -133,6 +133,11 @@ pub(crate) fn document(p: &mut Parser) {
 // ---------------------------------------------------------------- text
 
 fn text_content(p: &mut Parser, ctx: Ctx) {
+    text_content_with(p, ctx, |_| {});
+}
+
+/// Like [`text_content`], but calls `inspect` before each item.
+fn text_content_with(p: &mut Parser, ctx: Ctx, mut inspect: impl FnMut(&mut Parser)) {
     p.in_mode(Mode::Text, |p| loop {
         let local_stop = match ctx {
             Ctx::Plain => false,
@@ -146,7 +151,10 @@ fn text_content(p: &mut Parser, ctx: Ctx) {
         match flow(p, false) {
             Flow::Stop => break,
             Flow::Stray(kind) => stray(p, kind),
-            Flow::Go => text_item(p, ctx),
+            Flow::Go => {
+                inspect(p);
+                text_item(p, ctx);
+            }
         }
     })
 }
@@ -441,37 +449,83 @@ fn begin<'a>(p: &mut Parser<'a>) -> Option<&'a str> {
 }
 
 /// `{colspec}` followed by rows of cells. Rows end at `\\`, cells at `&`.
+/// Every row with content or with several cells must end with `\\`.
 fn table_body(p: &mut Parser) {
     if p.peek_byte() == Some(b'{') {
         arg(p, ArgSpec::AlignSpec);
     } else {
         p.error_missing(ErrorKind::MissingArgument);
     }
-    rows(p, Mode::Text, |p| text_content(p, Ctx::Cell));
+    rows(p, Mode::Text, RowEnd::Required, table_cell);
+}
+
+/// The content of a table cell. A `\multicolumn` is the whole cell: only
+/// blank text and `\hrule` may stand next to it.
+/// Returns whether the cell has content.
+fn table_cell(p: &mut Parser) -> bool {
+    let mut multicolumns = Vec::new();
+    let mut other = false;
+    text_content_with(p, Ctx::Cell, |p| match p.nth(0) {
+        ControlWord => match Sym::from_name(p.command_name(0)) {
+            Sym::Multicolumn => multicolumns.push(p.current_range()),
+            Sym::Hrule => {}
+            _ => other = true,
+        },
+        Text => other |= !p.nth_text(0).trim_ascii().is_empty(),
+        // An escape stands for the character after the backslash.
+        Escape => other |= !p.nth_text(0)[1..].trim_ascii().is_empty(),
+        ParBreak => {}
+        _ => other = true,
+    });
+    if other || multicolumns.len() > 1 {
+        for &range in &multicolumns {
+            p.error(ErrorKind::MisplacedMulticolumn, range);
+        }
+    }
+    other || !multicolumns.is_empty()
 }
 
 /// Rows of math cells. Rows end at `\\`, cells at `&`.
+/// The last row may go without `\\`.
 fn align_body(p: &mut Parser) {
-    rows(p, Mode::Math, |p| math_list(p, true));
+    rows(p, Mode::Math, RowEnd::Optional, |p| {
+        math_list(p, true);
+        false
+    });
 }
 
-/// The row and cell delimiters are shared by tables and aligned math.
-fn rows(p: &mut Parser, mode: Mode, cell_content: impl Fn(&mut Parser)) {
+/// Tells whether rows must end with `\\`.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum RowEnd {
+    /// A row with content or with several cells must end with `\\`.
+    Required,
+    /// The last row may go without `\\`.
+    Optional,
+}
+
+/// Parses rows of cells; tables and aligned math share the delimiters.
+/// `cell_content` parses a cell and tells whether the cell has content.
+fn rows(p: &mut Parser, mode: Mode, end: RowEnd, cell_content: impl Fn(&mut Parser) -> bool) {
     p.in_mode(mode, |p| loop {
         match flow(p, mode == Mode::Math) {
             Flow::Stop => break,
             Flow::Stray(kind) => stray(p, kind),
             Flow::Go => {
                 let row = p.open();
+                let mut needs_end = false;
                 loop {
                     let cell = p.open();
-                    cell_content(p);
+                    needs_end |= cell_content(p);
                     p.close(cell, Cell);
                     if !p.eat(Amp) {
                         break;
                     }
+                    // A cell separator makes a row even if the cells are empty.
+                    needs_end = true;
                 }
-                p.eat(DoubleBackslash);
+                if !p.eat(DoubleBackslash) && needs_end && end == RowEnd::Required {
+                    p.error_missing(ErrorKind::MissingRowEnd);
+                }
                 p.close(row, Row);
             }
         }

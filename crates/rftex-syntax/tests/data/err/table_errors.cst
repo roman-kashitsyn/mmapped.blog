@@ -1,4 +1,4 @@
-Document@0..103
+Document@0..342
   Environment@0..38
     Begin@0..15
       ControlWord@0..6 "\\begin"
@@ -66,7 +66,127 @@ Document@0..103
       Atom@94..101 "tabular"
       RBrace@101..102 "}"
   Text@102..103 "\n"
+  Environment@103..292
+    Begin@103..118
+      ControlWord@103..109 "\\begin"
+      LBrace@109..110 "{"
+      Atom@110..117 "tabular"
+      RBrace@117..118 "}"
+    Arg@118..122
+      LBrace@118..119 "{"
+      Atom@119..121 "ll"
+      RBrace@121..122 "}"
+    Row@122..149
+      Cell@122..147
+        Text@122..125 "\na "
+        Command@125..146
+          ControlWord@125..137 "\\multicolumn"
+          Arg@137..140
+            LBrace@137..138 "{"
+            Atom@138..139 "2"
+            RBrace@139..140 "}"
+          Arg@140..143
+            LBrace@140..141 "{"
+            Atom@141..142 "c"
+            RBrace@142..143 "}"
+          Arg@143..146
+            LBrace@143..144 "{"
+            Text@144..145 "x"
+            RBrace@145..146 "}"
+        Text@146..147 " "
+      DoubleBackslash@147..149 "\\\\"
+    Row@149..195
+      Cell@149..193
+        Text@149..150 "\n"
+        Command@150..171
+          ControlWord@150..162 "\\multicolumn"
+          Arg@162..165
+            LBrace@162..163 "{"
+            Atom@163..164 "1"
+            RBrace@164..165 "}"
+          Arg@165..168
+            LBrace@165..166 "{"
+            Atom@166..167 "l"
+            RBrace@167..168 "}"
+          Arg@168..171
+            LBrace@168..169 "{"
+            Text@169..170 "y"
+            RBrace@170..171 "}"
+        Command@171..192
+          ControlWord@171..183 "\\multicolumn"
+          Arg@183..186
+            LBrace@183..184 "{"
+            Atom@184..185 "1"
+            RBrace@185..186 "}"
+          Arg@186..189
+            LBrace@186..187 "{"
+            Atom@187..188 "l"
+            RBrace@188..189 "}"
+          Arg@189..192
+            LBrace@189..190 "{"
+            Text@190..191 "z"
+            RBrace@191..192 "}"
+        Text@192..193 " "
+      DoubleBackslash@193..195 "\\\\"
+    Row@195..278
+      Cell@195..276
+        Text@195..196 "\n"
+        Command@196..203
+          ControlWord@196..203 "\\hrule "
+        Command@203..225
+          ControlWord@203..215 "\\multicolumn"
+          Arg@215..218
+            LBrace@215..216 "{"
+            Atom@216..217 "2"
+            RBrace@217..218 "}"
+          Arg@218..221
+            LBrace@218..219 "{"
+            Atom@219..220 "c"
+            RBrace@220..221 "}"
+          Arg@221..225
+            LBrace@221..222 "{"
+            Text@222..224 "ok"
+            RBrace@224..225 "}"
+        Text@225..226 " "
+        Comment@226..276 "% blank text, a rule and comments may surround it\n"
+      DoubleBackslash@276..278 "\\\\"
+    Row@278..279
+      Cell@278..279
+        Text@278..279 "\n"
+    End@279..292
+      ControlWord@279..283 "\\end"
+      LBrace@283..284 "{"
+      Atom@284..291 "tabular"
+      RBrace@291..292 "}"
+  Text@292..293 "\n"
+  Environment@293..341
+    Begin@293..308
+      ControlWord@293..299 "\\begin"
+      LBrace@299..300 "{"
+      Atom@300..307 "tabular"
+      RBrace@307..308 "}"
+    Arg@308..311
+      LBrace@308..309 "{"
+      Atom@309..310 "l"
+      RBrace@310..311 "}"
+    Row@311..316
+      Cell@311..314
+        Text@311..314 "\na "
+      DoubleBackslash@314..316 "\\\\"
+    Row@316..328
+      Cell@316..328
+        Text@316..328 "\nno row end\n"
+    End@328..341
+      ControlWord@328..332 "\\end"
+      LBrace@332..333 "{"
+      Atom@333..340 "tabular"
+      RBrace@340..341 "}"
+  Text@341..342 "\n"
 errors:
   15..15: missing argument
   74..76: \multicolumn requires {N}{alignment}{content}
   84..85: unmatched }
+  125..137: \multicolumn must be the only content of its table cell
+  150..162: \multicolumn must be the only content of its table cell
+  171..183: \multicolumn must be the only content of its table cell
+  328..328: missing \\ at the end of the table row

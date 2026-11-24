@@ -81,11 +81,7 @@
 (text 379 "\n")
 (cmd 380 item
   (opts))
-(text 386 " ")
-(text 387 "[")
-(text 388 "not options")
-(text 399 "]")
-(text 400 " ")
+(text 386 " [not options] ")
 (cmd 401 item
   (opts "opt-1" "opt.2" "x"))
 (text 423 " ")
@@ -124,16 +120,12 @@
       (opts)
       (nodes 596
         (text 596 "6")))
-    (text 598 ", ")
-    (text 600 "[")
-    (text 601 "sic x")))
+    (text 598 ", [sic x")))
 (text 617 " ")
 (cmd 618 bibref
   (opts)
   (sym 633 "k")
   (nodes 626
     (group 626
-      (text 627 "a")
-      (text 628 "]")
-      (text 629 "b"))))
+      (text 627 "a]b"))))
 (text 635 "\n")
